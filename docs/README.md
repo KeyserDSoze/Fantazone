@@ -16,6 +16,7 @@ This documentation is the migration contract from `KeyserDSoze/Fantasoccer` to F
 10. [`10-public-security-model.md`](10-public-security-model.md) — public-repository data classification and V1 credential boundaries.
 11. [`11-repository-json-store.md`](11-repository-json-store.md) — typed JSON cache, SHA-based optimistic concurrency and public GitHub reads.
 12. [`12-calendar-migration.md`](12-calendar-migration.md) — first end-to-end Fantasoccer repository-service migration using the shared domain + GitHubJsonStore pattern.
+13. [`13-ranking-migration.md`](13-ranking-migration.md) — season/daily ranking migration, shared helpers and Action-compatible write side.
 
 ## Source of truth
 
