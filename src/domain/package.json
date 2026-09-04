@@ -4,9 +4,6 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/contracts.ts"
-  },
-  "scripts": {
-    "test": "node --test"
+    ".": "./src/index.ts"
   }
 }
