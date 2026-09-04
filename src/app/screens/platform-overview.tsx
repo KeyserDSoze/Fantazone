@@ -64,7 +64,7 @@ export function PlatformOverviewScreen({ onConnectGroup }: Props) {
                 <YStack gap="$2">
                   <Text fontWeight="800" fontSize="$5">{item.title}</Text>
                   <Paragraph color="$color10">{item.body}</Paragraph>
-                  <Text size="$2" fontWeight="700" color="$blue10">{item.status}</Text>
+                  <Text fontSize="$2" fontWeight="700" color="$blue10">{item.status}</Text>
                 </YStack>
               </Card>
             ))}
