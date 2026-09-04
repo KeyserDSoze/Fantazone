@@ -15,6 +15,7 @@ This documentation is the migration contract from `KeyserDSoze/Fantasoccer` to F
 9. [`09-event-demo.md`](09-event-demo.md) — short and extended paths for explaining Fantazone at events/workshops.
 10. [`10-public-security-model.md`](10-public-security-model.md) — public-repository data classification and V1 credential boundaries.
 11. [`11-repository-json-store.md`](11-repository-json-store.md) — typed JSON cache, SHA-based optimistic concurrency and public GitHub reads.
+12. [`12-calendar-migration.md`](12-calendar-migration.md) — first end-to-end Fantasoccer repository-service migration using the shared domain + GitHubJsonStore pattern.
 
 ## Source of truth
 
