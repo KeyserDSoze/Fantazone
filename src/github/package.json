@@ -1,0 +1,12 @@
+{
+  "name": "@fantazone/github",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@fantazone/domain": "0.1.0"
+  }
+}

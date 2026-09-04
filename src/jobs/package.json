@@ -1,0 +1,14 @@
+{
+  "name": "@fantazone/jobs",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "job": "tsx src/run-job.ts",
+    "test": "node --test"
+  },
+  "devDependencies": {
+    "tsx": "^4.20.5",
+    "typescript": "~6.0.3"
+  }
+}

@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Verify required repository layout
+        shell: bash
+        run: |
+          test -d docs
+          test -d src/app
+          test -d src/domain
+          test -d src/github
+          test -d src/jobs
+          test -d tests
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - name: Install workspace dependencies
+        run: npm install
+      - name: Typecheck application
+        run: npm run typecheck
+      - name: Run tests
+        run: npm test
+      - name: Build static web application
+        run: npm run export:web --workspace=fantazone-app
