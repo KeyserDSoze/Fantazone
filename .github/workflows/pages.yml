@@ -30,8 +30,10 @@ jobs:
         run: npm test
       - name: Export Expo web application
         run: npm run export:web --workspace=fantazone-app
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v4
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v5
         with:
           path: src/app/dist
 
@@ -44,4 +46,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
