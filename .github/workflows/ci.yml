@@ -31,3 +31,5 @@ jobs:
         run: npm run typecheck
       - name: Run tests
         run: npm test
+      - name: Build static web application
+        run: npm run export:web --workspace=fantazone-app
