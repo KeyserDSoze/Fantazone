@@ -16,7 +16,7 @@ import {
   type RepositoryJsonReadOptions,
   type RepositoryJsonWriteOptions,
 } from './repositoryStore'
-import type { GroupRepositoryTarget } from './calendarRepository'
+import type { GroupRepositoryTarget } from './repositoryTarget'
 
 export class GitHubRankRepository {
   constructor(

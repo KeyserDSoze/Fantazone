@@ -9,12 +9,7 @@ import {
   type EnhancedCalendar,
 } from '@fantazone/domain'
 import { GitHubJsonStore, type RepositoryJsonReadOptions } from './repositoryStore'
-
-export type GroupRepositoryTarget = {
-  owner: string
-  repo: string
-  ref?: string
-}
+import type { GroupRepositoryTarget } from './repositoryTarget'
 
 /**
  * GitHub-backed replacement for the read side of Fantasoccer CalendarService.
