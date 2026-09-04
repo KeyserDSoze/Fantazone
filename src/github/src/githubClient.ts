@@ -95,7 +95,14 @@ export class GitHubClient {
 }
 
 export function normalizeGroupName(value: string): string {
-  return value.trim().replace(/\s+/g, '-').replace(/[^A-Za-z0-9._-]/g, '')
+  return value
+    .trim()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/[^A-Za-z0-9._-]/g, '')
+    .replace(/-+/g, '-')
+    .replace(/^[.-]+|[.-]+$/g, '')
 }
 
 function encodeBase64Utf8(value: string): string {
