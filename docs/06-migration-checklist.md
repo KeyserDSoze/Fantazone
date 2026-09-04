@@ -18,15 +18,15 @@ This is the living backlog. `[ ]` means not yet migrated; `[~]` means scaffolded
 - [ ] Port Microsoft login.
 - [~] PAT validation and `Fantazone.*` repository discovery.
 - [~] group/repository initialization contract.
-- [ ] secure native PAT persistence and web credential persistence policy.
-- [ ] invite link + QR generation/import.
-- [ ] group switch when one PAT can access multiple `Fantazone.*` repositories.
+- [~] secure native PAT persistence and V1 web credential persistence policy.
+- [~] invite link + QR generation/import (fragment codec/import implemented; sharing UI/QR pending).
+- [~] group switch when one PAT can access multiple `Fantazone.*` repositories (discovery/choice implemented; full switch UX pending).
 - [ ] group members/roles parity.
 
 ## UI parity
 
 - [ ] App shell/navigation.
-- [ ] Light/dark themes.
+- [~] Light/dark themes.
 - [ ] Home.
 - [ ] Calendar.
 - [ ] Game/day view.
