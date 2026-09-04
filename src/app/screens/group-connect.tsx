@@ -28,9 +28,10 @@ export type ConnectedGroup = {
 
 type Props = {
   onConnected: (group: ConnectedGroup) => void
+  onExploreDemo: () => void
 }
 
-export function GroupConnectScreen({ onConnected }: Props) {
+export function GroupConnectScreen({ onConnected, onExploreDemo }: Props) {
   const [pat, setPat] = useState('')
   const [groupName, setGroupName] = useState('')
   const [repositories, setRepositories] = useState<GitHubRepo[]>([])
@@ -108,15 +109,29 @@ export function GroupConnectScreen({ onConnected }: Props) {
 
   return (
     <ScrollView flex={1} contentContainerStyle={{ flexGrow: 1 }}>
-      <YStack flex={1} justifyContent="center" alignItems="center" padding="$4">
+      <YStack flex={1} justifyContent="center" alignItems="center" padding="$4" gap="$4">
+        <Card borderWidth={1} borderColor="$blue8" padding="$4" width="100%" maxWidth={560}>
+          <YStack gap="$2">
+            <Text fontWeight="800" color="$blue10">SEI QUI PER VEDERE IL PROGETTO?</Text>
+            <Paragraph>La modalità didattica mostra l’architettura zero-server senza chiedere credenziali GitHub.</Paragraph>
+            <Button onPress={onExploreDemo}>Esplora l’architettura senza PAT</Button>
+          </YStack>
+        </Card>
+
         <Card borderWidth={1} borderColor="$borderColor" padding="$5" width="100%" maxWidth={560}>
           <YStack gap="$4">
             <YStack gap="$2">
               <H2>Collega un gruppo Fantazone</H2>
               <Paragraph color="$color10">
-                Inserisci il PAT GitHub del gruppo. Cercheremo tutti i repository accessibili che iniziano con Fantazone.
+                Per la V1 sperimentale inserisci il PAT GitHub del gruppo. Cercheremo i repository accessibili che iniziano con Fantazone.
               </Paragraph>
             </YStack>
+
+            <Card borderWidth={1} borderColor="$yellow8" padding="$3">
+              <Paragraph size="$2">
+                Usa solo un PAT fine-grained dedicato al demo/gruppo. Il PAT condiviso è una soluzione didattica temporanea e verrà sostituito da GitHub App/OAuth.
+              </Paragraph>
+            </Card>
 
             <YStack gap="$2">
               <Text fontWeight="700">Personal Access Token</Text>

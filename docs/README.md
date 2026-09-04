@@ -10,8 +10,10 @@ This documentation is the migration contract from `KeyserDSoze/Fantasoccer` to F
 4. [`04-background-jobs.md`](04-background-jobs.md) — legacy job inventory and GitHub Actions migration matrix.
 5. [`05-webrtc-auction.md`](05-webrtc-auction.md) — SignalR-to-WebRTC migration and auction host protocol.
 6. [`06-migration-checklist.md`](06-migration-checklist.md) — executable migration backlog.
-7. [`07-runtime-topology.md`](07-runtime-topology.md) — central/global data versus per-group repositories and Actions.
-8. [`08-legacy-service-matrix.md`](08-legacy-service-matrix.md) — every legacy frontend service and its Fantazone replacement mechanism.
+7. [`07-runtime-topology.md`](07-runtime-topology.md) — shared/global ingestion vs per-group GitHub Action responsibilities.
+8. [`08-legacy-service-matrix.md`](08-legacy-service-matrix.md) — old frontend services mapped to GitHub, local domain logic, Actions or WebRTC.
+9. [`09-event-demo.md`](09-event-demo.md) — short and extended paths for explaining Fantazone at events/workshops.
+10. [`10-public-security-model.md`](10-public-security-model.md) — public-repository data classification and V1 credential boundaries.
 
 ## Source of truth
 
