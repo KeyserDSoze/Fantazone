@@ -1,0 +1,24 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  structure:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify required repository layout
+        shell: bash
+        run: |
+          test -d docs
+          test -d src/app
+          test -d src/domain
+          test -d src/github
+          test -d src/jobs
+          test -d tests

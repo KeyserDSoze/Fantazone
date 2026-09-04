@@ -1,0 +1,44 @@
+{
+  "name": "fantazone-app",
+  "version": "0.1.0",
+  "private": true,
+  "main": "node_modules/expo/AppEntry.js",
+  "scripts": {
+    "start": "expo start --dev-client",
+    "web": "expo start --web",
+    "ios": "expo run:ios",
+    "android": "expo run:android",
+    "prebuild": "expo prebuild",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@react-native-async-storage/async-storage": "^2.2.0",
+    "@react-navigation/native": "^7.3.18",
+    "@react-navigation/native-stack": "^7.18.10",
+    "@tamagui/config": "2.7.7",
+    "@tamagui/font-inter": "2.7.7",
+    "@tamagui/lucide-icons-2": "2.7.7",
+    "@tamagui/react-native-media-driver": "2.7.7",
+    "@tamagui/toast": "2.7.7",
+    "expo": "~57.0.18",
+    "expo-dev-client": "~57.0.16",
+    "expo-font": "~57.0.2",
+    "expo-status-bar": "~57.0.1",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-native": "0.86.3",
+    "react-native-gesture-handler": "~2.32.0",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-screens": "~4.26.0",
+    "react-native-svg": "15.15.4",
+    "tamagui": "2.7.7",
+    "zustand": "^5.0.15"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.29.7",
+    "@tamagui/babel-plugin": "2.7.7",
+    "@tamagui/cli": "2.7.7",
+    "@types/react": "~19.2.10",
+    "typescript": "~6.0.3"
+  }
+}
