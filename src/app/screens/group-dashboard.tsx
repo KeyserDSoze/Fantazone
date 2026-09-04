@@ -71,7 +71,7 @@ export function GroupDashboardScreen({ group, onDisconnect, onExploreArchitectur
               <Text color="$color10">
                 Il token non viene mostrato. Su native è persistito con SecureStore; sul web la V1 usa storage locale.
               </Text>
-              <Text size="$2" color="$red10">Il link di invito contiene il bearer token codificato: non è crittografia.</Text>
+              <Text fontSize="$2" color="$red10">Il link di invito contiene il bearer token codificato: non è crittografia.</Text>
             </YStack>
           </Card>
         </XStack>
