@@ -12,7 +12,7 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Verify required repository layout
         shell: bash
         run: |
@@ -22,7 +22,7 @@ jobs:
           test -d src/github
           test -d src/jobs
           test -d tests
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: 22
       - name: Install workspace dependencies
