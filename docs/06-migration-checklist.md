@@ -9,8 +9,9 @@ This is the living backlog. `[ ]` means not yet migrated; `[~]` means scaffolded
 - [~] Bootstrap Expo/React Native/Tamagui app.
 - [~] Bootstrap shared TypeScript domain and GitHub client.
 - [~] Bootstrap GitHub Actions and job runner.
-- [ ] Add GitHub Pages web deployment.
+- [~] Add GitHub Pages web deployment (workflow + static export added; production Pages run pending merge/configuration).
 - [ ] Port Fantasoccer lint/format/test conventions.
+- [~] Public educational/demo experience and event documentation.
 
 ## Identity and groups
 
@@ -19,8 +20,9 @@ This is the living backlog. `[ ]` means not yet migrated; `[~]` means scaffolded
 - [~] PAT validation and `Fantazone.*` repository discovery.
 - [~] group/repository initialization contract.
 - [~] secure native PAT persistence and V1 web credential persistence policy.
-- [~] invite link + QR generation/import (fragment codec/import implemented; sharing UI/QR pending).
+- [~] invite link + QR generation/import (fragment codec/import + link sharing implemented; QR pending).
 - [~] group switch when one PAT can access multiple `Fantazone.*` repositories (discovery/choice implemented; full switch UX pending).
+- [~] connected-group dashboard / repository status surface.
 - [ ] group members/roles parity.
 
 ## UI parity
