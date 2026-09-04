@@ -109,7 +109,7 @@ export function GroupConnectScreen({ onConnected }: Props) {
   return (
     <ScrollView flex={1} contentContainerStyle={{ flexGrow: 1 }}>
       <YStack flex={1} justifyContent="center" alignItems="center" padding="$4">
-        <Card bordered padding="$5" width="100%" maxWidth={560}>
+        <Card borderWidth={1} borderColor="$borderColor" padding="$5" width="100%" maxWidth={560}>
           <YStack gap="$4">
             <YStack gap="$2">
               <H2>Collega un gruppo Fantazone</H2>
@@ -144,7 +144,7 @@ export function GroupConnectScreen({ onConnected }: Props) {
             </YStack>
 
             {error ? (
-              <Card bordered padding="$3">
+              <Card borderWidth={1} borderColor="$red8" padding="$3">
                 <Text>{error}</Text>
               </Card>
             ) : null}
