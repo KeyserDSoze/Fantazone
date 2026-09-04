@@ -9,7 +9,7 @@ This is the living backlog. `[ ]` means not yet migrated; `[~]` means scaffolded
 - [~] Bootstrap Expo/React Native/Tamagui app.
 - [~] Bootstrap shared TypeScript domain and GitHub client.
 - [~] Bootstrap GitHub Actions and job runner.
-- [~] Add GitHub Pages web deployment (workflow + static export implemented; production deployment validation tracked separately).
+- [~] Add GitHub Pages web deployment (workflow + static export implemented; repository Pages source still needs one-time GitHub Actions enablement).
 - [ ] Port Fantasoccer lint/format/test conventions.
 - [~] Public educational/demo experience and event documentation.
 
@@ -30,7 +30,7 @@ This is the living backlog. `[ ]` means not yet migrated; `[~]` means scaffolded
 - [ ] App shell/navigation.
 - [~] Light/dark themes.
 - [ ] Home.
-- [ ] Calendar.
+- [ ] Calendar screen (domain + GitHub read repository migrated; UI still pending).
 - [ ] Game/day view.
 - [ ] Formation/field/player cards/swaps.
 - [ ] Ranking/luck.
@@ -47,11 +47,23 @@ This is the living backlog. `[ ]` means not yet migrated; `[~]` means scaffolded
 - [ ] Patch notes/version update UX.
 - [ ] Push notification UX.
 
+## Service/domain migrations
+
+- [~] Calendar raw contract, mappings/helpers and GitHub read repository.
+- [ ] Ranking.
+- [ ] Teams.
+- [ ] Game/day.
+- [ ] Formations.
+- [ ] Live group/results.
+- [ ] Real players / Serie A.
+- [ ] Statistics/chances/votes.
+- [ ] Market persistence and commands.
+
 ## API/storage replacement
 
 - [ ] Replace every `buildApiUrl(...)` call.
 - [ ] Remove backend JWT exchange dependency from repository operations.
-- [~] Replace `rystem.repository.client` storage endpoints with GitHub repository adapters (typed JSON store foundation implemented; feature services pending).
+- [~] Replace `rystem.repository.client` storage endpoints with GitHub repository adapters (JSON store + Calendar read repository implemented; remaining services pending).
 - [ ] Replace Azure/static storage URLs with repository content URLs.
 - [~] Add SHA-aware in-memory JSON cache.
 - [ ] Add HTTP ETag / conditional GET support.
