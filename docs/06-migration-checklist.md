@@ -9,7 +9,7 @@ This is the living backlog. `[ ]` means not yet migrated; `[~]` means scaffolded
 - [~] Bootstrap Expo/React Native/Tamagui app.
 - [~] Bootstrap shared TypeScript domain and GitHub client.
 - [~] Bootstrap GitHub Actions and job runner.
-- [~] Add GitHub Pages web deployment (workflow + static export added; production Pages run pending merge/configuration).
+- [~] Add GitHub Pages web deployment (workflow + static export implemented; production deployment validation tracked separately).
 - [ ] Port Fantasoccer lint/format/test conventions.
 - [~] Public educational/demo experience and event documentation.
 
@@ -51,10 +51,12 @@ This is the living backlog. `[ ]` means not yet migrated; `[~]` means scaffolded
 
 - [ ] Replace every `buildApiUrl(...)` call.
 - [ ] Remove backend JWT exchange dependency from repository operations.
-- [ ] Replace `rystem.repository.client` storage endpoints with GitHub repository adapters.
+- [~] Replace `rystem.repository.client` storage endpoints with GitHub repository adapters (typed JSON store foundation implemented; feature services pending).
 - [ ] Replace Azure/static storage URLs with repository content URLs.
-- [ ] Add ETag/SHA cache.
-- [ ] Add optimistic-concurrency conflict handling.
+- [~] Add SHA-aware in-memory JSON cache.
+- [ ] Add HTTP ETag / conditional GET support.
+- [~] Add optimistic-concurrency conflict handling.
+- [~] Support unauthenticated reads of public canonical repository data.
 - [ ] Introduce append-only commands/events where concurrent edits are likely.
 
 ## Background jobs
