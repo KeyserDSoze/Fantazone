@@ -4,6 +4,8 @@ const PREFIX = 'Fantazone.'
 export type GitHubRepo = {
   name: string
   full_name: string
+  private: boolean
+  html_url?: string
   owner: { login: string }
   default_branch: string
   permissions?: { pull?: boolean; push?: boolean; admin?: boolean }
@@ -25,6 +27,7 @@ export class GitHubClient {
         Accept: 'application/vnd.github+json',
         'X-GitHub-Api-Version': '2022-11-28',
         Authorization: `Bearer ${this.token}`,
+        'Content-Type': 'application/json',
         ...init.headers,
       },
     })
@@ -54,12 +57,33 @@ export class GitHubClient {
     return (await this.discoverFantazoneRepositories()).find(x => x.name.toLowerCase() === expected.toLowerCase())
   }
 
-  async getContent(owner: string, repo: string, path: string, ref?: string): Promise<{ sha: string; content: string; etag?: string }> {
+  async createRepository(input: { name: string; description?: string; isPrivate?: boolean }): Promise<GitHubRepo> {
+    return this.request('/user/repos', {
+      method: 'POST',
+      body: JSON.stringify({
+        name: input.name,
+        description: input.description,
+        private: input.isPrivate ?? false,
+        auto_init: true,
+      }),
+    })
+  }
+
+  async getContent(owner: string, repo: string, path: string, ref?: string): Promise<{ sha: string; content: string }> {
     const suffix = ref ? `?ref=${encodeURIComponent(ref)}` : ''
     const result = await this.request<{ sha: string; content: string; encoding: string }>(`/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${path}${suffix}`)
     if (result.encoding !== 'base64') throw new Error(`Unsupported content encoding ${result.encoding}`)
     const content = decodeBase64Utf8(result.content.replace(/\n/g, ''))
     return { sha: result.sha, content }
+  }
+
+  async tryGetContent(owner: string, repo: string, path: string, ref?: string): Promise<{ sha: string; content: string } | null> {
+    try {
+      return await this.getContent(owner, repo, path, ref)
+    } catch (error) {
+      if (error instanceof GitHubApiError && error.status === 404) return null
+      throw error
+    }
   }
 
   async putContent(owner: string, repo: string, path: string, text: string, message: string, sha?: string, branch?: string): Promise<void> {

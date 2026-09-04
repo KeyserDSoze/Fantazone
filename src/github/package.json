@@ -3,7 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "scripts": {
-    "test": "node --test"
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@fantazone/domain": "0.1.0"
   }
 }

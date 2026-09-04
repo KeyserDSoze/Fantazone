@@ -1,0 +1,16 @@
+{
+  "name": "fantazone",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "src/app",
+    "src/domain",
+    "src/github",
+    "src/jobs"
+  ],
+  "scripts": {
+    "app:web": "npm run web --workspace=fantazone-app",
+    "app:start": "npm run start --workspace=fantazone-app",
+    "typecheck": "npm run typecheck --workspace=fantazone-app"
+  }
+}
