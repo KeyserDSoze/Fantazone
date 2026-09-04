@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 jobs:
-  structure:
+  validate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -22,3 +22,10 @@ jobs:
           test -d src/github
           test -d src/jobs
           test -d tests
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install workspace dependencies
+        run: npm install
+      - name: Typecheck application
+        run: npm run typecheck
