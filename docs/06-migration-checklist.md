@@ -33,7 +33,7 @@ This is the living backlog. `[ ]` means not yet migrated; `[~]` means scaffolded
 - [ ] Calendar screen (domain + GitHub read repository migrated; UI still pending).
 - [ ] Game/day view.
 - [ ] Formation/field/player cards/swaps.
-- [ ] Ranking/luck.
+- [ ] Ranking/luck screen (domain + GitHub season/daily repository migrated; UI/luck calculation still pending).
 - [ ] Live Serie A/live votes.
 - [ ] Players/statistics.
 - [ ] Teams.
@@ -50,7 +50,7 @@ This is the living backlog. `[ ]` means not yet migrated; `[~]` means scaffolded
 ## Service/domain migrations
 
 - [~] Calendar raw contract, mappings/helpers and GitHub read repository.
-- [ ] Ranking.
+- [~] Ranking raw contract, mappings/helpers, season/daily reads and Action-compatible writes.
 - [ ] Teams.
 - [ ] Game/day.
 - [ ] Formations.
@@ -63,7 +63,7 @@ This is the living backlog. `[ ]` means not yet migrated; `[~]` means scaffolded
 
 - [ ] Replace every `buildApiUrl(...)` call.
 - [ ] Remove backend JWT exchange dependency from repository operations.
-- [~] Replace `rystem.repository.client` storage endpoints with GitHub repository adapters (JSON store + Calendar read repository implemented; remaining services pending).
+- [~] Replace `rystem.repository.client` storage endpoints with GitHub repository adapters (JSON store + Calendar + Ranking implemented; remaining services pending).
 - [ ] Replace Azure/static storage URLs with repository content URLs.
 - [~] Add SHA-aware in-memory JSON cache.
 - [ ] Add HTTP ETag / conditional GET support.
