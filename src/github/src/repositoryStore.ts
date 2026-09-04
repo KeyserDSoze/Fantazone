@@ -163,7 +163,7 @@ export class GitHubJsonStore {
         `${JSON.stringify(value, null, 2)}\n`,
         message,
         expectedSha,
-        options.branch,
+        writeLocation.ref,
       )
       this.cache.set(key, { value: cloneJson(value), sha: result.sha })
       return { value: cloneJson(value), sha: result.sha, fromCache: false }
