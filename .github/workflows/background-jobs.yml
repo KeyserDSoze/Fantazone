@@ -46,8 +46,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-          cache-dependency-path: src/jobs/package-lock.json
       - name: Install job dependencies
         working-directory: src/jobs
         run: npm install
@@ -59,7 +57,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: fantazone-${{ inputs.job }}-${{ github.run_id }}
-          path: .artifacts/
+          path: src/jobs/.artifacts/
           if-no-files-found: ignore
           retention-days: 7
       - name: Commit canonical data changes
