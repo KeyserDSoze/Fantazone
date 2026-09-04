@@ -7,7 +7,8 @@
     "userInterfaceStyle": "automatic",
     "orientation": "portrait",
     "experiments": {
-      "tsconfigPaths": true
+      "tsconfigPaths": true,
+      "baseUrl": "/Fantazone"
     },
     "plugins": ["expo-font", "expo-status-bar", "expo-secure-store"],
     "ios": {
@@ -18,7 +19,9 @@
     },
     "web": {
       "bundler": "metro",
-      "output": "static"
+      "output": "single",
+      "name": "Fantazone",
+      "shortName": "Fantazone"
     }
   }
 }
