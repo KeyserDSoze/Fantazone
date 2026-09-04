@@ -14,6 +14,7 @@ This documentation is the migration contract from `KeyserDSoze/Fantasoccer` to F
 8. [`08-legacy-service-matrix.md`](08-legacy-service-matrix.md) — old frontend services mapped to GitHub, local domain logic, Actions or WebRTC.
 9. [`09-event-demo.md`](09-event-demo.md) — short and extended paths for explaining Fantazone at events/workshops.
 10. [`10-public-security-model.md`](10-public-security-model.md) — public-repository data classification and V1 credential boundaries.
+11. [`11-repository-json-store.md`](11-repository-json-store.md) — typed JSON cache, SHA-based optimistic concurrency and public GitHub reads.
 
 ## Source of truth
 

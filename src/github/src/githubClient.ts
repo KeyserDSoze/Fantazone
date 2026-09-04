@@ -11,25 +11,39 @@ export type GitHubRepo = {
   permissions?: { pull?: boolean; push?: boolean; admin?: boolean }
 }
 
+export type GitHubContentWriteResult = {
+  sha: string
+}
+
 export class GitHubApiError extends Error {
   constructor(public status: number, message: string) {
     super(message)
+    this.name = 'GitHubApiError'
   }
 }
 
 export class GitHubClient {
-  constructor(private readonly token: string) {}
+  constructor(private readonly token?: string) {}
+
+  private requireToken(): void {
+    if (!this.token) {
+      throw new GitHubApiError(401, 'A GitHub access token is required for this operation')
+    }
+  }
 
   private async request<T>(path: string, init: RequestInit = {}): Promise<T> {
+    const headers: Record<string, string> = {
+      Accept: 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28',
+      'Content-Type': 'application/json',
+    }
+
+    if (this.token) headers.Authorization = `Bearer ${this.token}`
+    if (init.headers) Object.assign(headers, init.headers as Record<string, string>)
+
     const response = await fetch(`${API}${path}`, {
       ...init,
-      headers: {
-        Accept: 'application/vnd.github+json',
-        'X-GitHub-Api-Version': '2022-11-28',
-        Authorization: `Bearer ${this.token}`,
-        'Content-Type': 'application/json',
-        ...init.headers,
-      },
+      headers,
     })
     if (!response.ok) {
       throw new GitHubApiError(response.status, await response.text())
@@ -39,10 +53,12 @@ export class GitHubClient {
   }
 
   async validateToken(): Promise<{ login: string }> {
+    this.requireToken()
     return this.request('/user')
   }
 
   async discoverFantazoneRepositories(): Promise<GitHubRepo[]> {
+    this.requireToken()
     const found: GitHubRepo[] = []
     for (let page = 1; ; page += 1) {
       const repos = await this.request<GitHubRepo[]>(`/user/repos?per_page=100&page=${page}&sort=full_name&direction=asc`)
@@ -58,6 +74,7 @@ export class GitHubClient {
   }
 
   async createRepository(input: { name: string; description?: string; isPrivate?: boolean }): Promise<GitHubRepo> {
+    this.requireToken()
     return this.request('/user/repos', {
       method: 'POST',
       body: JSON.stringify({
@@ -69,6 +86,10 @@ export class GitHubClient {
     })
   }
 
+  /**
+   * Reads repository content. Authentication is optional so public Fantazone data can
+   * be consumed without forcing the application to own a GitHub credential.
+   */
   async getContent(owner: string, repo: string, path: string, ref?: string): Promise<{ sha: string; content: string }> {
     const suffix = ref ? `?ref=${encodeURIComponent(ref)}` : ''
     const result = await this.request<{ sha: string; content: string; encoding: string }>(`/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${path}${suffix}`)
@@ -86,11 +107,31 @@ export class GitHubClient {
     }
   }
 
-  async putContent(owner: string, repo: string, path: string, text: string, message: string, sha?: string, branch?: string): Promise<void> {
-    await this.request(`/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${path}`, {
-      method: 'PUT',
-      body: JSON.stringify({ message, content: encodeBase64Utf8(text), ...(sha ? { sha } : {}), ...(branch ? { branch } : {}) }),
-    })
+  async putContent(
+    owner: string,
+    repo: string,
+    path: string,
+    text: string,
+    message: string,
+    sha?: string,
+    branch?: string,
+  ): Promise<GitHubContentWriteResult> {
+    this.requireToken()
+    const result = await this.request<{ content: { sha: string } | null }>(
+      `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${path}`,
+      {
+        method: 'PUT',
+        body: JSON.stringify({
+          message,
+          content: encodeBase64Utf8(text),
+          ...(sha ? { sha } : {}),
+          ...(branch ? { branch } : {}),
+        }),
+      },
+    )
+
+    if (!result.content?.sha) throw new Error(`GitHub did not return a content SHA for ${path}`)
+    return { sha: result.content.sha }
   }
 }
 
