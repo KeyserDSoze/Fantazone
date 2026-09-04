@@ -9,7 +9,7 @@
     "experiments": {
       "tsconfigPaths": true
     },
-    "plugins": ["expo-font", "expo-status-bar"],
+    "plugins": ["expo-font", "expo-status-bar", "expo-secure-store"],
     "ios": {
       "supportsTablet": true
     },
