@@ -23,7 +23,7 @@ export default function App() {
 
           {group ? (
             <YStack flex={1} alignItems="center" justifyContent="center" padding="$6" gap="$4">
-              <Card bordered padding="$6" maxWidth={640} width="100%">
+              <Card borderWidth={1} borderColor="$borderColor" padding="$6" maxWidth={640} width="100%">
                 <YStack gap="$3">
                   <H1>Fantazone</H1>
                   <Paragraph>Gruppo collegato direttamente a GitHub.</Paragraph>
