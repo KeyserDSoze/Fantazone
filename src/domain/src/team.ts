@@ -2,8 +2,6 @@ import { type LeagueSetting, Role } from './group'
 import type { Rank } from './rank'
 import type { RealPlayer } from './realPlayer'
 
-export type { RealPlayer } from './realPlayer'
-
 export enum PlayerInTeamStatus {
   Active = 0,
   SoldForOneHalf = 1,
