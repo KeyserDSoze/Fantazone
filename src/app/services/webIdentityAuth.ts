@@ -1,6 +1,7 @@
 import type { ExternalIdentity, ExternalIdentityProvider } from '@fantazone/domain'
 import {
   GOOGLE_CLIENT_ID,
+  GOOGLE_LOGIN_ENABLED,
   MICROSOFT_AUTHORITY_TENANT,
   MICROSOFT_CLIENT_ID,
   MICROSOFT_REDIRECT_URI,
@@ -88,7 +89,12 @@ export async function beginExternalLogin(
   expectedEmail?: string,
 ): Promise<ExternalIdentity | null> {
   assertWebBrowser()
-  if (provider === 'google') return loginWithGoogle(expectedEmail)
+  if (provider === 'google') {
+    if (!GOOGLE_LOGIN_ENABLED) {
+      throw new IdentityLoginError('Login Google temporaneamente disabilitato in Fantazone.')
+    }
+    return loginWithGoogle(expectedEmail)
+  }
   await beginMicrosoftLogin(expectedEmail)
   return null
 }
