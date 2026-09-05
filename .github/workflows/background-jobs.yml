@@ -39,6 +39,8 @@ env:
   FANTAZONE_FANTAGAZZETTA_FORMATIONS_URL: ${{ vars.FANTAZONE_FANTAGAZZETTA_FORMATIONS_URL }}
   FANTAZONE_GAZZETTA_FORMATIONS_URL: ${{ vars.FANTAZONE_GAZZETTA_FORMATIONS_URL }}
   FANTAZONE_INJURY_URL: ${{ vars.FANTAZONE_INJURY_URL }}
+  FANTAZONE_PLAYER_IMAGES_API_BASE_URL: ${{ vars.FANTAZONE_PLAYER_IMAGES_API_BASE_URL }}
+  FANTAZONE_PLAYER_IMAGES_MEDIA_BASE_URL: ${{ vars.FANTAZONE_PLAYER_IMAGES_MEDIA_BASE_URL }}
 
 jobs:
   run:
@@ -62,15 +64,15 @@ jobs:
           path: src/jobs/.artifacts/
           if-no-files-found: ignore
           retention-days: 7
-      - name: Commit canonical platform data changes
+      - name: Commit canonical platform data and static asset changes
         shell: bash
         run: |
-          if [ -z "$(git status --porcelain -- data)" ]; then
-            echo "No canonical platform data changes"
+          if [ -z "$(git status --porcelain -- data src/app/public/images/players)" ]; then
+            echo "No canonical platform data/static image changes"
             exit 0
           fi
           git config user.name "fantazone-actions[bot]"
           git config user.email "fantazone-actions[bot]@users.noreply.github.com"
-          git add -A -- data
+          git add -A -- data src/app/public/images/players
           git commit -m "data: $FANTAZONE_JOB"
           git push
