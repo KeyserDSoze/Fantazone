@@ -133,7 +133,7 @@ export async function createAndInitializeGroup(
 
   const repository = await client.createRepository({
     name: repositoryName,
-    isPrivate: options.isPrivate ?? false,
+    isPrivate: options.isPrivate ?? true,
     description: `Fantazone group: ${groupName}`,
   })
   await ensureGroupInitialized(client, repository, groupName)
