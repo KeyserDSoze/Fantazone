@@ -28,6 +28,7 @@ This documentation is the migration contract from `KeyserDSoze/Fantasoccer` to F
 22. [`22-global-real-calendar.md`](22-global-real-calendar.md) — shared readable Serie A calendar, legacy timing projections and platform/group repository split.
 23. [`23-global-serie-a-master-data.md`](23-global-serie-a-master-data.md) — readable RealTeams/RealPlayers ingestion, legacy active/inactive reconciliation and global-vs-group side-effect split.
 24. [`24-player-statistics-and-votes.md`](24-player-statistics-and-votes.md) — readable vote contract, pure FinalValue/statistics reducers and rebuild-player-stats workflow.
+25. [`25-serie-a-vote-ingestion.md`](25-serie-a-vote-ingestion.md) — official/live Fantacalcio vote producers, delayed-game parity, SignedUri/protobuf mapping and production-validation plan.
 
 ## Source of truth
 

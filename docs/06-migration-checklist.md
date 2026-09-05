@@ -43,10 +43,11 @@
 - [x] RealCalendar readable global schema + GitHub repository + legacy live/last/next timing projections.
 - [x] global RealTeams/RealPlayers readable master-data schema + GitHub repositories + active/inactive/transfer reconciliation.
 - [x] canonical Vote/StatPlayer readable contracts + GitHub repositories + pure FinalValue/player-statistics reducers + rebuild job.
+- [x] live/final Serie A vote producer logic: final HTML parser, delayed-game behavior, SignedUri/protobuf live adapter, canonical repositories and manual jobs; real-source production validation/scheduling still pending operationally.
 - [~] Game/day: local GameWrapper composition and TeamDay formation persistence derive editability from global RealCalendar; live player enrichment and score calculation still pending.
 - [~] Formations: authoritative validation + owner/SuperAdmin authorization + RealCalendar-controlled TeamDay GitHub write implemented; field-editing UI and chance/stat-based optimal formation still pending.
-- [~] Serie A ingestion: calendar + RealTeams/RealPlayers producers implemented/tested; vote contracts/rebuild are ready; external live/final vote producers, standings and scheduling still pending.
-- [~] Statistics/chances/votes: deterministic official-vote statistics are implemented; live/final vote ingestion and chances remain pending.
+- [~] Serie A ingestion: calendar, RealTeams/RealPlayers and live/final vote producers implemented/tested; production data initialization/source validation, standings and scheduling still pending.
+- [~] Statistics/chances/votes: deterministic official-vote statistics + live/final vote producers implemented; chances and production source validation remain pending.
 - [ ] Market persistence/commands.
 
 ## Infrastructure backlog
@@ -63,9 +64,10 @@
 ## Background jobs
 
 - [~] Serie A calendar ingestion: implementation + tests + manual Action ready; scheduling waits for production source validation.
-- [~] player/team master-data ingestion: global teams/players + reconciliation implemented; legacy count-change stats regeneration is implemented as independent `rebuild-player-stats`; per-group Team transfer propagation remains pending.
-- [~] player statistics rebuild: pure reducer/repository/manual Action implemented and automatically triggered only on legacy `playerCountChanged`; waits on official-vote producer for real runtime data.
-- [ ] live/final votes, odds/images.
+- [~] player/team master-data ingestion: global teams/players + reconciliation implemented; legacy count-change stats regeneration is independent; per-group Team transfer propagation remains pending.
+- [~] player statistics rebuild: pure reducer/repository/manual Action implemented and automatically triggered only on legacy `playerCountChanged`; real runtime data initialization remains pending.
+- [~] live/final votes: provider adapters + manual Actions + offline parity tests implemented; first real provider runs and scheduling decision remain pending (#29).
+- [ ] odds/images.
 - [ ] formation/groups manager.
 - [ ] HallOfFame/Market.
 - [ ] day/full-season recalculation.
