@@ -47,6 +47,7 @@ test('opens one selected group and composes all repositories around one store', 
   assert.ok(runtime.calendarRepository)
   assert.ok(runtime.rankRepository)
   assert.ok(runtime.teamRepository)
+  assert.ok(runtime.liveGroupRepository)
   assert.equal(client.reads, 1)
 })
 
