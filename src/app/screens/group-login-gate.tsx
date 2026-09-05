@@ -1,9 +1,7 @@
-import React, { useMemo, useState } from 'react'
-import { Linking, Platform, Share } from 'react-native'
-import { Button, Card, H1, H2, Paragraph, ScrollView, Text, XStack, YStack } from 'tamagui'
-import { createInviteFragment } from '@fantazone/github'
+import React, { useMemo } from 'react'
+import { Linking } from 'react-native'
+import { Button, Card, H1, H2, Paragraph, ScrollView, Spinner, Text, XStack, YStack } from 'tamagui'
 import type { ExternalIdentityProvider, Group } from '@fantazone/domain'
-import { publicWebUrl } from '../config/publicOrigin'
 import type { GroupConnection } from '../services/groupSessionRuntime'
 
 type Props = {
@@ -11,7 +9,9 @@ type Props = {
   group: Group
   onChangeGroup: () => void | Promise<void>
   onExploreArchitecture: () => void
-  onLogin?: (provider: ExternalIdentityProvider) => void | Promise<void>
+  onLogin: (provider: ExternalIdentityProvider) => void | Promise<void>
+  loginLoading?: boolean
+  loginError?: string | null
 }
 
 export function GroupLoginGateScreen({
@@ -20,37 +20,15 @@ export function GroupLoginGateScreen({
   onChangeGroup,
   onExploreArchitecture,
   onLogin,
+  loginLoading = false,
+  loginError,
 }: Props) {
-  const [shareStatus, setShareStatus] = useState<string | null>(null)
   const years = useMemo(() => {
     const values = new Set<number>()
     group.leagues.forEach(league => league.years.forEach(year => values.add(year.year)))
     group.baskets.forEach(basket => basket.years.forEach(year => values.add(year.year)))
     return [...values].sort((a, b) => b - a)
   }, [group])
-
-  const inviteUrl = useMemo(() => {
-    const fragment = createInviteFragment({
-      v: 1,
-      group: connection.groupName,
-      repository: connection.repository.name,
-      pat: connection.token,
-    })
-    return publicWebUrl(`/${fragment}`)
-  }, [connection])
-
-  async function shareGroup() {
-    setShareStatus(null)
-    if (Platform.OS === 'web' && typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
-      await navigator.clipboard.writeText(inviteUrl)
-      setShareStatus('Link copiato. Contiene il PAT del gruppo: condividilo solo con partecipanti fidati.')
-      return
-    }
-    await Share.share({
-      title: `Invito Fantazone · ${group.name}`,
-      message: `Unisciti al gruppo Fantazone ${group.name}: ${inviteUrl}`,
-    })
-  }
 
   const repositoryUrl = connection.repository.html_url ?? `https://github.com/${connection.repository.full_name}`
 
@@ -61,28 +39,29 @@ export function GroupLoginGateScreen({
           <Text fontSize="$3" fontWeight="800" color="$green10">1. GRUPPO SELEZIONATO</Text>
           <H1>{group.name}</H1>
           <Paragraph color="$color10">
-            Il repository è stato aperto e config/group.json è stato caricato. Ora l’identità utente deve essere verificata dentro questo gruppo.
+            Repository aperto: <Text fontWeight="700">{connection.repository.full_name}</Text>. config/group.json è la sorgente della membership Fantazone.
           </Paragraph>
         </YStack>
 
+        {connection.expectedEmail ? (
+          <Card borderWidth={1} borderColor="$green8" padding="$4">
+            <YStack gap="$1">
+              <Text fontWeight="800">Invito intestato a</Text>
+              <Text fontSize="$5">{connection.expectedEmail}</Text>
+              <Paragraph size="$2">Google/Microsoft riceverà questa email come suggerimento; una email diversa verrà rifiutata anche se fosse censita nel gruppo.</Paragraph>
+            </YStack>
+          </Card>
+        ) : null}
+
         <XStack gap="$3" flexWrap="wrap">
           <Card borderWidth={1} borderColor="$borderColor" padding="$4" flexGrow={1} flexBasis={280}>
-            <YStack gap="$1">
-              <Text fontSize="$7" fontWeight="800">{group.leagues.length}</Text>
-              <Text color="$color10">leghe</Text>
-            </YStack>
+            <YStack gap="$1"><Text fontSize="$7" fontWeight="800">{group.leagues.length}</Text><Text color="$color10">leghe</Text></YStack>
           </Card>
           <Card borderWidth={1} borderColor="$borderColor" padding="$4" flexGrow={1} flexBasis={280}>
-            <YStack gap="$1">
-              <Text fontSize="$7" fontWeight="800">{group.users.length}</Text>
-              <Text color="$color10">utenti nel JSON</Text>
-            </YStack>
+            <YStack gap="$1"><Text fontSize="$7" fontWeight="800">{group.users.length}</Text><Text color="$color10">utenti censiti</Text></YStack>
           </Card>
           <Card borderWidth={1} borderColor="$borderColor" padding="$4" flexGrow={1} flexBasis={280}>
-            <YStack gap="$1">
-              <Text fontSize="$7" fontWeight="800">{years.length}</Text>
-              <Text color="$color10">stagioni</Text>
-            </YStack>
+            <YStack gap="$1"><Text fontSize="$7" fontWeight="800">{years.length}</Text><Text color="$color10">stagioni</Text></YStack>
           </Card>
         </XStack>
 
@@ -91,21 +70,20 @@ export function GroupLoginGateScreen({
             <Text fontSize="$3" fontWeight="800" color="$blue10">2. IDENTITÀ UTENTE</Text>
             <H2 size="$7">Accedi al gruppo</H2>
             <Paragraph>
-              Google o Microsoft proveranno chi sei. Subito dopo Fantazone confronterà l’email restituita con <Text fontWeight="700">group.users</Text> del repository selezionato. Il PAT autorizza GitHub, ma non identifica l’utente Fantazone.
+              Il PAT dimostra soltanto che il browser può leggere il repository. L’accesso Fantazone nasce solo se l’email verificata dal provider è ammessa in <Text fontWeight="700">group.users</Text>.
             </Paragraph>
+            {loginError ? <Card borderWidth={1} borderColor="$red8" padding="$3"><Text color="$red10">{loginError}</Text></Card> : null}
             <XStack gap="$3" flexWrap="wrap">
-              <Button flex={1} minWidth={220} disabled={!onLogin} onPress={() => onLogin?.('microsoft')}>
-                Accedi con Microsoft
+              <Button flex={1} minWidth={220} disabled={loginLoading} onPress={() => onLogin('microsoft')}>
+                {loginLoading ? <Spinner /> : 'Accedi con Microsoft'}
               </Button>
-              <Button flex={1} minWidth={220} disabled={!onLogin} onPress={() => onLogin?.('google')}>
-                Accedi con Google
+              <Button flex={1} minWidth={220} disabled={loginLoading} onPress={() => onLogin('google')}>
+                {loginLoading ? <Spinner /> : 'Accedi con Google'}
               </Button>
             </XStack>
-            {!onLogin ? (
-              <Paragraph size="$2" color="$color9">
-                Il dominio pubblico è ora fanta.plus. Il prossimo adapter collega qui i callback Google/Microsoft senza cambiare la sequenza gruppo → login → membership.
-              </Paragraph>
-            ) : null}
+            <Paragraph size="$2" color="$color9">
+              Gli inviti con nuova email vengono creati solo dopo un login Admin/SuperAdmin: prima si aggiorna group.users, poi viene generato il link da condividere.
+            </Paragraph>
           </YStack>
         </Card>
 
@@ -117,11 +95,9 @@ export function GroupLoginGateScreen({
             <Text color="$color10">Visibilità: {connection.repository.private ? 'privato' : 'pubblico'}</Text>
             <XStack gap="$3" flexWrap="wrap">
               <Button onPress={() => Linking.openURL(repositoryUrl)}>Apri su GitHub</Button>
-              <Button onPress={shareGroup}>Condividi invito</Button>
               <Button onPress={onExploreArchitecture}>Come funziona</Button>
               <Button onPress={onChangeGroup}>Cambia gruppo</Button>
             </XStack>
-            {shareStatus ? <Paragraph size="$2" color="$color10">{shareStatus}</Paragraph> : null}
           </YStack>
         </Card>
       </YStack>

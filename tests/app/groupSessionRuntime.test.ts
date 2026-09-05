@@ -7,11 +7,18 @@ import { GroupSessionRuntime } from '../../src/app/services/groupSessionRuntime'
 class FakeContentClient implements RepositoryContentClient {
   readonly files = new Map<string, { sha: string; content: string }>()
   reads = 0
+  writes = 0
   async tryGetContent(owner: string, repo: string, path: string, ref?: string) {
     this.reads += 1
     return this.files.get(`${owner}/${repo}/${path}@${ref ?? ''}`) ?? null
   }
-  async putContent() { return { sha: 'unused' } }
+  async putContent(owner: string, repo: string, path: string, content: string, _message: string, _sha?: string, branch?: string) {
+    this.writes += 1
+    const key = `${owner}/${repo}/${path}@${branch ?? ''}`
+    const sha = `write-${this.writes}`
+    this.files.set(key, { sha, content })
+    return { sha }
+  }
 }
 
 const connection = {
@@ -62,4 +69,35 @@ test('re-reads selected group.users membership when resolving external identity'
 
   assert.equal(result.status, 'disabled')
   assert.equal(client.reads, 2)
+})
+
+test('invite expectedEmail is enforced in addition to group membership', async () => {
+  const client = new FakeContentClient()
+  client.files.set(`KeyserDSoze/Fantazone.Amici/${GROUP_DOCUMENT_PATH}@main`, { sha: 'group-1', content: JSON.stringify(group()) })
+  const runtime = await GroupSessionRuntime.open({ ...connection, expectedEmail: 'other@example.com' }, client)
+  const result = await runtime.resolveIdentity({ provider: 'google', subject: 'google-subject', email: 'ale@example.com' })
+  assert.equal(result.status, 'invite-email-mismatch')
+})
+
+test('only an authenticated admin can census an invited participant before sharing', async () => {
+  const client = new FakeContentClient()
+  const adminGroup = group(IdentityRole.Participant | IdentityRole.Admin)
+  client.files.set(`KeyserDSoze/Fantazone.Amici/${GROUP_DOCUMENT_PATH}@main`, { sha: 'group-1', content: JSON.stringify(adminGroup) })
+  const runtime = await GroupSessionRuntime.open(connection, client)
+  const invited = await runtime.inviteMember(adminGroup.users[0], { email: 'New@Example.com', username: 'Nuovo' })
+  assert.equal(invited.email, 'new@example.com')
+  assert.equal(invited.role, IdentityRole.Participant)
+  assert.equal(runtime.group.users.some(user => user.email === 'new@example.com'), true)
+  assert.equal(client.writes, 1)
+})
+
+test('a non-admin participant cannot add an invite recipient to group.users', async () => {
+  const client = new FakeContentClient()
+  const participantGroup = group(IdentityRole.Participant)
+  client.files.set(`KeyserDSoze/Fantazone.Amici/${GROUP_DOCUMENT_PATH}@main`, { sha: 'group-1', content: JSON.stringify(participantGroup) })
+  const runtime = await GroupSessionRuntime.open(connection, client)
+  await assert.rejects(
+    runtime.inviteMember(participantGroup.users[0], { email: 'new@example.com' }),
+    /Admin o SuperAdmin/,
+  )
 })

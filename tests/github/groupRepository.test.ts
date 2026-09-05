@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import type { Group } from '../../src/domain/src/index'
+import { IdentityRole, type Group } from '../../src/domain/src/index'
 import {
   createAndInitializeGroup,
   decodeStoredGroup,
@@ -76,7 +76,7 @@ test('accepts the early bootstrap-only group document', () => {
   assert.deepEqual(decoded, { id: 'Amici', name: 'Amici', leagues: [], users: [], baskets: [] })
 })
 
-test('new repositories initialize readable schema v2', async () => {
+test('new repositories initialize readable schema v2 with the first admin already censused', async () => {
   const files = new Map<string, { sha: string; content: string }>()
   let write = 0
   const setup: GroupSetupClient = {
@@ -91,16 +91,24 @@ test('new repositories initialize readable schema v2', async () => {
   }
   const repo: any = { name: 'Fantazone.Amici', full_name: 'KeyserDSoze/Fantazone.Amici', owner: { login: 'KeyserDSoze' } }
 
-  await ensureGroupInitialized(setup, repo, 'Amici')
+  await ensureGroupInitialized(setup, repo, 'Amici', { initialAdmin: { email: 'Admin@Example.com', username: 'Ale' } })
 
   assert.equal(FANTAZONE_SCHEMA_VERSION, 2)
   assert.deepEqual(JSON.parse(files.get(`KeyserDSoze/Fantazone.Amici/${GROUP_DOCUMENT_PATH}`)!.content), {
-    id: 'Amici', name: 'Amici', leagues: [], users: [], baskets: [],
+    id: 'Amici',
+    name: 'Amici',
+    leagues: [],
+    users: [{
+      username: 'Ale',
+      email: 'admin@example.com',
+      role: IdentityRole.Participant | IdentityRole.Admin | IdentityRole.SuperAdmin,
+    }],
+    baskets: [],
   })
   assert.equal(JSON.parse(files.get('KeyserDSoze/Fantazone.Amici/fantazone.json')!.content).schemaVersion, 2)
 })
 
-test('new group repositories remain private by default because group.users contains member emails', async () => {
+test('new group repositories remain private by default and bootstrap the requested administrator', async () => {
   let requestedPrivate: boolean | undefined
   const files = new Map<string, { sha: string; content: string }>()
   const repo: any = { name: 'Fantazone.Amici', full_name: 'KeyserDSoze/Fantazone.Amici', owner: { login: 'KeyserDSoze' } }
@@ -114,6 +122,40 @@ test('new group repositories remain private by default because group.users conta
     },
   }
 
-  await createAndInitializeGroup(setup, 'Amici')
+  await createAndInitializeGroup(setup, 'Amici', { isPrivate: true, initialAdmin: { email: 'owner@example.com' } })
   assert.equal(requestedPrivate, true)
+  const stored = JSON.parse(files.get(`KeyserDSoze/Fantazone.Amici/${GROUP_DOCUMENT_PATH}`)!.content) as Group
+  assert.equal(stored.users[0].email, 'owner@example.com')
+  assert.equal((stored.users[0].role & IdentityRole.SuperAdmin) === IdentityRole.SuperAdmin, true)
+})
+
+test('an already-created empty group can be bootstrapped but a populated group is never overwritten', async () => {
+  const files = new Map<string, { sha: string; content: string }>()
+  const repo: any = {
+    name: 'Fantazone.Amici',
+    full_name: 'KeyserDSoze/Fantazone.Amici',
+    owner: { login: 'KeyserDSoze' },
+    default_branch: 'main',
+  }
+  const empty: Group = { id: 'Amici', name: 'Amici', leagues: [], users: [], baskets: [] }
+  files.set(`KeyserDSoze/Fantazone.Amici/${GROUP_DOCUMENT_PATH}@main`, { sha: 'group-sha', content: JSON.stringify(empty) })
+  const setup: GroupSetupClient = {
+    async discoverFantazoneRepositories() { return [repo] },
+    async createRepository() { throw new Error('must not create') },
+    async tryGetContent(owner, repository, path, ref) { return files.get(`${owner}/${repository}/${path}@${ref ?? ''}`) ?? files.get(`${owner}/${repository}/${path}`) ?? null },
+    async putContent(owner, repository, path, content, _message, _sha, branch) {
+      files.set(`${owner}/${repository}/${path}@${branch ?? ''}`, { sha: 'updated', content })
+      return { sha: 'updated' }
+    },
+  }
+
+  await createAndInitializeGroup(setup, 'Amici', { initialAdmin: { email: 'owner@example.com' } })
+  const bootstrapped = JSON.parse(files.get(`KeyserDSoze/Fantazone.Amici/${GROUP_DOCUMENT_PATH}@main`)!.content) as Group
+  assert.equal(bootstrapped.users[0].email, 'owner@example.com')
+
+  bootstrapped.users = [{ username: 'Existing', email: 'existing@example.com', role: IdentityRole.Admin }]
+  files.set(`KeyserDSoze/Fantazone.Amici/${GROUP_DOCUMENT_PATH}@main`, { sha: 'existing-sha', content: JSON.stringify(bootstrapped) })
+  await createAndInitializeGroup(setup, 'Amici', { initialAdmin: { email: 'different@example.com' } })
+  const untouched = JSON.parse(files.get(`KeyserDSoze/Fantazone.Amici/${GROUP_DOCUMENT_PATH}@main`)!.content) as Group
+  assert.deepEqual(untouched.users.map(user => user.email), ['existing@example.com'])
 })

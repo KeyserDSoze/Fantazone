@@ -1,5 +1,6 @@
 import {
   GroupHelper,
+  IdentityRole,
   type AnnualLeague,
   type Basket,
   type FantazoneManifest,
@@ -17,6 +18,17 @@ export const GROUP_DOCUMENT_PATH = 'config/group.json'
 export type InitializedGroup = {
   repository: GitHubRepo
   groupName: string
+}
+
+export type InitialGroupAdmin = {
+  email: string
+  username?: string
+}
+
+export type CreateGroupOptions = {
+  isPrivate?: boolean
+  /** Required bootstrap identity for a newly created group. The first OAuth login must prove this email. */
+  initialAdmin: InitialGroupAdmin
 }
 
 export type LegacyGroupBootstrap = {
@@ -106,10 +118,11 @@ export class GitHubGroupRepository {
 export async function createAndInitializeGroup(
   client: GroupSetupClient,
   groupName: string,
-  options: { isPrivate?: boolean } = {},
+  options: CreateGroupOptions,
 ): Promise<InitializedGroup> {
   const normalized = normalizeGroupName(groupName)
   if (!normalized) throw new Error('Il nome del gruppo non è valido')
+  const initialAdmin = createInitialAdmin(options.initialAdmin)
 
   const repositoryName = `Fantazone.${normalized}`
   const existing = (await client.discoverFantazoneRepositories()).find(
@@ -117,6 +130,7 @@ export async function createAndInitializeGroup(
   )
   if (existing) {
     await ensureGroupInitialized(client, existing, groupName)
+    await ensureInitialAdminIfGroupIsEmpty(client, existing, initialAdmin)
     return { repository: existing, groupName }
   }
 
@@ -125,7 +139,7 @@ export async function createAndInitializeGroup(
     isPrivate: options.isPrivate ?? true,
     description: `Fantazone group: ${groupName}`,
   })
-  await ensureGroupInitialized(client, repository, groupName)
+  await ensureGroupInitialized(client, repository, groupName, { initialAdmin: options.initialAdmin })
   return { repository, groupName }
 }
 
@@ -133,6 +147,7 @@ export async function ensureGroupInitialized(
   client: GroupSetupClient | GitHubClient,
   repository: GitHubRepo,
   groupName: string,
+  options: { initialAdmin?: InitialGroupAdmin } = {},
 ): Promise<void> {
   const manifest: FantazoneManifest = {
     schemaVersion: FANTAZONE_SCHEMA_VERSION,
@@ -145,7 +160,7 @@ export async function ensureGroupInitialized(
     id: normalized,
     name: groupName,
     leagues: [],
-    users: [],
+    users: options.initialAdmin ? [createInitialAdmin(options.initialAdmin)] : [],
     baskets: [],
   }
 
@@ -201,4 +216,51 @@ export function decodeStoredGroup(value: unknown, repository: GroupRepositoryTar
     }
   }
   throw new Error(`Unsupported group JSON schema in ${repository.owner}/${repository.repo}/${GROUP_DOCUMENT_PATH}. Fantazone schema v2 requires readable property names.`)
+}
+
+function createInitialAdmin(input: InitialGroupAdmin): UserOfAGroup {
+  const email = normalizeEmail(input.email)
+  if (!email || !email.includes('@')) throw new Error('Inserisci una email valida per l’amministratore iniziale.')
+  return {
+    username: input.username?.trim() || email.split('@')[0],
+    email,
+    role: IdentityRole.Participant | IdentityRole.Admin | IdentityRole.SuperAdmin,
+  }
+}
+
+async function ensureInitialAdminIfGroupIsEmpty(
+  client: GroupSetupClient,
+  repository: GitHubRepo,
+  initialAdmin: UserOfAGroup,
+): Promise<void> {
+  const current = await client.tryGetContent(
+    repository.owner.login,
+    repository.name,
+    GROUP_DOCUMENT_PATH,
+    repository.default_branch,
+  ) ?? await client.tryGetContent(repository.owner.login, repository.name, GROUP_DOCUMENT_PATH)
+  if (!current) return
+
+  let value: unknown
+  try {
+    value = JSON.parse(current.content)
+  } catch {
+    return
+  }
+  if (!isGroupDocument(value) || value.users.length > 0) return
+
+  const updated: Group = { ...value, users: [initialAdmin] }
+  await client.putContent(
+    repository.owner.login,
+    repository.name,
+    GROUP_DOCUMENT_PATH,
+    `${JSON.stringify(updated, null, 2)}\n`,
+    `chore: bootstrap initial admin ${initialAdmin.email}`,
+    current.sha,
+    repository.default_branch,
+  )
+}
+
+function normalizeEmail(email: string | null | undefined): string {
+  return email?.trim().toLowerCase() ?? ''
 }

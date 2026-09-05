@@ -1,8 +1,11 @@
 import {
+  GroupHelper,
+  IdentityRole,
   resolveGroupLogin,
   type ExternalIdentity,
   type Group,
   type GroupLoginResolution,
+  type UserOfAGroup,
 } from '@fantazone/domain'
 import {
   GitHubCalendarRepository,
@@ -21,6 +24,8 @@ export type GroupConnection = {
   token: string
   repository: GitHubRepo
   groupName: string
+  /** Optional recipient constraint imported from an invite link. */
+  expectedEmail?: string
 }
 
 export class GroupDocumentUnavailableError extends Error {
@@ -81,9 +86,49 @@ export class GroupSessionRuntime {
 
   async resolveIdentity(
     identity: ExternalIdentity,
-    options: { refreshMembership?: boolean } = {},
+    options: { refreshMembership?: boolean; expectedEmail?: string } = {},
   ): Promise<GroupLoginResolution> {
     const group = options.refreshMembership === false ? this.group : await this.refreshGroup()
-    return resolveGroupLogin(group, identity)
+    const expectedEmail = options.expectedEmail ?? this.connection.expectedEmail
+    return resolveGroupLogin(group, identity, expectedEmail)
   }
+
+  /**
+   * Register an invited participant in config/group.json before generating the
+   * bearer invite link. Normal UI calls require the authenticated actor to be
+   * Admin or SuperAdmin in the freshly reloaded group.
+   */
+  async inviteMember(
+    actor: UserOfAGroup,
+    input: { email: string; username?: string },
+  ): Promise<UserOfAGroup> {
+    const group = await this.refreshGroup()
+    const currentActor = GroupHelper.findUserByEmail(group, actor.email)
+    const canManageUsers = Boolean(currentActor) && (
+      GroupHelper.hasRole(currentActor!, IdentityRole.Admin) ||
+      GroupHelper.hasRole(currentActor!, IdentityRole.SuperAdmin)
+    )
+    if (!canManageUsers) throw new Error('Solo Admin o SuperAdmin possono invitare utenti nel gruppo.')
+
+    const email = normalizeEmail(input.email)
+    if (!email || !email.includes('@')) throw new Error('Inserisci una email valida per l’invito.')
+    const existingIndex = group.users.findIndex(user => normalizeEmail(user.email) === email)
+    const existing = existingIndex >= 0 ? group.users[existingIndex] : null
+    const username = input.username?.trim() || existing?.username || email.split('@')[0]
+    const invited: UserOfAGroup = existing
+      ? { ...existing, username, email: existing.email, role: existing.role === IdentityRole.None ? IdentityRole.Participant : existing.role }
+      : { username, email, role: IdentityRole.Participant }
+
+    const users = [...group.users]
+    if (existingIndex >= 0) users[existingIndex] = invited
+    else users.push(invited)
+    const updated: Group = { ...group, users }
+    await this.groupRepository.writeGroup(updated, `chore: invite ${email}`)
+    this.currentGroup = updated
+    return invited
+  }
+}
+
+function normalizeEmail(email: string | null | undefined): string {
+  return email?.trim().toLowerCase() ?? ''
 }

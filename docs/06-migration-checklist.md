@@ -12,13 +12,15 @@
 
 ## Identity and groups
 
-- [ ] Wire Google login after group selection to configured `fanta.plus` client.
-- [ ] Wire Microsoft login after group selection to configured `fanta.plus` client.
+- [x] Google web login after group selection through Google Identity Services; Pages build expects `EXPO_PUBLIC_GOOGLE_CLIENT_ID`.
+- [x] Microsoft web login after group selection through authorization-code + PKCE; `common` authority by default and `https://fanta.plus` redirect.
 - [~] PAT validation/repository discovery before login.
 - [x] readable Group initialization and `group.users` membership resolution.
-- [~] secure credential persistence / invite / group switch / login gate.
-- [~] GroupSession shares Group/Calendar/Ranking/Team/LiveGroup repositories.
-- [ ] authenticated session after provider membership resolution.
+- [x] email-bound Admin/SuperAdmin group invitation flow: census member first, then share repository/PAT/expected-email link.
+- [~] secure credential persistence and group switching; V1 web PAT still uses local storage.
+- [x] GroupSession shares Group/Calendar/Ranking/Team/LiveGroup repositories.
+- [x] authenticated web session after provider email + selected-group membership resolution.
+- [ ] native Google/Microsoft OAuth redirects/deep links for iOS/Android.
 
 ## UI parity
 
@@ -45,13 +47,14 @@
 
 ## Infrastructure backlog
 
-- [ ] Replace remaining `buildApiUrl(...)` calls.
-- [~] remove backend JWT/AppIdentity dependency; OAuth adapter pending.
+- [ ] Replace every legacy `buildApiUrl(...)` responsibility with local composition/GitHub/Actions/WebRTC.
+- [x] remove backend JWT/AppIdentity dependency from the web login boundary.
 - [~] replace `rystem.repository.client` with GitHub adapters.
 - [ ] replace Azure/static URLs.
 - [~] SHA cache + optimistic concurrency.
 - [ ] ETag conditional reads.
 - [ ] one-time schema-v1→v2 migration tooling if any compact runtime repositories exist.
+- [ ] strict per-user write authorization beyond the client UI (repository rules, signed commands or trusted command service) if required.
 
 ## Background jobs
 
