@@ -197,7 +197,7 @@ export function excludedRankRounds(leagueType: LeagueType): string[] {
   switch (leagueType) {
     case LeagueType.Cup:
       return ['Finals']
-    case LeagueType.ChampionsLeague:
+    case LeagueType.NewCup:
       return ['Finals', 'Europa League', 'Supercoppa']
     default:
       return []

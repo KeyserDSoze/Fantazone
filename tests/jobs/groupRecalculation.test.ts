@@ -139,9 +139,9 @@ test('explicit recalculate-day fails closed when official votes are missing', as
   assert.equal(persisted.rounds.Regular[0].games[0].result, null)
 })
 
-test('rank exclusions preserve legacy Cup and Champions group-stage ranking boundaries', () => {
+test('rank exclusions preserve legacy Cup and NewCup group-stage ranking boundaries', () => {
   assert.deepEqual(excludedRankRounds(LeagueType.Cup), ['Finals'])
-  assert.deepEqual(excludedRankRounds(LeagueType.ChampionsLeague), ['Finals', 'Europa League', 'Supercoppa'])
+  assert.deepEqual(excludedRankRounds(LeagueType.NewCup), ['Finals', 'Europa League', 'Supercoppa'])
   assert.deepEqual(excludedRankRounds(LeagueType.League), [])
 })
 
