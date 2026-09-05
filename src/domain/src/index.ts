@@ -1,4 +1,5 @@
 export * from './calendar'
+export * from './chance'
 export * from './contracts'
 export * from './dayCalculation'
 export * from './formation'
