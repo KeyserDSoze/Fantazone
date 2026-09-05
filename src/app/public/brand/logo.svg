@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 560" role="img" aria-label="fanta.plus">
+  <rect width="1200" height="560" rx="48" fill="#fff"/>
+  <g transform="translate(330 25) scale(.48)">
+    <g fill="#111">
+      <path d="M500 55 430 245 500 330 570 245z"/>
+      <path d="M445 260 225 125 290 350 430 455z"/>
+      <path d="M555 260 775 125 710 350 570 455z"/>
+      <path d="M435 405 305 345 355 470 450 505z"/>
+      <path d="M565 405 695 345 645 470 550 505z"/>
+      <path d="M410 350 500 300 590 350 620 500 500 610 380 500z"/>
+      <path d="M405 500 500 610 595 500 560 760 500 875 440 760z"/>
+      <path d="M470 255 365 45 455 205z"/>
+      <path d="M530 255 635 45 545 205z"/>
+    </g>
+    <g fill="#ffd100">
+      <path d="m275 220 145 95 45 100-130-85z"/>
+      <path d="m725 220-145 95-45 100 130-85z"/>
+      <path d="m457 315 38 25-18 86-48-38z"/>
+      <path d="m543 315-38 25 18 86 48-38z"/>
+      <path d="m420 625 80 48 80-48-12 62-68 42-68-42z"/>
+      <path d="m435 715 65 40 65-40-10 55-55 34-55-34z"/>
+    </g>
+    <g stroke="#111" stroke-width="12" fill="#fff">
+      <path d="m500 420 55 38-20 64h-70l-20-64z"/>
+      <path d="m445 458 20 64-48 34-44-48 12-60z"/>
+      <path d="m555 458-20 64 48 34 44-48-12-60z"/>
+      <path d="m465 522 70 0 22 60-57 42-57-42z"/>
+    </g>
+  </g>
+  <text x="125" y="510" font-family="Arial,Helvetica,sans-serif" font-size="178" font-weight="900" fill="#111">fanta.</text>
+  <text x="630" y="510" font-family="Arial,Helvetica,sans-serif" font-size="178" font-weight="900" fill="#ffd100">plus</text>
+</svg>
