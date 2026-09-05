@@ -22,8 +22,9 @@ This documentation is the migration contract from `KeyserDSoze/Fantasoccer` to F
 16. [`16-team-migration.md`](16-team-migration.md) — Team/Player migration.
 17. [`17-readable-json-schema-v2.md`](17-readable-json-schema-v2.md) — readable schema-v2 policy.
 18. [`18-live-group-schema-v2.md`](18-live-group-schema-v2.md) — readable LiveGroup snapshot and helper migration.
-19. [`19-web-oauth-group-invites.md`](19-web-oauth-group-invites.md) — `fanta.plus` Google/Microsoft login, group membership gate and email-bound Admin invites.
+19. [`19-web-oauth-group-invites.md`](19-web-oauth-group-invites.md) — `fanta.plus` external login, group membership gate and email-bound Admin invites; Microsoft is active and Google remains feature-flagged off until configured.
 20. [`20-game-wrapper-composition.md`](20-game-wrapper-composition.md) — local ephemeral GameWrapper composition replacing the legacy `/Game/Get` aggregate endpoint.
+21. [`21-formation-write-side.md`](21-formation-write-side.md) — validated position-only TeamDay writes replacing legacy `Game/SaveTeam`.
 
 ## Source of truth
 
