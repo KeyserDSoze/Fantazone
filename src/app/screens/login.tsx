@@ -12,9 +12,9 @@ export function LoginScreen({ loading, error, onMicrosoftLogin }: {
       <Card width="100%" maxWidth={520} padding="$5" borderWidth={1} borderColor="$borderColor">
         <YStack gap="$4" alignItems="center">
           <Image
-            source={{ uri: '/brand/logo.png' }}
+            source={{ uri: '/brand/logo.svg' }}
             accessibilityLabel="fanta.plus"
-            style={{ width: 280, height: 180, resizeMode: 'contain' }}
+            style={{ width: 320, height: 180, resizeMode: 'contain' }}
           />
           <YStack gap="$2" alignItems="center">
             <H2 textAlign="center">Il tuo fantacalcio, senza backend.</H2>
@@ -27,7 +27,7 @@ export function LoginScreen({ loading, error, onMicrosoftLogin }: {
             {loading ? <Spinner /> : 'Accedi con Microsoft'}
           </Button>
           <Paragraph size="$2" textAlign="center" color="$color9">
-            fanta.plus richiede solo l’accesso al proprio App Folder OneDrive per leggere e salvare le impostazioni dei gruppi.
+            fanta.plus richiede l’accesso al proprio App Folder OneDrive per leggere e salvare la lista dei gruppi. Le credenziali GitHub restano sul dispositivo.
           </Paragraph>
         </YStack>
       </Card>
