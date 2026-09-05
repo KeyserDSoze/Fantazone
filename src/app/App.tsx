@@ -1,95 +1,127 @@
 import React, { useEffect, useState } from 'react'
 import { StatusBar } from 'expo-status-bar'
 import { Button, Card, Paragraph, Spinner, TamaguiProvider, Text, Theme, XStack, YStack } from 'tamagui'
-import type { AuthenticatedGroupSession, ExternalIdentity, ExternalIdentityProvider } from '@fantazone/domain'
+import type { AuthenticatedGroupSession, ExternalIdentity } from '@fantazone/domain'
 import { ensureGroupInitialized, GitHubClient } from '@fantazone/github'
 import config from './tamagui.config'
 import { GroupConnectScreen, type ConnectedGroup } from './screens/group-connect'
 import { GroupDashboardScreen } from './screens/group-dashboard'
-import { GroupLoginGateScreen } from './screens/group-login-gate'
+import { GroupPickerScreen } from './screens/group-picker'
+import { LoginScreen } from './screens/login'
 import { PlatformOverviewScreen } from './screens/platform-overview'
 import {
-  clearGroupConnection,
-  loadGroupConnection,
+  loadRepositoryToken,
   saveGroupConnection,
 } from './services/groupCredentialStorage'
 import { GroupSessionRuntime } from './services/groupSessionRuntime'
 import {
   beginExternalLogin,
-  completePendingExternalLogin,
+  completePendingMicrosoftAppLogin,
+  type MicrosoftAppSession,
 } from './services/webIdentityAuth'
+import {
+  createStoredGroup,
+  emptyUserSettings,
+  loadUserSettings,
+  saveUserSettings,
+  upsertStoredGroup,
+  type StoredGroup,
+  type UserSettings,
+} from './services/userSettingsOneDrive'
 
 type ThemeName = 'light' | 'dark'
-type ViewName = 'connect' | 'architecture'
+type ViewName = 'groups' | 'architecture'
 
 export default function App() {
   const [theme, setTheme] = useState<ThemeName>('dark')
+  const [microsoftSession, setMicrosoftSession] = useState<MicrosoftAppSession | null>(null)
+  const [settings, setSettings] = useState<UserSettings | null>(null)
   const [runtime, setRuntime] = useState<GroupSessionRuntime | null>(null)
   const [authenticatedSession, setAuthenticatedSession] = useState<AuthenticatedGroupSession | null>(null)
-  const [view, setView] = useState<ViewName>('connect')
-  const [restoring, setRestoring] = useState(true)
-  const [connectionError, setConnectionError] = useState<string | null>(null)
-  const [loginError, setLoginError] = useState<string | null>(null)
+  const [view, setView] = useState<ViewName>('groups')
+  const [addingGroup, setAddingGroup] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [loginLoading, setLoginLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     let active = true
-    async function restore() {
+    async function restoreMicrosoftCallback() {
       try {
-        const connection = await loadGroupConnection()
-        if (!connection || !active) return
-        const opened = await openGroupConnection(connection)
-        if (!active) return
-        setRuntime(opened)
-
-        try {
-          // The only identity that can survive a navigation is the identity
-          // produced by the just-completed Microsoft PKCE callback. We never
-          // trust a plain locally-stored email/subject as an authenticated user.
-          const callbackIdentity = await completePendingExternalLogin()
-          if (callbackIdentity && active) await authorizeIdentity(opened, callbackIdentity)
-        } catch (error) {
-          if (active) setLoginError(toMessage(error))
-        }
-      } catch (error) {
-        if (active) setConnectionError(toMessage(error))
+        const completed = await completePendingMicrosoftAppLogin()
+        if (!active || !completed) return
+        setMicrosoftSession(completed)
+        const remoteSettings = await loadUserSettings(completed.graphAccessToken)
+        if (active) setSettings(remoteSettings)
+      } catch (caught) {
+        if (active) setError(toMessage(caught))
       } finally {
-        if (active) setRestoring(false)
+        if (active) setLoading(false)
       }
     }
-    void restore()
+    void restoreMicrosoftCallback()
     return () => { active = false }
   }, [])
 
-  async function connectGroup(connection: ConnectedGroup) {
-    setRestoring(true)
-    setConnectionError(null)
-    setLoginError(null)
-    setAuthenticatedSession(null)
+  async function loginWithMicrosoft() {
+    setLoginLoading(true)
+    setError(null)
     try {
-      const opened = await openGroupConnection(connection)
-      await saveGroupConnection(connection)
-      setRuntime(opened)
-      setView('connect')
-    } catch (error) {
-      setRuntime(null)
-      setConnectionError(toMessage(error))
-    } finally {
-      setRestoring(false)
+      await beginExternalLogin('microsoft')
+    } catch (caught) {
+      setError(toMessage(caught))
+      setLoginLoading(false)
     }
   }
 
-  async function login(provider: ExternalIdentityProvider) {
-    if (!runtime) return
-    setLoginLoading(true)
-    setLoginError(null)
+  async function connectAndRemember(connection: ConnectedGroup) {
+    if (!microsoftSession) return
+    setLoading(true)
+    setError(null)
     try {
-      const identity = await beginExternalLogin(provider, runtime.connection.expectedEmail)
-      if (identity) await authorizeIdentity(runtime, identity)
-    } catch (error) {
-      setLoginError(toMessage(error))
+      const opened = await openGroupConnection(connection)
+      await saveGroupConnection(connection)
+      const next = upsertStoredGroup(settings ?? emptyUserSettings(), createStoredGroup({
+        name: connection.groupName,
+        repository: connection.repository.full_name,
+      }))
+      await saveUserSettings(microsoftSession.graphAccessToken, next)
+      setSettings(next)
+      await authorizeIdentity(opened, microsoftSession.identity)
+      setRuntime(opened)
+      setAddingGroup(false)
+      setView('groups')
+    } catch (caught) {
+      setError(toMessage(caught))
     } finally {
-      setLoginLoading(false)
+      setLoading(false)
+    }
+  }
+
+  async function openStoredGroup(group: StoredGroup) {
+    if (!microsoftSession) return
+    setLoading(true)
+    setError(null)
+    try {
+      const token = await loadRepositoryToken(group.repository)
+      if (!token) {
+        setAddingGroup(true)
+        throw new Error(`Questo dispositivo non ha ancora il PAT per ${group.name}. Inseriscilo una volta per collegare il repository.`)
+      }
+      const client = new GitHubClient(token)
+      await client.validateToken()
+      const repositories = await client.discoverFantazoneRepositories()
+      const repository = repositories.find(candidate => candidate.full_name.toLowerCase() === group.repository.toLowerCase())
+      if (!repository) throw new Error(`Il PAT non può aprire ${group.repository}.`)
+      const connection: ConnectedGroup = { token, repository, groupName: group.name }
+      const opened = await openGroupConnection(connection)
+      await saveGroupConnection(connection)
+      await authorizeIdentity(opened, microsoftSession.identity)
+      setRuntime(opened)
+    } catch (caught) {
+      setError(toMessage(caught))
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -97,31 +129,27 @@ export default function App() {
     const resolution = await opened.resolveIdentity(identity)
     if (resolution.status === 'authorized') {
       setAuthenticatedSession({ group: opened.group, identity, member: resolution.member })
-      setLoginError(null)
       return
     }
-    setAuthenticatedSession(null)
+    if (resolution.status === 'disabled') throw new Error(`L’utente ${identity.email} è disabilitato nel gruppo ${opened.group.name}.`)
     if (resolution.status === 'invite-email-mismatch') {
-      throw new Error(`Questo invito è per ${resolution.expectedEmail}, ma hai effettuato l’accesso come ${resolution.identity.email}.`)
+      throw new Error(`Questo invito è per ${resolution.expectedEmail}, ma hai effettuato l’accesso come ${identity.email}.`)
     }
-    if (resolution.status === 'disabled') {
-      throw new Error(`L’utente ${resolution.identity.email} è disabilitato nel gruppo ${opened.group.name}.`)
-    }
-    throw new Error(`L’email ${resolution.identity.email} non è censita in config/group.json per il gruppo ${opened.group.name}.`)
+    throw new Error(`L’email ${identity.email} non è censita nel gruppo ${opened.group.name}.`)
   }
 
-  async function logoutIdentity() {
-    setAuthenticatedSession(null)
-    setLoginError(null)
-  }
-
-  async function disconnectGroup() {
-    await clearGroupConnection()
+  function closeGroup() {
     setRuntime(null)
     setAuthenticatedSession(null)
-    setConnectionError(null)
-    setLoginError(null)
-    setView('connect')
+    setError(null)
+  }
+
+  function logoutMicrosoft() {
+    closeGroup()
+    setMicrosoftSession(null)
+    setSettings(null)
+    setAddingGroup(false)
+    setView('groups')
   }
 
   return (
@@ -129,54 +157,65 @@ export default function App() {
       <Theme name={theme}>
         <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
         <YStack flex={1} backgroundColor="$background">
-          <XStack padding="$3" justifyContent="flex-end" gap="$2">
-            {view === 'architecture' ? (
-              <Button size="$3" onPress={() => setView('connect')}>Gruppo</Button>
-            ) : (
-              <Button size="$3" onPress={() => setView('architecture')}>Come funziona</Button>
-            )}
-            <Button size="$3" onPress={() => setTheme(current => (current === 'dark' ? 'light' : 'dark'))}>
-              Tema {theme === 'dark' ? 'chiaro' : 'scuro'}
-            </Button>
-          </XStack>
+          {microsoftSession ? (
+            <XStack padding="$3" justifyContent="flex-end" gap="$2">
+              {view === 'architecture' ? (
+                <Button size="$3" onPress={() => setView('groups')}>Gruppi</Button>
+              ) : (
+                <Button size="$3" onPress={() => setView('architecture')}>Come funziona</Button>
+              )}
+              <Button size="$3" onPress={() => setTheme(current => current === 'dark' ? 'light' : 'dark')}>
+                Tema {theme === 'dark' ? 'chiaro' : 'scuro'}
+              </Button>
+            </XStack>
+          ) : null}
 
-          {restoring ? (
+          {loading ? (
             <YStack flex={1} alignItems="center" justifyContent="center" gap="$3">
               <Spinner size="large" />
-              <Text>Caricamento del gruppo...</Text>
+              <Text>Caricamento fanta.plus...</Text>
             </YStack>
+          ) : !microsoftSession ? (
+            <LoginScreen loading={loginLoading} error={error} onMicrosoftLogin={loginWithMicrosoft} />
           ) : view === 'architecture' ? (
-            <PlatformOverviewScreen onConnectGroup={() => setView('connect')} />
+            <PlatformOverviewScreen onConnectGroup={() => setView('groups')} />
           ) : runtime && authenticatedSession ? (
             <GroupDashboardScreen
               runtime={runtime}
               session={authenticatedSession}
-              onLogout={logoutIdentity}
-              onDisconnect={disconnectGroup}
+              onLogout={closeGroup}
+              onDisconnect={closeGroup}
               onExploreArchitecture={() => setView('architecture')}
             />
-          ) : runtime ? (
-            <GroupLoginGateScreen
-              connection={runtime.connection}
-              group={runtime.group}
-              onLogin={login}
-              loginLoading={loginLoading}
-              loginError={loginError}
-              onChangeGroup={disconnectGroup}
-              onExploreArchitecture={() => setView('architecture')}
+          ) : settings && (settings.groups.length === 0 || addingGroup) ? (
+            <YStack flex={1}>
+              {settings.groups.length > 0 ? (
+                <XStack padding="$3"><Button onPress={() => { setAddingGroup(false); setError(null) }}>← I miei gruppi</Button></XStack>
+              ) : null}
+              {settings.groups.length === 0 ? (
+                <Card marginHorizontal="$4" marginTop="$3" padding="$3" borderWidth={1} borderColor="$yellow8">
+                  <Paragraph>Non hai ancora gruppi. Crea il primo repository Fantazone oppure collega un gruppo esistente.</Paragraph>
+                </Card>
+              ) : null}
+              {error ? <Card margin="$4" padding="$3" borderWidth={1} borderColor="$red8"><Text>{error}</Text></Card> : null}
+              <GroupConnectScreen onConnected={connectAndRemember} onExploreDemo={() => setView('architecture')} />
+            </YStack>
+          ) : settings ? (
+            <GroupPickerScreen
+              groups={settings.groups}
+              userEmail={microsoftSession.identity.email}
+              error={error}
+              onOpen={openStoredGroup}
+              onAdd={() => { setAddingGroup(true); setError(null) }}
+              onLogout={logoutMicrosoft}
             />
-          ) : connectionError ? (
+          ) : (
             <YStack flex={1} justifyContent="center" alignItems="center" padding="$4">
-              <Card width="100%" maxWidth={560} padding="$5" borderWidth={1} borderColor="$red8">
-                <YStack gap="$3">
-                  <Text fontWeight="800" color="$red10">Impossibile aprire il gruppo</Text>
-                  <Paragraph>{connectionError}</Paragraph>
-                  <Button onPress={disconnectGroup}>Inserisci di nuovo PAT / gruppo</Button>
-                </YStack>
+              <Card padding="$4" borderWidth={1} borderColor="$red8">
+                <Paragraph>{error ?? 'Impossibile caricare le impostazioni OneDrive.'}</Paragraph>
+                <Button marginTop="$3" onPress={logoutMicrosoft}>Torna al login</Button>
               </Card>
             </YStack>
-          ) : (
-            <GroupConnectScreen onConnected={connectGroup} onExploreDemo={() => setView('architecture')} />
           )}
         </YStack>
       </Theme>
@@ -186,13 +225,10 @@ export default function App() {
 
 async function openGroupConnection(connection: ConnectedGroup): Promise<GroupSessionRuntime> {
   const client = new GitHubClient(connection.token)
-  // App releases can raise GROUP_REPOSITORY_RUNTIME_VERSION when group-owned
-  // workflows/templates change. Current groups do zero writes; outdated groups
-  // receive only Fantazone-managed artifact upgrades before the runtime opens.
   await ensureGroupInitialized(client, connection.repository, connection.groupName)
   return GroupSessionRuntime.open(connection, client)
 }
 
 function toMessage(error: unknown): string {
-  return error instanceof Error ? error.message : 'Errore durante il caricamento del gruppo.'
+  return error instanceof Error ? error.message : 'Errore imprevisto in fanta.plus.'
 }
