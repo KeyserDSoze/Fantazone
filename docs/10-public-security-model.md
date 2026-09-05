@@ -1,31 +1,48 @@
-# Public repository and credential model
+# Public source repository and credential model
 
-Fantazone is now intentionally public so its architecture can be studied. Public source code and public group repositories change what must be treated as secret.
+The **Fantazone source-code repository** is intentionally public so its architecture can be studied and presented at events. That does not mean repositories containing real fantasy-group data should be public.
 
 ## Three different identities
 
-Fantazone should keep these concepts separate:
+Fantazone keeps these concepts separate:
 
-1. **Human application identity** — Google or Microsoft account used to identify the fantasy-football participant.
-2. **GitHub repository authorization** — permission to read/write a `Fantazone.<group>` repository.
+1. **Human application identity** — Google or Microsoft identity proving who the person is.
+2. **GitHub repository authorization** — the PAT/credential that determines which `Fantazone.<group>` repositories can be opened.
 3. **Auction session identity** — ephemeral participant/host identity used inside a WebRTC auction session.
 
-Conflating these identities would make later migration away from a shared PAT significantly harder.
+Repository selection happens before application login. After Google/Microsoft returns an email, Fantazone resolves that email against the selected group's `GroupRaw.u` list.
+
+## Group repositories are private by default
+
+`GroupRaw` intentionally preserves the Fantasoccer JSON contract and therefore includes users and email addresses. New `Fantazone.<group>` repositories are created **private by default**.
+
+A public group repository is appropriate only for an explicit demo using synthetic/non-personal data. Never publish a real group merely to make read access easier: Git history can retain data even after a later file deletion.
+
+The public teaching repository and a private runtime group repository serve different purposes:
+
+```text
+KeyserDSoze/Fantazone       public source / educational project
+Fantazone.<real-group>      private runtime data by default
+Fantazone.Demo-*            may be public only with synthetic data
+```
 
 ## V1 shared PAT
 
 V1 accepts a PAT because it makes the repository-per-group experiment easy to demonstrate. It is a bearer secret and must be treated as such.
 
-The invite payload currently travels in a URL fragment. This is preferable to a query string for the prototype because fragments are not sent as part of the HTTP request and are less likely to appear in ordinary server/referrer logs. The payload is only encoded, however, and is readable by anyone who receives the link.
+The invite payload currently travels in a URL fragment. Fragments are not sent as part of the HTTP request, but the payload is only encoded and is readable by anyone who receives the link.
 
-## Recommended demo token
+Use a fine-grained PAT scoped to only the group repositories required by that installation. Rotate/revoke it when membership changes or after a public workshop where a demo credential was shared.
+
+## Event/demo token
 
 For a public workshop/event:
 
+- create a dedicated synthetic `Fantazone.Demo-*` repository;
+- put no real participant emails/profile data in it;
 - create a dedicated fine-grained PAT;
-- scope it to a dedicated `Fantazone.Demo-*` repository or the minimum demo repositories;
-- grant only the repository permissions the current flows need;
-- do not grant organization administration or unrelated repository access;
+- scope it only to the demo repository/repositories;
+- grant only the repository permissions the demo flows need;
 - rotate/revoke it after the event if participants received it.
 
 ## Target authorization
@@ -39,17 +56,15 @@ interface RepositoryCredentialProvider {
 }
 ```
 
-The implementation can then move from a stored PAT to GitHub App/OAuth installation authorization while persistence/business code continues to depend only on the repository adapter.
+The implementation can move from a stored PAT to GitHub App/OAuth installation authorization while persistence/business code continues to depend only on the repository adapter.
 
-## Public data vs private data
+## Data classification
 
-A public group repository should contain only information participants accept as public. Email addresses, private profile information and secrets should not be committed merely because the old backend model stored them.
+Preserving a legacy JSON contract does not make its contents public. Repository visibility is part of the security boundary.
 
-As Fantasoccer models are migrated, each field should be classified as:
+- canonical match/league data can be published where intentionally public;
+- `GroupRaw.u` contains membership/email data and requires a private real-group repository;
+- local UI state may stay device-local;
+- PATs, OAuth tokens and other bearer credentials are never committed.
 
-- public canonical game data;
-- public participant display data;
-- local-only/private client data;
-- secret credential material (never committed).
-
-This classification should be completed before full group/user parity is considered done.
+If a future product requirement needs public standings while keeping the exact private Group JSON, publish a separate derived public projection rather than altering or partially redacting the canonical legacy GroupRaw file.

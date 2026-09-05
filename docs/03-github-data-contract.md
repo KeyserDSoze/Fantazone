@@ -4,64 +4,78 @@
 
 A fantasy group maps to one repository whose logical name begins with `Fantazone.`.
 
-Example:
-
 ```text
 Fantazone.AmiciDelBar
 Fantazone.Ufficio2026
 ```
 
-The client discovers all repositories visible to the supplied token, filters names beginning with `Fantazone.`, and lets the user choose if more than one is available.
+The PAT is resolved **before application login**. The client validates the PAT, discovers the visible `Fantazone.*` repositories and lets the user choose the group repository. Only after a group has been selected does Fantazone start Google/Microsoft login.
 
-When creating/opening a named group the client first tries the exact normalized repository name `Fantazone.<groupName>`.
+## Onboarding and login order
 
-## V1 onboarding
+The order is intentionally different from legacy Fantasoccer:
 
-Create/join flow:
+1. enter/import the GitHub PAT;
+2. validate the PAT against GitHub;
+3. discover accessible `Fantazone.*` repositories;
+4. choose exactly which group repository to enter;
+5. persist the selected group connection locally;
+6. start Google or Microsoft login;
+7. take the authenticated email and look it up in **that selected group's JSON**;
+8. continue only if the user exists in the selected group and its role allows access.
 
-1. user signs in to Fantazone with Google or Microsoft;
-2. user enters a GitHub PAT;
-3. client validates the token with GitHub;
-4. client lists repositories accessible to that PAT;
-5. client resolves one or more `Fantazone.*` repositories;
-6. if the selected repository is uninitialized, the client writes the Fantazone manifest/layout;
-7. the selected group and PAT are stored locally.
+The login provider proves the external identity. Membership and Fantazone roles come from the selected group's repository, not from a central backend and not from the PAT owner.
 
-PAT permissions must be the minimum required for the group repository. The architecture must not assume the token can administer unrelated repositories.
+## Preserve the legacy JSON contracts
+
+Moving from Azure/blob storage to GitHub is a storage migration, not a domain-schema redesign.
+
+Canonical files must continue to store the same compact raw JSON contracts used by Fantasoccer. Examples:
+
+- Group: `GroupRaw` (`i`, `n`, `l`, `u`, `b`)
+- Calendar: `CalendarRaw`
+- Ranking: `RankRaw`
+- future Team/Live/Formation/etc. files: preserve their legacy raw contracts too
+
+Application code maps raw compact JSON to readable TypeScript domain objects exactly as before. GitHub paths, SHA handling and caching belong outside the domain model.
+
+### Group JSON
+
+`config/group.json` is the old `GroupRaw` payload itself:
+
+```json
+{
+  "i": "amici",
+  "n": "Amici",
+  "l": [],
+  "u": [],
+  "b": []
+}
+```
+
+`u` is the canonical group membership list. Do not maintain a second `members.json` copy. Repositories created by an early Fantazone prototype that already contain `members/members.json` may keep that historical file, but runtime code must not use it as another source of truth.
 
 ## Invite links and QR codes
 
 Do **not** place a raw PAT in a normal query string: URLs can leak through browser history, analytics, proxy logs and referrers.
 
-V1 sharing should use a URL fragment, which is not sent to the static web host:
+V1 sharing uses a URL fragment, which is not sent to the static web host:
 
 ```text
 https://fantazone.example/#join=<base64url-payload>
 ```
 
-Payload:
+The imported connection selects the repository first. It does **not** authenticate a Fantazone user. Google/Microsoft login still follows and membership is checked against `config/group.json`.
 
-```json
-{
-  "v": 1,
-  "group": "AmiciDelBar",
-  "repository": "Fantazone.AmiciDelBar",
-  "pat": "github_pat_..."
-}
-```
+The fragment is transport obfuscation, not encryption. V1 shared PATs remain bearer credentials and should be fine-grained, repository-scoped and rotatable.
 
-On import the app must immediately persist the credential and remove the fragment from the visible URL with `history.replaceState`. QR codes contain the same invite URL. This is still a shared bearer credential; token rotation remains necessary when membership changes.
-
-## Proposed group repository layout
+## Group repository layout
 
 ```text
 fantazone.json
+manifest.json
 config/
-  group.json
-  competitions.json
-  rules.json
-members/
-  members.json
+  group.json                 # exact legacy GroupRaw JSON
 data/
   serie-a/
     seasons/<season>/calendar.json
@@ -72,10 +86,12 @@ data/
     player-images/
     odds/
   groups/
+    seasons/<season>/leagues/<league>/calendar.json
+    seasons/<season>/leagues/<league>/ranking.json
+    seasons/<season>/leagues/<league>/days/<day>/ranking.json
     seasons/<season>/teams/
     seasons/<season>/formations/
     seasons/<season>/results/
-    seasons/<season>/rankings/
     market/
     hall-of-fame.json
 commands/
@@ -85,8 +101,9 @@ events/
 realtime/
   auctions/<auctionId>/signaling/
 assets/
-manifest.json
 ```
+
+Paths may evolve as old repositories are migrated, but the JSON payload for a migrated legacy repository type must not be silently replaced by a new normalized schema.
 
 ## Manifest
 
@@ -96,7 +113,7 @@ Clients poll one small file instead of every resource:
 {
   "schemaVersion": 1,
   "revision": 42,
-  "updatedAt": "2026-09-04T21:00:00Z",
+  "updatedAt": "2026-09-05T06:00:00Z",
   "season": 2026,
   "liveDay": 3
 }
@@ -106,16 +123,10 @@ Use `ETag`/conditional GET and the Git blob SHA. When `revision` changes, reload
 
 ## Concurrency
 
-Never have many clients repeatedly overwrite one large JSON document.
+For legacy aggregate JSON files, preserve their payload while using GitHub SHA as the optimistic concurrency version. Where a new high-contention feature needs commands/events, append-only files may be added around the canonical legacy projection instead of changing the projection's JSON shape.
 
-Prefer:
-
-- append-only command/event files with UUID paths;
-- one file per team/day/entity;
-- optimistic updates using the current GitHub content SHA;
-- retry/rebase after `409 Conflict` only when the operation is safe/idempotent;
-- Actions or deterministic reducers for derived aggregate files.
+Never silently overwrite a stale SHA. Reducer/Action outputs should be deterministic and write the same compact raw contracts consumed by the app.
 
 ## Static content
 
-Images and other immutable content formerly in Azure Blob Storage should live under `assets/` or a dedicated content repository and be loaded using raw GitHub URLs pinned to an appropriate branch/revision. Large/binary growth must be monitored separately from JSON state.
+Images and other immutable content formerly in Azure Blob Storage should live under `assets/` or a dedicated content repository and be loaded using GitHub/static URLs. Large/binary growth is monitored separately from JSON state.
