@@ -15,6 +15,7 @@ import {
   GitHubLiveGroupRepository,
   GitHubRankRepository,
   GitHubRealCalendarRepository,
+  GitHubSerieAVoteRepository,
   GitHubTeamRepository,
   type GitHubRepo,
   type GroupRepositoryTarget,
@@ -23,6 +24,7 @@ import {
 } from '@fantazone/github'
 import { GroupFormationWriter } from './groupFormationWriter'
 import { GroupGameComposer } from './groupGameComposer'
+import { GroupLiveComposer } from './groupLiveComposer'
 
 export type GroupConnection = {
   token: string
@@ -57,9 +59,13 @@ export class GroupSessionRuntime {
   readonly calendarRepository: GitHubCalendarRepository
   readonly rankRepository: GitHubRankRepository
   readonly teamRepository: GitHubTeamRepository
+  /** Legacy persisted cache adapter kept temporarily for migration compatibility. Prefer liveComposer. */
   readonly liveGroupRepository: GitHubLiveGroupRepository
   readonly realCalendarRepository: GitHubRealCalendarRepository
+  readonly liveVoteRepository: GitHubSerieAVoteRepository
+  readonly officialVoteRepository: GitHubSerieAVoteRepository
   readonly gameComposer: GroupGameComposer
+  readonly liveComposer: GroupLiveComposer
   readonly formationWriter: GroupFormationWriter
 
   private currentGroup: Group | null = null
@@ -82,11 +88,23 @@ export class GroupSessionRuntime {
     this.teamRepository = new GitHubTeamRepository(this.store, this.target, this.rankRepository)
     this.liveGroupRepository = new GitHubLiveGroupRepository(this.store, this.target)
     this.realCalendarRepository = new GitHubRealCalendarRepository(this.store, this.platformTarget)
+    this.liveVoteRepository = new GitHubSerieAVoteRepository(this.store, this.platformTarget, 'live')
+    this.officialVoteRepository = new GitHubSerieAVoteRepository(this.store, this.platformTarget, 'official')
     this.gameComposer = new GroupGameComposer(
       () => this.group,
       this.calendarRepository,
       this.teamRepository,
       this.realCalendarRepository,
+      options.now,
+    )
+    this.liveComposer = new GroupLiveComposer(
+      () => this.group,
+      this.calendarRepository,
+      this.rankRepository,
+      this.teamRepository,
+      this.realCalendarRepository,
+      this.liveVoteRepository,
+      this.officialVoteRepository,
       options.now,
     )
     this.formationWriter = new GroupFormationWriter(
