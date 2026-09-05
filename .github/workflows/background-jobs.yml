@@ -8,6 +8,7 @@ on:
         required: true
         type: choice
         options:
+          - bootstrap-serie-a
           - ingest-serie-a
           - ingest-master-data
           - rebuild-player-stats
