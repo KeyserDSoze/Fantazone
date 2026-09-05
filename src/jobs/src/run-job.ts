@@ -3,6 +3,7 @@ import { recalculateGroupAll, recalculateGroupDay } from './groupRecalculation'
 import { ingestFinalVotes } from './officialVoteIngestion'
 import { ingestLiveVotes } from './liveVoteIngestion'
 import { ingestMasterData } from './masterDataIngestion'
+import { ingestPlayerOdds } from './playerOddsIngestion'
 import { rebuildPlayerStats } from './playerStatsRebuild'
 import { ingestSerieACalendar } from './serieAIngestion'
 
@@ -68,6 +69,22 @@ const migrated: Partial<Record<JobName, (context: JobContext) => Promise<void>>>
       `Voti live: ${result.incomingPlayers} giocatori ricevuti; ` +
       `${result.written ? `snapshot aggiornato in ${result.path}` : 'nessun aggiornamento persistito'}.`,
     )
+  },
+  'ingest-player-odds': async context => {
+    const result = await ingestPlayerOdds({ season: context.season })
+    if (result.skipped) {
+      console.log(`Player odds ${result.season}: skip=${result.reason ?? 'unknown'}.`)
+      for (const source of result.sources.filter(source => !source.ok)) {
+        console.warn(`${source.source}: ${source.error ?? 'provider error'}`)
+      }
+      return
+    }
+    console.log(
+      `Player odds ${result.season}/${result.serieADay}: ${result.snapshot?.players.length ?? 0} giocatori salvati in ${result.path}.`,
+    )
+    for (const source of result.sources) {
+      console.log(`${source.source}: ${source.ok ? `${source.observations} osservazioni` : `errore: ${source.error}`}`)
+    }
   },
   'set-next-formations': async context => {
     const roots = groupJobRoots()
