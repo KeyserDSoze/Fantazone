@@ -15,15 +15,18 @@ This is the living backlog. `[ ]` means not yet migrated; `[~]` means scaffolded
 
 ## Identity and groups
 
-- [ ] Port Google login.
-- [ ] Port Microsoft login.
-- [~] PAT validation and `Fantazone.*` repository discovery.
+- [ ] Port Google login after group selection.
+- [ ] Port Microsoft login after group selection.
+- [~] PAT validation and `Fantazone.*` repository discovery before login.
 - [~] group/repository initialization contract.
+- [~] preserve legacy `GroupRaw` JSON (`i/n/l/u/b`) directly in `config/group.json`.
+- [~] group-scoped membership lookup by authenticated email.
 - [~] secure native PAT persistence and V1 web credential persistence policy.
 - [~] invite link + QR generation/import (fragment codec/import + link sharing implemented; QR pending).
 - [~] group switch when one PAT can access multiple `Fantazone.*` repositories (discovery/choice implemented; full switch UX pending).
 - [~] connected-group dashboard / repository status surface.
-- [ ] group members/roles parity.
+- [~] group members/roles domain parity; administration UI still pending.
+- [ ] authenticated GroupSession provider: repository + Group + external identity + UserOfAGroup.
 
 ## UI parity
 
@@ -49,6 +52,7 @@ This is the living backlog. `[ ]` means not yet migrated; `[~]` means scaffolded
 
 ## Service/domain migrations
 
+- [~] Group raw contract, mappings/helpers and GitHub read/write repository.
 - [~] Calendar raw contract, mappings/helpers and GitHub read repository.
 - [~] Ranking raw contract, mappings/helpers, season/daily reads and Action-compatible writes.
 - [ ] Teams.
@@ -63,13 +67,13 @@ This is the living backlog. `[ ]` means not yet migrated; `[~]` means scaffolded
 
 - [ ] Replace every `buildApiUrl(...)` call.
 - [ ] Remove backend JWT exchange dependency from repository operations.
-- [~] Replace `rystem.repository.client` storage endpoints with GitHub repository adapters (JSON store + Calendar + Ranking implemented; remaining services pending).
+- [~] Replace `rystem.repository.client` storage endpoints with GitHub repository adapters (Group + Calendar + Ranking implemented; remaining services pending).
 - [ ] Replace Azure/static storage URLs with repository content URLs.
 - [~] Add SHA-aware in-memory JSON cache.
 - [ ] Add HTTP ETag / conditional GET support.
 - [~] Add optimistic-concurrency conflict handling.
 - [~] Support unauthenticated reads of public canonical repository data.
-- [ ] Introduce append-only commands/events where concurrent edits are likely.
+- [ ] Introduce append-only commands/events only where a high-contention feature needs them; keep canonical legacy JSON projections unchanged.
 
 ## Background jobs
 
@@ -110,4 +114,4 @@ This is the living backlog. `[ ]` means not yet migrated; `[~]` means scaffolded
 
 ## Definition of done
 
-A feature is migrated only when the corresponding Fantasoccer screen/service behavior is represented by tests or fixtures and the old HTTP/SignalR/storage dependency is gone.
+A feature is migrated only when the corresponding Fantasoccer screen/service behavior is represented by tests or fixtures, its persisted raw JSON contract is preserved unless an explicit migration says otherwise, and the old HTTP/SignalR/storage dependency is gone.
