@@ -26,7 +26,7 @@ This is the living backlog. `[ ]` means not yet migrated; `[~]` means scaffolded
 - [~] group switch when one PAT can access multiple `Fantazone.*` repositories (discovery/choice/change-group flow implemented; full navigation integration pending).
 - [~] connected-group repository/login-gate surface.
 - [~] group members/roles domain parity; administration UI still pending.
-- [~] GroupSession runtime: one selected repository + Group + shared Group/Calendar/Ranking repositories; external identity provider wiring pending.
+- [~] GroupSession runtime: one selected repository + shared Group/Calendar/Ranking/Team repositories; external identity provider wiring pending.
 - [ ] authenticated application session after Google/Microsoft membership resolution.
 
 ## UI parity
@@ -40,7 +40,7 @@ This is the living backlog. `[ ]` means not yet migrated; `[~]` means scaffolded
 - [ ] Ranking/luck screen (domain + GitHub season/daily repository migrated; UI/luck calculation still pending).
 - [ ] Live Serie A/live votes.
 - [ ] Players/statistics.
-- [ ] Teams.
+- [ ] Teams screen (domain + GitHub season/day repository migrated; UI still pending).
 - [ ] Market.
 - [ ] Trades.
 - [ ] Cards administration.
@@ -56,7 +56,7 @@ This is the living backlog. `[ ]` means not yet migrated; `[~]` means scaffolded
 - [x] Group raw contract, mappings/helpers and GitHub read/write repository.
 - [~] Calendar raw contract, mappings/helpers and GitHub read repository.
 - [~] Ranking raw contract, mappings/helpers, season/daily reads and Action-compatible writes.
-- [ ] Teams.
+- [~] Team/Player raw contracts, helpers, season/day reads+writes and Ranking-derived money behavior.
 - [ ] Game/day.
 - [ ] Formations.
 - [ ] Live group/results.
@@ -68,7 +68,7 @@ This is the living backlog. `[ ]` means not yet migrated; `[~]` means scaffolded
 
 - [ ] Replace every `buildApiUrl(...)` call.
 - [~] Remove backend JWT exchange dependency from application identity (new runtime has no JWT/AppIdentity dependency; OAuth adapter still pending).
-- [~] Replace `rystem.repository.client` storage endpoints with GitHub repository adapters (Group + Calendar + Ranking implemented; remaining services pending).
+- [~] Replace `rystem.repository.client` storage endpoints with GitHub repository adapters (Group + Calendar + Ranking + Team implemented; remaining services pending).
 - [ ] Replace Azure/static storage URLs with repository content URLs.
 - [~] Add SHA-aware in-memory JSON cache.
 - [ ] Add HTTP ETag / conditional GET support.

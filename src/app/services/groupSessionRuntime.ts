@@ -10,6 +10,7 @@ import {
   GitHubGroupRepository,
   GitHubJsonStore,
   GitHubRankRepository,
+  GitHubTeamRepository,
   type GitHubRepo,
   type GroupRepositoryTarget,
   type RepositoryContentClient,
@@ -28,19 +29,13 @@ export class GroupDocumentUnavailableError extends Error {
   }
 }
 
-/**
- * Composition root for one selected Fantazone group.
- *
- * A runtime owns exactly one GitHub client/store and all repositories for that
- * group. Screens never construct GitHub clients and never carry PAT/SHA details.
- * External identity is deliberately resolved only after this runtime exists.
- */
 export class GroupSessionRuntime {
   readonly target: GroupRepositoryTarget
   readonly store: GitHubJsonStore
   readonly groupRepository: GitHubGroupRepository
   readonly calendarRepository: GitHubCalendarRepository
   readonly rankRepository: GitHubRankRepository
+  readonly teamRepository: GitHubTeamRepository
 
   private currentGroup: Group | null = null
 
@@ -57,6 +52,7 @@ export class GroupSessionRuntime {
     this.groupRepository = new GitHubGroupRepository(this.store, this.target)
     this.calendarRepository = new GitHubCalendarRepository(this.store, this.target)
     this.rankRepository = new GitHubRankRepository(this.store, this.target)
+    this.teamRepository = new GitHubTeamRepository(this.store, this.target, this.rankRepository)
   }
 
   static async open(
@@ -80,10 +76,6 @@ export class GroupSessionRuntime {
     return group
   }
 
-  /**
-   * Re-read GroupRaw.u before authorization by default so a role/member change
-   * committed after app startup is honored at the login boundary.
-   */
   async resolveIdentity(
     identity: ExternalIdentity,
     options: { refreshMembership?: boolean } = {},
