@@ -1,21 +1,14 @@
 import {
   CalendarHelper,
   enhanceCalendar,
-  mapRawCalendarToCalendar,
   type Calendar,
   type CalendarDay,
   type CalendarGame,
-  type CalendarRaw,
   type EnhancedCalendar,
 } from '@fantazone/domain'
 import { GitHubJsonStore, type RepositoryJsonReadOptions } from './repositoryStore'
 import type { GroupRepositoryTarget } from './repositoryTarget'
 
-/**
- * GitHub-backed replacement for the read side of Fantasoccer CalendarService.
- * The group id disappears from the key because the selected repository already
- * represents exactly one Fantazone group.
- */
 export class GitHubCalendarRepository {
   constructor(
     private readonly store: GitHubJsonStore,
@@ -27,11 +20,8 @@ export class GitHubCalendarRepository {
     season: number,
     options: RepositoryJsonReadOptions = {},
   ): Promise<Calendar | null> {
-    const snapshot = await this.store.tryReadJson<CalendarRaw>(
-      this.location(leagueId, season),
-      options,
-    )
-    return snapshot ? mapRawCalendarToCalendar(snapshot.value) : null
+    const snapshot = await this.store.tryReadJson<Calendar>(this.location(leagueId, season), options)
+    return snapshot?.value ?? null
   }
 
   async getEnhancedCalendar(

@@ -2,14 +2,11 @@ import {
   enhanceRank,
   enhanceRankedTeam,
   enhanceRankWithTeamPositions,
-  mapRankToRawRank,
-  mapRawRankToRank,
   RankHelper,
   type EnhancedRank,
   type EnhancedRankedTeam,
   type Rank,
   type RankedTeam,
-  type RankRaw,
 } from '@fantazone/domain'
 import {
   GitHubJsonStore,
@@ -24,20 +21,11 @@ export class GitHubRankRepository {
     private readonly repository: GroupRepositoryTarget,
   ) {}
 
-  async getRank(
-    leagueId: string,
-    season: number,
-    options: RepositoryJsonReadOptions = {},
-  ): Promise<Rank | null> {
+  async getRank(leagueId: string, season: number, options: RepositoryJsonReadOptions = {}): Promise<Rank | null> {
     return this.readRank(seasonRankDocumentPath(leagueId, season), options)
   }
 
-  async getDailyRank(
-    leagueId: string,
-    season: number,
-    day: number,
-    options: RepositoryJsonReadOptions = {},
-  ): Promise<Rank | null> {
+  async getDailyRank(leagueId: string, season: number, day: number, options: RepositoryJsonReadOptions = {}): Promise<Rank | null> {
     return this.readRank(dailyRankDocumentPath(leagueId, season, day), options)
   }
 
@@ -46,22 +34,12 @@ export class GitHubRankRepository {
     return rank ? enhanceRank(rank) : null
   }
 
-  async getTeamRanking(
-    leagueId: string,
-    season: number,
-    roundId: string,
-    owner: string,
-  ): Promise<RankedTeam | null> {
+  async getTeamRanking(leagueId: string, season: number, roundId: string, owner: string): Promise<RankedTeam | null> {
     const rank = await this.getRank(leagueId, season)
     return rank ? RankHelper.getRankedTeamByOwner(rank, roundId, owner) : null
   }
 
-  async getEnhancedTeamRanking(
-    leagueId: string,
-    season: number,
-    roundId: string,
-    owner: string,
-  ): Promise<EnhancedRankedTeam | null> {
+  async getEnhancedTeamRanking(leagueId: string, season: number, roundId: string, owner: string): Promise<EnhancedRankedTeam | null> {
     const rank = await this.getRank(leagueId, season)
     if (!rank) return null
     const team = RankHelper.getRankedTeamByOwner(rank, roundId, owner)
@@ -80,20 +58,12 @@ export class GitHubRankRepository {
     return rank ? RankHelper.getTeamsSortedByPoints(rank, roundId) : []
   }
 
-  async getEnhancedRoundRanking(
-    leagueId: string,
-    season: number,
-    roundId: string,
-  ): Promise<EnhancedRankedTeam[]> {
+  async getEnhancedRoundRanking(leagueId: string, season: number, roundId: string): Promise<EnhancedRankedTeam[]> {
     const rank = await this.getRank(leagueId, season)
     return rank ? (enhanceRankWithTeamPositions(rank)[roundId] ?? []) : []
   }
 
-  async getRoundRankingByValueAssets(
-    leagueId: string,
-    season: number,
-    roundId: string,
-  ): Promise<RankedTeam[]> {
+  async getRoundRankingByValueAssets(leagueId: string, season: number, roundId: string): Promise<RankedTeam[]> {
     const rank = await this.getRank(leagueId, season)
     return rank ? RankHelper.getTeamsSortedByValueAssets(rank, roundId) : []
   }
@@ -119,12 +89,7 @@ export class GitHubRankRepository {
     message = 'rank: update season ranking',
     options: RepositoryJsonWriteOptions = {},
   ): Promise<string> {
-    const result = await this.store.writeJson(
-      this.location(seasonRankDocumentPath(leagueId, season)),
-      mapRankToRawRank(rank),
-      message,
-      options,
-    )
+    const result = await this.store.writeJson(this.location(seasonRankDocumentPath(leagueId, season)), rank, message, options)
     return result.sha
   }
 
@@ -136,18 +101,13 @@ export class GitHubRankRepository {
     message = `rank: update day ${day}`,
     options: RepositoryJsonWriteOptions = {},
   ): Promise<string> {
-    const result = await this.store.writeJson(
-      this.location(dailyRankDocumentPath(leagueId, season, day)),
-      mapRankToRawRank(rank),
-      message,
-      options,
-    )
+    const result = await this.store.writeJson(this.location(dailyRankDocumentPath(leagueId, season, day)), rank, message, options)
     return result.sha
   }
 
   private async readRank(path: string, options: RepositoryJsonReadOptions): Promise<Rank | null> {
-    const snapshot = await this.store.tryReadJson<RankRaw>(this.location(path), options)
-    return snapshot ? mapRawRankToRank(snapshot.value) : null
+    const snapshot = await this.store.tryReadJson<Rank>(this.location(path), options)
+    return snapshot?.value ?? null
   }
 
   private location(path: string) {

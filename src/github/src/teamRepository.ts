@@ -1,15 +1,12 @@
 import {
   TeamHelper,
   enhanceTeam,
-  mapRawTeamToTeam,
-  mapTeamToRawTeam,
   type EnhancedTeam,
   type LeagueSetting,
   type Player,
   type Rank,
   type Role,
   type Team,
-  type TeamRaw,
 } from '@fantazone/domain'
 import { GitHubJsonStore, type RepositoryJsonReadOptions, type RepositoryJsonWriteOptions } from './repositoryStore'
 import type { GroupRepositoryTarget } from './repositoryTarget'
@@ -78,12 +75,7 @@ export class GitHubTeamRepository {
     message = 'chore: update season team',
     options: RepositoryJsonWriteOptions = {},
   ): Promise<string> {
-    const snapshot = await this.store.writeJson(
-      this.location(seasonTeamDocumentPath(basketId, season, email)),
-      mapTeamToRawTeam(team),
-      message,
-      options,
-    )
+    const snapshot = await this.store.writeJson(this.location(seasonTeamDocumentPath(basketId, season, email)), team, message, options)
     return snapshot.sha
   }
 
@@ -96,18 +88,13 @@ export class GitHubTeamRepository {
     message = 'chore: update day team',
     options: RepositoryJsonWriteOptions = {},
   ): Promise<string> {
-    const snapshot = await this.store.writeJson(
-      this.location(dayTeamDocumentPath(basketId, season, day, email)),
-      mapTeamToRawTeam(team),
-      message,
-      options,
-    )
+    const snapshot = await this.store.writeJson(this.location(dayTeamDocumentPath(basketId, season, day, email)), team, message, options)
     return snapshot.sha
   }
 
   private async readTeam(path: string, options: RepositoryJsonReadOptions): Promise<Team | null> {
-    const snapshot = await this.store.tryReadJson<TeamRaw>(this.location(path), options)
-    return snapshot ? mapRawTeamToTeam(snapshot.value) : null
+    const snapshot = await this.store.tryReadJson<Team>(this.location(path), options)
+    return snapshot?.value ?? null
   }
 
   private async enhanceWithOptionalRank(

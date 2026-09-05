@@ -6,44 +6,6 @@ export enum GameResultType {
   Tie = 2,
 }
 
-export interface PointRaw {
-  v: number
-  d: boolean
-  g: boolean
-  o: boolean
-}
-
-export interface GameResultRaw {
-  h: PointRaw
-  a: PointRaw
-  i: boolean
-  g: number
-  l: number
-}
-
-export interface CalendarGameRaw {
-  i: string
-  n: number
-  h: string
-  o: string
-  a: string
-  u: string
-  r?: GameResultRaw | null
-}
-
-export interface DayRaw {
-  a: number
-  n: number
-  g: CalendarGameRaw[]
-}
-
-export type CalendarRoundsRaw = Record<string, DayRaw[]>
-
-export interface CalendarRaw {
-  y: number
-  r: CalendarRoundsRaw
-}
-
 export interface Point {
   value: number
   defensiveBonus: boolean
@@ -82,6 +44,7 @@ export interface CalendarDay {
 
 export type CalendarRounds = Record<string, CalendarDay[]>
 
+/** Persisted directly as calendar.json in schema v2. */
 export interface Calendar {
   year: number
   rounds: CalendarRounds
@@ -92,58 +55,6 @@ export interface EnhancedCalendar extends Calendar {
   allDays: CalendarDay[]
   allGames: CalendarGame[]
   pendingGames: CalendarGame[]
-}
-
-export const mapRawPointToPoint = (raw: PointRaw): Point => ({
-  value: raw?.v ?? 0,
-  defensiveBonus: raw?.d ?? false,
-  goodPeople: raw?.g ?? false,
-  ownGoal: raw?.o ?? false,
-})
-
-export const mapRawGameResultToGameResult = (
-  raw: GameResultRaw | null | undefined,
-): GameResult | null => {
-  if (!raw) return null
-
-  return {
-    home: mapRawPointToPoint(raw.h),
-    away: mapRawPointToPoint(raw.a),
-    isCancelled: raw.i ?? false,
-    homeGoals: raw.g ?? 0,
-    awayGoals: raw.l ?? 0,
-  }
-}
-
-export const mapRawCalendarGameToCalendarGame = (raw: CalendarGameRaw): CalendarGame => ({
-  id: raw.i,
-  number: raw.n,
-  home: raw.h,
-  homeOwner: raw.o,
-  away: raw.a,
-  awayOwner: raw.u,
-  result: mapRawGameResultToGameResult(raw.r),
-})
-
-export const mapRawDayToDay = (raw: DayRaw): CalendarDay => ({
-  serieADay: raw.a,
-  number: raw.n,
-  games: raw.g?.map(mapRawCalendarGameToCalendarGame) ?? [],
-})
-
-export const mapRawCalendarToCalendar = (raw: CalendarRaw): Calendar => {
-  const rounds: CalendarRounds = {}
-
-  if (raw?.r) {
-    for (const [roundKey, days] of Object.entries(raw.r)) {
-      rounds[roundKey] = days?.map(mapRawDayToDay) ?? []
-    }
-  }
-
-  return {
-    year: raw?.y ?? new Date().getFullYear(),
-    rounds,
-  }
 }
 
 export class GameResultHelper {

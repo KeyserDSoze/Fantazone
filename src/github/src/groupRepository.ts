@@ -1,12 +1,9 @@
 import {
   GroupHelper,
-  mapGroupToRaw,
-  mapRawGroupToGroup,
   type AnnualLeague,
   type Basket,
   type FantazoneManifest,
   type Group,
-  type GroupRaw,
   type League,
   type UserOfAGroup,
 } from '@fantazone/domain'
@@ -14,7 +11,7 @@ import { GitHubClient, normalizeGroupName, type GitHubRepo } from './githubClien
 import { GitHubJsonStore, type RepositoryJsonReadOptions } from './repositoryStore'
 import type { GroupRepositoryTarget } from './repositoryTarget'
 
-export const FANTAZONE_SCHEMA_VERSION = 1
+export const FANTAZONE_SCHEMA_VERSION = 2
 export const GROUP_DOCUMENT_PATH = 'config/group.json'
 
 export type InitializedGroup = {
@@ -43,10 +40,7 @@ export interface GroupSetupClient {
   ): Promise<{ sha: string }>
 }
 
-/**
- * GitHub replacement for Fantasoccer's old Group repository.
- * The JSON payload deliberately stays the original compact GroupRaw contract.
- */
+/** GitHub-backed Group repository. Schema v2 stores the readable Group model directly. */
 export class GitHubGroupRepository {
   constructor(
     private readonly store: GitHubJsonStore,
@@ -59,13 +53,8 @@ export class GitHubGroupRepository {
     return decodeStoredGroup(snapshot.value, this.repository)
   }
 
-  async getRawGroup(options: RepositoryJsonReadOptions = {}): Promise<GroupRaw | null> {
-    const group = await this.getGroup(options)
-    return group ? mapGroupToRaw(group) : null
-  }
-
   async writeGroup(group: Group, message = 'chore: update group'): Promise<string> {
-    const snapshot = await this.store.writeJson(this.location(), mapGroupToRaw(group), message)
+    const snapshot = await this.store.writeJson(this.location(), group, message)
     return snapshot.sha
   }
 
@@ -152,12 +141,12 @@ export async function ensureGroupInitialized(
   }
 
   const normalized = normalizeGroupName(groupName) || repository.name.replace(/^Fantazone\./i, '')
-  const initialGroup: GroupRaw = {
-    i: normalized,
-    n: groupName,
-    l: [],
-    u: [],
-    b: [],
+  const initialGroup: Group = {
+    id: normalized,
+    name: groupName,
+    leagues: [],
+    users: [],
+    baskets: [],
   }
 
   const files: Array<{ path: string; value: unknown }> = [
@@ -187,21 +176,21 @@ export async function ensureGroupInitialized(
   }
 }
 
-export function isGroupRaw(value: unknown): value is GroupRaw {
+export function isGroupDocument(value: unknown): value is Group {
   if (!value || typeof value !== 'object') return false
-  const raw = value as Partial<GroupRaw>
-  return typeof raw.i === 'string' && typeof raw.n === 'string' &&
-    Array.isArray(raw.l) && Array.isArray(raw.u) && Array.isArray(raw.b)
+  const group = value as Partial<Group>
+  return typeof group.id === 'string' && typeof group.name === 'string' &&
+    Array.isArray(group.leagues) && Array.isArray(group.users) && Array.isArray(group.baskets)
 }
 
 export function isLegacyGroupBootstrap(value: unknown): value is LegacyGroupBootstrap {
   if (!value || typeof value !== 'object') return false
   const bootstrap = value as Partial<LegacyGroupBootstrap>
-  return typeof bootstrap.name === 'string' && !('i' in bootstrap)
+  return typeof bootstrap.name === 'string' && !('id' in bootstrap)
 }
 
 export function decodeStoredGroup(value: unknown, repository: GroupRepositoryTarget): Group {
-  if (isGroupRaw(value)) return mapRawGroupToGroup(value)
+  if (isGroupDocument(value)) return value
   if (isLegacyGroupBootstrap(value)) {
     return {
       id: repository.repo.replace(/^Fantazone\./i, '') || normalizeGroupName(value.name),
@@ -211,5 +200,5 @@ export function decodeStoredGroup(value: unknown, repository: GroupRepositoryTar
       baskets: [],
     }
   }
-  throw new Error(`Unsupported group JSON in ${repository.owner}/${repository.repo}/${GROUP_DOCUMENT_PATH}`)
+  throw new Error(`Unsupported group JSON schema in ${repository.owner}/${repository.repo}/${GROUP_DOCUMENT_PATH}. Fantazone schema v2 requires readable property names.`)
 }

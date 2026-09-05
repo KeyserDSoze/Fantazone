@@ -3,9 +3,6 @@ import type {
   AnnualTeam,
   League,
   LeagueSetting,
-  LeagueSettingRaw,
-  VoteLeagueSetting,
-  VoteLeagueSettingRaw,
 } from './group'
 
 export const cloneLeagueSetting = (setting: LeagueSetting): LeagueSetting =>
@@ -89,67 +86,3 @@ export const isLeagueSettingValid = (setting: LeagueSetting): boolean => {
     Number.isInteger(votes.injury) &&
     Number.isInteger(votes.manOfTheMatch))
 }
-
-const roleNames: Record<string, string> = {
-  '-1': 'Undefined',
-  '0': 'GoalKeeper',
-  '1': 'Defensor',
-  '2': 'Midfielder',
-  '3': 'Forward',
-}
-
-export const serializeVoteSettings = (
-  votes: Partial<Record<number, VoteLeagueSetting>>,
-): Record<string, VoteLeagueSettingRaw> => {
-  const rawVotes: Record<string, VoteLeagueSettingRaw> = {}
-
-  for (const [role, setting] of Object.entries(votes)) {
-    if (!setting) continue
-    rawVotes[roleNames[role] || role] = {
-      g: setting.goal,
-      p: setting.penalty,
-      s: setting.sufferedGoal,
-      d: setting.stoppedPenalty,
-      w: setting.wrongedPenalty,
-      o: setting.ownGoal,
-      a: setting.assist,
-      y: setting.yellowCard,
-      r: setting.redCard,
-      j: setting.injury,
-      m: setting.manOfTheMatch,
-    }
-  }
-
-  return rawVotes
-}
-
-export const preserveRawLeagueSetting = (
-  setting: LeagueSetting,
-  votes: Record<string, VoteLeagueSettingRaw>,
-): LeagueSettingRaw => ({
-  ...setting.raw,
-  v: votes,
-  frm: setting.formation,
-  lt: setting.typeSettings,
-  s: setting.startingMoney,
-  d: setting.delayedDay,
-  c: setting.cancelledDay,
-  g: setting.pointForFirstGoal,
-  t: setting.pointForNextGoal,
-  o: setting.pointForOwnGoal,
-  f: setting.differencePointForOwnGoal,
-  p: setting.pointInHome,
-  a: setting.pointForVictory,
-  b: setting.pointForDefeat,
-  h: setting.pointForDraw,
-  '3': setting.pointForStrongDefense,
-  '4': setting.pointForStrongDefense4,
-  '5': setting.pointForStrongDefense5,
-  gp: setting.pointForGoodPeople,
-  l: setting.pointForCleanSheet,
-  m: setting.moneyForGoal,
-  n: setting.moneyForSufferedGoal,
-  q: setting.randomAuction,
-  vp: setting.rankWithValuePoints,
-  mk: setting.market,
-})

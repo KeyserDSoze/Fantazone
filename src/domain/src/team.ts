@@ -1,11 +1,6 @@
 import { type LeagueSetting, Role } from './group'
 import type { Rank } from './rank'
-import {
-  mapRawRealTeamToRealTeam,
-  mapRealTeamToRawRealTeam,
-  type RealTeam,
-  type RealTeamRaw,
-} from './realTeam'
+import type { RealTeam } from './realTeam'
 
 export enum PlayerInTeamStatus {
   Active = 0,
@@ -32,21 +27,6 @@ export enum FantaSoccerRole {
   Tribune = 11,
 }
 
-export interface RealPlayerRaw {
-  n: string
-  t: RealTeamRaw
-  r: Role
-  a: boolean
-  vh: boolean
-}
-
-export interface PlayerRaw extends RealPlayerRaw {
-  p: number
-  rv: number
-  s: PlayerInTeamStatus
-  k: FantaSoccerRole
-}
-
 export interface RealPlayer {
   name: string
   team: RealTeam
@@ -62,13 +42,6 @@ export interface Player extends RealPlayer {
   position: FantaSoccerRole
 }
 
-export interface TeamKeyRaw {
-  g: string
-  y: number
-  b: string
-  e: string
-}
-
 export interface TeamKey {
   group: string
   year: number
@@ -76,32 +49,19 @@ export interface TeamKey {
   email: string
 }
 
-export interface TeamDayKeyRaw extends TeamKeyRaw {
-  d: number
-}
-
 export interface TeamDayKey extends TeamKey {
   day: number
 }
 
-export interface TeamRaw {
-  n: string
-  o: string
-  a?: string[] | null
-  p: PlayerRaw[]
-  m: number
-  d?: string | null
-}
-
+/** Persisted directly as a team JSON document in schema v2. */
 export interface Team {
-  /** Original compact payload retained so null/omitted optional fields survive rewrites. */
-  raw?: TeamRaw
   name: string
   owner: string
   additionalOwners: string[]
   players: Player[]
   moneyFromRank: number
-  lastUpdate: Date | null
+  /** ISO-8601 timestamp. Keeping it serializable removes the old hydrate/dehydrate mapper. */
+  lastUpdate: string | null
 }
 
 export interface EnhancedTeam extends Team {
@@ -153,58 +113,6 @@ export const FantaSoccerRoleHelper = {
   },
 }
 
-export const mapRawRealPlayerToRealPlayer = (raw: RealPlayerRaw): RealPlayer => ({
-  name: raw.n,
-  team: mapRawRealTeamToRealTeam(raw.t),
-  role: raw.r,
-  isActive: raw.a,
-  visible: raw.vh,
-})
-
-export const mapRawPlayerToPlayer = (raw: PlayerRaw): Player => ({
-  ...mapRawRealPlayerToRealPlayer(raw),
-  price: raw.p,
-  revenue: raw.rv,
-  status: raw.s,
-  position: raw.k,
-})
-
-export const mapPlayerToRawPlayer = (player: Player): PlayerRaw => ({
-  n: player.name,
-  t: mapRealTeamToRawRealTeam(player.team),
-  r: player.role,
-  a: player.isActive,
-  vh: player.visible,
-  p: player.price,
-  rv: player.revenue,
-  s: player.status,
-  k: player.position,
-})
-
-export const mapRawTeamKeyToTeamKey = (raw: TeamKeyRaw): TeamKey => ({
-  group: raw.g,
-  year: raw.y,
-  basketId: raw.b,
-  email: raw.e,
-})
-
-export const mapTeamKeyToRawTeamKey = (key: TeamKey): TeamKeyRaw => ({
-  g: key.group,
-  y: key.year,
-  b: key.basketId,
-  e: key.email,
-})
-
-export const mapRawTeamDayKeyToTeamDayKey = (raw: TeamDayKeyRaw): TeamDayKey => ({
-  ...mapRawTeamKeyToTeamKey(raw),
-  day: raw.d,
-})
-
-export const mapTeamDayKeyToRawTeamDayKey = (key: TeamDayKey): TeamDayKeyRaw => ({
-  ...mapTeamKeyToRawTeamKey(key),
-  d: key.day,
-})
-
 export class TeamKeyHelper {
   static create(group: string, year: number, basketId: string, email: string): TeamKey {
     return { group, year, basketId, email }
@@ -221,44 +129,6 @@ export class TeamKeyHelper {
   static toDayString(key: TeamDayKey): string {
     return `${key.group}-${key.year}-${key.basketId}-${key.day}-${key.email}`
   }
-}
-
-export const mapRawTeamToTeam = (raw: TeamRaw): Team => ({
-  raw: cloneRaw(raw),
-  name: raw?.n ?? '',
-  owner: raw?.o ?? '',
-  additionalOwners: raw?.a ?? [],
-  players: raw?.p?.map(mapRawPlayerToPlayer) ?? [],
-  moneyFromRank: raw?.m ?? 0,
-  lastUpdate: raw?.d ? new Date(raw.d) : null,
-})
-
-export function mapTeamToRawTeam(team: Team): TeamRaw {
-  const result: TeamRaw = {
-    ...(team.raw ? cloneRaw(team.raw) : {}),
-    n: team.name,
-    o: team.owner,
-    p: team.players.map(mapPlayerToRawPlayer),
-    m: team.moneyFromRank,
-  }
-
-  if (team.additionalOwners.length > 0) {
-    result.a = [...team.additionalOwners]
-  } else if (team.raw && Object.prototype.hasOwnProperty.call(team.raw, 'a')) {
-    result.a = team.raw.a === null ? null : []
-  } else {
-    result.a = []
-  }
-
-  if (team.lastUpdate) {
-    result.d = team.lastUpdate.toISOString()
-  } else if (team.raw && Object.prototype.hasOwnProperty.call(team.raw, 'd')) {
-    result.d = team.raw.d ?? null
-  } else {
-    delete result.d
-  }
-
-  return result
 }
 
 export class PlayerHelper {
@@ -321,6 +191,10 @@ export class TeamHelper {
     return TeamHelper.getCost(team)
   }
 
+  static getLastUpdateDate(team: Team): Date | null {
+    return team.lastUpdate ? new Date(team.lastUpdate) : null
+  }
+
   static calculateMoneyFromRank(team: Team, rank: Rank | null | undefined, settings?: LeagueSetting): number {
     if (!settings || !rank || (settings.moneyForGoal === 0 && settings.moneyForSufferedGoal === 0)) return 0
     for (const roundTeams of Object.values(rank.rounds)) {
@@ -354,7 +228,3 @@ export class TeamHelper {
 }
 
 export const enhanceTeam = (team: Team): EnhancedTeam => TeamHelper.enhance(team)
-
-function cloneRaw<T>(value: T): T {
-  return JSON.parse(JSON.stringify(value)) as T
-}
