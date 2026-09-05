@@ -151,8 +151,8 @@ test('missing or unavailable catalog does not modify existing static images', as
   assert.deepEqual(await readFile(existingPath), before)
 })
 
-test('builds public canonical WebP URL from legacy player key', () => {
-  assert.equal(playerImagePublicPath("Nicolò D'Ambrosio"), '/images/players/nicolodambrosio.webp')
+test('builds public canonical WebP URL from the exact legacy ASCII-only player key', () => {
+  assert.equal(playerImagePublicPath("Nicolò D'Ambrosio"), '/images/players/nicoldambrosio.webp')
   assert.equal(isWebp(WEBP), true)
 })
 
