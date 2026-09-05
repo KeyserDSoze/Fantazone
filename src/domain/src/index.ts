@@ -1,5 +1,6 @@
 export * from './calendar'
 export * from './contracts'
+export * from './game'
 export * from './group'
 export * from './groupAdmin'
 export * from './liveGroup'

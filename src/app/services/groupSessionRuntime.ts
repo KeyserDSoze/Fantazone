@@ -19,6 +19,7 @@ import {
   type GroupRepositoryTarget,
   type RepositoryContentClient,
 } from '@fantazone/github'
+import { GroupGameComposer } from './groupGameComposer'
 
 export type GroupConnection = {
   token: string
@@ -43,6 +44,7 @@ export class GroupSessionRuntime {
   readonly rankRepository: GitHubRankRepository
   readonly teamRepository: GitHubTeamRepository
   readonly liveGroupRepository: GitHubLiveGroupRepository
+  readonly gameComposer: GroupGameComposer
 
   private currentGroup: Group | null = null
 
@@ -61,6 +63,7 @@ export class GroupSessionRuntime {
     this.rankRepository = new GitHubRankRepository(this.store, this.target)
     this.teamRepository = new GitHubTeamRepository(this.store, this.target, this.rankRepository)
     this.liveGroupRepository = new GitHubLiveGroupRepository(this.store, this.target)
+    this.gameComposer = new GroupGameComposer(() => this.group, this.calendarRepository, this.teamRepository)
   }
 
   static async open(

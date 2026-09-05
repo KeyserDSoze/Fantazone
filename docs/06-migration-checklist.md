@@ -16,9 +16,10 @@
 - [x] Microsoft web login after group selection through authorization-code + PKCE; `common` authority by default and `https://fanta.plus` redirect.
 - [~] PAT validation/repository discovery before login.
 - [x] readable Group initialization and `group.users` membership resolution.
+- [x] first-admin bootstrap for newly created/legacy-empty groups.
 - [x] email-bound Admin/SuperAdmin group invitation flow: census member first, then share repository/PAT/expected-email link.
 - [~] secure credential persistence and group switching; V1 web PAT still uses local storage.
-- [x] GroupSession shares Group/Calendar/Ranking/Team/LiveGroup repositories.
+- [x] GroupSession shares Group/Calendar/Ranking/Team/LiveGroup repositories and local Game composition.
 - [x] authenticated web session after provider email + selected-group membership resolution.
 - [ ] native Google/Microsoft OAuth redirects/deep links for iOS/Android.
 
@@ -39,7 +40,7 @@
 - [x] Ranking.
 - [x] Team/Player.
 - [x] LiveGroup readable snapshot/helpers/repository.
-- [ ] Game/day composition.
+- [~] Game/day: local GameWrapper composition from Group + Calendar + TeamDay/Team implemented; RealCalendar timing, live enrichment, score calculation and save/formation flows pending.
 - [ ] Formations.
 - [ ] Real players / Serie A.
 - [ ] Statistics/chances/votes.
@@ -47,7 +48,7 @@
 
 ## Infrastructure backlog
 
-- [ ] Replace every legacy `buildApiUrl(...)` responsibility with local composition/GitHub/Actions/WebRTC.
+- [ ] Replace every legacy `buildApiUrl(...)` responsibility with local composition/GitHub/Actions/WebRTC; `/Game/Get` read aggregate is removed conceptually by `GroupGameComposer`.
 - [x] remove backend JWT/AppIdentity dependency from the web login boundary.
 - [~] replace `rystem.repository.client` with GitHub adapters.
 - [ ] replace Azure/static URLs.
