@@ -1,3 +1,4 @@
+import { ingestMasterData } from './masterDataIngestion'
 import { ingestSerieACalendar } from './serieAIngestion'
 
 type JobName =
@@ -25,6 +26,14 @@ const migrated: Partial<Record<JobName, (context: JobContext) => Promise<void>>>
     const result = await ingestSerieACalendar(context)
     console.log(
       `Serie A calendar ${result.calendar.year}: ${result.calendar.days.length} giornate salvate in ${result.path}`,
+    )
+  },
+  'ingest-master-data': async context => {
+    const result = await ingestMasterData(context)
+    console.log(
+      `Serie A master data ${result.players.year}: ${result.teams.teams.length} squadre, ${result.players.players.length} giocatori; ` +
+      `${result.reconciliation.addedKeys.length} nuovi, ${result.reconciliation.inactiveKeys.length} inattivi, ` +
+      `${result.reconciliation.transferredKeys.length} trasferimenti.`,
     )
   },
 }

@@ -1,6 +1,8 @@
 import { type LeagueSetting, Role } from './group'
 import type { Rank } from './rank'
-import type { RealTeam } from './realTeam'
+import type { RealPlayer } from './realPlayer'
+
+export type { RealPlayer } from './realPlayer'
 
 export enum PlayerInTeamStatus {
   Active = 0,
@@ -25,14 +27,6 @@ export enum FantaSoccerRole {
   FirstBackupForward = 9,
   SecondBackupForward = 10,
   Tribune = 11,
-}
-
-export interface RealPlayer {
-  name: string
-  team: RealTeam
-  role: Role
-  isActive: boolean
-  visible: boolean
 }
 
 export interface Player extends RealPlayer {
