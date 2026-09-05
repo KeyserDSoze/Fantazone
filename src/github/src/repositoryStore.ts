@@ -71,39 +71,24 @@ type CacheEntry = {
 
 /**
  * Small JSON persistence boundary used by screens, domain services and Actions.
- *
- * It intentionally hides the GitHub Contents API details from product code:
- * - parsed JSON values are cached by owner/repo/path/ref;
- * - the Git blob SHA acts as an optimistic concurrency token;
- * - writes update the cache with GitHub's newly returned SHA;
- * - 409/stale-SHA style responses become a domain-specific conflict error.
+ * Git blob SHA is the optimistic-concurrency token for every mutable document.
  */
 export class GitHubJsonStore {
   private readonly cache = new Map<string, CacheEntry>()
 
   constructor(private readonly client: RepositoryContentClient) {}
 
-  async readJson<T>(
-    location: RepositoryJsonLocation,
-    options: RepositoryJsonReadOptions = {},
-  ): Promise<RepositoryJsonSnapshot<T>> {
+  async readJson<T>(location: RepositoryJsonLocation, options: RepositoryJsonReadOptions = {}): Promise<RepositoryJsonSnapshot<T>> {
     const snapshot = await this.tryReadJson<T>(location, options)
     if (!snapshot) throw new RepositoryJsonNotFoundError(location)
     return snapshot
   }
 
-  async tryReadJson<T>(
-    location: RepositoryJsonLocation,
-    options: RepositoryJsonReadOptions = {},
-  ): Promise<RepositoryJsonSnapshot<T> | null> {
+  async tryReadJson<T>(location: RepositoryJsonLocation, options: RepositoryJsonReadOptions = {}): Promise<RepositoryJsonSnapshot<T> | null> {
     const key = cacheKey(location)
     const cached = this.cache.get(key)
     if (cached && !options.refresh) {
-      return {
-        value: cloneJson(cached.value as T),
-        sha: cached.sha,
-        fromCache: true,
-      }
+      return { value: cloneJson(cached.value as T), sha: cached.sha, fromCache: true }
     }
 
     const content = await this.client.tryGetContent(location.owner, location.repo, location.path, location.ref)
@@ -123,12 +108,7 @@ export class GitHubJsonStore {
     return { value: cloneJson(value), sha: content.sha, fromCache: false }
   }
 
-  async writeJson<T>(
-    location: RepositoryJsonLocation,
-    value: T,
-    message: string,
-    options: RepositoryJsonWriteOptions = {},
-  ): Promise<RepositoryJsonSnapshot<T>> {
+  async writeJson<T>(location: RepositoryJsonLocation, value: T, message: string, options: RepositoryJsonWriteOptions = {}): Promise<RepositoryJsonSnapshot<T>> {
     const writeRef = options.branch ?? location.ref
     const writeLocation = writeRef ? { ...location, ref: writeRef } : location
     const key = cacheKey(writeLocation)
@@ -137,21 +117,10 @@ export class GitHubJsonStore {
 
     if (options.createOnly) {
       if (expectedSha) throw new RepositoryWriteConflictError(writeLocation, 409)
-      const current = await this.client.tryGetContent(
-        writeLocation.owner,
-        writeLocation.repo,
-        writeLocation.path,
-        writeLocation.ref,
-      )
+      const current = await this.client.tryGetContent(writeLocation.owner, writeLocation.repo, writeLocation.path, writeLocation.ref)
       if (current) throw new RepositoryWriteConflictError(writeLocation, 409)
     } else if (!expectedSha) {
-      // Fetch a fresh version before an update so the write is never a blind overwrite.
-      const current = await this.client.tryGetContent(
-        writeLocation.owner,
-        writeLocation.repo,
-        writeLocation.path,
-        writeLocation.ref,
-      )
+      const current = await this.client.tryGetContent(writeLocation.owner, writeLocation.repo, writeLocation.path, writeLocation.ref)
       expectedSha = current?.sha
     }
 
@@ -168,7 +137,11 @@ export class GitHubJsonStore {
       this.cache.set(key, { value: cloneJson(value), sha: result.sha })
       return { value: cloneJson(value), sha: result.sha, fromCache: false }
     } catch (error) {
-      if (error instanceof GitHubApiError && (error.status === 409 || (error.status === 422 && Boolean(expectedSha)))) {
+      const conflict = error instanceof GitHubApiError && (
+        error.status === 409 ||
+        (error.status === 422 && (Boolean(expectedSha) || options.createOnly === true))
+      )
+      if (conflict) {
         this.cache.delete(key)
         throw new RepositoryWriteConflictError(writeLocation, error.status, error)
       }
@@ -186,9 +159,7 @@ export class GitHubJsonStore {
 
   invalidateRepository(owner: string, repo: string): void {
     const prefix = `${owner.toLowerCase()}/${repo.toLowerCase()}/`
-    for (const key of this.cache.keys()) {
-      if (key.startsWith(prefix)) this.cache.delete(key)
-    }
+    for (const key of this.cache.keys()) if (key.startsWith(prefix)) this.cache.delete(key)
   }
 }
 

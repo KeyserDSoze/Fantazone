@@ -7,5 +7,7 @@ export const MICROSOFT_HOME_TENANT_ID = '302135a8-33c7-448c-87cb-cc71fe0136c9'
 export const MICROSOFT_AUTHORITY_TENANT = process.env.EXPO_PUBLIC_MICROSOFT_AUTHORITY_TENANT?.trim() || 'common'
 export const MICROSOFT_REDIRECT_URI = PUBLIC_WEB_ORIGIN
 
-/** Google web OAuth client id. Configure it as a GitHub Actions variable for the Pages build. */
+/** Google is implemented but intentionally disabled until its web OAuth client is configured. */
 export const GOOGLE_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID?.trim() || ''
+export const GOOGLE_LOGIN_ENABLED =
+  process.env.EXPO_PUBLIC_GOOGLE_LOGIN_ENABLED?.trim().toLowerCase() === 'true' && Boolean(GOOGLE_CLIENT_ID)

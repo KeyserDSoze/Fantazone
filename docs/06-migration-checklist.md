@@ -7,19 +7,19 @@
 - [x] Initialize Fantazone repository and documentation.
 - [~] Expo/React Native/Tamagui app.
 - [~] shared TypeScript domain/GitHub client/Actions runner.
-- [~] GitHub Pages at canonical `https://fanta.plus`.
+- [x] GitHub Pages production deployment at canonical `https://fanta.plus` with automatic deploy from `main`.
 - [x] readable JSON schema v2; no single-letter persistence for migrated features.
 
 ## Identity and groups
 
-- [x] Google web login after group selection through Google Identity Services; Pages build expects `EXPO_PUBLIC_GOOGLE_CLIENT_ID`.
+- [~] Google web adapter implemented but product login intentionally disabled until its web client is configured (`EXPO_PUBLIC_GOOGLE_LOGIN_ENABLED=false`).
 - [x] Microsoft web login after group selection through authorization-code + PKCE; `common` authority by default and `https://fanta.plus` redirect.
 - [~] PAT validation/repository discovery before login.
 - [x] readable Group initialization and `group.users` membership resolution.
 - [x] first-admin bootstrap for newly created/legacy-empty groups.
 - [x] email-bound Admin/SuperAdmin group invitation flow: census member first, then share repository/PAT/expected-email link.
 - [~] secure credential persistence and group switching; V1 web PAT still uses local storage.
-- [x] GroupSession shares Group/Calendar/Ranking/Team/LiveGroup repositories and local Game composition.
+- [x] GroupSession shares Group/Calendar/Ranking/Team/LiveGroup repositories plus local Game composition and formation write-side.
 - [x] authenticated web session after provider email + selected-group membership resolution.
 - [ ] native Google/Microsoft OAuth redirects/deep links for iOS/Android.
 
@@ -40,19 +40,19 @@
 - [x] Ranking.
 - [x] Team/Player.
 - [x] LiveGroup readable snapshot/helpers/repository.
-- [~] Game/day: local GameWrapper composition from Group + Calendar + TeamDay/Team implemented; RealCalendar timing, live enrichment, score calculation and save/formation flows pending.
-- [ ] Formations.
+- [~] Game/day: local GameWrapper composition and validated TeamDay formation persistence implemented; RealCalendar timing, live enrichment and score calculation still pending.
+- [~] Formations: authoritative validation + owner/SuperAdmin authorization + TeamDay GitHub write implemented; field-editing UI and chance/stat-based optimal formation still pending.
 - [ ] Real players / Serie A.
 - [ ] Statistics/chances/votes.
 - [ ] Market persistence/commands.
 
 ## Infrastructure backlog
 
-- [ ] Replace every legacy `buildApiUrl(...)` responsibility with local composition/GitHub/Actions/WebRTC; `/Game/Get` read aggregate is removed conceptually by `GroupGameComposer`.
+- [ ] Replace every legacy `buildApiUrl(...)` responsibility with local composition/GitHub/Actions/WebRTC; `/Game/Get` and `Game/SaveTeam` are removed conceptually by `GroupGameComposer` + `GroupFormationWriter`.
 - [x] remove backend JWT/AppIdentity dependency from the web login boundary.
 - [~] replace `rystem.repository.client` with GitHub adapters.
 - [ ] replace Azure/static URLs.
-- [~] SHA cache + optimistic concurrency.
+- [x] SHA cache + optimistic concurrency for migrated mutable JSON, including create-only races.
 - [ ] ETag conditional reads.
 - [ ] one-time schema-v1→v2 migration tooling if any compact runtime repositories exist.
 - [ ] strict per-user write authorization beyond the client UI (repository rules, signed commands or trusted command service) if required.

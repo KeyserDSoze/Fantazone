@@ -8,7 +8,12 @@ import {
   type Role,
   type Team,
 } from '@fantazone/domain'
-import { GitHubJsonStore, type RepositoryJsonReadOptions, type RepositoryJsonWriteOptions } from './repositoryStore'
+import {
+  GitHubJsonStore,
+  type RepositoryJsonReadOptions,
+  type RepositoryJsonSnapshot,
+  type RepositoryJsonWriteOptions,
+} from './repositoryStore'
 import type { GroupRepositoryTarget } from './repositoryTarget'
 import type { GitHubRankRepository } from './rankRepository'
 
@@ -20,30 +25,27 @@ export class GitHubTeamRepository {
   ) {}
 
   async getTeam(basketId: string, season: number, email: string, options: RepositoryJsonReadOptions = {}): Promise<Team | null> {
-    return this.readTeam(seasonTeamDocumentPath(basketId, season, email), options)
+    return (await this.getTeamSnapshot(basketId, season, email, options))?.value ?? null
   }
 
   async getTeamDay(basketId: string, season: number, day: number, email: string, options: RepositoryJsonReadOptions = {}): Promise<Team | null> {
-    return this.readTeam(dayTeamDocumentPath(basketId, season, day, email), options)
+    return (await this.getTeamDaySnapshot(basketId, season, day, email, options))?.value ?? null
   }
 
-  async getEnhancedTeam(
-    basketId: string,
-    season: number,
-    email: string,
-    context: { leagueId?: string; leagueSettings?: LeagueSetting } = {},
-  ): Promise<EnhancedTeam | null> {
+  async getTeamSnapshot(basketId: string, season: number, email: string, options: RepositoryJsonReadOptions = {}): Promise<RepositoryJsonSnapshot<Team> | null> {
+    return this.store.tryReadJson<Team>(this.location(seasonTeamDocumentPath(basketId, season, email)), options)
+  }
+
+  async getTeamDaySnapshot(basketId: string, season: number, day: number, email: string, options: RepositoryJsonReadOptions = {}): Promise<RepositoryJsonSnapshot<Team> | null> {
+    return this.store.tryReadJson<Team>(this.location(dayTeamDocumentPath(basketId, season, day, email)), options)
+  }
+
+  async getEnhancedTeam(basketId: string, season: number, email: string, context: { leagueId?: string; leagueSettings?: LeagueSetting } = {}): Promise<EnhancedTeam | null> {
     const team = await this.getTeam(basketId, season, email)
     return team ? this.enhanceWithOptionalRank(team, season, context) : null
   }
 
-  async getEnhancedTeamDay(
-    basketId: string,
-    season: number,
-    day: number,
-    email: string,
-    context: { leagueId?: string; leagueSettings?: LeagueSetting } = {},
-  ): Promise<EnhancedTeam | null> {
+  async getEnhancedTeamDay(basketId: string, season: number, day: number, email: string, context: { leagueId?: string; leagueSettings?: LeagueSetting } = {}): Promise<EnhancedTeam | null> {
     const team = await this.getTeamDay(basketId, season, day, email)
     return team ? this.enhanceWithOptionalRank(team, season, context) : null
   }
@@ -67,41 +69,15 @@ export class GitHubTeamRepository {
     return teams.filter((team): team is Team => team !== null)
   }
 
-  async writeTeam(
-    basketId: string,
-    season: number,
-    email: string,
-    team: Team,
-    message = 'chore: update season team',
-    options: RepositoryJsonWriteOptions = {},
-  ): Promise<string> {
-    const snapshot = await this.store.writeJson(this.location(seasonTeamDocumentPath(basketId, season, email)), team, message, options)
-    return snapshot.sha
+  async writeTeam(basketId: string, season: number, email: string, team: Team, message = 'chore: update season team', options: RepositoryJsonWriteOptions = {}): Promise<string> {
+    return (await this.store.writeJson(this.location(seasonTeamDocumentPath(basketId, season, email)), team, message, options)).sha
   }
 
-  async writeTeamDay(
-    basketId: string,
-    season: number,
-    day: number,
-    email: string,
-    team: Team,
-    message = 'chore: update day team',
-    options: RepositoryJsonWriteOptions = {},
-  ): Promise<string> {
-    const snapshot = await this.store.writeJson(this.location(dayTeamDocumentPath(basketId, season, day, email)), team, message, options)
-    return snapshot.sha
+  async writeTeamDay(basketId: string, season: number, day: number, email: string, team: Team, message = 'chore: update day team', options: RepositoryJsonWriteOptions = {}): Promise<string> {
+    return (await this.store.writeJson(this.location(dayTeamDocumentPath(basketId, season, day, email)), team, message, options)).sha
   }
 
-  private async readTeam(path: string, options: RepositoryJsonReadOptions): Promise<Team | null> {
-    const snapshot = await this.store.tryReadJson<Team>(this.location(path), options)
-    return snapshot?.value ?? null
-  }
-
-  private async enhanceWithOptionalRank(
-    team: Team,
-    season: number,
-    context: { leagueId?: string; leagueSettings?: LeagueSetting },
-  ): Promise<EnhancedTeam> {
+  private async enhanceWithOptionalRank(team: Team, season: number, context: { leagueId?: string; leagueSettings?: LeagueSetting }): Promise<EnhancedTeam> {
     if ((!team.moneyFromRank || team.moneyFromRank === 0) && context.leagueId && context.leagueSettings && this.rankRepository) {
       const rank: Rank | null = await this.rankRepository.getRank(context.leagueId, season)
       const moneyFromRank = TeamHelper.calculateMoneyFromRank(team, rank, context.leagueSettings)

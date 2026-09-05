@@ -6,8 +6,8 @@ Legend: **GitHub R/W**, **Local**, **Action**, **WebRTC**.
 
 | Fantasoccer service | Fantazone replacement |
 |---|---|
-| `appIdentityService` | remove central AppIdentity repository; Google/Microsoft proves identity after group selection, membership/roles come from selected `Group.users`, UI selection stays local |
-| `authService` | provider-native Google/Microsoft login on `fanta.plus`; no Fantasoccer JWT exchange |
+| `appIdentityService` | remove central AppIdentity repository; Microsoft/Google proves identity after group selection, membership/roles come from selected `Group.users`, UI selection stays local |
+| `authService` | provider-native login on `fanta.plus`; Microsoft active now, Google adapter feature-flagged off until its client is configured; no Fantasoccer JWT exchange |
 | `tokenStorageService` | separate social session and GitHub group credential storage |
 | `groupService` | GitHub R/W readable `Group` at `config/group.json` |
 | `calendarService` | GitHub R readable `Calendar`; generation/rebuild Local/Action |
@@ -18,10 +18,10 @@ Legend: **GitHub R/W**, **Local**, **Action**, **WebRTC**.
 | `serieAService` | GitHub R global calendar/ranking/live data; ingestion Action |
 | `statPlayerService` | GitHub R derived statistics; Action/Local reducers |
 | `teamService` | GitHub R/W readable `Team` season/day documents; optional moneyFromRank from selected Rank repository |
-| `formationService` | GitHub R/W readable team/day/formation documents; commands only when contention requires them |
+| `formationService` | Local shared formation rules + GitHub R/W `TeamDay`; no separate formation document. Chance/stat-driven automatic formation will migrate after those inputs exist |
 | `teamCalculatorService` | shared Local deterministic calculation |
-| `gameService` | compose group/global GitHub inputs + Local scoring + GitHub formation/team writes |
-| `liveGroupService` | rebuild as readable schema-v2 LiveGroup projection + Local helpers |
+| `gameService` | `GroupGameComposer` for local reads + `GroupFormationWriter` for validated position-only TeamDay writes; later Local scoring/live enrichment |
+| `liveGroupService` | readable schema-v2 LiveGroup projection + Local helpers |
 | `leagueManagerService` | Local algorithms + manual/scheduled Actions |
 | `recalculationService` | group Action `workflow_dispatch` using shared reducers |
 | `marketService` | readable command/event JSON + Local validation + Action reducer |
@@ -37,9 +37,10 @@ Legend: **GitHub R/W**, **Local**, **Action**, **WebRTC**.
 1. enumerate behavior and callers;
 2. define the readable domain document using full property names;
 3. preserve deterministic business behavior, not old serialization abbreviations;
-4. add GitHub adapter/Action reducer around that same document type;
-5. add representative tests;
-6. migrate UI callers;
-7. remove old HTTP/SignalR/repository-framework dependencies.
+4. prefer narrow commands over accepting mutable aggregate JSON from the UI;
+5. add GitHub adapter/Action reducer around the same document types;
+6. add representative tests and concurrency tests for writes;
+7. migrate UI callers;
+8. remove old HTTP/SignalR/repository-framework dependencies.
 
 Do not introduce `*Raw` mirror types merely to reproduce historical one-letter JSON names.

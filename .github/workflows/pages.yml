@@ -40,6 +40,7 @@ jobs:
       - name: Export Expo web application
         env:
           EXPO_PUBLIC_GOOGLE_CLIENT_ID: ${{ vars.EXPO_PUBLIC_GOOGLE_CLIENT_ID }}
+          EXPO_PUBLIC_GOOGLE_LOGIN_ENABLED: ${{ vars.EXPO_PUBLIC_GOOGLE_LOGIN_ENABLED || 'false' }}
           EXPO_PUBLIC_MICROSOFT_AUTHORITY_TENANT: ${{ vars.EXPO_PUBLIC_MICROSOFT_AUTHORITY_TENANT || 'common' }}
         run: npm run export:web --workspace=fantazone-app
 
