@@ -6,6 +6,7 @@ import {
   calculateDefinitiveDay,
   calculateRankFromCalendar,
   getCurrentSeasonYear,
+  progressLeagueCalendar,
   type Calendar,
   type Group,
   type LeagueSetting,
@@ -35,6 +36,7 @@ export type GroupRecalculationOptions = {
 export type GroupLeagueRecalculationResult = {
   leagueId: string
   calculatedSerieADays: number[]
+  progressionChanged: boolean
   calendarPath: string
   rankPath: string
   dailyRankPaths: string[]
@@ -114,23 +116,32 @@ async function recalculateGroup(
       if (changed) calculatedSerieADays.push(serieADay)
     }
 
-    if (calculatedSerieADays.length === 0 && options.requiredDay == null) continue
+    const excludedRounds = excludedRankRounds(leagueType)
+    const rank = calculateRankFromCalendar(calendar, settings, excludedRounds)
+    const progression = progressLeagueCalendar({ calendar, rank, leagueType })
+    if (calculatedSerieADays.length === 0 && !progression.changed && options.requiredDay == null) continue
 
-    const rank = calculateRankFromCalendar(calendar, settings, excludedRankRounds(leagueType))
-    await writeJson(calendarPath, calendar)
+    await writeJson(calendarPath, progression.calendar)
     const rankPath = resolve(options.groupRepoRoot, seasonRankDocumentPath(league.id, season))
     await writeJson(rankPath, rank)
     const dailyRankPaths = await rebuildDailyRanks(
       options.groupRepoRoot,
       league.id,
       season,
-      calendar,
+      progression.calendar,
       settings,
       leagueType,
       rank,
     )
 
-    results.push({ leagueId: league.id, calculatedSerieADays, calendarPath, rankPath, dailyRankPaths })
+    results.push({
+      leagueId: league.id,
+      calculatedSerieADays,
+      progressionChanged: progression.changed,
+      calendarPath,
+      rankPath,
+      dailyRankPaths,
+    })
   }
 
   return { season, leagues: results }
