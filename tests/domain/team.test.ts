@@ -6,38 +6,39 @@ import {
   PlayerInTeamStatus,
   Role,
   TeamHelper,
-  mapRawTeamToTeam,
-  mapTeamToRawTeam,
   type LeagueSetting,
   type Rank,
-  type TeamRaw,
+  type Team,
 } from '../../src/domain/src/index'
 
-const raw: TeamRaw = {
-  n: 'Alpha',
-  o: 'ale@example.com',
-  a: null,
-  p: [
-    { n: 'Portiere', t: { n: 'Roma', a: 'ROM' }, r: Role.GoalKeeper, a: true, vh: true, p: 12, rv: 12, s: PlayerInTeamStatus.Active, k: FantaSoccerRole.GoalKeeper },
-    { n: 'Attaccante', t: { n: 'Milan', a: 'MIL' }, r: Role.Forward, a: true, vh: true, p: 30, rv: 40, s: PlayerInTeamStatus.Sold, k: FantaSoccerRole.Forward },
-    { n: 'Riserva', t: { n: 'Inter', a: 'INT' }, r: Role.Defensor, a: true, vh: true, p: 9, rv: 0, s: PlayerInTeamStatus.SoldForOneHalf, k: FantaSoccerRole.FirstBackupDefensor },
+const team: Team = {
+  name: 'Alpha',
+  owner: 'ale@example.com',
+  additionalOwners: [],
+  players: [
+    { name: 'Portiere', team: { name: 'Roma', abbreviation: 'ROM' }, role: Role.GoalKeeper, isActive: true, visible: true, price: 12, revenue: 12, status: PlayerInTeamStatus.Active, position: FantaSoccerRole.GoalKeeper },
+    { name: 'Attaccante', team: { name: 'Milan', abbreviation: 'MIL' }, role: Role.Forward, isActive: true, visible: true, price: 30, revenue: 40, status: PlayerInTeamStatus.Sold, position: FantaSoccerRole.Forward },
+    { name: 'Riserva', team: { name: 'Inter', abbreviation: 'INT' }, role: Role.Defensor, isActive: true, visible: true, price: 9, revenue: 0, status: PlayerInTeamStatus.SoldForOneHalf, position: FantaSoccerRole.FirstBackupDefensor },
   ],
-  m: 5,
-  d: null,
+  moneyFromRank: 5,
+  lastUpdate: null,
 }
 
-test('round-trips the compact TeamRaw payload including null optional fields', () => {
-  assert.deepEqual(mapTeamToRawTeam(mapRawTeamToTeam(raw)), raw)
+test('team JSON stores readable nested player/team properties directly', () => {
+  const json = JSON.parse(JSON.stringify(team))
+  assert.equal(json.name, 'Alpha')
+  assert.equal(json.players[0].name, 'Portiere')
+  assert.equal(json.players[0].team.abbreviation, 'ROM')
+  assert.equal(json.players[0].price, 12)
+  assert.equal('n' in json, false)
 })
 
 test('preserves Fantasoccer role mapping and active-player behavior', () => {
-  const team = mapRawTeamToTeam(raw)
   assert.equal(FantaSoccerRoleHelper.toMainRole(FantaSoccerRole.FirstBackupDefensor), Role.Defensor)
   assert.deepEqual(TeamHelper.getActivePlayers(team).map(player => player.name), ['Portiere'])
 })
 
 test('preserves legacy team cost calculations', () => {
-  const team = mapRawTeamToTeam(raw)
   const enhanced = TeamHelper.enhance(team)
   assert.equal(enhanced.totalCost, 51)
   assert.equal(enhanced.revenueMoney, 10)
@@ -46,8 +47,14 @@ test('preserves legacy team cost calculations', () => {
   assert.equal(enhanced.netCost, 32)
 })
 
+test('keeps lastUpdate JSON-native while exposing a Date helper', () => {
+  const dated = { ...team, lastUpdate: '2026-09-05T07:00:00.000Z' }
+  assert.equal(TeamHelper.getLastUpdateDate(dated)?.toISOString(), dated.lastUpdate)
+  assert.equal(TeamHelper.getLastUpdateDate(team), null)
+})
+
 test('calculates moneyFromRank with the legacy goal/suffered-goal formula', () => {
-  const team = mapRawTeamToTeam({ ...raw, m: 0 })
+  const withoutRankMoney = { ...team, moneyFromRank: 0 }
   const rank: Rank = {
     serieADay: 3,
     rounds: {
@@ -58,5 +65,5 @@ test('calculates moneyFromRank with the legacy goal/suffered-goal formula', () =
     },
   }
   const settings = { moneyForGoal: 5, moneyForSufferedGoal: 3 } as LeagueSetting
-  assert.equal(TeamHelper.calculateMoneyFromRank(team, rank, settings), 26)
+  assert.equal(TeamHelper.calculateMoneyFromRank(withoutRankMoney, rank, settings), 26)
 })
