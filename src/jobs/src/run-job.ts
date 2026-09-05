@@ -1,3 +1,4 @@
+import { recalculateGroupAll, recalculateGroupDay } from './groupRecalculation'
 import { ingestFinalVotes } from './officialVoteIngestion'
 import { ingestLiveVotes } from './liveVoteIngestion'
 import { ingestMasterData } from './masterDataIngestion'
@@ -27,9 +28,7 @@ type JobContext = {
 const migrated: Partial<Record<JobName, (context: JobContext) => Promise<void>>> = {
   'ingest-serie-a': async context => {
     const result = await ingestSerieACalendar(context)
-    console.log(
-      `Serie A calendar ${result.calendar.year}: ${result.calendar.days.length} giornate salvate in ${result.path}`,
-    )
+    console.log(`Serie A calendar ${result.calendar.year}: ${result.calendar.days.length} giornate salvate in ${result.path}`)
   },
   'ingest-master-data': async context => {
     const result = await ingestMasterData(context)
@@ -40,16 +39,12 @@ const migrated: Partial<Record<JobName, (context: JobContext) => Promise<void>>>
     )
     if (result.reconciliation.playerCountChanged) {
       const stats = await rebuildPlayerStats({ season: result.players.year })
-      console.log(
-        `Player count changed: statistiche ${stats.stats.year} rigenerate fino alla giornata ${stats.stats.untilSerieADay}.`,
-      )
+      console.log(`Player count changed: statistiche ${stats.stats.year} rigenerate fino alla giornata ${stats.stats.untilSerieADay}.`)
     }
   },
   'rebuild-player-stats': async context => {
     const result = await rebuildPlayerStats(context)
-    console.log(
-      `Statistiche giocatori ${result.stats.year}: ${result.stats.players.length} giocatori fino alla giornata ${result.stats.untilSerieADay} salvati in ${result.path}`,
-    )
+    console.log(`Statistiche giocatori ${result.stats.year}: ${result.stats.players.length} giocatori fino alla giornata ${result.stats.untilSerieADay} salvati in ${result.path}`)
   },
   'ingest-final-votes': async context => {
     const result = await ingestFinalVotes(context)
@@ -59,13 +54,8 @@ const migrated: Partial<Record<JobName, (context: JobContext) => Promise<void>>>
       `${result.syntheticDelayedPlayers} voti sintetici da rinvii; complete=${result.complete}.`,
     )
     if (result.complete) {
-      const stats = await rebuildPlayerStats({
-        season: result.votes.year,
-        day: result.votes.serieADay,
-      })
-      console.log(
-        `Voti completi: statistiche ${stats.stats.year} rigenerate fino alla giornata ${stats.stats.untilSerieADay}.`,
-      )
+      const stats = await rebuildPlayerStats({ season: result.votes.year, day: result.votes.serieADay })
+      console.log(`Voti completi: statistiche ${stats.stats.year} rigenerate fino alla giornata ${stats.stats.untilSerieADay}.`)
     }
   },
   'ingest-live-votes': async context => {
@@ -78,6 +68,16 @@ const migrated: Partial<Record<JobName, (context: JobContext) => Promise<void>>>
       `Voti live: ${result.incomingPlayers} giocatori ricevuti; ` +
       `${result.written ? `snapshot aggiornato in ${result.path}` : 'nessun aggiornamento persistito'}.`,
     )
+  },
+  'recalculate-day': async context => {
+    const roots = groupJobRoots()
+    const result = await recalculateGroupDay({ ...roots, season: context.season, day: context.day })
+    console.log(`Ricalcolo gruppo ${result.season}: ${result.leagues.length} leghe aggiornate per la giornata ${context.day}.`)
+  },
+  'recalculate-all': async context => {
+    const roots = groupJobRoots()
+    const result = await recalculateGroupAll({ ...roots, season: context.season })
+    console.log(`Ricalcolo completo gruppo ${result.season}: ${result.leagues.length} leghe aggiornate.`)
   },
 }
 
@@ -98,6 +98,18 @@ if (!handler) {
 }
 
 await handler(context)
+
+function groupJobRoots(): { groupRepoRoot: string; platformRepoRoot: string } {
+  const groupRepoRoot = process.env.FANTAZONE_GROUP_REPO_ROOT?.trim()
+  const platformRepoRoot = process.env.FANTAZONE_PLATFORM_REPO_ROOT?.trim()
+  if (!groupRepoRoot || !platformRepoRoot) {
+    throw new Error(
+      'Group job requires FANTAZONE_GROUP_REPO_ROOT and FANTAZONE_PLATFORM_REPO_ROOT. ' +
+      'Run it from the Fantazone group workflow, not the platform background workflow.',
+    )
+  }
+  return { groupRepoRoot, platformRepoRoot }
+}
 
 function optionalPositiveInteger(value: string | undefined, label: string): number | undefined {
   const normalized = value?.trim()
