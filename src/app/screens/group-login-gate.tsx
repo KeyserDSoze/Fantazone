@@ -2,6 +2,7 @@ import React, { useMemo } from 'react'
 import { Linking } from 'react-native'
 import { Button, Card, H1, H2, Paragraph, ScrollView, Spinner, Text, XStack, YStack } from 'tamagui'
 import type { ExternalIdentityProvider, Group } from '@fantazone/domain'
+import { GOOGLE_LOGIN_ENABLED } from '../config/identity'
 import type { GroupConnection } from '../services/groupSessionRuntime'
 
 type Props = {
@@ -48,7 +49,7 @@ export function GroupLoginGateScreen({
             <YStack gap="$1">
               <Text fontWeight="800">Invito intestato a</Text>
               <Text fontSize="$5">{connection.expectedEmail}</Text>
-              <Paragraph size="$2">Google/Microsoft riceverà questa email come suggerimento; una email diversa verrà rifiutata anche se fosse censita nel gruppo.</Paragraph>
+              <Paragraph size="$2">Microsoft riceverà questa email come suggerimento; una email diversa verrà rifiutata anche se fosse censita nel gruppo.</Paragraph>
             </YStack>
           </Card>
         ) : null}
@@ -77,9 +78,11 @@ export function GroupLoginGateScreen({
               <Button flex={1} minWidth={220} disabled={loginLoading} onPress={() => onLogin('microsoft')}>
                 {loginLoading ? <Spinner /> : 'Accedi con Microsoft'}
               </Button>
-              <Button flex={1} minWidth={220} disabled={loginLoading} onPress={() => onLogin('google')}>
-                {loginLoading ? <Spinner /> : 'Accedi con Google'}
-              </Button>
+              {GOOGLE_LOGIN_ENABLED ? (
+                <Button flex={1} minWidth={220} disabled={loginLoading} onPress={() => onLogin('google')}>
+                  {loginLoading ? <Spinner /> : 'Accedi con Google'}
+                </Button>
+              ) : null}
             </XStack>
             <Paragraph size="$2" color="$color9">
               Gli inviti con nuova email vengono creati solo dopo un login Admin/SuperAdmin: prima si aggiorna group.users, poi viene generato il link da condividere.
