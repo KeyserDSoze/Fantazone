@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { StatusBar } from 'expo-status-bar'
 import { Button, Card, Paragraph, Spinner, TamaguiProvider, Text, Theme, XStack, YStack } from 'tamagui'
 import type { AuthenticatedGroupSession, ExternalIdentity, ExternalIdentityProvider } from '@fantazone/domain'
+import { ensureGroupInitialized, GitHubClient } from '@fantazone/github'
 import config from './tamagui.config'
 import { GroupConnectScreen, type ConnectedGroup } from './screens/group-connect'
 import { GroupDashboardScreen } from './screens/group-dashboard'
@@ -37,7 +38,7 @@ export default function App() {
       try {
         const connection = await loadGroupConnection()
         if (!connection || !active) return
-        const opened = await GroupSessionRuntime.open(connection)
+        const opened = await openGroupConnection(connection)
         if (!active) return
         setRuntime(opened)
 
@@ -66,7 +67,7 @@ export default function App() {
     setLoginError(null)
     setAuthenticatedSession(null)
     try {
-      const opened = await GroupSessionRuntime.open(connection)
+      const opened = await openGroupConnection(connection)
       await saveGroupConnection(connection)
       setRuntime(opened)
       setView('connect')
@@ -181,6 +182,15 @@ export default function App() {
       </Theme>
     </TamaguiProvider>
   )
+}
+
+async function openGroupConnection(connection: ConnectedGroup): Promise<GroupSessionRuntime> {
+  const client = new GitHubClient(connection.token)
+  // App releases can raise GROUP_REPOSITORY_RUNTIME_VERSION when group-owned
+  // workflows/templates change. Current groups do zero writes; outdated groups
+  // receive only Fantazone-managed artifact upgrades before the runtime opens.
+  await ensureGroupInitialized(client, connection.repository, connection.groupName)
+  return GroupSessionRuntime.open(connection, client)
 }
 
 function toMessage(error: unknown): string {

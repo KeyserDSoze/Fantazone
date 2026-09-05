@@ -1,11 +1,20 @@
+export const GROUP_REPOSITORY_RUNTIME_VERSION = 2
 export const GROUP_RECALCULATION_WORKFLOW_PATH = '.github/workflows/fantazone-group.yml'
 
 /**
- * Installed into every group repository so group-only recalculation runs with that
- * repository's GITHUB_TOKEN. The bootstrap credential must be allowed to create
- * workflow files (classic PAT: `workflow` scope; fine-grained tokens: Workflows write).
+ * Managed Fantazone group workflow installed into every Fantazone.<group> repository.
+ *
+ * The file is intentionally copied into the group repository because group-owned
+ * jobs must execute with that repository's GITHUB_TOKEN. The implementation stays
+ * shared in KeyserDSoze/Fantazone and is checked out at runtime.
+ *
+ * Bump GROUP_REPOSITORY_RUNTIME_VERSION whenever this managed template (or another
+ * mandatory group-managed artifact) changes in a way existing group repositories
+ * must receive.
  */
 export const GROUP_RECALCULATION_WORKFLOW = [
+  '# Managed by Fantazone. Local edits to this file are overwritten by runtime upgrades.',
+  `# group-runtime-version: ${GROUP_REPOSITORY_RUNTIME_VERSION}`,
   'name: Fantazone group maintenance',
   '',
   'on:',
@@ -18,6 +27,7 @@ export const GROUP_RECALCULATION_WORKFLOW = [
   '        options:',
   '          - recalculate-day',
   '          - recalculate-all',
+  '          - set-next-formations',
   '      day:',
   '        description: Optional Serie A day (required by recalculate-day)',
   '        required: false',

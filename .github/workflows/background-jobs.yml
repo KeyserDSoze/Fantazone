@@ -15,7 +15,6 @@ on:
           - ingest-final-votes
           - ingest-player-odds
           - ingest-player-images
-          - set-next-formations
           - rebuild-hall-of-fame
           - process-market
       day:

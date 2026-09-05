@@ -94,12 +94,22 @@ test('does not create a target when the source TeamDay is missing', async () => 
 
 test('missing calendar and completed day 38 are no-ops', async () => {
   const missing = await fixtureRoots(null)
-  const missingResult = await propagateNextFormations({ ...missing, season: SEASON, now: NOW })
+  const missingResult = await propagateNextFormations({
+    groupRepoRoot: missing.groupRoot,
+    platformRepoRoot: missing.platformRoot,
+    season: SEASON,
+    now: NOW,
+  })
   assert.equal(missingResult.targetSerieADay, null)
 
   const ended = await fixtureRoots(completedCalendar(38))
   await writeJson(join(ended.groupRoot, dayTeamDocumentPath(BASKET, SEASON, 38, OWNER)), sourceTeam)
-  const endedResult = await propagateNextFormations({ ...ended, season: SEASON, now: NOW })
+  const endedResult = await propagateNextFormations({
+    groupRepoRoot: ended.groupRoot,
+    platformRepoRoot: ended.platformRoot,
+    season: SEASON,
+    now: NOW,
+  })
   assert.equal(endedResult.targetSerieADay, null)
   await assert.rejects(readFile(join(ended.groupRoot, dayTeamDocumentPath(BASKET, SEASON, 39, OWNER)), 'utf8'), /ENOENT/)
 })

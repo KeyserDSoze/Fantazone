@@ -8,17 +8,44 @@ import {
   type League,
   type UserOfAGroup,
 } from '@fantazone/domain'
-import { GitHubClient, normalizeGroupName, type GitHubRepo } from './githubClient'
-import { GROUP_RECALCULATION_WORKFLOW, GROUP_RECALCULATION_WORKFLOW_PATH } from './groupWorkflow'
-import { GitHubJsonStore, type RepositoryJsonReadOptions } from './repositoryStore'
+import { normalizeGroupName, type GitHubRepo } from './githubClient'
+import {
+  GROUP_RECALCULATION_WORKFLOW,
+  GROUP_RECALCULATION_WORKFLOW_PATH,
+  GROUP_REPOSITORY_RUNTIME_VERSION,
+} from './groupWorkflow'
+import {
+  GitHubJsonStore,
+  type RepositoryContentClient,
+  type RepositoryJsonReadOptions,
+} from './repositoryStore'
 import type { GroupRepositoryTarget } from './repositoryTarget'
 
 export const FANTAZONE_SCHEMA_VERSION = 2
 export const GROUP_DOCUMENT_PATH = 'config/group.json'
+export const GROUP_REPOSITORY_METADATA_PATH = 'fantazone.json'
+
+export type GroupRepositoryMetadata = {
+  schemaVersion: number
+  kind: 'fantazone-group'
+  groupName: string
+  groupRuntimeVersion: number
+  createdAt: string
+  updatedAt: string
+}
+
+type DecodedGroupRepositoryMetadata = Omit<GroupRepositoryMetadata, 'kind'> & { kind: string }
+
+export type GroupRepositoryUpgradeResult = {
+  runtimeVersion: number
+  createdFiles: string[]
+  updatedManagedFiles: string[]
+}
 
 export type InitializedGroup = {
   repository: GitHubRepo
   groupName: string
+  runtimeVersion: number
 }
 
 export type InitialGroupAdmin = {
@@ -38,19 +65,9 @@ export type LegacyGroupBootstrap = {
   schemaVersion?: number
 }
 
-export interface GroupSetupClient {
+export interface GroupSetupClient extends RepositoryContentClient {
   discoverFantazoneRepositories(): Promise<GitHubRepo[]>
   createRepository(input: { name: string; isPrivate?: boolean; description?: string }): Promise<GitHubRepo>
-  tryGetContent(owner: string, repo: string, path: string, ref?: string): Promise<{ sha: string; content: string } | null>
-  putContent(
-    owner: string,
-    repo: string,
-    path: string,
-    text: string,
-    message: string,
-    sha?: string,
-    branch?: string,
-  ): Promise<{ sha: string }>
 }
 
 /** GitHub-backed Group repository. Schema v2 stores the readable Group model directly. */
@@ -116,6 +133,10 @@ export class GitHubGroupRepository {
   }
 }
 
+/**
+ * Creates a Fantazone.<group> repository from scratch when it does not exist and
+ * immediately bootstraps the current group runtime inside that repository.
+ */
 export async function createAndInitializeGroup(
   client: GroupSetupClient,
   groupName: string,
@@ -130,9 +151,9 @@ export async function createAndInitializeGroup(
     repo => repo.name.toLowerCase() === repositoryName.toLowerCase(),
   )
   if (existing) {
-    await ensureGroupInitialized(client, existing, groupName)
+    const upgrade = await ensureGroupInitialized(client, existing, groupName)
     await ensureInitialAdminIfGroupIsEmpty(client, existing, initialAdmin)
-    return { repository: existing, groupName }
+    return { repository: existing, groupName, runtimeVersion: upgrade.runtimeVersion }
   }
 
   const repository = await client.createRepository({
@@ -140,25 +161,29 @@ export async function createAndInitializeGroup(
     isPrivate: options.isPrivate ?? true,
     description: `Fantazone group: ${groupName}`,
   })
-  await ensureGroupInitialized(client, repository, groupName, { initialAdmin: options.initialAdmin })
-  return { repository, groupName }
+  const upgrade = await ensureGroupInitialized(client, repository, groupName, { initialAdmin: options.initialAdmin })
+  return { repository, groupName, runtimeVersion: upgrade.runtimeVersion }
 }
 
 /**
- * Idempotent bootstrap/upgrade for a group repository.
- * Besides readable schema-v2 documents it installs the group-owned maintenance workflow.
+ * Idempotent bootstrap + runtime upgrade for a group repository.
+ *
+ * Canonical/user-owned data is create-only here. Fantazone-managed workflow files
+ * are the only files this routine is allowed to replace, and they are updated using
+ * their current GitHub SHA. The runtime metadata is advanced only after all managed
+ * artifacts were installed successfully.
  */
 export async function ensureGroupInitialized(
-  client: GroupSetupClient | GitHubClient,
+  client: RepositoryContentClient,
   repository: GitHubRepo,
   groupName: string,
   options: { initialAdmin?: InitialGroupAdmin } = {},
-): Promise<void> {
-  const manifest: FantazoneManifest = {
-    schemaVersion: FANTAZONE_SCHEMA_VERSION,
-    revision: 1,
-    updatedAt: new Date().toISOString(),
-  }
+): Promise<GroupRepositoryUpgradeResult> {
+  const owner = repository.owner.login
+  const repo = repository.name
+  const now = new Date().toISOString()
+  const createdFiles: string[] = []
+  const updatedManagedFiles: string[] = []
 
   const normalized = normalizeGroupName(groupName) || repository.name.replace(/^Fantazone\./i, '')
   const initialGroup: Group = {
@@ -168,42 +193,79 @@ export async function ensureGroupInitialized(
     users: options.initialAdmin ? [createInitialAdmin(options.initialAdmin)] : [],
     baskets: [],
   }
+  const manifest: FantazoneManifest = {
+    schemaVersion: FANTAZONE_SCHEMA_VERSION,
+    revision: 1,
+    updatedAt: now,
+  }
 
-  const files: Array<{ path: string; content: string }> = [
-    {
-      path: 'fantazone.json',
-      content: serializeJson({
-        schemaVersion: FANTAZONE_SCHEMA_VERSION,
-        kind: 'fantazone-group',
-        groupName,
-        createdAt: new Date().toISOString(),
-      }),
-    },
-    { path: 'manifest.json', content: serializeJson(manifest) },
-    { path: GROUP_DOCUMENT_PATH, content: serializeJson(initialGroup) },
-    { path: GROUP_RECALCULATION_WORKFLOW_PATH, content: GROUP_RECALCULATION_WORKFLOW },
-  ]
+  // Canonical group data is never rewritten by a runtime/application upgrade.
+  await ensureCreateOnlyFile(client, owner, repo, 'manifest.json', serializeJson(manifest), createdFiles)
+  await ensureCreateOnlyFile(client, owner, repo, GROUP_DOCUMENT_PATH, serializeJson(initialGroup), createdFiles)
 
-  for (const file of files) {
-    const current = await client.tryGetContent(repository.owner.login, repository.name, file.path)
-    if (current) continue
-    try {
-      await client.putContent(
-        repository.owner.login,
-        repository.name,
-        file.path,
-        file.content,
-        `chore: initialize ${file.path}`,
-      )
-    } catch (error) {
-      if (file.path === GROUP_RECALCULATION_WORKFLOW_PATH) {
-        throw new Error(
-          `Impossibile installare ${GROUP_RECALCULATION_WORKFLOW_PATH}. ` +
-          'Il token GitHub usato per creare/aggiornare il gruppo deve poter modificare i workflow del repository.',
-        )
-      }
-      throw error
+  // This path is explicitly Fantazone-managed. Existing custom workflows elsewhere
+  // in .github/workflows are untouched.
+  const workflow = await client.tryGetContent(owner, repo, GROUP_RECALCULATION_WORKFLOW_PATH)
+  if (!workflow) {
+    await writeManagedWorkflow(
+      client,
+      owner,
+      repo,
+      GROUP_RECALCULATION_WORKFLOW,
+      undefined,
+      `chore: install Fantazone group runtime v${GROUP_REPOSITORY_RUNTIME_VERSION}`,
+    )
+    createdFiles.push(GROUP_RECALCULATION_WORKFLOW_PATH)
+  } else if (normalizeManagedText(workflow.content) !== normalizeManagedText(GROUP_RECALCULATION_WORKFLOW)) {
+    await writeManagedWorkflow(
+      client,
+      owner,
+      repo,
+      GROUP_RECALCULATION_WORKFLOW,
+      workflow.sha,
+      `chore: upgrade Fantazone group runtime v${GROUP_REPOSITORY_RUNTIME_VERSION}`,
+    )
+    updatedManagedFiles.push(GROUP_RECALCULATION_WORKFLOW_PATH)
+  }
+
+  // Metadata is managed too, but it is written last: an upgrade is never marked as
+  // complete if a required managed workflow could not be installed.
+  const metadataSnapshot = await client.tryGetContent(owner, repo, GROUP_REPOSITORY_METADATA_PATH)
+  const metadata = decodeGroupRepositoryMetadata(metadataSnapshot?.content, groupName, now)
+  const metadataNeedsUpgrade =
+    !metadataSnapshot ||
+    metadata.schemaVersion !== FANTAZONE_SCHEMA_VERSION ||
+    metadata.kind !== 'fantazone-group' ||
+    metadata.groupName !== groupName ||
+    metadata.groupRuntimeVersion !== GROUP_REPOSITORY_RUNTIME_VERSION
+
+  if (metadataNeedsUpgrade) {
+    const nextMetadata: GroupRepositoryMetadata = {
+      schemaVersion: FANTAZONE_SCHEMA_VERSION,
+      kind: 'fantazone-group',
+      groupName,
+      groupRuntimeVersion: GROUP_REPOSITORY_RUNTIME_VERSION,
+      createdAt: metadata.createdAt,
+      updatedAt: now,
     }
+    await client.putContent(
+      owner,
+      repo,
+      GROUP_REPOSITORY_METADATA_PATH,
+      serializeJson(nextMetadata),
+      metadataSnapshot
+        ? `chore: record Fantazone group runtime v${GROUP_REPOSITORY_RUNTIME_VERSION}`
+        : `chore: initialize ${GROUP_REPOSITORY_METADATA_PATH}`,
+      metadataSnapshot?.sha,
+    )
+    if (metadataSnapshot) updatedManagedFiles.push(GROUP_REPOSITORY_METADATA_PATH)
+    else createdFiles.push(GROUP_REPOSITORY_METADATA_PATH)
+  }
+
+  return {
+    runtimeVersion: GROUP_REPOSITORY_RUNTIME_VERSION,
+    createdFiles,
+    updatedManagedFiles,
   }
 }
 
@@ -244,6 +306,74 @@ function createInitialAdmin(input: InitialGroupAdmin): UserOfAGroup {
   }
 }
 
+async function ensureCreateOnlyFile(
+  client: RepositoryContentClient,
+  owner: string,
+  repo: string,
+  path: string,
+  content: string,
+  createdFiles: string[],
+): Promise<void> {
+  if (await client.tryGetContent(owner, repo, path)) return
+  await client.putContent(owner, repo, path, content, `chore: initialize ${path}`)
+  createdFiles.push(path)
+}
+
+async function writeManagedWorkflow(
+  client: RepositoryContentClient,
+  owner: string,
+  repo: string,
+  content: string,
+  sha: string | undefined,
+  message: string,
+): Promise<void> {
+  try {
+    await client.putContent(owner, repo, GROUP_RECALCULATION_WORKFLOW_PATH, content, message, sha)
+  } catch (error) {
+    throw new Error(
+      `Impossibile installare/aggiornare ${GROUP_RECALCULATION_WORKFLOW_PATH}. ` +
+      'Il token GitHub usato per il gruppo deve poter modificare i workflow del repository.',
+      { cause: error },
+    )
+  }
+}
+
+function decodeGroupRepositoryMetadata(
+  content: string | undefined,
+  groupName: string,
+  now: string,
+): DecodedGroupRepositoryMetadata {
+  if (!content) {
+    return {
+      schemaVersion: FANTAZONE_SCHEMA_VERSION,
+      kind: 'fantazone-group',
+      groupName,
+      groupRuntimeVersion: 0,
+      createdAt: now,
+      updatedAt: now,
+    }
+  }
+
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(content)
+  } catch {
+    throw new Error(`Il file ${GROUP_REPOSITORY_METADATA_PATH} non contiene JSON valido.`)
+  }
+  if (!parsed || typeof parsed !== 'object') {
+    throw new Error(`Il file ${GROUP_REPOSITORY_METADATA_PATH} non contiene metadata Fantazone valide.`)
+  }
+  const value = parsed as Record<string, unknown>
+  return {
+    schemaVersion: typeof value.schemaVersion === 'number' ? value.schemaVersion : 0,
+    kind: typeof value.kind === 'string' ? value.kind : '',
+    groupName: typeof value.groupName === 'string' ? value.groupName : groupName,
+    groupRuntimeVersion: typeof value.groupRuntimeVersion === 'number' ? value.groupRuntimeVersion : 0,
+    createdAt: typeof value.createdAt === 'string' ? value.createdAt : now,
+    updatedAt: typeof value.updatedAt === 'string' ? value.updatedAt : now,
+  }
+}
+
 async function ensureInitialAdminIfGroupIsEmpty(
   client: GroupSetupClient,
   repository: GitHubRepo,
@@ -275,6 +405,10 @@ async function ensureInitialAdminIfGroupIsEmpty(
     current.sha,
     repository.default_branch,
   )
+}
+
+function normalizeManagedText(value: string): string {
+  return value.replace(/\r\n/g, '\n').trimEnd()
 }
 
 function serializeJson(value: unknown): string {
