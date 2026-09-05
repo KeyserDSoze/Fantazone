@@ -7,6 +7,8 @@ import {
   MICROSOFT_REDIRECT_URI,
 } from '../config/identity'
 
+const MICROSOFT_SCOPE = 'openid profile email Files.ReadWrite.AppFolder'
+
 type MicrosoftPendingLogin = {
   state: string
   verifier: string
@@ -64,11 +66,11 @@ declare global {
   }
 }
 
-/**
- * sessionStorage contains only the short-lived PKCE transaction state required
- * to survive Microsoft's full-page redirect. It never contains an authenticated
- * Fantazone identity or a trusted email/subject session.
- */
+export type MicrosoftAppSession = {
+  identity: ExternalIdentity
+  graphAccessToken: string
+}
+
 const MICROSOFT_PENDING_KEY = 'fantazone.oauth.microsoft.pending.v1'
 const GOOGLE_SCRIPT_ID = 'fantazone-google-identity-services'
 let googleScriptPromise: Promise<void> | null = null
@@ -80,10 +82,6 @@ export class IdentityLoginError extends Error {
   }
 }
 
-/**
- * Starts a provider login. Google resolves in the same page; Microsoft redirects
- * and therefore returns null after navigation has been scheduled.
- */
 export async function beginExternalLogin(
   provider: ExternalIdentityProvider,
   expectedEmail?: string,
@@ -99,8 +97,12 @@ export async function beginExternalLogin(
   return null
 }
 
-/** Complete a Microsoft authorization-code callback after the selected group has been restored. */
 export async function completePendingExternalLogin(): Promise<ExternalIdentity | null> {
+  const session = await completePendingMicrosoftAppLogin()
+  return session?.identity ?? null
+}
+
+export async function completePendingMicrosoftAppLogin(): Promise<MicrosoftAppSession | null> {
   assertWebBrowser()
   const pending = readMicrosoftPending()
   if (!pending) return null
@@ -131,10 +133,13 @@ export async function completePendingExternalLogin(): Promise<ExternalIdentity |
     }
 
     return {
-      provider: 'microsoft',
-      subject,
-      email,
-      displayName: user.name || stringClaim(claims.name) || undefined,
+      identity: {
+        provider: 'microsoft',
+        subject,
+        email,
+        displayName: user.name || stringClaim(claims.name) || undefined,
+      },
+      graphAccessToken: token.access_token!,
     }
   } finally {
     clearMicrosoftPending()
@@ -160,7 +165,7 @@ async function beginMicrosoftLogin(expectedEmail?: string): Promise<void> {
     response_type: 'code',
     redirect_uri: MICROSOFT_REDIRECT_URI,
     response_mode: 'query',
-    scope: 'openid profile email',
+    scope: MICROSOFT_SCOPE,
     state,
     nonce,
     code_challenge: challenge,
@@ -177,7 +182,7 @@ async function exchangeMicrosoftCode(code: string, verifier: string): Promise<Mi
   const endpoint = `https://login.microsoftonline.com/${encodeURIComponent(MICROSOFT_AUTHORITY_TENANT)}/oauth2/v2.0/token`
   const body = new URLSearchParams({
     client_id: MICROSOFT_CLIENT_ID,
-    scope: 'openid profile email',
+    scope: MICROSOFT_SCOPE,
     code,
     redirect_uri: MICROSOFT_REDIRECT_URI,
     grant_type: 'authorization_code',
