@@ -60,12 +60,13 @@ Execution topology:
 ```text
 Fantazone.<group> workflow
         |
-        +--> checkout group/      (own writable repository)
+        +--> group/          own writable repository
         |
-        +--> checkout platform/   (pinned group-runtime-vN engine ref)
-                 |
-                 +--> shared TypeScript engine
-                 +--> global normalized football data
+        +--> engine/         Fantazone @ group-runtime-vN
+        |                    stable compatible code
+        |
+        +--> platform-data/  Fantazone @ current global-data ref
+                             latest data/serie-a files
         |
         v
 shared reducers/jobs
@@ -125,15 +126,14 @@ A workflow-write permission failure stops the upgrade and the runtime version is
 
 Full lifecycle/versioning rules: `docs/28-group-repository-lifecycle.md`.
 
-## Pinned group engine
+## Stable engine, fresh shared data
 
-Group workflows do not follow moving `main`. Runtime v2 is pinned to:
+Group business logic and global football data have different versioning requirements:
 
-```text
-group-runtime-v2
-```
+- engine code is pinned to `group-runtime-vN` so an existing group does not silently change behavior;
+- shared football data remains current, currently from `main/data/**`.
 
-Future runtime versions receive their own never-moved `group-runtime-vN` ref after the engine is validated. The app then upgrades each group workflow to the matching ref. This makes group upgrades controlled instead of allowing platform changes to alter all existing groups immediately.
+Runtime v2 uses `group-runtime-v2` for code but a separate `platform-data` checkout for the latest votes/calendar. A future public `Fantazone.Data` repository can take over the live-data checkout.
 
 ## 3. User device
 

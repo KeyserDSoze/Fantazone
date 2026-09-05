@@ -6,7 +6,7 @@ Every Fantazone fantasy group is an autonomous GitHub repository:
 Fantazone.<group-name>
 ```
 
-The platform repository (`KeyserDSoze/Fantazone`) does **not** own group state and does not execute group maintenance on behalf of every group. It contains the application, shared TypeScript engine, global football producers/data and the maintained templates that are copied into group repositories.
+The platform repository (`KeyserDSoze/Fantazone`) does **not** own group state and does not execute group maintenance on behalf of every group. It contains the application, shared TypeScript engine, global football producers/data and maintained templates copied into group repositories.
 
 ## Ownership boundary
 
@@ -130,18 +130,40 @@ Custom files and custom workflows with other names are also untouched. This give
 
 `.github/workflows/background-jobs.yml` in the platform repository exposes only platform/global producers and rebuilds. Group-only commands are deliberately absent from that workflow.
 
-The shared CLI can still contain group job implementations because group workflows check out the platform engine and invoke those implementations with two explicit roots:
+The shared CLI can contain both global and group job implementations because the execution boundary is explicit. Group jobs require:
 
 ```text
 FANTAZONE_GROUP_REPO_ROOT
 FANTAZONE_PLATFORM_REPO_ROOT
 ```
 
-Without those roots, a group job refuses to run as a central platform job.
+Without those roots they refuse to run as central platform jobs.
 
-## Versioned shared engine
+## Stable code, fresh global data
 
-Production group workflows should not follow a moving `main` forever. Each group runtime version should resolve to an immutable or never-moved platform engine ref such as:
+A group Action needs two different views of `KeyserDSoze/Fantazone`:
+
+```text
+engine/         -> group-runtime-vN   (stable code compatible with installed runtime)
+platform-data/  -> main               (latest shared data/serie-a files)
+```
+
+This distinction is essential. Pinning the whole platform checkout would freeze votes/calendar; following `main` for the engine would silently change group business logic before that group had upgraded.
+
+Runtime v2 therefore installs a workflow equivalent to:
+
+```text
+checkout Fantazone @ group-runtime-v2 -> engine/
+checkout Fantazone @ main, data/ only -> platform-data/
+run job from engine/
+FANTAZONE_PLATFORM_REPO_ROOT = platform-data/
+```
+
+A future dedicated `Fantazone.Data` repository can replace the second checkout without changing the group ownership model.
+
+## Publishing a new group runtime
+
+Production group workflows must not follow a moving engine ref. Each runtime gets a never-moved compatibility ref such as:
 
 ```text
 group-runtime-v2
@@ -150,14 +172,15 @@ group-runtime-v3
 
 Release order:
 
-1. finish and validate the shared engine for runtime `N`;
-2. publish/pin `group-runtime-vN`;
-3. make the managed group workflow reference that engine ref;
-4. raise `GROUP_REPOSITORY_RUNTIME_VERSION` when required;
-5. deploy the application;
-6. each group upgrades independently the next time it is opened/managed.
+1. implement the shared engine/template changes for runtime `N`;
+2. pass typecheck, tests and application build;
+3. create/freeze `group-runtime-vN` at that validated engine commit;
+4. make the managed workflow template reference that engine ref;
+5. raise `GROUP_REPOSITORY_RUNTIME_VERSION` when required;
+6. deploy the application;
+7. each group upgrades independently the next time it is opened/managed.
 
-This prevents a platform `main` change from silently changing group maintenance before that group has migrated.
+The engine ref must never be moved after publication. If behavior changes, publish a new runtime number.
 
 ## Permissions
 

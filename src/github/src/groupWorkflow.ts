@@ -1,18 +1,18 @@
 export const GROUP_REPOSITORY_RUNTIME_VERSION = 2
 export const GROUP_RUNTIME_ENGINE_REF = `group-runtime-v${GROUP_REPOSITORY_RUNTIME_VERSION}`
+export const GROUP_GLOBAL_DATA_REF = 'main'
 export const GROUP_RECALCULATION_WORKFLOW_PATH = '.github/workflows/fantazone-group.yml'
 
 /**
  * Managed Fantazone group workflow installed into every Fantazone.<group> repository.
  *
- * The file is intentionally copied into the group repository because group-owned
- * jobs must execute with that repository's GITHUB_TOKEN. The implementation stays
- * shared in KeyserDSoze/Fantazone but is pinned to the engine ref associated with
- * this group runtime version; it never follows moving `main` in production.
+ * Group-owned jobs execute with that repository's GITHUB_TOKEN. Code and global
+ * football data are deliberately checked out separately:
+ * - engine: pinned to the immutable/never-moved group-runtime-vN compatibility ref;
+ * - platform-data: follows the current global data ref so votes/calendar never freeze.
  *
- * Bump GROUP_REPOSITORY_RUNTIME_VERSION whenever this managed template (or another
- * mandatory group-managed artifact) changes in a way existing group repositories
- * must receive, then publish the matching group-runtime-vN engine ref.
+ * Bump GROUP_REPOSITORY_RUNTIME_VERSION whenever a mandatory group-managed artifact
+ * changes, validate the engine, then publish the matching group-runtime-vN ref.
  */
 export const GROUP_RECALCULATION_WORKFLOW = [
   '# Managed by Fantazone. Local edits to this file are overwritten by runtime upgrades.',
@@ -60,26 +60,37 @@ export const GROUP_RECALCULATION_WORKFLOW = [
   '        with:',
   '          path: group',
   '',
-  '      - name: Checkout Fantazone engine and global football data',
+  '      - name: Checkout compatible Fantazone engine',
   '        uses: actions/checkout@v6',
   '        with:',
   '          repository: KeyserDSoze/Fantazone',
   `          ref: ${GROUP_RUNTIME_ENGINE_REF}`,
-  '          path: platform',
+  '          path: engine',
+  '          persist-credentials: false',
+  '',
+  '      - name: Checkout current global football data',
+  '        uses: actions/checkout@v6',
+  '        with:',
+  '          repository: KeyserDSoze/Fantazone',
+  `          ref: ${GROUP_GLOBAL_DATA_REF}`,
+  '          path: platform-data',
+  '          persist-credentials: false',
+  '          sparse-checkout: |',
+  '            data',
   '',
   '      - uses: actions/setup-node@v6',
   '        with:',
   '          node-version: 22',
   '',
   '      - name: Install Fantazone engine dependencies',
-  '        working-directory: platform',
+  '        working-directory: engine',
   '        run: npm install',
   '',
   '      - name: Run selected group job',
-  '        working-directory: platform',
+  '        working-directory: engine',
   '        env:',
   '          FANTAZONE_GROUP_REPO_ROOT: ${{ github.workspace }}/group',
-  '          FANTAZONE_PLATFORM_REPO_ROOT: ${{ github.workspace }}/platform',
+  '          FANTAZONE_PLATFORM_REPO_ROOT: ${{ github.workspace }}/platform-data',
   '        run: npm run job --workspace=@fantazone/jobs -- "$FANTAZONE_JOB" "$FANTAZONE_DAY" "$FANTAZONE_SEASON"',
   '',
   '      - name: Commit canonical group data changes',

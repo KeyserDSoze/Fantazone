@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
   GROUP_DOCUMENT_PATH,
+  GROUP_GLOBAL_DATA_REF,
   GROUP_RECALCULATION_WORKFLOW,
   GROUP_RECALCULATION_WORKFLOW_PATH,
   GROUP_REPOSITORY_METADATA_PATH,
@@ -55,7 +56,7 @@ function fileKey(path: string) {
   return `KeyserDSoze/Fantazone.Amici/${path}`
 }
 
-test('fresh group bootstrap installs the current group-owned runtime pinned to its engine ref', async () => {
+test('fresh group bootstrap installs runtime with pinned engine and current global data', async () => {
   const client = new FakeSetupClient()
 
   const result = await ensureGroupInitialized(client, repo, 'Amici', {
@@ -67,14 +68,20 @@ test('fresh group bootstrap installs the current group-owned runtime pinned to i
 
   assert.equal(result.runtimeVersion, GROUP_REPOSITORY_RUNTIME_VERSION)
   assert.equal(GROUP_RUNTIME_ENGINE_REF, `group-runtime-v${GROUP_REPOSITORY_RUNTIME_VERSION}`)
+  assert.equal(GROUP_GLOBAL_DATA_REF, 'main')
   assert.equal(workflow, GROUP_RECALCULATION_WORKFLOW)
   assert.match(workflow!, /recalculate-day/)
   assert.match(workflow!, /recalculate-all/)
   assert.match(workflow!, /set-next-formations/)
-  assert.match(workflow!, /repository: KeyserDSoze\/Fantazone/)
+  assert.match(workflow!, /Checkout compatible Fantazone engine/)
   assert.match(workflow!, new RegExp(`ref: ${GROUP_RUNTIME_ENGINE_REF}`))
-  assert.doesNotMatch(workflow!, /ref: main/)
-  assert.match(workflow!, /FANTAZONE_GROUP_REPO_ROOT/)
+  assert.match(workflow!, /path: engine/)
+  assert.match(workflow!, /Checkout current global football data/)
+  assert.match(workflow!, new RegExp(`ref: ${GROUP_GLOBAL_DATA_REF}`))
+  assert.match(workflow!, /path: platform-data/)
+  assert.match(workflow!, /sparse-checkout: \|\n            data/)
+  assert.match(workflow!, /FANTAZONE_GROUP_REPO_ROOT: \$\{\{ github\.workspace \}\}\/group/)
+  assert.match(workflow!, /FANTAZONE_PLATFORM_REPO_ROOT: \$\{\{ github\.workspace \}\}\/platform-data/)
   assert.match(workflow!, /git status --porcelain -- data/)
   assert.equal(metadata.kind, 'fantazone-group')
   assert.equal(metadata.groupRuntimeVersion, GROUP_REPOSITORY_RUNTIME_VERSION)

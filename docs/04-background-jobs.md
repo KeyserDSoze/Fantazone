@@ -50,16 +50,17 @@ Runtime v2 currently exposes:
 
 Future group-owned capabilities such as market/Hall-of-Fame/repair will be added by advancing the group repository runtime version and upgrading the managed workflow in each repository.
 
-The group workflow checks out:
+The group workflow uses three checkouts with different purposes:
 
 ```text
-group/      -> its own writable repository
-platform/   -> pinned group-runtime-vN engine + shared football data
+group/          -> its own writable repository
+engine/         -> KeyserDSoze/Fantazone @ group-runtime-vN (stable compatible code)
+platform-data/  -> KeyserDSoze/Fantazone @ current data ref, data/ only
 ```
 
-It executes the shared TypeScript reducer/job implementation and commits only the group repository's `data/` changes with that group's own short-lived `GITHUB_TOKEN`.
+It runs the shared job implementation from `engine/`, reads the latest normalized football data from `platform-data/` and commits only group `data/` changes with that group's own short-lived `GITHUB_TOKEN`.
 
-The platform therefore never enumerates all groups and never stores their PATs.
+The platform therefore never enumerates all groups and never stores their PATs. Pinning engine code and refreshing global data are deliberately separate concerns.
 
 See `docs/28-group-repository-lifecycle.md` for create/bootstrap/upgrade/versioning rules.
 
