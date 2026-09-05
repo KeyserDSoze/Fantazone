@@ -15,10 +15,7 @@ import {
 import { GroupSessionRuntime } from './services/groupSessionRuntime'
 import {
   beginExternalLogin,
-  clearRememberedExternalIdentity,
   completePendingExternalLogin,
-  loadRememberedExternalIdentity,
-  rememberExternalIdentity,
 } from './services/webIdentityAuth'
 
 type ThemeName = 'light' | 'dark'
@@ -45,9 +42,11 @@ export default function App() {
         setRuntime(opened)
 
         try {
+          // The only identity that can survive a navigation is the identity
+          // produced by the just-completed Microsoft PKCE callback. We never
+          // trust a plain locally-stored email/subject as an authenticated user.
           const callbackIdentity = await completePendingExternalLogin()
-          const rememberedIdentity = callbackIdentity ?? loadRememberedExternalIdentity()
-          if (rememberedIdentity && active) await authorizeIdentity(opened, rememberedIdentity)
+          if (callbackIdentity && active) await authorizeIdentity(opened, callbackIdentity)
         } catch (error) {
           if (active) setLoginError(toMessage(error))
         }
@@ -66,7 +65,6 @@ export default function App() {
     setConnectionError(null)
     setLoginError(null)
     setAuthenticatedSession(null)
-    clearRememberedExternalIdentity()
     try {
       const opened = await GroupSessionRuntime.open(connection)
       await saveGroupConnection(connection)
@@ -97,12 +95,10 @@ export default function App() {
   async function authorizeIdentity(opened: GroupSessionRuntime, identity: ExternalIdentity) {
     const resolution = await opened.resolveIdentity(identity)
     if (resolution.status === 'authorized') {
-      rememberExternalIdentity(identity)
       setAuthenticatedSession({ group: opened.group, identity, member: resolution.member })
       setLoginError(null)
       return
     }
-    clearRememberedExternalIdentity()
     setAuthenticatedSession(null)
     if (resolution.status === 'invite-email-mismatch') {
       throw new Error(`Questo invito è per ${resolution.expectedEmail}, ma hai effettuato l’accesso come ${resolution.identity.email}.`)
@@ -114,13 +110,11 @@ export default function App() {
   }
 
   async function logoutIdentity() {
-    clearRememberedExternalIdentity()
     setAuthenticatedSession(null)
     setLoginError(null)
   }
 
   async function disconnectGroup() {
-    clearRememberedExternalIdentity()
     await clearGroupConnection()
     setRuntime(null)
     setAuthenticatedSession(null)

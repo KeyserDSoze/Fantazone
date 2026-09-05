@@ -63,8 +63,12 @@ declare global {
   }
 }
 
+/**
+ * sessionStorage contains only the short-lived PKCE transaction state required
+ * to survive Microsoft's full-page redirect. It never contains an authenticated
+ * Fantazone identity or a trusted email/subject session.
+ */
 const MICROSOFT_PENDING_KEY = 'fantazone.oauth.microsoft.pending.v1'
-const REMEMBERED_IDENTITY_KEY = 'fantazone.identity.session.v1'
 const GOOGLE_SCRIPT_ID = 'fantazone-google-identity-services'
 let googleScriptPromise: Promise<void> | null = null
 
@@ -130,28 +134,6 @@ export async function completePendingExternalLogin(): Promise<ExternalIdentity |
     clearMicrosoftPending()
     stripMicrosoftCallbackFromUrl()
   }
-}
-
-export function rememberExternalIdentity(identity: ExternalIdentity): void {
-  if (!isWebBrowser()) return
-  window.sessionStorage.setItem(REMEMBERED_IDENTITY_KEY, JSON.stringify(identity))
-}
-
-export function loadRememberedExternalIdentity(): ExternalIdentity | null {
-  if (!isWebBrowser()) return null
-  const raw = window.sessionStorage.getItem(REMEMBERED_IDENTITY_KEY)
-  if (!raw) return null
-  try {
-    const identity = JSON.parse(raw) as ExternalIdentity
-    return identity?.provider && identity?.subject && identity?.email ? identity : null
-  } catch {
-    return null
-  }
-}
-
-export function clearRememberedExternalIdentity(): void {
-  if (!isWebBrowser()) return
-  window.sessionStorage.removeItem(REMEMBERED_IDENTITY_KEY)
 }
 
 async function beginMicrosoftLogin(expectedEmail?: string): Promise<void> {

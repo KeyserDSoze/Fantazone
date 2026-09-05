@@ -24,6 +24,14 @@ The Pages build reads `EXPO_PUBLIC_GOOGLE_CLIENT_ID` from the GitHub Actions rep
 
 The Google web client must allow JavaScript origin `https://fanta.plus`. Fantazone uses Google Identity Services popup token flow with only `openid profile email`, then reads the standard OIDC UserInfo endpoint.
 
+## Identity lifetime in the SPA
+
+The selected group connection may remain persisted so a reload can reopen the same repository. The authenticated human identity does **not** come back from local/session storage: it lives only in the current React runtime. After a page reload the user must prove Google/Microsoft again before an authenticated Fantazone session is rebuilt.
+
+Microsoft is the one navigation exception: authorization-code + PKCE needs `state`, `nonce` and the code verifier to survive the full-page round trip to Microsoft. Those short-lived transaction values are stored in `sessionStorage` only while login is pending and are removed in the callback `finally` block. They are not an authenticated email, subject or Fantazone session.
+
+This prevents a locally edited JSON blob from being treated as a provider-proven identity after reload. The provider usually still has its own session, so proving the account again should not mean entering credentials from scratch every time.
+
 ## First group administrator
 
 A newly created repository cannot start with `group.users: []`, otherwise nobody could ever pass the membership gate and become the first administrator. Group creation therefore requires an initial administrator email. Fantazone writes it into the initial readable Group document with Participant + Admin + SuperAdmin flags and immediately binds the first login to that same email.
