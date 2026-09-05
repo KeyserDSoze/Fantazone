@@ -1,6 +1,7 @@
 export * from './calendarRepository'
 export * from './githubClient'
 export * from './groupRepository'
+export * from './groupWorkflow'
 export * from './invite'
 export * from './liveGroupRepository'
 export * from './rankRepository'

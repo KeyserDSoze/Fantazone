@@ -9,6 +9,7 @@ import {
   type UserOfAGroup,
 } from '@fantazone/domain'
 import { GitHubClient, normalizeGroupName, type GitHubRepo } from './githubClient'
+import { GROUP_RECALCULATION_WORKFLOW, GROUP_RECALCULATION_WORKFLOW_PATH } from './groupWorkflow'
 import { GitHubJsonStore, type RepositoryJsonReadOptions } from './repositoryStore'
 import type { GroupRepositoryTarget } from './repositoryTarget'
 
@@ -143,6 +144,10 @@ export async function createAndInitializeGroup(
   return { repository, groupName }
 }
 
+/**
+ * Idempotent bootstrap/upgrade for a group repository.
+ * Besides readable schema-v2 documents it installs the group-owned maintenance workflow.
+ */
 export async function ensureGroupInitialized(
   client: GroupSetupClient | GitHubClient,
   repository: GitHubRepo,
@@ -164,30 +169,41 @@ export async function ensureGroupInitialized(
     baskets: [],
   }
 
-  const files: Array<{ path: string; value: unknown }> = [
+  const files: Array<{ path: string; content: string }> = [
     {
       path: 'fantazone.json',
-      value: {
+      content: serializeJson({
         schemaVersion: FANTAZONE_SCHEMA_VERSION,
         kind: 'fantazone-group',
         groupName,
         createdAt: new Date().toISOString(),
-      },
+      }),
     },
-    { path: 'manifest.json', value: manifest },
-    { path: GROUP_DOCUMENT_PATH, value: initialGroup },
+    { path: 'manifest.json', content: serializeJson(manifest) },
+    { path: GROUP_DOCUMENT_PATH, content: serializeJson(initialGroup) },
+    { path: GROUP_RECALCULATION_WORKFLOW_PATH, content: GROUP_RECALCULATION_WORKFLOW },
   ]
 
   for (const file of files) {
     const current = await client.tryGetContent(repository.owner.login, repository.name, file.path)
     if (current) continue
-    await client.putContent(
-      repository.owner.login,
-      repository.name,
-      file.path,
-      `${JSON.stringify(file.value, null, 2)}\n`,
-      `chore: initialize ${file.path}`,
-    )
+    try {
+      await client.putContent(
+        repository.owner.login,
+        repository.name,
+        file.path,
+        file.content,
+        `chore: initialize ${file.path}`,
+      )
+    } catch (error) {
+      if (file.path === GROUP_RECALCULATION_WORKFLOW_PATH) {
+        throw new Error(
+          `Impossibile installare ${GROUP_RECALCULATION_WORKFLOW_PATH}. ` +
+          'Il token GitHub usato per creare/aggiornare il gruppo deve poter modificare i workflow del repository.',
+        )
+      }
+      throw error
+    }
   }
 }
 
@@ -254,11 +270,15 @@ async function ensureInitialAdminIfGroupIsEmpty(
     repository.owner.login,
     repository.name,
     GROUP_DOCUMENT_PATH,
-    `${JSON.stringify(updated, null, 2)}\n`,
+    serializeJson(updated),
     `chore: bootstrap initial admin ${initialAdmin.email}`,
     current.sha,
     repository.default_branch,
   )
+}
+
+function serializeJson(value: unknown): string {
+  return `${JSON.stringify(value, null, 2)}\n`
 }
 
 function normalizeEmail(email: string | null | undefined): string {
