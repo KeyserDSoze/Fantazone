@@ -9,24 +9,25 @@ This is the living backlog. `[ ]` means not yet migrated; `[~]` means scaffolded
 - [~] Bootstrap Expo/React Native/Tamagui app.
 - [~] Bootstrap shared TypeScript domain and GitHub client.
 - [~] Bootstrap GitHub Actions and job runner.
-- [~] Add GitHub Pages web deployment (workflow + static export implemented; repository Pages source still needs one-time GitHub Actions enablement).
+- [~] Add GitHub Pages web deployment (workflow + static export implemented; final Pages/custom-domain wiring handled separately).
 - [ ] Port Fantasoccer lint/format/test conventions.
 - [~] Public educational/demo experience and event documentation.
 
 ## Identity and groups
 
-- [ ] Port Google login after group selection.
-- [ ] Port Microsoft login after group selection.
+- [ ] Port Google login after group selection (provider callback ready; final OAuth/domain redirect pending).
+- [ ] Port Microsoft login after group selection (provider callback ready; final OAuth/domain redirect pending).
 - [~] PAT validation and `Fantazone.*` repository discovery before login.
 - [~] group/repository initialization contract.
-- [~] preserve legacy `GroupRaw` JSON (`i/n/l/u/b`) directly in `config/group.json`.
-- [~] group-scoped membership lookup by authenticated email.
+- [x] preserve legacy `GroupRaw` JSON (`i/n/l/u/b`) directly in `config/group.json`.
+- [x] group-scoped membership resolution by authenticated email.
 - [~] secure native PAT persistence and V1 web credential persistence policy.
 - [~] invite link + QR generation/import (fragment codec/import + link sharing implemented; QR pending).
-- [~] group switch when one PAT can access multiple `Fantazone.*` repositories (discovery/choice implemented; full switch UX pending).
-- [~] connected-group dashboard / repository status surface.
+- [~] group switch when one PAT can access multiple `Fantazone.*` repositories (discovery/choice/change-group flow implemented; full navigation integration pending).
+- [~] connected-group repository/login-gate surface.
 - [~] group members/roles domain parity; administration UI still pending.
-- [ ] authenticated GroupSession provider: repository + Group + external identity + UserOfAGroup.
+- [~] GroupSession runtime: one selected repository + Group + shared Group/Calendar/Ranking repositories; external identity provider wiring pending.
+- [ ] authenticated application session after Google/Microsoft membership resolution.
 
 ## UI parity
 
@@ -52,7 +53,7 @@ This is the living backlog. `[ ]` means not yet migrated; `[~]` means scaffolded
 
 ## Service/domain migrations
 
-- [~] Group raw contract, mappings/helpers and GitHub read/write repository.
+- [x] Group raw contract, mappings/helpers and GitHub read/write repository.
 - [~] Calendar raw contract, mappings/helpers and GitHub read repository.
 - [~] Ranking raw contract, mappings/helpers, season/daily reads and Action-compatible writes.
 - [ ] Teams.
@@ -66,13 +67,13 @@ This is the living backlog. `[ ]` means not yet migrated; `[~]` means scaffolded
 ## API/storage replacement
 
 - [ ] Replace every `buildApiUrl(...)` call.
-- [ ] Remove backend JWT exchange dependency from repository operations.
+- [~] Remove backend JWT exchange dependency from application identity (new runtime has no JWT/AppIdentity dependency; OAuth adapter still pending).
 - [~] Replace `rystem.repository.client` storage endpoints with GitHub repository adapters (Group + Calendar + Ranking implemented; remaining services pending).
 - [ ] Replace Azure/static storage URLs with repository content URLs.
 - [~] Add SHA-aware in-memory JSON cache.
 - [ ] Add HTTP ETag / conditional GET support.
 - [~] Add optimistic-concurrency conflict handling.
-- [~] Support unauthenticated reads of public canonical repository data.
+- [~] Support unauthenticated reads of intentionally public canonical/demo repository data.
 - [ ] Introduce append-only commands/events only where a high-contention feature needs them; keep canonical legacy JSON projections unchanged.
 
 ## Background jobs
