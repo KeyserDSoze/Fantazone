@@ -1,66 +1,46 @@
-# Calendar migration: first end-to-end repository slice
+# Calendar migration
 
-Calendar is the first Fantasoccer feature migrated through the complete domain/persistence pattern.
+Calendar was the first complete feature moved from the Fantasoccer repository framework to GitHub.
 
-## Legacy shape
+## Repository scope
 
-The React Native `calendarService` used `rystem.repository.client`:
-
-```text
-CalendarService
-  -> RepositoryServices.Repository<CalendarRaw, LeagueKeyRaw>('Calendar')
-  -> mapRawCalendarToCalendar
-  -> CalendarHelper
-```
-
-Its logical key contained `group + league + year` because all groups shared one backend repository.
-
-## Fantazone shape
-
-A Fantazone repository already identifies the group, so the group component no longer belongs in every document key:
+The selected `Fantazone.<group>` repository already identifies the group, so Calendar uses:
 
 ```text
-GitHubCalendarRepository
-  -> GitHubJsonStore
-  -> Fantazone.<group>
-  -> data/groups/seasons/<season>/leagues/<league>/calendar.json
-  -> mapRawCalendarToCalendar
-  -> CalendarHelper
+data/groups/seasons/<season>/leagues/<league>/calendar.json
 ```
 
-The compact raw calendar representation and helper behavior are ported from Fantasoccer into `@fantazone/domain`. This preserves the existing wire/data semantics while replacing only the persistence mechanism.
+`GitHubCalendarRepository` reads this through the shared `GitHubJsonStore`.
 
-## Why this is the migration template
+## Schema v2
 
-Calendar demonstrates the intended sequence for other services:
+The canonical file is a `Calendar` document directly:
 
-1. copy the compact raw contract and deterministic helpers into the shared domain package;
-2. port representative parity tests before changing behavior;
-3. define one canonical repository path;
-4. write a GitHub-backed repository adapter around `GitHubJsonStore`;
-5. expose clean domain objects to future screens;
-6. let the store own SHA/cache/conflict concerns.
+```json
+{
+  "year": 15,
+  "rounds": {
+    "@": [
+      {
+        "serieADay": 3,
+        "number": 1,
+        "games": []
+      }
+    ]
+  }
+}
+```
 
-React screens therefore do not call `fetch('https://api.github.com/...')` and do not know about base64 or GitHub content SHAs.
+Games/results/points likewise use readable names (`homeOwner`, `awayOwner`, `defensiveBonus`, `isCancelled`, `homeGoals`, ...). The former naming mapper is gone.
 
-## Current scope
+## Preserved behavior
 
-Migrated in this slice:
-
-- raw/clean calendar contracts;
-- compact-model mapping;
-- result helpers;
-- fantasy goal threshold calculation;
+- result-type and has-value helpers;
+- fantasy goal thresholds;
 - round/day/game helpers;
 - pending games;
 - case-insensitive team lookup;
 - enhanced calendar projection;
-- GitHub repository read adapter and canonical path;
 - cache reuse through the shared JSON store.
 
-Still pending:
-
-- Calendar screen/navigation parity;
-- Actions that generate/recalculate the canonical calendar file;
-- integration with rankings and game/day views;
-- migration fixtures captured from a real Fantasoccer group dataset.
+Generation/recalculation Actions must produce this same readable Calendar shape.

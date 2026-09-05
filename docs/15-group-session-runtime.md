@@ -1,10 +1,6 @@
 # Group session runtime
 
-The app now has a composition boundary between repository selection and external login.
-
-## Runtime creation
-
-After PAT validation and repository selection, `GroupSessionRuntime.open(connection)` creates exactly one:
+`GroupSessionRuntime` is the composition boundary between repository selection and human login.
 
 ```text
 GitHubClient(PAT)
@@ -13,33 +9,31 @@ GitHubJsonStore
       │
       ├── GitHubGroupRepository
       ├── GitHubCalendarRepository
-      └── GitHubRankRepository
+      ├── GitHubRankRepository
+      └── GitHubTeamRepository
 ```
 
-All feature repositories therefore share the same target and JSON cache. Screens do not construct GitHub clients and do not carry SHA/PAT transport concerns.
-
-Opening the runtime immediately reads `config/group.json`. A stored connection that can no longer read the group is not considered a valid application session.
+All repositories share one target and cache.
 
 ## Login gate
 
-The app flow is now structurally:
-
 ```text
 no connection
-  → PAT / repository discovery
-  → GroupSessionRuntime + GroupRaw loaded
-  → login gate for the selected group
-  → external Google/Microsoft identity
-  → refresh GroupRaw.u and resolve membership
-  → authenticated application session
+ → PAT / repository discovery
+ → GroupSessionRuntime + readable Group loaded
+ → login gate for selected group
+ → Google/Microsoft identity
+ → refresh Group.users
+ → membership decision
+ → authenticated application session
 ```
 
-The Google/Microsoft adapter is intentionally not wired in this slice because the final public domain/redirect URI is being configured separately. The login screen already accepts an optional provider callback, so adding OAuth does not require restructuring the group/session flow.
+The canonical public origin is `https://fanta.plus`. OAuth provider wiring is layered onto this sequence; it does not move login ahead of group selection.
 
 ## Membership freshness
 
-`GroupSessionRuntime.resolveIdentity()` refreshes `config/group.json` by default before authorizing the external identity. If an administrator removed/disabled a member after app startup, the login boundary sees the new `GroupRaw.u` state instead of trusting stale local cache.
+`resolveIdentity()` refreshes `config/group.json` before authorization by default, so a removed/disabled member is not accepted from stale cache.
 
-## Existing JSON
+## Persistence
 
-This runtime introduces no new persisted application schema. Group, Calendar and Ranking adapters continue reading the exact compact legacy raw JSON contracts.
+Group, Calendar, Rank and Team use readable schema-v2 documents directly. The runtime contains no raw naming translation layer.

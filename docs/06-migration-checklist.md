@@ -1,6 +1,6 @@
 # Migration checklist
 
-This is the living backlog. `[ ]` means not yet migrated; `[~]` means scaffolded/being migrated; `[x]` means parity tests exist and legacy integration has been removed.
+`[ ]` pending, `[~]` in progress/scaffolded, `[x]` implemented with tests.
 
 ## Foundation
 
@@ -9,24 +9,22 @@ This is the living backlog. `[ ]` means not yet migrated; `[~]` means scaffolded
 - [~] Bootstrap Expo/React Native/Tamagui app.
 - [~] Bootstrap shared TypeScript domain and GitHub client.
 - [~] Bootstrap GitHub Actions and job runner.
-- [~] Add GitHub Pages web deployment (workflow + static export implemented; final Pages/custom-domain wiring handled separately).
-- [ ] Port Fantasoccer lint/format/test conventions.
-- [~] Public educational/demo experience and event documentation.
+- [~] GitHub Pages static export; canonical custom domain is `https://fanta.plus`.
+- [x] Introduce readable JSON schema v2 and remove single-letter domain persistence for Group/Calendar/Rank/Team.
+- [ ] Port Fantasoccer lint/format conventions.
 
 ## Identity and groups
 
-- [ ] Port Google login after group selection (provider callback ready; final OAuth/domain redirect pending).
-- [ ] Port Microsoft login after group selection (provider callback ready; final OAuth/domain redirect pending).
+- [ ] Wire Google login after group selection to the configured `fanta.plus` client.
+- [ ] Wire Microsoft login after group selection to the configured `fanta.plus` client.
 - [~] PAT validation and `Fantazone.*` repository discovery before login.
-- [~] group/repository initialization contract.
-- [x] preserve legacy `GroupRaw` JSON (`i/n/l/u/b`) directly in `config/group.json`.
-- [x] group-scoped membership resolution by authenticated email.
-- [~] secure native PAT persistence and V1 web credential persistence policy.
-- [~] invite link + QR generation/import (fragment codec/import + link sharing implemented; QR pending).
-- [~] group switch when one PAT can access multiple `Fantazone.*` repositories (discovery/choice/change-group flow implemented; full navigation integration pending).
-- [~] connected-group repository/login-gate surface.
-- [~] group members/roles domain parity; administration UI still pending.
-- [~] GroupSession runtime: one selected repository + shared Group/Calendar/Ranking/Team repositories; external identity provider wiring pending.
+- [x] schema-v2 group initialization (`id/name/leagues/users/baskets`).
+- [x] group-scoped membership resolution by authenticated email from `group.users`.
+- [~] secure native PAT persistence and explicit web credential policy.
+- [~] invite fragment import/share; QR pending.
+- [~] group switch flow.
+- [~] connected-group repository/login gate.
+- [~] GroupSession runtime sharing Group/Calendar/Ranking/Team repositories.
 - [ ] authenticated application session after Google/Microsoft membership resolution.
 
 ## UI parity
@@ -34,32 +32,28 @@ This is the living backlog. `[ ]` means not yet migrated; `[~]` means scaffolded
 - [ ] App shell/navigation.
 - [~] Light/dark themes.
 - [ ] Home.
-- [ ] Calendar screen (domain + GitHub read repository migrated; UI still pending).
+- [ ] Calendar UI.
 - [ ] Game/day view.
 - [ ] Formation/field/player cards/swaps.
-- [ ] Ranking/luck screen (domain + GitHub season/daily repository migrated; UI/luck calculation still pending).
+- [ ] Ranking/luck UI.
 - [ ] Live Serie A/live votes.
 - [ ] Players/statistics.
-- [ ] Teams screen (domain + GitHub season/day repository migrated; UI still pending).
-- [ ] Market.
-- [ ] Trades.
+- [ ] Teams UI.
+- [ ] Market/trades.
 - [ ] Cards administration.
 - [ ] Group users/baskets/leagues administration.
 - [ ] Settings/rules.
-- [ ] Hall of Fame.
-- [ ] Logs.
-- [ ] Patch notes/version update UX.
-- [ ] Push notification UX.
+- [ ] Hall of Fame/logs/patch notes/push UX.
 
 ## Service/domain migrations
 
-- [x] Group raw contract, mappings/helpers and GitHub read/write repository.
-- [~] Calendar raw contract, mappings/helpers and GitHub read repository.
-- [~] Ranking raw contract, mappings/helpers, season/daily reads and Action-compatible writes.
-- [~] Team/Player raw contracts, helpers, season/day reads+writes and Ranking-derived money behavior.
+- [x] Group readable domain + GitHub read/write repository.
+- [x] Calendar readable domain + GitHub read repository.
+- [x] Ranking readable domain + season/day reads and writes.
+- [x] Team/Player readable domain + season/day reads/writes + Ranking-derived money behavior.
 - [ ] Game/day.
 - [ ] Formations.
-- [ ] Live group/results.
+- [ ] Live group/results (rebuild on schema v2; do not merge the old compact branch).
 - [ ] Real players / Serie A.
 - [ ] Statistics/chances/votes.
 - [ ] Market persistence and commands.
@@ -67,52 +61,32 @@ This is the living backlog. `[ ]` means not yet migrated; `[~]` means scaffolded
 ## API/storage replacement
 
 - [ ] Replace every `buildApiUrl(...)` call.
-- [~] Remove backend JWT exchange dependency from application identity (new runtime has no JWT/AppIdentity dependency; OAuth adapter still pending).
-- [~] Replace `rystem.repository.client` storage endpoints with GitHub repository adapters (Group + Calendar + Ranking + Team implemented; remaining services pending).
-- [ ] Replace Azure/static storage URLs with repository content URLs.
-- [~] Add SHA-aware in-memory JSON cache.
-- [ ] Add HTTP ETag / conditional GET support.
-- [~] Add optimistic-concurrency conflict handling.
-- [~] Support unauthenticated reads of intentionally public canonical/demo repository data.
-- [ ] Introduce append-only commands/events only where a high-contention feature needs them; keep canonical legacy JSON projections unchanged.
+- [~] Remove backend JWT/AppIdentity dependency; OAuth adapter pending.
+- [~] Replace `rystem.repository.client` with GitHub adapters.
+- [ ] Replace Azure/static storage URLs.
+- [~] SHA-aware in-memory JSON cache.
+- [ ] HTTP ETag / conditional GET.
+- [~] optimistic concurrency conflict handling.
+- [ ] one-time migration tooling for any schema-v1 compact group repositories/data.
 
 ## Background jobs
 
-- [ ] SerieAJob.
-- [ ] AllPlayersAndAllTeamsJob.
-- [ ] LiveVotesJob.
-- [ ] LiveJob.
-- [ ] FinalVotesJob.
-- [ ] PlayerOddsJob.
-- [ ] PlayerImagesJob.
-- [ ] SetFormationJob.
-- [ ] GroupsManagerJob.
-- [ ] NewsJob decision/migration.
-- [ ] TeamHelperJob decision/migration.
-- [ ] PushNotificationJob decision/migration.
-- [ ] HallOfFameJob.
-- [ ] MarketJob.
-- [ ] single-day recalculation.
-- [ ] full-season/all-days recalculation.
+- [ ] SerieAJob / players-teams ingestion.
+- [ ] live/final votes jobs.
+- [ ] odds/images jobs.
+- [ ] formation/groups manager jobs.
+- [ ] HallOfFame/Market jobs.
+- [ ] single-day and full-season recalculation.
 
 ## Auction
 
-- [ ] Port auction domain types/helpers.
-- [ ] Port auction screen/components unchanged where possible.
-- [ ] Implement WebRTC host/participant abstraction.
-- [ ] GitHub-based signaling.
-- [ ] host sequence/event protocol.
-- [ ] timer synchronization.
-- [ ] bid validation and idempotency.
-- [ ] team/budget broadcast updates.
-- [ ] player assignment checkpoint to GitHub.
-- [ ] pause/resume/close/reset.
-- [ ] emoji/reaction channel.
-- [ ] reconnection/snapshot recovery.
-- [ ] STUN config.
-- [ ] TURN/fallback decision.
-- [ ] host-loss UX; later host migration.
+- [ ] Port auction domain/types/helpers using readable schema-v2 documents.
+- [ ] Port auction UI.
+- [ ] WebRTC host/participant abstraction and GitHub signaling.
+- [ ] sequence/timer/bid validation/idempotency.
+- [ ] checkpoint final player assignments to GitHub.
+- [ ] reconnection/STUN/TURN/host-loss decisions.
 
 ## Definition of done
 
-A feature is migrated only when the corresponding Fantasoccer screen/service behavior is represented by tests or fixtures, its persisted raw JSON contract is preserved unless an explicit migration says otherwise, and the old HTTP/SignalR/storage dependency is gone.
+A migrated feature preserves Fantasoccer behavior where desired, persists readable schema-v2 JSON, has representative tests, and no longer depends on the legacy backend/storage transport. Do not add a second compact representation as a compatibility shortcut.
