@@ -1,4 +1,5 @@
 import { ingestFinalVotes } from './officialVoteIngestion'
+import { ingestLiveVotes } from './liveVoteIngestion'
 import { ingestMasterData } from './masterDataIngestion'
 import { rebuildPlayerStats } from './playerStatsRebuild'
 import { ingestSerieACalendar } from './serieAIngestion'
@@ -67,6 +68,17 @@ const migrated: Partial<Record<JobName, (context: JobContext) => Promise<void>>>
         `Voti completi: statistiche ${stats.stats.year} rigenerate fino alla giornata ${stats.stats.untilSerieADay}.`,
       )
     }
+  },
+  'ingest-live-votes': async context => {
+    const result = await ingestLiveVotes(context)
+    if (result.skipped) {
+      console.log('Nessuna partita live: ingest-live-votes non esegue chiamate al provider.')
+      return
+    }
+    console.log(
+      `Voti live: ${result.incomingPlayers} giocatori ricevuti; ` +
+      `${result.written ? `snapshot aggiornato in ${result.path}` : 'nessun aggiornamento persistito'}.`,
+    )
   },
 }
 
