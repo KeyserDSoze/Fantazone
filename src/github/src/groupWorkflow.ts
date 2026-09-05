@@ -1,4 +1,5 @@
 export const GROUP_REPOSITORY_RUNTIME_VERSION = 2
+export const GROUP_RUNTIME_ENGINE_REF = `group-runtime-v${GROUP_REPOSITORY_RUNTIME_VERSION}`
 export const GROUP_RECALCULATION_WORKFLOW_PATH = '.github/workflows/fantazone-group.yml'
 
 /**
@@ -6,11 +7,12 @@ export const GROUP_RECALCULATION_WORKFLOW_PATH = '.github/workflows/fantazone-gr
  *
  * The file is intentionally copied into the group repository because group-owned
  * jobs must execute with that repository's GITHUB_TOKEN. The implementation stays
- * shared in KeyserDSoze/Fantazone and is checked out at runtime.
+ * shared in KeyserDSoze/Fantazone but is pinned to the engine ref associated with
+ * this group runtime version; it never follows moving `main` in production.
  *
  * Bump GROUP_REPOSITORY_RUNTIME_VERSION whenever this managed template (or another
  * mandatory group-managed artifact) changes in a way existing group repositories
- * must receive.
+ * must receive, then publish the matching group-runtime-vN engine ref.
  */
 export const GROUP_RECALCULATION_WORKFLOW = [
   '# Managed by Fantazone. Local edits to this file are overwritten by runtime upgrades.',
@@ -62,7 +64,7 @@ export const GROUP_RECALCULATION_WORKFLOW = [
   '        uses: actions/checkout@v6',
   '        with:',
   '          repository: KeyserDSoze/Fantazone',
-  '          ref: main',
+  `          ref: ${GROUP_RUNTIME_ENGINE_REF}`,
   '          path: platform',
   '',
   '      - uses: actions/setup-node@v6',

@@ -21,7 +21,10 @@
 - [~] secure credential persistence and group switching; V1 web PAT still uses local storage.
 - [x] GroupSession shares per-group repositories plus global football repositories.
 - [x] authenticated web session after provider email + selected-group membership resolution.
-- [x] group bootstrap installs `.github/workflows/fantazone-group.yml` idempotently.
+- [x] create a `Fantazone.<group>` repository from zero and bootstrap current canonical/managed files.
+- [x] independent `GROUP_REPOSITORY_RUNTIME_VERSION` persisted in `fantazone.json`.
+- [x] app-open runtime upgrade updates only Fantazone-managed workflow paths and preserves group/custom data.
+- [x] group runtime engine refs are versioned (`group-runtime-vN`) instead of following moving `main`.
 - [ ] native Google/Microsoft OAuth redirects/deep links for iOS/Android.
 
 ## UI parity
@@ -63,22 +66,24 @@
 - [~] replace `rystem.repository.client` with GitHub adapters.
 - [ ] replace Azure/static URLs.
 - [x] SHA cache + optimistic concurrency for migrated mutable JSON.
+- [x] managed group-workflow upgrades use current GitHub blob SHA and advance runtime metadata only after success.
 - [ ] ETag conditional reads.
 - [ ] one-time schema-v1→v2 migration tooling if compact runtime repositories exist.
 - [ ] strict per-user write authorization beyond client UI if required.
 
 ## Background jobs
 
-- [~] Serie A calendar ingestion: implementation/tests/manual Action ready; scheduling waits for production validation.
+- [~] Serie A calendar ingestion: implementation/tests/manual global Action ready; scheduling waits for production validation.
 - [~] player/team master-data ingestion: global teams/players + reconciliation implemented; per-group transfer propagation remains pending.
 - [~] player statistics rebuild implemented; real runtime data initialization remains pending.
-- [~] live/final votes: provider adapters + manual Actions + offline parity tests implemented; first real provider runs and scheduling remain pending (#29).
+- [~] live/final votes: provider adapters + manual global Actions + offline parity tests implemented; first real provider runs and scheduling remain pending (#29).
 - [x] legacy `LiveJob`: retired; local `GroupLiveComposer` replaces it.
 - [x] legacy `GroupsManagerJob`: retired; definitive scoring/ranking/progression use shared reducers and group-owned `recalculate-day` / `recalculate-all`.
-- [x] day/full-season recalculation: filesystem orchestration + tests + group workflow bootstrap implemented.
-- [ ] odds/images.
-- [ ] set-next-formations migration.
-- [ ] HallOfFame/Market.
+- [x] day/full-season recalculation: filesystem orchestration + tests + group workflow implemented.
+- [x] legacy `SetFormationJob` behavior: deterministic `set-next-formations` group job + parity tests; automatic schedule intentionally not enabled yet (#32).
+- [x] central Background jobs workflow contains only global/shared jobs; group mutations are excluded.
+- [ ] odds/images production implementation/validation.
+- [ ] HallOfFame/Market group workflows/reducers.
 
 ## Auction
 
@@ -88,4 +93,4 @@
 
 ## Definition of done
 
-A feature preserves desired Fantasoccer behavior, uses readable schema-v2 JSON, has representative tests and no longer depends on the legacy backend/storage transport.
+A feature preserves desired Fantasoccer behavior, uses readable schema-v2 JSON, has representative tests and no longer depends on the legacy backend/storage transport. Group-owned behavior must be deployable and upgradeable inside each `Fantazone.<group>` repository rather than being centralized in the platform repository.

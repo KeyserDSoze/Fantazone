@@ -31,6 +31,7 @@ This documentation is the migration contract from `KeyserDSoze/Fantasoccer` to F
 25. [`25-serie-a-vote-ingestion.md`](25-serie-a-vote-ingestion.md) — official/live Fantacalcio vote producers and provider mapping.
 26. [`26-local-live-composition.md`](26-local-live-composition.md) — local team/rank reducers, GroupLiveComposer and retirement of LiveJob.
 27. [`27-definitive-day-recalculation.md`](27-definitive-day-recalculation.md) — definitive scoring/ranking, deterministic Cup/NewCup progression and group-owned recalculation workflow.
+28. [`28-group-repository-lifecycle.md`](28-group-repository-lifecycle.md) — create-from-zero group repositories, managed runtime versioning, workflow upgrades and pinned engine refs.
 
 ## Source of truth
 

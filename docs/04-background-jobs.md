@@ -4,48 +4,64 @@ The current Fantasoccer background-job project contains the following jobs. None
 
 | Legacy job | Legacy intent | Fantazone target |
 |---|---|---|
-| `SerieAJob` | refresh Serie A/calendar/live source data | **implemented first slice:** `ingest-serie-a` global Action -> readable RealCalendar JSON; production validation/scheduling still pending |
-| `AllPlayersAndAllTeamsJob` | refresh player/team master data | **global slices implemented:** `ingest-master-data` -> readable RealTeams/RealPlayers + reconciliation; per-group transfer propagation remains separate |
-| `LiveVotesJob` | ingest live fantasy votes | **implemented/tested:** `ingest-live-votes` -> SignedUri/protobuf adapter -> readable live vote JSON |
+| `SerieAJob` | refresh Serie A/calendar/live source data | **global:** `ingest-serie-a` -> readable RealCalendar JSON; production validation/scheduling still pending |
+| `AllPlayersAndAllTeamsJob` | refresh player/team master data | **global:** `ingest-master-data` -> readable RealTeams/RealPlayers + reconciliation; per-group transfer propagation remains separate |
+| `LiveVotesJob` | ingest live fantasy votes | **global:** `ingest-live-votes` -> SignedUri/protobuf adapter -> readable live vote JSON |
 | `LiveJob` | rebuild per-group live match/rank snapshot | **retired in #30:** `GroupLiveComposer` derives `LiveGroup` locally; no Action/cache loop |
-| `FinalVotesJob` | ingest final votes | **implemented/tested:** `ingest-final-votes` -> official vote JSON + completeness check + stats rebuild |
-| `PlayerOddsJob` | ingest player odds/probabilities | `ingest-player-odds` Action |
-| `PlayerImagesJob` | refresh player images | `ingest-player-images` Action/assets |
-| `SetFormationJob` | copy previous formation to next day when missing | deterministic group-owned formation job, still pending |
+| `FinalVotesJob` | ingest final votes | **global:** `ingest-final-votes` -> official vote JSON + completeness check + stats rebuild |
+| `PlayerOddsJob` | ingest player odds/probabilities | **global:** `ingest-player-odds` Action |
+| `PlayerImagesJob` | refresh player images | **global:** `ingest-player-images` Action/assets |
+| `SetFormationJob` | copy previous formation to next day when missing | **group-owned:** deterministic `set-next-formations`, runtime-v2 workflow (#32) |
 | `GroupsManagerJob` | definitive game calculation, ranking and knockout progression | **retired in #31:** shared reducers + group-owned `recalculate-day` / `recalculate-all` workflow |
 | `NewsJob` | news ingestion, currently disabled | tracked; implement only if product keeps feature |
-| `TeamHelperJob` | team helper calculations, currently disabled | pure domain calculation where still useful |
+| `TeamHelperJob` | team helper calculations, currently disabled | pure/local domain calculation where still useful |
 | `PushNotificationJob` | decide/send notifications | decision logic migrates; delivery requires explicit transport design |
-| `HallOfFameJob` | historical/Hall of Fame aggregation | group-owned rebuild Action |
-| `MarketJob` | scheduled market state processing | group-owned Action/domain reducer |
+| `HallOfFameJob` | historical/Hall of Fame aggregation | **group-owned future workflow/reducer**, never a platform job |
+| `MarketJob` | scheduled market state processing | **group-owned future workflow/reducer**, never a platform job |
 
-## Runtime split
+## Hard runtime split
 
-Fantazone deliberately separates global producers from group calculations.
+Fantazone deliberately separates shared/global producers from group-owned mutations.
 
 ### Platform/global Actions
 
-These fetch or rebuild shared Serie A data once:
+Only work whose output is shared by every fantasy group belongs in `KeyserDSoze/Fantazone/.github/workflows/background-jobs.yml`:
 
 - `ingest-serie-a`;
 - `ingest-master-data`;
 - `rebuild-player-stats`;
 - `ingest-live-votes`;
 - `ingest-final-votes`;
-- future global odds/images producers.
+- global odds/images producers.
 
-They run in `KeyserDSoze/Fantazone` and write `data/serie-a/...`.
+They write shared `data/serie-a/...` once.
+
+The central workflow must **not** expose formation propagation, fantasy-day recalculation, market processing, Hall-of-Fame rebuilds or any other command that mutates one particular group's state.
 
 ### Group-owned Actions
 
-Every `Fantazone.<group>` repository receives `.github/workflows/fantazone-group.yml`. It currently exposes:
+Every `Fantazone.<group>` repository owns its canonical state and receives Fantazone-managed group workflow files during bootstrap/runtime upgrades.
+
+Runtime v2 currently exposes:
 
 - `recalculate-day`;
-- `recalculate-all`.
+- `recalculate-all`;
+- `set-next-formations`.
 
-The workflow checks out both the group repository and public Fantazone engine/data. It executes the shared reducers and commits only the group repository's `data/` files with that repository's own `GITHUB_TOKEN`.
+Future group-owned capabilities such as market/Hall-of-Fame/repair will be added by advancing the group repository runtime version and upgrading the managed workflow in each repository.
 
-Therefore the platform workflow does **not** expose `rebuild-groups`, `recalculate-day` or `recalculate-all` and never stores PATs for fantasy groups.
+The group workflow checks out:
+
+```text
+group/      -> its own writable repository
+platform/   -> pinned group-runtime-vN engine + shared football data
+```
+
+It executes the shared TypeScript reducer/job implementation and commits only the group repository's `data/` changes with that group's own short-lived `GITHUB_TOKEN`.
+
+The platform therefore never enumerates all groups and never stores their PATs.
+
+See `docs/28-group-repository-lifecycle.md` for create/bootstrap/upgrade/versioning rules.
 
 ## Implemented global jobs
 
@@ -59,7 +75,7 @@ Builds readable RealTeams/RealPlayers, preserves active/inactive/transfer reconc
 
 ### `rebuild-player-stats`
 
-Reads canonical RealPlayers + official vote documents and writes `data/serie-a/stats/<season-id>.json` with the legacy statistics semantics.
+Reads canonical RealPlayers + official vote documents and writes `data/serie-a/stats/<season-id>.json` with legacy statistics semantics.
 
 ### `ingest-final-votes`
 
@@ -111,15 +127,23 @@ persistence/rebuild                -> group-owned workflow
 
 Full details: `docs/27-definitive-day-recalculation.md` and issue #31.
 
+## `SetFormationJob` migration
+
+The legacy hourly process is now a deterministic group operation. It chooses `LiveDay ?? LastDay`, never creates day 39, never overwrites an existing next TeamDay and copies the current TeamDay forward only when the next one is missing.
+
+The operation belongs to the group's runtime because it mutates group formations. It is available through `Fantazone.<group>/.github/workflows/fantazone-group.yml`; it is deliberately absent from the central Background jobs workflow. No automatic hourly schedule is enabled yet.
+
 ## Migration rule
 
 Before enabling a producer/rebuild job:
 
 1. port representative legacy behavior/tests;
 2. identify whether it is a real producer/write or only a derived cache;
-3. keep deterministic business logic in shared TypeScript reducers;
-4. use platform Actions only for global producers;
-5. use group Actions only for group-owned persistence;
-6. validate manually through `workflow_dispatch` before any schedule is enabled.
+3. classify the output as **global** or **group-owned** before adding any Action;
+4. keep deterministic business logic in shared TypeScript reducers;
+5. use platform Actions only for globally shared data;
+6. use group Actions only for group-owned persistence;
+7. advance the group runtime only when existing group repositories must receive a managed artifact change;
+8. validate manually through `workflow_dispatch` before any schedule is enabled.
 
 No automatic production schedule is enabled yet for the remaining external producers.

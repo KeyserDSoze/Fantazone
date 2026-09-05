@@ -6,6 +6,7 @@ import {
   GROUP_RECALCULATION_WORKFLOW_PATH,
   GROUP_REPOSITORY_METADATA_PATH,
   GROUP_REPOSITORY_RUNTIME_VERSION,
+  GROUP_RUNTIME_ENGINE_REF,
   ensureGroupInitialized,
   type GroupSetupClient,
 } from '../../src/github/src/index'
@@ -54,7 +55,7 @@ function fileKey(path: string) {
   return `KeyserDSoze/Fantazone.Amici/${path}`
 }
 
-test('fresh group bootstrap installs the current group-owned runtime', async () => {
+test('fresh group bootstrap installs the current group-owned runtime pinned to its engine ref', async () => {
   const client = new FakeSetupClient()
 
   const result = await ensureGroupInitialized(client, repo, 'Amici', {
@@ -65,11 +66,14 @@ test('fresh group bootstrap installs the current group-owned runtime', async () 
   const metadata = JSON.parse(client.files.get(fileKey(GROUP_REPOSITORY_METADATA_PATH))!.content)
 
   assert.equal(result.runtimeVersion, GROUP_REPOSITORY_RUNTIME_VERSION)
+  assert.equal(GROUP_RUNTIME_ENGINE_REF, `group-runtime-v${GROUP_REPOSITORY_RUNTIME_VERSION}`)
   assert.equal(workflow, GROUP_RECALCULATION_WORKFLOW)
   assert.match(workflow!, /recalculate-day/)
   assert.match(workflow!, /recalculate-all/)
   assert.match(workflow!, /set-next-formations/)
   assert.match(workflow!, /repository: KeyserDSoze\/Fantazone/)
+  assert.match(workflow!, new RegExp(`ref: ${GROUP_RUNTIME_ENGINE_REF}`))
+  assert.doesNotMatch(workflow!, /ref: main/)
   assert.match(workflow!, /FANTAZONE_GROUP_REPO_ROOT/)
   assert.match(workflow!, /git status --porcelain -- data/)
   assert.equal(metadata.kind, 'fantazone-group')

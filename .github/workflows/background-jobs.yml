@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       job:
-        description: Job to execute
+        description: Global platform job to execute
         required: true
         type: choice
         options:
@@ -15,10 +15,8 @@ on:
           - ingest-final-votes
           - ingest-player-odds
           - ingest-player-images
-          - rebuild-hall-of-fame
-          - process-market
       day:
-        description: Optional Serie A/fantasy day
+        description: Optional Serie A day
         required: false
         type: string
       season:
@@ -51,7 +49,7 @@ jobs:
         run: npm install
       - name: Typecheck jobs
         run: npm run typecheck --workspace=@fantazone/jobs
-      - name: Run selected job
+      - name: Run selected global job
         run: npm run job --workspace=@fantazone/jobs -- "$FANTAZONE_JOB" "$FANTAZONE_DAY" "$FANTAZONE_SEASON"
       - name: Upload raw/debug outputs
         if: always()
@@ -61,11 +59,11 @@ jobs:
           path: src/jobs/.artifacts/
           if-no-files-found: ignore
           retention-days: 7
-      - name: Commit canonical data changes
+      - name: Commit canonical platform data changes
         shell: bash
         run: |
           if git diff --quiet; then
-            echo "No canonical data changes"
+            echo "No canonical platform data changes"
             exit 0
           fi
           git config user.name "fantazone-actions[bot]"

@@ -1,10 +1,15 @@
 # Runtime topology: zero application servers
 
-Fantazone has three persistent/runtime scopes. Keeping them separate avoids duplicate scraping and avoids storing group credentials on a central server.
+Fantazone has three persistent/runtime scopes. Keeping them separate avoids duplicate scraping, prevents the platform from storing group credentials and lets every fantasy group own its lifecycle independently.
 
 ## 1. Platform repository
 
-`KeyserDSoze/Fantazone` contains application source, documentation, the shared TypeScript engine and global football data/producers.
+`KeyserDSoze/Fantazone` contains:
+
+- application source and GitHub Pages deployment;
+- shared TypeScript domain/job engine;
+- Fantazone-maintained templates used to bootstrap/upgrade group repositories;
+- global football producers and normalized data.
 
 ```text
 external public sources
@@ -22,6 +27,8 @@ data/serie-a/...
 
 Global football data is fetched once and consumed by every group/client.
 
+The platform `Background jobs` workflow exposes only global work. It must never expose group maintenance such as recalculation, formation propagation, market processing or Hall-of-Fame rebuilds.
+
 ## 2. Group repository
 
 Each fantasy group owns one repository:
@@ -30,20 +37,23 @@ Each fantasy group owns one repository:
 Fantazone.<group-name>
 ```
 
-It stores only group-specific state: settings/members, baskets/leagues, rosters, formations, fantasy calendars/results/rankings, market data, Hall of Fame/history and finalized auction outcomes.
+It stores all group-specific canonical state: settings/members, baskets/leagues, rosters, formations, fantasy calendars/results/rankings, market data, Hall of Fame/history and finalized auction outcomes.
+
+It also owns its executable maintenance entrypoints under `.github/workflows/`.
 
 ### Group-owned workflow
 
-The bootstrap now installs this entrypoint automatically:
+Fantazone currently manages:
 
 ```text
 .github/workflows/fantazone-group.yml
 ```
 
-Current manual jobs:
+Runtime v2 exposes:
 
 - `recalculate-day`;
-- `recalculate-all`.
+- `recalculate-all`;
+- `set-next-formations`.
 
 Execution topology:
 
@@ -52,13 +62,13 @@ Fantazone.<group> workflow
         |
         +--> checkout group/      (own writable repository)
         |
-        +--> checkout platform/   (public KeyserDSoze/Fantazone)
+        +--> checkout platform/   (pinned group-runtime-vN engine ref)
                  |
-                 +--> TypeScript engine
-                 +--> data/serie-a/official votes
+                 +--> shared TypeScript engine
+                 +--> global normalized football data
         |
         v
-shared reducers
+shared reducers/jobs
         |
         v
 group/data/... updates
@@ -67,22 +77,63 @@ group/data/... updates
 commit with the group's short-lived GITHUB_TOKEN
 ```
 
-The central Fantazone workflow therefore never needs a PAT for any group.
+The central Fantazone repository therefore never needs a PAT for any group. Concurrent maintenance runs inside one group are serialized by workflow concurrency.
 
-Concurrent maintenance runs in one group are serialized by workflow concurrency, avoiding two recalculation commits racing each other.
+## Group creation from zero
 
-### Bootstrap and upgrades
+The client can create a new group repository directly:
 
-`ensureGroupInitialized()` is idempotent. New groups receive:
+```text
+create group
+   -> GitHub createRepository(Fantazone.<normalized-name>)
+   -> ensureGroupInitialized()
+      -> create canonical bootstrap files
+      -> install current group workflow
+      -> record groupRuntimeVersion
+   -> open group
+```
 
-- `fantazone.json`;
-- `manifest.json`;
-- `config/group.json`;
-- `.github/workflows/fantazone-group.yml`.
+New repositories are private by default and receive the first administrator directly in readable `config/group.json`.
 
-Existing groups missing the workflow receive it the next time initialization/upgrade runs; existing files are not rewritten.
+## Bootstrap and managed upgrades
 
-Because GitHub protects workflow-file writes separately, the credential used for bootstrap must be authorized to modify `.github/workflows/*`. A classic PAT needs the `workflow` scope in addition to repository access; granular credentials need the corresponding workflow write permission. Bootstrap returns a specific error when this permission is missing.
+Application version and group runtime version are intentionally different concepts. UI-only releases do not need to rewrite every group repository.
+
+`GROUP_REPOSITORY_RUNTIME_VERSION` advances only when a mandatory Fantazone-managed artifact changes. The installed version is recorded in `fantazone.json`.
+
+Opening a selected/saved group runs the lightweight upgrade check before the normal session starts:
+
+```text
+open Fantazone.<group>
+        |
+        v
+ensureGroupInitialized()
+        |
+        +--> current runtime/template -> zero writes
+        |
+        +--> outdated runtime/template
+                -> SHA-update Fantazone-managed files only
+                -> update runtime metadata last
+        |
+        v
+normal GroupSessionRuntime
+```
+
+The updater may replace the known Fantazone-managed workflow path. It never overwrites existing canonical group data (`config/group.json`, `data/**`, existing `manifest.json`) and never touches custom workflows/files with other paths.
+
+A workflow-write permission failure stops the upgrade and the runtime version is not advanced.
+
+Full lifecycle/versioning rules: `docs/28-group-repository-lifecycle.md`.
+
+## Pinned group engine
+
+Group workflows do not follow moving `main`. Runtime v2 is pinned to:
+
+```text
+group-runtime-v2
+```
+
+Future runtime versions receive their own never-moved `group-runtime-vN` ref after the engine is validated. The app then upgrades each group workflow to the matching ref. This makes group upgrades controlled instead of allowing platform changes to alter all existing groups immediately.
 
 ## 3. User device
 
@@ -92,6 +143,7 @@ The Expo React Native/web client is the application runtime. It owns:
 - V1 group credential;
 - selected group/year/league state;
 - GitHub REST reads/writes;
+- group repository creation/bootstrap/managed-upgrade checks;
 - local deterministic calculations/read models;
 - SHA/cache and optimistic concurrency;
 - WebRTC during auctions.
@@ -109,11 +161,10 @@ There is no Fantazone application API between the client and GitHub.
                                   |
 +-------------+      REST         |        +----------------------+
 | Expo client |<------------------+------->| Fantazone.<group>    |
-| native/web  |                           | canonical group state |
+| native/web  |                           | state + own Actions  |
 +------+------+                           +----------^-----------+
        |                                             |
-       | WebRTC auction                              | own Actions
-       |                                             | own GITHUB_TOKEN
+       | WebRTC auction                              | own GITHUB_TOKEN
        v                                             |
 +-------------------+                                |
 | Auctioneer browser|--------------------------------+
@@ -126,6 +177,8 @@ There is no Fantazone application API between the client and GitHub.
 - Live match/rank view: **client/local composition**, because it is derived state.
 - External votes/calendar: **platform Action**, because it is global ingestion.
 - Definitive fantasy results/rankings: **group Action**, because it mutates group-owned canonical state.
+- Next-day formation propagation: **group Action**, never a platform job.
+- Market/Hall-of-Fame persistence: **future group Actions/reducers**, not platform jobs.
 - Auction bids: **WebRTC**, with GitHub only for durable/signaling state.
 
 ## External infrastructure that may remain
