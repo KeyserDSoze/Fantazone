@@ -1,0 +1,41 @@
+# GameWrapper local composition
+
+The legacy `GET /Game/Get` endpoint built one compact `GameWrapperRaw` by reading Group, fantasy Calendar, real Serie A calendar, Team/TeamDay and score-enrichment services. Fantazone does not reproduce that endpoint or persist another aggregate JSON file.
+
+## New boundary
+
+`GroupGameComposer` is an application read-model composer:
+
+```text
+selected GroupSession
+  + Calendar
+  + TeamDay (preferred)
+  + Team (editable fallback only)
+  -> ephemeral GameWrapper
+```
+
+`GameWrapper` is exported by the domain package for UI/shared typing, but it is explicitly not a persistence contract. There is no `game.json`, `GameWrapperRaw`, raw mapper or GitHub Game repository.
+
+## Preserved legacy semantics
+
+For a located Calendar game:
+
+- `serieADay` comes from the containing fantasy `CalendarDay`;
+- `canEdit = serieADay >= nextSerieADay`;
+- TeamDay is read first for each owner;
+- when TeamDay is absent and the game is editable, the current season Team is used as fallback;
+- when the game is locked, mutable season Team is never used to reconstruct historical state;
+- only active players are projected into the game-team view;
+- stored Calendar result remains authoritative.
+
+Until the global RealCalendar/Serie A context is migrated, callers may provide `nextSerieADay`. If it is omitted the composer uses `39`, matching the old controller's missing-real-calendar fallback and marks `editabilitySource = legacy-fallback`.
+
+## Deliberately staged behavior
+
+The old controller also enriched players with live/final votes, chances and real matches, applied the correct formation after locking, and calculated missing points/goals. Those responsibilities depend on services that have not yet migrated.
+
+The new wrapper therefore exposes `requiresScoreCalculation` when a game is locked and has no stored result. It does not fake enriched data or silently run incomplete calculations. Future slices will add typed player enrichment and the shared TeamCalculator/formation reducer around the same wrapper.
+
+## Why this matters
+
+The backend endpoint existed because the server was the only place that could join multiple repositories. In the repository-per-group architecture the client/Actions already have deterministic access to the canonical documents. Keeping GameWrapper ephemeral avoids one more duplicated projection, one more mapper and one more source of stale state.
