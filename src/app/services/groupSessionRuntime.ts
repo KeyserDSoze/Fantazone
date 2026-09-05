@@ -19,13 +19,13 @@ import {
   type GroupRepositoryTarget,
   type RepositoryContentClient,
 } from '@fantazone/github'
+import { GroupFormationWriter } from './groupFormationWriter'
 import { GroupGameComposer } from './groupGameComposer'
 
 export type GroupConnection = {
   token: string
   repository: GitHubRepo
   groupName: string
-  /** Optional recipient constraint imported from an invite link. */
   expectedEmail?: string
 }
 
@@ -45,13 +45,11 @@ export class GroupSessionRuntime {
   readonly teamRepository: GitHubTeamRepository
   readonly liveGroupRepository: GitHubLiveGroupRepository
   readonly gameComposer: GroupGameComposer
+  readonly formationWriter: GroupFormationWriter
 
   private currentGroup: Group | null = null
 
-  private constructor(
-    readonly connection: GroupConnection,
-    contentClient: RepositoryContentClient,
-  ) {
+  private constructor(readonly connection: GroupConnection, contentClient: RepositoryContentClient) {
     this.target = {
       owner: connection.repository.owner.login,
       repo: connection.repository.name,
@@ -64,12 +62,15 @@ export class GroupSessionRuntime {
     this.teamRepository = new GitHubTeamRepository(this.store, this.target, this.rankRepository)
     this.liveGroupRepository = new GitHubLiveGroupRepository(this.store, this.target)
     this.gameComposer = new GroupGameComposer(() => this.group, this.calendarRepository, this.teamRepository)
+    this.formationWriter = new GroupFormationWriter(
+      () => this.group,
+      () => this.refreshGroup(),
+      this.gameComposer,
+      this.teamRepository,
+    )
   }
 
-  static async open(
-    connection: GroupConnection,
-    contentClient: RepositoryContentClient = new GitHubClient(connection.token),
-  ): Promise<GroupSessionRuntime> {
+  static async open(connection: GroupConnection, contentClient: RepositoryContentClient = new GitHubClient(connection.token)): Promise<GroupSessionRuntime> {
     const runtime = new GroupSessionRuntime(connection, contentClient)
     await runtime.refreshGroup()
     return runtime
@@ -87,24 +88,13 @@ export class GroupSessionRuntime {
     return group
   }
 
-  async resolveIdentity(
-    identity: ExternalIdentity,
-    options: { refreshMembership?: boolean; expectedEmail?: string } = {},
-  ): Promise<GroupLoginResolution> {
+  async resolveIdentity(identity: ExternalIdentity, options: { refreshMembership?: boolean; expectedEmail?: string } = {}): Promise<GroupLoginResolution> {
     const group = options.refreshMembership === false ? this.group : await this.refreshGroup()
     const expectedEmail = options.expectedEmail ?? this.connection.expectedEmail
     return resolveGroupLogin(group, identity, expectedEmail)
   }
 
-  /**
-   * Register an invited participant in config/group.json before generating the
-   * bearer invite link. Normal UI calls require the authenticated actor to be
-   * Admin or SuperAdmin in the freshly reloaded group.
-   */
-  async inviteMember(
-    actor: UserOfAGroup,
-    input: { email: string; username?: string },
-  ): Promise<UserOfAGroup> {
+  async inviteMember(actor: UserOfAGroup, input: { email: string; username?: string }): Promise<UserOfAGroup> {
     const group = await this.refreshGroup()
     const currentActor = GroupHelper.findUserByEmail(group, actor.email)
     const canManageUsers = Boolean(currentActor) && (
