@@ -31,7 +31,7 @@ jobs:
       - name: Export Expo web application
         run: npm run export:web --workspace=fantazone-app
       - name: Configure GitHub Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v5
         with:
