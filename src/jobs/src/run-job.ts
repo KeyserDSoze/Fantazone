@@ -1,3 +1,4 @@
+import { ingestFinalVotes } from './officialVoteIngestion'
 import { ingestMasterData } from './masterDataIngestion'
 import { rebuildPlayerStats } from './playerStatsRebuild'
 import { ingestSerieACalendar } from './serieAIngestion'
@@ -49,6 +50,23 @@ const migrated: Partial<Record<JobName, (context: JobContext) => Promise<void>>>
     console.log(
       `Statistiche giocatori ${result.stats.year}: ${result.stats.players.length} giocatori fino alla giornata ${result.stats.untilSerieADay} salvati in ${result.path}`,
     )
+  },
+  'ingest-final-votes': async context => {
+    const result = await ingestFinalVotes(context)
+    console.log(
+      `Voti ufficiali ${result.votes.year}/${result.votes.serieADay}: ${result.votes.players.length} giocatori, ` +
+      `${result.parsedPlayedTeams}/${result.expectedPlayedTeams} squadre giocate, ` +
+      `${result.syntheticDelayedPlayers} voti sintetici da rinvii; complete=${result.complete}.`,
+    )
+    if (result.complete) {
+      const stats = await rebuildPlayerStats({
+        season: result.votes.year,
+        day: result.votes.serieADay,
+      })
+      console.log(
+        `Voti completi: statistiche ${stats.stats.year} rigenerate fino alla giornata ${stats.stats.untilSerieADay}.`,
+      )
+    }
   },
 }
 
