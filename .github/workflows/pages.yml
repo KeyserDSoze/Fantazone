@@ -51,12 +51,13 @@ jobs:
           touch src/app/dist/.nojekyll
 
       - name: Configure GitHub Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
 
       - name: Upload GitHub Pages artifact
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v5
         with:
           path: src/app/dist
+          include-hidden-files: true
 
   deploy:
     name: Deploy production
@@ -70,4 +71,14 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
+
+      - name: Check canonical production origin
+        shell: bash
+        env:
+          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+        run: |
+          echo "GitHub Pages reports production URL: ${PAGE_URL}"
+          if [ "${PAGE_URL}" != "https://fanta.plus/" ]; then
+            echo "::warning title=GitHub Pages HTTPS is not canonical::GitHub Pages reports ${PAGE_URL}. In Settings > Pages keep custom domain fanta.plus and enable Enforce HTTPS so OAuth redirects and invite links use https://fanta.plus."
+          fi
