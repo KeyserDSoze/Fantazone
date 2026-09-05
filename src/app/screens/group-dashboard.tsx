@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react'
 import { Linking, Platform, Share } from 'react-native'
 import { Button, Card, H1, H2, Paragraph, ScrollView, Text, XStack, YStack } from 'tamagui'
 import { createInviteFragment } from '@fantazone/github'
+import { publicWebUrl } from '../config/publicOrigin'
 import type { ConnectedGroup } from './group-connect'
 
 type Props = {
@@ -20,12 +21,7 @@ export function GroupDashboardScreen({ group, onDisconnect, onExploreArchitectur
       repository: group.repository.name,
       pat: group.token,
     })
-
-    if (Platform.OS === 'web' && typeof window !== 'undefined') {
-      return `${window.location.origin}${window.location.pathname}${fragment}`
-    }
-
-    return `https://keyserdsoze.github.io/Fantazone/${fragment}`
+    return publicWebUrl(`/${fragment}`)
   }, [group])
 
   async function shareGroup() {
@@ -50,7 +46,7 @@ export function GroupDashboardScreen({ group, onDisconnect, onExploreArchitectur
         <YStack gap="$2" paddingVertical="$4">
           <Text fontSize="$3" fontWeight="800" color="$green10">GRUPPO COLLEGATO</Text>
           <H1>{group.groupName}</H1>
-          <Paragraph color="$color10">La sorgente durevole di questo gruppo è un repository GitHub, non un database applicativo centrale.</Paragraph>
+          <Paragraph color="$color10">La sorgente durevole di questo gruppo è un repository GitHub con JSON leggibili e versionati.</Paragraph>
         </YStack>
 
         <XStack gap="$3" flexWrap="wrap">
@@ -68,9 +64,7 @@ export function GroupDashboardScreen({ group, onDisconnect, onExploreArchitectur
             <YStack gap="$2">
               <H2 size="$6">Autorizzazione V1</H2>
               <Text>GitHub PAT</Text>
-              <Text color="$color10">
-                Il token non viene mostrato. Su native è persistito con SecureStore; sul web la V1 usa storage locale.
-              </Text>
+              <Text color="$color10">Il token non viene mostrato. Su native è persistito con SecureStore; sul web la V1 usa storage locale.</Text>
               <Text fontSize="$2" color="$red10">Il link di invito contiene il bearer token codificato: non è crittografia.</Text>
             </YStack>
           </Card>
@@ -80,20 +74,11 @@ export function GroupDashboardScreen({ group, onDisconnect, onExploreArchitectur
           <YStack gap="$3">
             <H2 size="$6">Azioni</H2>
             <XStack gap="$3" flexWrap="wrap">
-              <Button theme="accent" onPress={shareGroup}>Condividi invito</Button>
+              <Button theme="accent" onPress={shareGroup}>Condividi invito fanta.plus</Button>
               <Button onPress={onExploreArchitecture}>Esplora architettura</Button>
               <Button onPress={onDisconnect}>Cambia gruppo</Button>
             </XStack>
             {shareStatus ? <Paragraph size="$2" color="$color10">{shareStatus}</Paragraph> : null}
-          </YStack>
-        </Card>
-
-        <Card borderWidth={1} borderColor="$blue8" padding="$4">
-          <YStack gap="$2">
-            <H2 size="$6">Prossimi dati del gruppo</H2>
-            <Paragraph>
-              Le prossime migrazioni collegheranno qui calendario, classifica, squadre, mercato e formazioni leggendo file canonici dal repository. L’UI verrà portata da Fantasoccer mentre le vecchie API vengono sostituite dietro adapter.
-            </Paragraph>
           </YStack>
         </Card>
       </YStack>
