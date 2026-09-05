@@ -2,11 +2,12 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { RealCalendarHelper, RealGameHelper, type RealCalendar, type RealGame } from '../../src/domain/src/index'
 
+const season = 15 // 2026/27 internal Fantazone season id.
 const calendar: RealCalendar = {
-  year: 2026,
+  year: season,
   days: [
     {
-      year: 2026,
+      year: season,
       serieADay: 1,
       games: [
         game('Roma', 'Milan', '2026-08-22T16:30:00Z'),
@@ -14,7 +15,7 @@ const calendar: RealCalendar = {
       ],
     },
     {
-      year: 2026,
+      year: season,
       serieADay: 2,
       games: [
         game('Roma', 'Inter', '2026-08-29T16:30:00Z'),
@@ -22,7 +23,7 @@ const calendar: RealCalendar = {
       ],
     },
     {
-      year: 2026,
+      year: season,
       serieADay: 3,
       games: [game('Roma', 'Napoli', '2026-09-05T18:45:00Z')],
     },

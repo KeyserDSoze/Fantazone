@@ -5,9 +5,15 @@
   "type": "module",
   "scripts": {
     "job": "tsx src/run-job.ts",
-    "test": "node --test"
+    "test": "tsx --test ../../tests/jobs/*.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@fantazone/domain": "0.1.0",
+    "@fantazone/github": "0.1.0"
   },
   "devDependencies": {
+    "@types/node": "^22.19.0",
     "tsx": "^4.20.5",
     "typescript": "~6.0.3"
   }

@@ -11,11 +11,12 @@
   "scripts": {
     "app:web": "npm run web --workspace=fantazone-app",
     "app:start": "npm run start --workspace=fantazone-app",
-    "typecheck": "npm run typecheck --workspace=fantazone-app",
-    "test": "npm run test:github && npm run test:domain && npm run test:app",
+    "typecheck": "npm run typecheck --workspace=fantazone-app && npm run typecheck --workspace=@fantazone/jobs",
+    "test": "npm run test:github && npm run test:domain && npm run test:app && npm run test:jobs",
     "test:github": "tsx --test tests/github/*.test.ts",
     "test:domain": "tsx --test tests/domain/*.test.ts",
-    "test:app": "tsx --test tests/app/*.test.ts"
+    "test:app": "tsx --test tests/app/*.test.ts",
+    "test:jobs": "tsx --test tests/jobs/*.test.ts"
   },
   "devDependencies": {
     "tsx": "^4.20.5"

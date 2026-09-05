@@ -9,9 +9,9 @@ import type { PlatformRepositoryTarget } from './repositoryTarget'
 
 export const SERIE_A_CALENDAR_ROOT = 'data/serie-a/calendars'
 
-export function realCalendarDocumentPath(year: number): string {
-  if (!Number.isInteger(year) || year < 1) throw new Error('Serie A calendar year must be a positive integer')
-  return `${SERIE_A_CALENDAR_ROOT}/${year}.json`
+export function realCalendarDocumentPath(season: number): string {
+  if (!Number.isInteger(season) || season < 1) throw new Error('Serie A calendar season id must be a positive integer')
+  return `${SERIE_A_CALENDAR_ROOT}/${season}.json`
 }
 
 /** Shared/global Serie A calendar repository. It is intentionally not scoped to one fantasy group. */
@@ -21,17 +21,17 @@ export class GitHubRealCalendarRepository {
     private readonly repository: PlatformRepositoryTarget,
   ) {}
 
-  async getCalendar(year: number, options: RepositoryJsonReadOptions = {}): Promise<RealCalendar | null> {
-    return (await this.getCalendarSnapshot(year, options))?.value ?? null
+  async getCalendar(season: number, options: RepositoryJsonReadOptions = {}): Promise<RealCalendar | null> {
+    return (await this.getCalendarSnapshot(season, options))?.value ?? null
   }
 
   async getCalendarSnapshot(
-    year: number,
+    season: number,
     options: RepositoryJsonReadOptions = {},
   ): Promise<RepositoryJsonSnapshot<RealCalendar> | null> {
-    const snapshot = await this.store.tryReadJson<unknown>(this.location(year), options)
+    const snapshot = await this.store.tryReadJson<unknown>(this.location(season), options)
     if (!snapshot) return null
-    return { ...snapshot, value: decodeRealCalendar(snapshot.value, year) }
+    return { ...snapshot, value: decodeRealCalendar(snapshot.value, season) }
   }
 
   async writeCalendar(
@@ -44,20 +44,20 @@ export class GitHubRealCalendarRepository {
     return snapshot.sha
   }
 
-  private location(year: number) {
-    return { ...this.repository, path: realCalendarDocumentPath(year) }
+  private location(season: number) {
+    return { ...this.repository, path: realCalendarDocumentPath(season) }
   }
 }
 
-export function decodeRealCalendar(value: unknown, expectedYear?: number): RealCalendar {
-  if (!value || typeof value !== 'object') throw invalidCalendar(expectedYear)
+export function decodeRealCalendar(value: unknown, expectedSeason?: number): RealCalendar {
+  if (!value || typeof value !== 'object') throw invalidCalendar(expectedSeason)
   const calendar = value as Partial<RealCalendar>
   const year = calendar.year
   if (typeof year !== 'number' || !Number.isInteger(year) || !Array.isArray(calendar.days)) {
-    throw invalidCalendar(expectedYear)
+    throw invalidCalendar(expectedSeason)
   }
-  if (expectedYear != null && year !== expectedYear) {
-    throw new Error(`Serie A calendar year mismatch: expected ${expectedYear}, found ${year}`)
+  if (expectedSeason != null && year !== expectedSeason) {
+    throw new Error(`Serie A calendar season mismatch: expected ${expectedSeason}, found ${year}`)
   }
 
   return {
@@ -66,7 +66,7 @@ export function decodeRealCalendar(value: unknown, expectedYear?: number): RealC
   }
 }
 
-function decodeDay(value: unknown, calendarYear: number, index: number): RealDay {
+function decodeDay(value: unknown, calendarSeason: number, index: number): RealDay {
   if (!value || typeof value !== 'object') throw new Error(`Invalid Serie A day at index ${index}`)
   const day = value as Partial<RealDay>
   const year = day.year
@@ -76,7 +76,9 @@ function decodeDay(value: unknown, calendarYear: number, index: number): RealDay
       !Array.isArray(day.games)) {
     throw new Error(`Invalid Serie A day at index ${index}`)
   }
-  if (year !== calendarYear) throw new Error(`Serie A day ${serieADay} belongs to year ${year}, expected ${calendarYear}`)
+  if (year !== calendarSeason) {
+    throw new Error(`Serie A day ${serieADay} belongs to season ${year}, expected ${calendarSeason}`)
+  }
   return {
     year,
     serieADay,
@@ -110,6 +112,6 @@ function isRealTeam(value: unknown): value is RealTeam {
   return typeof team.name === 'string' && typeof team.abbreviation === 'string'
 }
 
-function invalidCalendar(expectedYear?: number): Error {
-  return new Error(`Unsupported Serie A calendar JSON schema${expectedYear ? ` for ${expectedYear}` : ''}. Fantazone schema v2 requires readable property names.`)
+function invalidCalendar(expectedSeason?: number): Error {
+  return new Error(`Unsupported Serie A calendar JSON schema${expectedSeason ? ` for season ${expectedSeason}` : ''}. Fantazone schema v2 requires readable property names.`)
 }

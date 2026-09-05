@@ -4,29 +4,40 @@ The legacy backend stored `RealCalendar` in Repository Framework with compact on
 
 Fantazone keeps only the canonical readable data and computes timing locally.
 
+## Season key
+
+`RealCalendar.year` deliberately keeps the same **internal Fantazone season id** used by fantasy Calendar, Team and Rank. It is not a Gregorian year.
+
+```text
+15 = 2026/27
+16 = 2027/28
+```
+
+This matches the legacy `FantacalcioTime.ActualYear` convention and avoids translation at every group-data join.
+
 ## Global data location
 
 Serie A calendar data belongs to the platform repository, not to each fantasy-group repository:
 
 ```text
 KeyserDSoze/Fantazone
-└── data/serie-a/calendars/<year>.json
+└── data/serie-a/calendars/<season-id>.json
 ```
 
-A readable document looks like:
+A readable 2026/27 document therefore starts as:
 
 ```json
 {
-  "year": 2026,
+  "year": 15,
   "days": [
     {
-      "year": 2026,
+      "year": 15,
       "serieADay": 1,
       "games": [
         {
-          "home": { "name": "Roma", "abbreviation": "ROM" },
-          "away": { "name": "Inter", "abbreviation": "INT" },
-          "date": "2026-08-22T18:45:00Z",
+          "home": { "name": "Roma", "abbreviation": "rom" },
+          "away": { "name": "Inter", "abbreviation": "int" },
+          "date": "2026-08-22T18:45:00.000Z",
           "homeGoals": null,
           "awayGoals": null,
           "delayed": false
@@ -54,7 +65,7 @@ The explicit clock dependency makes tests deterministic and prevents local UI st
 
 ## Runtime topology
 
-`GroupSessionRuntime` now has two repository targets:
+`GroupSessionRuntime` has two repository targets:
 
 ```text
 target
@@ -66,7 +77,7 @@ platformTarget
   -> RealCalendar now; RealPlayers/votes later
 ```
 
-Both use the same `GitHubJsonStore`, whose cache key already includes owner/repository/path/ref.
+Both use the same `GitHubJsonStore`, whose cache key includes owner/repository/path/ref.
 
 ## Game and formation integration
 
@@ -74,6 +85,30 @@ Both use the same `GitHubJsonStore`, whose cache key already includes owner/repo
 
 `GroupFormationWriter` no longer accepts `nextSerieADay` or `liveSerieADay`. A SuperAdmin override on a locked game is allowed only when the refreshed shared RealCalendar says that exact Serie A day is live.
 
+## `ingest-serie-a`
+
+The first platform ingestion job produces this canonical document directly. The legacy Gazzetta source is isolated behind an adapter instead of leaking its response shape into the domain.
+
+Default source:
+
+```text
+https://api2-mtc.gazzetta.it/api/
+```
+
+It can be replaced through `FANTAZONE_SERIE_A_CALENDAR_BASE_URL` without changing domain or persistence code.
+
+The mapper preserves the old source semantics:
+
+- `FULL` and `LIVE` expose scores;
+- `POSTPONED` marks the game delayed;
+- missing team names are ignored;
+- source UTC dates are normalized to ISO instants;
+- a full run queries days 1–38;
+- a day-only run replaces that day in an already existing calendar and refuses to create an incomplete calendar from scratch;
+- the current Gazzetta adapter may only write the current internal season id, preventing current data from being mislabeled as historical data.
+
+The job is manually dispatchable through `Background jobs`; scheduling can be added after the source behavior is validated in production.
+
 ## Remaining work
 
-This migration provides the data contract, repository and timing projections. The ingestion Action that fetches the actual Serie A schedule/results is still pending, as are RealPlayers, chances, live/final votes and score calculation.
+RealPlayers, standings, chances, live/final votes, score calculation and any historical/backfill-specific Serie A source remain pending.

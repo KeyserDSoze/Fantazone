@@ -14,12 +14,14 @@ export interface RealGame {
 }
 
 export interface RealDay {
+  /** Internal Fantazone season id, e.g. 15 = 2026/27. */
   year: number
   serieADay: number
   games: RealGame[]
 }
 
 export interface RealCalendar {
+  /** Internal Fantazone season id, matching Calendar/Team/Rank year keys. */
   year: number
   days: RealDay[]
 }

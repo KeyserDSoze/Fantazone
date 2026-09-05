@@ -25,10 +25,11 @@ class FakeContentClient implements RepositoryContentClient {
 }
 
 const target = { owner: 'KeyserDSoze', repo: 'Fantazone', ref: 'main' }
+const season = 15 // 2026/27, same internal id used by Calendar/Team/Rank.
 const calendar: RealCalendar = {
-  year: 2026,
+  year: season,
   days: [{
-    year: 2026,
+    year: season,
     serieADay: 1,
     games: [{
       home: { name: 'Roma', abbreviation: 'ROM' },
@@ -41,20 +42,20 @@ const calendar: RealCalendar = {
   }],
 }
 
-test('stores shared Serie A calendars outside every group repository namespace', () => {
-  assert.equal(realCalendarDocumentPath(2026), 'data/serie-a/calendars/2026.json')
+test('stores shared Serie A calendars by internal season id outside every group repository namespace', () => {
+  assert.equal(realCalendarDocumentPath(season), 'data/serie-a/calendars/15.json')
 })
 
 test('reads readable schema-v2 RealCalendar through the shared JSON cache', async () => {
   const client = new FakeContentClient()
-  client.files.set(key(target.owner, target.repo, realCalendarDocumentPath(2026), target.ref), {
+  client.files.set(key(target.owner, target.repo, realCalendarDocumentPath(season), target.ref), {
     sha: 'sha-1',
     content: JSON.stringify(calendar),
   })
   const repository = new GitHubRealCalendarRepository(new GitHubJsonStore(client), target)
 
-  const first = await repository.getCalendarSnapshot(2026)
-  const second = await repository.getCalendarSnapshot(2026)
+  const first = await repository.getCalendarSnapshot(season)
+  const second = await repository.getCalendarSnapshot(season)
 
   assert.equal(first?.value.days[0].games[0].home.name, 'Roma')
   assert.equal(first?.fromCache, false)
@@ -63,22 +64,23 @@ test('reads readable schema-v2 RealCalendar through the shared JSON cache', asyn
 
 test('rejects compact legacy RealCalendar JSON instead of keeping a permanent mapper', async () => {
   const client = new FakeContentClient()
-  client.files.set(key(target.owner, target.repo, realCalendarDocumentPath(2026), target.ref), {
+  client.files.set(key(target.owner, target.repo, realCalendarDocumentPath(season), target.ref), {
     sha: 'sha-old',
-    content: JSON.stringify({ y: 2026, d: [] }),
+    content: JSON.stringify({ y: season, d: [] }),
   })
   const repository = new GitHubRealCalendarRepository(new GitHubJsonStore(client), target)
 
-  await assert.rejects(repository.getCalendar(2026), /schema v2 requires readable property names/)
+  await assert.rejects(repository.getCalendar(season), /schema v2 requires readable property names/)
 })
 
 test('writes the same readable domain contract for ingestion jobs', async () => {
   const client = new FakeContentClient()
   const repository = new GitHubRealCalendarRepository(new GitHubJsonStore(client), target)
   await repository.writeCalendar(calendar, 'test: write real calendar')
-  const stored = client.files.get(key(target.owner, target.repo, realCalendarDocumentPath(2026), target.ref))
+  const stored = client.files.get(key(target.owner, target.repo, realCalendarDocumentPath(season), target.ref))
   assert.ok(stored)
   const json = JSON.parse(stored.content)
+  assert.equal(json.year, season)
   assert.equal(json.days[0].serieADay, 1)
   assert.equal(json.days[0].games[0].home.name, 'Roma')
   assert.equal('y' in json, false)

@@ -4,7 +4,7 @@ The current Fantasoccer background-job project contains the following jobs. None
 
 | Legacy job | Legacy intent | Fantazone target |
 |---|---|---|
-| `SerieAJob` | refresh Serie A/calendar/live source data | `ingest-serie-a` Action + committed normalized JSON |
+| `SerieAJob` | refresh Serie A/calendar/live source data | **implemented first slice:** `ingest-serie-a` manual Action -> global readable RealCalendar JSON; standings/live extensions still pending |
 | `AllPlayersAndAllTeamsJob` | refresh player/team master data | `ingest-master-data` Action |
 | `LiveVotesJob` | ingest live fantasy votes | `ingest-live-votes` Action |
 | `LiveJob` | ingest live match state | `ingest-live` Action |
@@ -23,20 +23,25 @@ The current Fantasoccer background-job project contains the following jobs. None
 
 The current host configures frequent jobs including Serie A every 5 minutes, live/live-votes/push roughly every minute, daily master/market/group jobs and scheduled final-vote/odds/Hall-of-Fame refreshes. GitHub scheduled workflows have coarser operational characteristics, so exact cadence must be revalidated rather than copied blindly.
 
-## Job implementation strategy
+## Current job runtime
 
-Use TypeScript/Node for the first migration because it can share domain types/calculators with the React Native client and has low startup/compile overhead in Actions.
+`src/jobs` is a TypeScript workspace sharing `@fantazone/domain` and `@fantazone/github` with the application. CI typechecks and tests it like the other workspaces.
 
-Each job implements:
+The dispatcher receives:
 
-```ts
-export interface BackgroundJob {
-  name: string
-  run(context: JobContext): Promise<JobResult>
-}
+```text
+npm run job --workspace=@fantazone/jobs -- <job> [day] [season-id]
 ```
 
-Inputs are repository files and external HTTP sources. Outputs are written to a workspace, validated, then committed atomically when possible. Raw fetched pages/responses may be uploaded as workflow artifacts for debugging.
+`Background jobs` exposes the same inputs through `workflow_dispatch`. Implemented jobs write canonical files into the checked-out repository; the workflow commits only `data/` changes after successful execution.
+
+### `ingest-serie-a`
+
+The first migrated producer is deliberately narrow: it fetches the Serie A calendar and writes `data/serie-a/calendars/<season-id>.json` using the exact readable `RealCalendar` domain contract.
+
+The Gazzetta response is isolated in a source adapter. Its base URL defaults to the one used by Fantasoccer and is configurable with `FANTAZONE_SERIE_A_CALENDAR_BASE_URL`.
+
+Full refresh queries days 1–38. A day-only refresh requires an existing calendar and replaces that day; it never creates a partial calendar accidentally. The current-source adapter refuses historical season ids so current fixtures cannot be mislabeled as a backfill.
 
 ## Manual operations required
 
@@ -59,3 +64,5 @@ Before enabling a scheduled job:
 3. verify deterministic output;
 4. enable `workflow_dispatch` first;
 5. only then enable `schedule`.
+
+`ingest-serie-a` is currently at step 4: implementation and deterministic tests exist, but the external source still needs a successful manual production run before any schedule is added.
