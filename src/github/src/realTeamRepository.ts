@@ -51,8 +51,10 @@ export class GitHubRealTeamsRepository {
 export function decodeRealTeams(value: unknown, expectedYear?: number): RealTeams {
   if (!value || typeof value !== 'object') throw invalidTeams(expectedYear)
   const document = value as Partial<RealTeams>
-  if (!Number.isInteger(document.year) || !Array.isArray(document.teams)) throw invalidTeams(expectedYear)
-  const year = document.year as number
+  const year = document.year
+  if (typeof year !== 'number' || !Number.isInteger(year) || !Array.isArray(document.teams)) {
+    throw invalidTeams(expectedYear)
+  }
   if (expectedYear != null && year !== expectedYear) {
     throw new Error(`Serie A teams year mismatch: expected ${expectedYear}, found ${year}`)
   }
