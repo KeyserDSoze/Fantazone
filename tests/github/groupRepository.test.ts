@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { Group, GroupRaw } from '../../src/domain/src/index'
 import {
+  createAndInitializeGroup,
   decodeStoredGroup,
   ensureGroupInitialized,
   GitHubGroupRepository,
@@ -88,4 +89,29 @@ test('new repositories initialize config/group.json directly as GroupRaw', async
     i: 'Amici', n: 'Amici', l: [], u: [], b: [],
   })
   assert.equal(files.has('KeyserDSoze/Fantazone.Amici/members/members.json'), false)
+})
+
+test('new group repositories are private by default because GroupRaw contains member emails', async () => {
+  let requestedPrivate: boolean | undefined
+  const files = new Map<string, { sha: string; content: string }>()
+  const repo: any = {
+    name: 'Fantazone.Amici',
+    full_name: 'KeyserDSoze/Fantazone.Amici',
+    owner: { login: 'KeyserDSoze' },
+  }
+  const setup: GroupSetupClient = {
+    async discoverFantazoneRepositories() { return [] },
+    async createRepository(input) {
+      requestedPrivate = input.isPrivate
+      return repo
+    },
+    async tryGetContent(owner, repository, path) { return files.get(`${owner}/${repository}/${path}`) ?? null },
+    async putContent(owner, repository, path, content) {
+      files.set(`${owner}/${repository}/${path}`, { sha: 'setup', content })
+      return { sha: 'setup' }
+    },
+  }
+
+  await createAndInitializeGroup(setup, 'Amici')
+  assert.equal(requestedPrivate, true)
 })
