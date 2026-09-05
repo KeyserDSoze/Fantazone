@@ -147,16 +147,7 @@ const rank = {
 }
 
 test('composes LiveGroup locally from canonical group/global data without writing a live cache', async () => {
-  const client = new FakeContentClient()
-  putGroup(client, GROUP_DOCUMENT_PATH, group)
-  putGroup(client, calendarDocumentPath('league-a', SEASON), calendar)
-  putGroup(client, dayTeamDocumentPath('main', SEASON, DAY, 'alpha@example.com'), homeTeam)
-  putGroup(client, dayTeamDocumentPath('main', SEASON, DAY, 'beta@example.com'), awayTeam)
-  putGroup(client, seasonRankDocumentPath('league-a', SEASON), rank)
-  putPlatform(client, realCalendarDocumentPath(SEASON), realCalendar)
-  putPlatform(client, serieAVoteDocumentPath('official', SEASON, DAY), officialVotes)
-  putPlatform(client, serieAVoteDocumentPath('live', SEASON, DAY), liveVotes)
-
+  const client = fixtureClient({ includeHomeTeam: true })
   const runtime = await GroupSessionRuntime.open(connection, client, { now: () => NOW })
   const result = await runtime.liveComposer.getLiveGroup(SEASON)
 
@@ -174,6 +165,32 @@ test('composes LiveGroup locally from canonical group/global data without writin
   assert.equal(rank.rounds.A[0].point, 0, 'canonical rank fixture must remain untouched')
   assert.equal(client.writes, 0, 'local live composition must not persist data/groups/live-group.json')
 })
+
+test('missing home TeamDay stays Point.Zero and does not receive home advantage', async () => {
+  const client = fixtureClient({ includeHomeTeam: false })
+  const runtime = await GroupSessionRuntime.open(connection, client, { now: () => NOW })
+  const result = await runtime.liveComposer.getLiveGroup(SEASON)
+
+  assert.ok(result)
+  const game = result.leagues[0].rounds.A.games[0]
+  assert.equal(game.result?.home.value, 0)
+  assert.equal(game.result?.away.value, 65)
+})
+
+function fixtureClient(options: { includeHomeTeam: boolean }): FakeContentClient {
+  const client = new FakeContentClient()
+  putGroup(client, GROUP_DOCUMENT_PATH, group)
+  putGroup(client, calendarDocumentPath('league-a', SEASON), calendar)
+  if (options.includeHomeTeam) {
+    putGroup(client, dayTeamDocumentPath('main', SEASON, DAY, 'alpha@example.com'), homeTeam)
+  }
+  putGroup(client, dayTeamDocumentPath('main', SEASON, DAY, 'beta@example.com'), awayTeam)
+  putGroup(client, seasonRankDocumentPath('league-a', SEASON), rank)
+  putPlatform(client, realCalendarDocumentPath(SEASON), realCalendar)
+  putPlatform(client, serieAVoteDocumentPath('official', SEASON, DAY), officialVotes)
+  putPlatform(client, serieAVoteDocumentPath('live', SEASON, DAY), liveVotes)
+  return client
+}
 
 function team(name: string, owner: string, playerName: string, realTeam: string, abbreviation: string): Team {
   return {

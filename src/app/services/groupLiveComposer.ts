@@ -134,10 +134,9 @@ export class GroupLiveComposer {
         this.teams.getTeamDay(homeBasket, input.season, input.day.serieADay, game.homeOwner),
         this.teams.getTeamDay(awayBasket, input.season, input.day.serieADay, game.awayOwner),
       ])
-      const home = addHomeAdvantage(
-        this.calculatePoint(homeTeam, input, input.settings),
-        input.settings.pointInHome,
-      )
+      const home = homeTeam?.players
+        ? addHomeAdvantage(this.calculatePoint(homeTeam, input, input.settings), input.settings.pointInHome)
+        : zeroPoint()
       const away = this.calculatePoint(awayTeam, input, input.settings)
       const result: GameResult = {
         home,
