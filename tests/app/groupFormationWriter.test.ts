@@ -107,8 +107,8 @@ function session(email: string): AuthenticatedGroupSession {
 }
 
 const swap = [
-  { playerKey: getPlayerKey('Fwd starter 1'), position: FantaSoccerRole.Tribune },
-  { playerKey: getPlayerKey('Fwd tribune 1'), position: FantaSoccerRole.Forward },
+  { playerKey: getPlayerKey('Fwd starter Alpha'), position: FantaSoccerRole.Tribune },
+  { playerKey: getPlayerKey('Fwd tribune Alpha'), position: FantaSoccerRole.Forward },
 ]
 
 test('creates TeamDay from the season Team and changes only formation positions', async () => {
@@ -120,11 +120,11 @@ test('creates TeamDay from the season Team and changes only formation positions'
   assert.equal(result.source, 'season-fallback')
   assert.equal(client.lastWriteSha, undefined)
   const day = JSON.parse(client.files.get(key('KeyserDSoze', 'Fantazone.Amici', dayTeamDocumentPath('main', 2026, 4, 'owner@example.com'), 'main'))!.content) as Team
-  assert.equal(day.players.find(player => player.name === 'Fwd starter 1')?.position, FantaSoccerRole.Tribune)
-  assert.equal(day.players.find(player => player.name === 'Fwd starter 1')?.price, 10)
+  assert.equal(day.players.find(player => player.name === 'Fwd starter Alpha')?.position, FantaSoccerRole.Tribune)
+  assert.equal(day.players.find(player => player.name === 'Fwd starter Alpha')?.price, 10)
   assert.ok(day.lastUpdate)
   const season = JSON.parse(client.files.get(key('KeyserDSoze', 'Fantazone.Amici', seasonTeamDocumentPath('main', 2026, 'owner@example.com'), 'main'))!.content) as Team
-  assert.equal(season.players.find(player => player.name === 'Fwd starter 1')?.position, FantaSoccerRole.Forward)
+  assert.equal(season.players.find(player => player.name === 'Fwd starter Alpha')?.position, FantaSoccerRole.Forward)
   assert.equal(season.lastUpdate, null)
 })
 
@@ -175,7 +175,7 @@ test('rejects an invalid position-only payload before writing GitHub', async () 
     runtime.formationWriter.saveGameFormation({
       session: session('owner@example.com'), leagueId: 'league-a', season: 2026, gameId: 'game-1', owner: 'owner@example.com',
       nextSerieADay: 4,
-      positions: [{ playerKey: getPlayerKey('Fwd starter 1'), position: FantaSoccerRole.Tribune }],
+      positions: [{ playerKey: getPlayerKey('Fwd starter Alpha'), position: FantaSoccerRole.Tribune }],
     }),
     FormationValidationError,
   )
@@ -187,23 +187,24 @@ function makeTeam(): Team {
   add(players, 'GK starter', Role.GoalKeeper, FantaSoccerRole.GoalKeeper, 1)
   add(players, 'GK backup', Role.GoalKeeper, FantaSoccerRole.BackupGoalKeeper, 1)
   add(players, 'Def starter', Role.Defensor, FantaSoccerRole.Defensor, 3)
-  add(players, 'Def backup 1', Role.Defensor, FantaSoccerRole.FirstBackupDefensor, 1)
-  add(players, 'Def backup 2', Role.Defensor, FantaSoccerRole.SecondBackupDefensor, 1)
+  add(players, 'Def backup first', Role.Defensor, FantaSoccerRole.FirstBackupDefensor, 1)
+  add(players, 'Def backup second', Role.Defensor, FantaSoccerRole.SecondBackupDefensor, 1)
   add(players, 'Def tribune', Role.Defensor, FantaSoccerRole.Tribune, 3)
   add(players, 'Mid starter', Role.Midfielder, FantaSoccerRole.Midfielder, 4)
-  add(players, 'Mid backup 1', Role.Midfielder, FantaSoccerRole.FirstBackupMidfielder, 1)
-  add(players, 'Mid backup 2', Role.Midfielder, FantaSoccerRole.SecondBackupMidfielder, 1)
+  add(players, 'Mid backup first', Role.Midfielder, FantaSoccerRole.FirstBackupMidfielder, 1)
+  add(players, 'Mid backup second', Role.Midfielder, FantaSoccerRole.SecondBackupMidfielder, 1)
   add(players, 'Mid tribune', Role.Midfielder, FantaSoccerRole.Tribune, 2)
   add(players, 'Fwd starter', Role.Forward, FantaSoccerRole.Forward, 3)
-  add(players, 'Fwd backup 1', Role.Forward, FantaSoccerRole.FirstBackupForward, 1)
-  add(players, 'Fwd backup 2', Role.Forward, FantaSoccerRole.SecondBackupForward, 1)
+  add(players, 'Fwd backup first', Role.Forward, FantaSoccerRole.FirstBackupForward, 1)
+  add(players, 'Fwd backup second', Role.Forward, FantaSoccerRole.SecondBackupForward, 1)
   add(players, 'Fwd tribune', Role.Forward, FantaSoccerRole.Tribune, 2)
   players.push(player('Sold player', Role.Forward, FantaSoccerRole.Tribune, PlayerInTeamStatus.Sold))
   return { name: 'Owner Team', owner: 'owner@example.com', additionalOwners: ['coowner@example.com'], players, moneyFromRank: 0, lastUpdate: null }
 }
 
+const suffixes = ['Alpha', 'Bravo', 'Charlie', 'Delta', 'Echo', 'Foxtrot']
 function add(target: Player[], prefix: string, role: Role, position: FantaSoccerRole, count: number) {
-  for (let index = 1; index <= count; index += 1) target.push(player(`${prefix} ${index}`, role, position))
+  for (let index = 0; index < count; index += 1) target.push(player(`${prefix} ${suffixes[index]}`, role, position))
 }
 
 function player(name: string, role: Role, position: FantaSoccerRole, status = PlayerInTeamStatus.Active): Player {
