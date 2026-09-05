@@ -6,9 +6,11 @@ import { ingestMasterData } from './masterDataIngestion'
 import { ingestPlayerImages } from './playerImagesIngestion'
 import { ingestPlayerOdds } from './playerOddsIngestion'
 import { rebuildPlayerStats } from './playerStatsRebuild'
+import { bootstrapSerieAPlatformData } from './serieAPlatformBootstrap'
 import { ingestSerieACalendar } from './serieAIngestion'
 
 type JobName =
+  | 'bootstrap-serie-a'
   | 'ingest-serie-a'
   | 'ingest-master-data'
   | 'rebuild-player-stats'
@@ -28,6 +30,20 @@ type JobContext = {
 }
 
 const migrated: Partial<Record<JobName, (context: JobContext) => Promise<void>>> = {
+  'bootstrap-serie-a': async context => {
+    const result = await bootstrapSerieAPlatformData({ season: context.season })
+    console.log(
+      `Bootstrap Serie A ${result.master.players.year}: ${result.calendar.calendar.days.length} giornate, ` +
+      `${result.master.teams.teams.length} squadre, ${result.master.players.players.length} giocatori.`,
+    )
+    if (result.stats) {
+      console.log(
+        `Bootstrap statistiche: ${result.stats.stats.players.length} giocatori fino alla giornata ${result.stats.stats.untilSerieADay}.`,
+      )
+    } else {
+      console.log('Bootstrap statistiche: nessuna rigenerazione necessaria perché il numero giocatori non è cambiato.')
+    }
+  },
   'ingest-serie-a': async context => {
     const result = await ingestSerieACalendar(context)
     console.log(`Serie A calendar ${result.calendar.year}: ${result.calendar.days.length} giornate salvate in ${result.path}`)
