@@ -1,14 +1,10 @@
 import { Platform } from 'react-native'
 import * as SecureStore from 'expo-secure-store'
-import type { GitHubRepo } from '@fantazone/github'
+import type { GroupConnection } from './groupSessionRuntime'
 
 const STORAGE_KEY = 'fantazone.github.group.v1'
 
-export type StoredGroupConnection = {
-  token: string
-  repository: GitHubRepo
-  groupName: string
-}
+export type StoredGroupConnection = GroupConnection
 
 export async function loadGroupConnection(): Promise<StoredGroupConnection | null> {
   const raw = Platform.OS === 'web'

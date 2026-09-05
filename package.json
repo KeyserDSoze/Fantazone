@@ -12,9 +12,10 @@
     "app:web": "npm run web --workspace=fantazone-app",
     "app:start": "npm run start --workspace=fantazone-app",
     "typecheck": "npm run typecheck --workspace=fantazone-app",
-    "test": "npm run test:github && npm run test:domain",
+    "test": "npm run test:github && npm run test:domain && npm run test:app",
     "test:github": "tsx --test tests/github/*.test.ts",
-    "test:domain": "tsx --test tests/domain/*.test.ts"
+    "test:domain": "tsx --test tests/domain/*.test.ts",
+    "test:app": "tsx --test tests/app/*.test.ts"
   },
   "devDependencies": {
     "tsx": "^4.20.5"

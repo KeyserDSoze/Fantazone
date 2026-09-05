@@ -19,12 +19,9 @@ import {
   parseInviteFragment,
   type GitHubRepo,
 } from '@fantazone/github'
+import type { GroupConnection } from '../services/groupSessionRuntime'
 
-export type ConnectedGroup = {
-  token: string
-  repository: GitHubRepo
-  groupName: string
-}
+export type ConnectedGroup = GroupConnection
 
 type Props = {
   onConnected: (group: ConnectedGroup) => void

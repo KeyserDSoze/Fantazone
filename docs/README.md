@@ -13,11 +13,12 @@ This documentation is the migration contract from `KeyserDSoze/Fantasoccer` to F
 7. [`07-runtime-topology.md`](07-runtime-topology.md) — shared/global ingestion vs per-group GitHub Action responsibilities.
 8. [`08-legacy-service-matrix.md`](08-legacy-service-matrix.md) — old frontend services mapped to GitHub, local domain logic, Actions or WebRTC.
 9. [`09-event-demo.md`](09-event-demo.md) — short and extended paths for explaining Fantazone at events/workshops.
-10. [`10-public-security-model.md`](10-public-security-model.md) — public-repository data classification and V1 credential boundaries.
+10. [`10-public-security-model.md`](10-public-security-model.md) — public source repository vs private real-group data and V1 credential boundaries.
 11. [`11-repository-json-store.md`](11-repository-json-store.md) — typed JSON cache, SHA-based optimistic concurrency and public GitHub reads.
 12. [`12-calendar-migration.md`](12-calendar-migration.md) — first end-to-end Fantasoccer repository-service migration using the shared domain + GitHubJsonStore pattern.
 13. [`13-ranking-migration.md`](13-ranking-migration.md) — season/daily ranking migration, shared helpers and Action-compatible write side.
 14. [`14-group-json-login-flow.md`](14-group-json-login-flow.md) — exact GroupRaw persistence plus PAT → group → login → membership ordering.
+15. [`15-group-session-runtime.md`](15-group-session-runtime.md) — selected-group composition root, shared repository cache and the pre-login UX gate.
 
 ## Source of truth
 
