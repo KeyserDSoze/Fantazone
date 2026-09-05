@@ -11,6 +11,7 @@ import {
   type Team,
 } from '../../src/domain/src/index'
 
+const suffixes = ['Alpha', 'Bravo', 'Charlie', 'Delta', 'Echo', 'Foxtrot']
 const team = makeValidTeam()
 
 test('accepts the legacy-valid 3-4-3 formation with complete bench and tribune', () => {
@@ -66,7 +67,6 @@ export function makeValidTeam(owner = 'owner@example.com'): Team {
   return { name: 'Owner Team', owner, additionalOwners: ['coowner@example.com'], players, moneyFromRank: 0, lastUpdate: null }
 }
 
-const suffixes = ['Alpha', 'Bravo', 'Charlie', 'Delta', 'Echo', 'Foxtrot']
 function add(target: Player[], prefix: string, role: Role, position: FantaSoccerRole, count: number) {
   for (let index = 0; index < count; index += 1) target.push(player(`${prefix} ${suffixes[index]}`, role, position))
 }
