@@ -19,6 +19,7 @@ This documentation is the migration contract from `KeyserDSoze/Fantasoccer` to F
 13. [`13-ranking-migration.md`](13-ranking-migration.md) — season/daily ranking migration, shared helpers and Action-compatible write side.
 14. [`14-group-json-login-flow.md`](14-group-json-login-flow.md) — exact GroupRaw persistence plus PAT → group → login → membership ordering.
 15. [`15-group-session-runtime.md`](15-group-session-runtime.md) — selected-group composition root, shared repository cache and the pre-login UX gate.
+16. [`16-team-migration.md`](16-team-migration.md) — exact TeamRaw/PlayerRaw persistence, season/day repositories and shared Ranking integration.
 
 ## Source of truth
 
