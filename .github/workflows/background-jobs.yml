@@ -65,7 +65,7 @@ jobs:
       - name: Commit canonical platform data changes
         shell: bash
         run: |
-          if git diff --quiet; then
+          if [ -z "$(git status --porcelain -- data)" ]; then
             echo "No canonical platform data changes"
             exit 0
           fi
