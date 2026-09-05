@@ -24,6 +24,12 @@ The Pages build reads `EXPO_PUBLIC_GOOGLE_CLIENT_ID` from the GitHub Actions rep
 
 The Google web client must allow JavaScript origin `https://fanta.plus`. Fantazone uses Google Identity Services popup token flow with only `openid profile email`, then reads the standard OIDC UserInfo endpoint.
 
+## First group administrator
+
+A newly created repository cannot start with `group.users: []`, otherwise nobody could ever pass the membership gate and become the first administrator. Group creation therefore requires an initial administrator email. Fantazone writes it into the initial readable Group document with Participant + Admin + SuperAdmin flags and immediately binds the first login to that same email.
+
+This is a bootstrap operation tied to repository creation. It is different from normal invitations, which remain restricted to an already-authenticated Admin/SuperAdmin. An old already-created repository with an empty `group.users` list can be bootstrapped once; a populated membership list is never overwritten by the creation helper.
+
 ## Invite flow
 
 Only an authenticated Group Admin/SuperAdmin gets the invite form in the normal UI.

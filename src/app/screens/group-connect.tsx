@@ -32,6 +32,7 @@ export function GroupConnectScreen({ onConnected, onExploreDemo }: Props) {
   const [pat, setPat] = useState('')
   const [groupName, setGroupName] = useState('')
   const [expectedEmail, setExpectedEmail] = useState('')
+  const [creatorEmail, setCreatorEmail] = useState('')
   const [repositories, setRepositories] = useState<GitHubRepo[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -117,8 +118,9 @@ export function GroupConnectScreen({ onConnected, onExploreDemo }: Props) {
   }
 
   async function createGroup() {
-    if (!canSubmit || !groupName.trim()) {
-      setError('Inserisci PAT e nome del gruppo.')
+    const adminEmail = creatorEmail.trim().toLowerCase()
+    if (!canSubmit || !groupName.trim() || !adminEmail || !adminEmail.includes('@')) {
+      setError('Per creare un gruppo inserisci PAT, nome del gruppo e una email valida per il primo amministratore.')
       return
     }
     setLoading(true)
@@ -126,8 +128,16 @@ export function GroupConnectScreen({ onConnected, onExploreDemo }: Props) {
     try {
       const client = new GitHubClient(pat.trim())
       await client.validateToken()
-      const initialized = await createAndInitializeGroup(client, groupName.trim(), { isPrivate: true })
-      onConnected({ token: pat.trim(), repository: initialized.repository, groupName: initialized.groupName })
+      const initialized = await createAndInitializeGroup(client, groupName.trim(), {
+        isPrivate: true,
+        initialAdmin: { email: adminEmail },
+      })
+      onConnected({
+        token: pat.trim(),
+        repository: initialized.repository,
+        groupName: initialized.groupName,
+        expectedEmail: adminEmail,
+      })
     } catch (caught) {
       setError(toMessage(caught))
     } finally {
@@ -179,13 +189,23 @@ export function GroupConnectScreen({ onConnected, onExploreDemo }: Props) {
               <Paragraph size="$2" color="$color9">Il repository corrispondente sarà Fantazone.&lt;nome-normalizzato&gt;.</Paragraph>
             </YStack>
 
+            <Card borderWidth={1} borderColor="$borderColor" padding="$3">
+              <YStack gap="$2">
+                <Text fontWeight="700">Se stai creando un gruppo nuovo</Text>
+                <Paragraph size="$2" color="$color9">
+                  Indica l’email del primo amministratore. Verrà salvata subito in group.users e dovrà essere provata con Google/Microsoft al primo accesso.
+                </Paragraph>
+                <Input value={creatorEmail} onChangeText={setCreatorEmail} autoCapitalize="none" autoCorrect={false} placeholder="admin@esempio.it" />
+              </YStack>
+            </Card>
+
             {error ? <Card borderWidth={1} borderColor="$red8" padding="$3"><Text>{error}</Text></Card> : null}
 
             <XStack gap="$3" flexWrap="wrap">
               <Button disabled={!canSubmit} onPress={discover} flex={1} minWidth={180}>
                 {loading ? <Spinner /> : 'Cerca gruppi'}
               </Button>
-              <Button disabled={!canSubmit || !groupName.trim()} onPress={createGroup} flex={1} minWidth={180} theme="accent">
+              <Button disabled={!canSubmit || !groupName.trim() || !creatorEmail.trim()} onPress={createGroup} flex={1} minWidth={180} theme="accent">
                 Crea / inizializza gruppo
               </Button>
             </XStack>
