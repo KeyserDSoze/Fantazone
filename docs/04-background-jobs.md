@@ -5,7 +5,7 @@ The current Fantasoccer background-job project contains the following jobs. None
 | Legacy job | Legacy intent | Fantazone target |
 |---|---|---|
 | `SerieAJob` | refresh Serie A/calendar/live source data | **implemented first slice:** `ingest-serie-a` manual Action -> global readable RealCalendar JSON; standings/live extensions still pending |
-| `AllPlayersAndAllTeamsJob` | refresh player/team master data | `ingest-master-data` Action |
+| `AllPlayersAndAllTeamsJob` | refresh player/team master data | **global slice implemented:** `ingest-master-data` -> readable RealTeams/RealPlayers + active/inactive/transfer reconciliation; stats regeneration and per-group Team propagation are intentionally split into follow-ups #28 / #9 |
 | `LiveVotesJob` | ingest live fantasy votes | `ingest-live-votes` Action |
 | `LiveJob` | ingest live match state | `ingest-live` Action |
 | `FinalVotesJob` | ingest final votes | `ingest-final-votes` Action, also manually dispatchable by day |
@@ -43,6 +43,42 @@ The Gazzetta response is isolated in a source adapter. Its base URL defaults to 
 
 Full refresh queries days 1–38. A day-only refresh requires an existing calendar and replaces that day; it never creates a partial calendar accidentally. The current-source adapter refuses historical season ids so current fixtures cannot be mislabeled as a backfill.
 
+### `ingest-master-data`
+
+The legacy `AllPlayersAndAllTeamsJob` mixed platform master-data ingestion, statistics regeneration and writes into every fantasy-group Team. Fantazone deliberately splits those responsibilities.
+
+The implemented global slice does:
+
+```text
+RealCalendar
+  -> derive RealTeams
+  -> fetch Fantacalcio quotations HTML
+  -> parse current RealPlayers
+  -> reconcile with existing RealPlayers
+  -> write data/serie-a/teams/<season-id>.json
+  -> write data/serie-a/players/<season-id>.json
+```
+
+Important parity rules:
+
+- fresh source players are authoritative;
+- historical players missing from the source remain in the master list with `isActive=false`;
+- returning players become active again;
+- real-team transfers come from the fresh source representation;
+- legacy player identity is still lowercase ASCII letters only;
+- `playerCountChanged` is reported separately, matching the legacy condition that triggered statistics regeneration.
+
+Intentional architecture difference: clubs are derived from the canonical RealCalendar instead of bootstrapping RealTeams from official day-1 votes. This removes an avoidable provider dependency without changing the resulting football-domain model.
+
+The current quotations source defaults to `https://www.fantacalcio.it/quotazioni-fantacalcio` and can be overridden with `FANTAZONE_PLAYERS_SOURCE_URL`.
+
+What the job deliberately does **not** do:
+
+- player statistics regeneration is tracked separately in #28;
+- propagating transfers into each `Fantazone.<group>` Team remains a group-scoped responsibility tied to #9.
+
+Full details: `docs/23-global-serie-a-master-data.md` and issue #27.
+
 ## Manual operations required
 
 The Action dispatcher must support at least:
@@ -65,4 +101,4 @@ Before enabling a scheduled job:
 4. enable `workflow_dispatch` first;
 5. only then enable `schedule`.
 
-`ingest-serie-a` is currently at step 4: implementation and deterministic tests exist, but the external source still needs a successful manual production run before any schedule is added.
+`ingest-serie-a` and `ingest-master-data` are currently at step 4: implementation and deterministic tests exist, but the external sources still need successful manual production validation before any schedule is added.

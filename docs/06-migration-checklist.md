@@ -38,13 +38,13 @@
 - [x] Group.
 - [x] Calendar.
 - [x] Ranking.
-- [x] Team/Player.
+- [x] Team/Player fantasy-roster domain.
 - [x] LiveGroup readable snapshot/helpers/repository.
 - [x] RealCalendar readable global schema + GitHub repository + legacy live/last/next timing projections.
+- [x] global RealTeams/RealPlayers readable master-data schema + GitHub repositories + active/inactive/transfer reconciliation.
 - [~] Game/day: local GameWrapper composition and TeamDay formation persistence derive editability from global RealCalendar; live player enrichment and score calculation still pending.
 - [~] Formations: authoritative validation + owner/SuperAdmin authorization + RealCalendar-controlled TeamDay GitHub write implemented; field-editing UI and chance/stat-based optimal formation still pending.
-- [~] Serie A ingestion: `ingest-serie-a` calendar producer implemented/tested and manually dispatchable; first production source validation, standings and master data still pending.
-- [ ] Real players.
+- [~] Serie A ingestion: calendar + RealTeams/RealPlayers producers implemented/tested and manually dispatchable; production source validation, standings/live/final vote data and scheduling still pending.
 - [ ] Statistics/chances/votes.
 - [ ] Market persistence/commands.
 
@@ -62,7 +62,7 @@
 ## Background jobs
 
 - [~] Serie A calendar ingestion: implementation + tests + manual Action ready; scheduling waits for production source validation.
-- [ ] player/team master-data ingestion.
+- [~] player/team master-data ingestion: global teams/players + reconciliation implemented; legacy stats regeneration and per-group Team transfer propagation intentionally split into follow-up jobs.
 - [ ] live/final votes, odds/images.
 - [ ] formation/groups manager.
 - [ ] HallOfFame/Market.
