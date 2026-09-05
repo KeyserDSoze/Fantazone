@@ -44,6 +44,10 @@ jobs:
           EXPO_PUBLIC_MICROSOFT_AUTHORITY_TENANT: ${{ vars.EXPO_PUBLIC_MICROSOFT_AUTHORITY_TENANT || 'common' }}
         run: npm run export:web --workspace=fantazone-app
 
+      - name: Verify player image static assets
+        shell: bash
+        run: test -f src/app/dist/images/players/default.webp
+
       - name: Prepare GitHub Pages SPA artifact
         shell: bash
         run: |
