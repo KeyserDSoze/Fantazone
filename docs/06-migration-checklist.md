@@ -12,15 +12,16 @@
 
 ## Identity and groups
 
-- [~] Google web adapter implemented but product login intentionally disabled until its web client is configured (`EXPO_PUBLIC_GOOGLE_LOGIN_ENABLED=false`).
-- [x] Microsoft web login after group selection through authorization-code + PKCE; `common` authority by default and `https://fanta.plus` redirect.
+- [~] Google web adapter implemented but product login intentionally disabled until configured.
+- [x] Microsoft web login after group selection through authorization-code + PKCE.
 - [~] PAT validation/repository discovery before login.
 - [x] readable Group initialization and `group.users` membership resolution.
 - [x] first-admin bootstrap for newly created/legacy-empty groups.
-- [x] email-bound Admin/SuperAdmin group invitation flow: census member first, then share repository/PAT/expected-email link.
+- [x] email-bound Admin/SuperAdmin invitation flow.
 - [~] secure credential persistence and group switching; V1 web PAT still uses local storage.
-- [x] GroupSession shares per-group repositories plus global RealCalendar and vote repositories around one JSON store.
+- [x] GroupSession shares per-group repositories plus global football repositories.
 - [x] authenticated web session after provider email + selected-group membership resolution.
+- [x] group bootstrap installs `.github/workflows/fantazone-group.yml` idempotently.
 - [ ] native Google/Microsoft OAuth redirects/deep links for iOS/Android.
 
 ## UI parity
@@ -39,41 +40,45 @@
 - [x] Calendar.
 - [x] Ranking.
 - [x] Team/Player fantasy-roster domain.
-- [x] LiveGroup readable contract/helpers; persisted repository retained only for migration compatibility.
-- [x] RealCalendar readable global schema + GitHub repository + legacy live/last/next timing projections.
-- [x] global RealTeams/RealPlayers readable master-data schema + GitHub repositories + active/inactive/transfer reconciliation.
-- [x] canonical Vote/StatPlayer readable contracts + GitHub repositories + pure FinalValue/player-statistics reducers + rebuild job.
-- [x] live/final Serie A vote producer logic: final HTML parser, delayed-game behavior, SignedUri/protobuf live adapter, canonical repositories and manual jobs; real-source production validation/scheduling still pending operationally.
-- [x] local fantasy team scoring reducer: official-over-live precedence, substitutions, Best Formation, defensive/good-people/own-goal behavior.
-- [x] local live Rank projection + `GroupLiveComposer`; legacy high-frequency `LiveJob`/`ingest-live` retired with zero live-cache writes.
-- [~] Game/day: local GameWrapper composition and TeamDay formation persistence exist; next step is reusing the new scoring reducer for definitive stored day results and UI enrichment.
-- [~] Formations: authoritative validation + owner/SuperAdmin authorization + RealCalendar-controlled TeamDay GitHub write implemented; field-editing UI and chance/stat-based optimal formation still pending.
-- [~] Serie A ingestion: calendar, RealTeams/RealPlayers and live/final vote producers implemented/tested; production data initialization/source validation, standings and scheduling still pending.
-- [~] Statistics/chances/votes: deterministic official-vote statistics + live/final vote producers implemented; chances and production source validation remain pending.
+- [x] LiveGroup readable contract/helpers; persisted adapter retained only for migration compatibility.
+- [x] RealCalendar readable global schema + GitHub repository + timing projections.
+- [x] global RealTeams/RealPlayers readable master-data + reconciliation.
+- [x] Vote/StatPlayer readable contracts + FinalValue/statistics reducers + rebuild job.
+- [x] live/final Serie A vote producer logic and canonical repositories; real-source production validation/scheduling remains operational work.
+- [x] local fantasy team scoring reducer: official-over-live precedence, substitutions, Best Formation, defence/good-people/own-goal behavior.
+- [x] local live Rank projection + `GroupLiveComposer`; legacy `LiveJob` retired.
+- [x] definitive fantasy-day reducer using official votes only, including missing TeamDay and home-advantage parity.
+- [x] full canonical Rank rebuild from calculated Calendar.
+- [x] deterministic Cup/NewCup progression including Finals, Europa League and Supercoppa; perfect-tie randomness intentionally replaced by stable seeded choice.
+- [~] Game/day: read composition, TeamDay write side and scoring core are migrated; actual screens/UI enrichment remain pending.
+- [~] Formations: validation + owner/SuperAdmin authorization + TeamDay write implemented; UI and chance/stat automatic formation remain pending.
+- [~] Serie A ingestion: core calendar/master/vote producers implemented; production initialization/source validation/scheduling remain pending.
+- [~] Statistics/chances/votes: deterministic statistics + vote producers implemented; chances remain pending.
 - [ ] Market persistence/commands.
 
 ## Infrastructure backlog
 
-- [ ] Replace every legacy `buildApiUrl(...)` responsibility with local composition/GitHub/Actions/WebRTC; `/Game/Get`, `Game/SaveTeam` and persisted LiveGroup aggregation are removed conceptually by local composers/writers.
-- [x] remove backend JWT/AppIdentity dependency from the web login boundary.
+- [ ] Replace every legacy `buildApiUrl(...)` responsibility with local composition/GitHub/Actions/WebRTC; major Game, formation, live and recalculation endpoints are already removed conceptually.
+- [x] remove backend JWT/AppIdentity dependency from web login.
 - [~] replace `rystem.repository.client` with GitHub adapters.
 - [ ] replace Azure/static URLs.
-- [x] SHA cache + optimistic concurrency for migrated mutable JSON, including create-only races.
+- [x] SHA cache + optimistic concurrency for migrated mutable JSON.
 - [ ] ETag conditional reads.
-- [ ] one-time schema-v1→v2 migration tooling if any compact runtime repositories exist.
-- [ ] strict per-user write authorization beyond the client UI (repository rules, signed commands or trusted command service) if required.
+- [ ] one-time schema-v1→v2 migration tooling if compact runtime repositories exist.
+- [ ] strict per-user write authorization beyond client UI if required.
 
 ## Background jobs
 
-- [~] Serie A calendar ingestion: implementation + tests + manual Action ready; scheduling waits for production source validation.
-- [~] player/team master-data ingestion: global teams/players + reconciliation implemented; legacy count-change stats regeneration is independent; per-group Team transfer propagation remains pending.
-- [~] player statistics rebuild: pure reducer/repository/manual Action implemented and automatically triggered only on legacy `playerCountChanged`; real runtime data initialization remains pending.
-- [~] live/final votes: provider adapters + manual Actions + offline parity tests implemented; first real provider runs and scheduling decision remain pending (#29).
-- [x] legacy `LiveJob`: retired, replaced by local `GroupLiveComposer`; `ingest-live` removed from dispatcher/Action choices.
+- [~] Serie A calendar ingestion: implementation/tests/manual Action ready; scheduling waits for production validation.
+- [~] player/team master-data ingestion: global teams/players + reconciliation implemented; per-group transfer propagation remains pending.
+- [~] player statistics rebuild implemented; real runtime data initialization remains pending.
+- [~] live/final votes: provider adapters + manual Actions + offline parity tests implemented; first real provider runs and scheduling remain pending (#29).
+- [x] legacy `LiveJob`: retired; local `GroupLiveComposer` replaces it.
+- [x] legacy `GroupsManagerJob`: retired; definitive scoring/ranking/progression use shared reducers and group-owned `recalculate-day` / `recalculate-all`.
+- [x] day/full-season recalculation: filesystem orchestration + tests + group workflow bootstrap implemented.
 - [ ] odds/images.
-- [ ] formation/groups manager.
+- [ ] set-next-formations migration.
 - [ ] HallOfFame/Market.
-- [ ] day/full-season recalculation.
 
 ## Auction
 

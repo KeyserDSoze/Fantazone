@@ -6,12 +6,12 @@ This documentation is the migration contract from `KeyserDSoze/Fantasoccer` to F
 
 1. [`01-feature-inventory.md`](01-feature-inventory.md) — user-facing and domain functionality discovered in Fantasoccer.
 2. [`02-zero-server-architecture.md`](02-zero-server-architecture.md) — target zero-backend architecture.
-3. [`03-github-data-contract.md`](03-github-data-contract.md) — repository naming, readable schema v2, group-first onboarding and concurrency rules.
-4. [`04-background-jobs.md`](04-background-jobs.md) — legacy job inventory and GitHub Actions migration matrix.
+3. [`03-github-data-contract.md`](03-github-data-contract.md) — repository naming, readable schema v2, onboarding and concurrency rules.
+4. [`04-background-jobs.md`](04-background-jobs.md) — legacy job inventory and platform-vs-group Actions migration matrix.
 5. [`05-webrtc-auction.md`](05-webrtc-auction.md) — SignalR-to-WebRTC migration and auction host protocol.
 6. [`06-migration-checklist.md`](06-migration-checklist.md) — executable migration backlog.
-7. [`07-runtime-topology.md`](07-runtime-topology.md) — shared/global ingestion vs per-group GitHub Action responsibilities.
-8. [`08-legacy-service-matrix.md`](08-legacy-service-matrix.md) — old frontend services mapped to GitHub, local domain logic, Actions or WebRTC.
+7. [`07-runtime-topology.md`](07-runtime-topology.md) — global ingestion, group-owned workflows and device responsibilities.
+8. [`08-legacy-service-matrix.md`](08-legacy-service-matrix.md) — old frontend services mapped to GitHub, Local, Actions or WebRTC.
 9. [`09-event-demo.md`](09-event-demo.md) — event/workshop explanation path.
 10. [`10-public-security-model.md`](10-public-security-model.md) — source/data visibility and credential boundaries.
 11. [`11-repository-json-store.md`](11-repository-json-store.md) — typed JSON cache and SHA concurrency.
@@ -21,16 +21,17 @@ This documentation is the migration contract from `KeyserDSoze/Fantasoccer` to F
 15. [`15-group-session-runtime.md`](15-group-session-runtime.md) — selected-group composition root.
 16. [`16-team-migration.md`](16-team-migration.md) — Team/Player migration.
 17. [`17-readable-json-schema-v2.md`](17-readable-json-schema-v2.md) — readable schema-v2 policy.
-18. [`18-live-group-schema-v2.md`](18-live-group-schema-v2.md) — LiveGroup readable contract; persisted adapter is now legacy compatibility while runtime composition is local.
-19. [`19-web-oauth-group-invites.md`](19-web-oauth-group-invites.md) — `fanta.plus` external login, group membership gate and email-bound Admin invites; Microsoft is active and Google remains feature-flagged off until configured.
-20. [`20-game-wrapper-composition.md`](20-game-wrapper-composition.md) — local ephemeral GameWrapper composition replacing the legacy `/Game/Get` aggregate endpoint.
-21. [`21-formation-write-side.md`](21-formation-write-side.md) — validated position-only TeamDay writes replacing legacy `Game/SaveTeam`.
-22. [`22-global-real-calendar.md`](22-global-real-calendar.md) — shared readable Serie A calendar, legacy timing projections and platform/group repository split.
-23. [`23-global-serie-a-master-data.md`](23-global-serie-a-master-data.md) — readable RealTeams/RealPlayers ingestion, legacy active/inactive reconciliation and global-vs-group side-effect split.
-24. [`24-player-statistics-and-votes.md`](24-player-statistics-and-votes.md) — readable vote contract, pure FinalValue/statistics reducers and rebuild-player-stats workflow.
-25. [`25-serie-a-vote-ingestion.md`](25-serie-a-vote-ingestion.md) — official/live Fantacalcio vote producers, delayed-game parity, SignedUri/protobuf mapping and production-validation plan.
-26. [`26-local-live-composition.md`](26-local-live-composition.md) — local TeamCalculator/Rank reducers, GroupLiveComposer and retirement of the legacy high-frequency LiveJob cache builder.
+18. [`18-live-group-schema-v2.md`](18-live-group-schema-v2.md) — LiveGroup readable contract; persisted adapter is compatibility-only.
+19. [`19-web-oauth-group-invites.md`](19-web-oauth-group-invites.md) — external login, membership gate and email-bound Admin invites.
+20. [`20-game-wrapper-composition.md`](20-game-wrapper-composition.md) — local GameWrapper composition replacing `/Game/Get`.
+21. [`21-formation-write-side.md`](21-formation-write-side.md) — validated TeamDay formation writes replacing `Game/SaveTeam`.
+22. [`22-global-real-calendar.md`](22-global-real-calendar.md) — shared Serie A calendar and timing projections.
+23. [`23-global-serie-a-master-data.md`](23-global-serie-a-master-data.md) — RealTeams/RealPlayers ingestion and reconciliation.
+24. [`24-player-statistics-and-votes.md`](24-player-statistics-and-votes.md) — vote contract, FinalValue/statistics reducers and rebuild job.
+25. [`25-serie-a-vote-ingestion.md`](25-serie-a-vote-ingestion.md) — official/live Fantacalcio vote producers and provider mapping.
+26. [`26-local-live-composition.md`](26-local-live-composition.md) — local team/rank reducers, GroupLiveComposer and retirement of LiveJob.
+27. [`27-definitive-day-recalculation.md`](27-definitive-day-recalculation.md) — definitive scoring/ranking, deterministic Cup/NewCup progression and group-owned recalculation workflow.
 
 ## Source of truth
 
-Fantasoccer remains the product/behavior reference. Fantazone persists readable camelCase schema-v2 domain documents directly and does not recreate single-letter `*Raw` naming models.
+Fantasoccer remains the product/behavior reference. Fantazone persists readable camelCase schema-v2 domain documents directly and does not recreate compact single-letter `*Raw` models.

@@ -6,42 +6,62 @@ Legend: **GitHub R/W**, **Local**, **Action**, **WebRTC**.
 
 | Fantasoccer service | Fantazone replacement |
 |---|---|
-| `appIdentityService` | remove central AppIdentity repository; Microsoft/Google proves identity after group selection, membership/roles come from selected `Group.users`, UI selection stays local |
-| `authService` | provider-native login on `fanta.plus`; Microsoft active now, Google adapter feature-flagged off until its client is configured; no Fantasoccer JWT exchange |
+| `appIdentityService` | remove central AppIdentity repository; OAuth proves identity and selected `Group.users` supplies membership/roles |
+| `authService` | provider-native login on `fanta.plus`; no Fantasoccer JWT exchange |
 | `tokenStorageService` | separate social session and GitHub group credential storage |
 | `groupService` | GitHub R/W readable `Group` at `config/group.json` |
-| `calendarService` | GitHub R readable `Calendar`; generation/rebuild Local/Action |
-| `rankService` | GitHub R/W readable canonical `Rank`; live projection is Local through `applyLiveRoundsToRank()` |
+| `calendarService` | GitHub R/W readable fantasy `Calendar`; generation/progression through shared domain logic and group Actions |
+| `rankService` | GitHub R/W canonical `Rank`; live projection Local through `applyLiveRoundsToRank()` |
 | `chanceService` | GitHub R inputs + Local derived calculations |
-| `realPlayerService` | GitHub R global Serie A data using readable models |
+| `realPlayerService` | GitHub R global Serie A data |
 | `realVoteService` | GitHub R global vote data; ingestion Action |
-| `serieAService` | GitHub R global calendar/live-vote data; ingestion Action only for true external producers |
+| `serieAService` | GitHub R global football data; Actions only for external producers |
 | `statPlayerService` | GitHub R derived statistics; Action/Local reducers |
-| `teamService` | GitHub R/W readable `Team` season/day documents; optional moneyFromRank from selected Rank repository |
-| `formationService` | Local shared formation rules + GitHub R/W `TeamDay`; no separate formation document. Chance/stat-driven automatic formation will migrate after those inputs exist |
-| `teamCalculatorService` | shared Local deterministic `calculateVoteValue()` + `calculateTeamPoint()` reducers |
-| `gameService` | `GroupGameComposer` for local reads + `GroupFormationWriter` for validated position-only TeamDay writes; new team scoring reducer is reusable for definitive result calculation |
-| `liveGroupService` | `GroupLiveComposer` Local read model; no backend aggregate and no periodic live-group cache writes. `GitHubLiveGroupRepository` remains compatibility-only |
-| `leagueManagerService` | Local algorithms + manual/scheduled Actions only when persistence/rebuild is actually required |
-| `recalculationService` | group Action `workflow_dispatch` using shared reducers |
-| `marketService` | readable command/event JSON + Local validation + Action reducer |
+| `teamService` | GitHub R/W readable Team season/day documents |
+| `formationService` | Local validation/rules + GitHub R/W `TeamDay` |
+| `teamCalculatorService` | Local deterministic `calculateVoteValue()` + `calculateTeamPoint()` |
+| `gameService` | Local `GroupGameComposer` + `GroupFormationWriter`; definitive scoring uses `calculateDefinitiveDay()` |
+| `liveGroupService` | Local `GroupLiveComposer`; no backend aggregate/cache loop |
+| `leagueManagerService` | Local ranking/progression algorithms + group Action only when canonical persistence is required |
+| `recalculationService` | group-owned `workflow_dispatch`: `recalculate-day` / `recalculate-all`; no backend endpoint |
+| `marketService` | readable command/event JSON + Local validation + group Action reducer |
 | `cardService` | GitHub R/W readable configuration/entity JSON |
-| `settingsService` | GitHub R/W readable config; assets in repository content |
-| `hallOfFameService` | GitHub R readable historical projection; Action rebuild |
+| `settingsService` | GitHub R/W readable config/assets |
+| `hallOfFameService` | GitHub R historical projection; group Action rebuild |
 | `fantasoccerLogService` | Git history + structured readable event/diagnostic JSON |
 | `pushNotificationService` | GitHub preferences + separate push transport decision |
-| `auctionService` | GitHub initial/final readable state + WebRTC realtime transport |
+| `auctionService` | GitHub durable state + WebRTC realtime transport |
+
+## Recalculation replacement in detail
+
+The old admin API name was misleading: its day recalculation endpoint only regenerated official votes. Fantazone makes the split explicit:
+
+```text
+provider -> global ingest-final-votes
+                    |
+                    v
+            official vote JSON
+                    |
+                    v
+Fantazone.<group> workflow_dispatch
+        -> calculateDefinitiveDay()
+        -> calculateRankFromCalendar()
+        -> progressLeagueCalendar()
+        -> Calendar + season/daily Rank commit
+```
+
+This also replaces the useful part of legacy `GroupsManagerJob` without recreating a central service.
 
 ## Migration rule for every remaining service
 
 1. enumerate behavior and callers;
-2. define the readable domain document using full property names;
-3. preserve deterministic business behavior, not old serialization abbreviations;
-4. decide whether the old server operation is a true producer/write or only a derived read cache;
-5. prefer Local composition for deterministic read models and narrow commands for real writes;
-6. add GitHub adapter/Action reducer only where persistence/external execution is genuinely needed;
-7. add representative tests and concurrency tests for writes;
+2. define/read the readable schema-v2 document;
+3. preserve deterministic business behavior rather than old transport details;
+4. decide whether the old server operation is a real producer/write or just a derived cache;
+5. prefer Local composition for deterministic read models;
+6. use platform Actions only for global ingestion and group Actions only for group-owned persistence;
+7. add representative parity/concurrency tests;
 8. migrate UI callers;
-9. remove old HTTP/SignalR/repository-framework dependencies.
+9. remove HTTP/SignalR/repository-framework dependencies.
 
 Do not introduce `*Raw` mirror types merely to reproduce historical one-letter JSON names.

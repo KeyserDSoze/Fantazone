@@ -16,11 +16,8 @@ on:
           - ingest-player-odds
           - ingest-player-images
           - set-next-formations
-          - rebuild-groups
           - rebuild-hall-of-fame
           - process-market
-          - recalculate-day
-          - recalculate-all
       day:
         description: Optional Serie A/fantasy day
         required: false

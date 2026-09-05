@@ -1,12 +1,10 @@
 # Runtime topology: zero application servers
 
-Fantazone has three persistent/runtime scopes. Keeping them separate avoids duplicating global scraping and avoids keeping group PATs on a central server.
+Fantazone has three persistent/runtime scopes. Keeping them separate avoids duplicate scraping and avoids storing group credentials on a central server.
 
 ## 1. Platform repository
 
-`KeyserDSoze/Fantazone` contains the application source, documentation, shared domain/job code and global ingestion workflows.
-
-Global football data should be fetched **once**, not once per fantasy group:
+`KeyserDSoze/Fantazone` contains application source, documentation, the shared TypeScript engine and global football data/producers.
 
 ```text
 external public sources
@@ -14,125 +12,128 @@ external public sources
         v
 Fantazone global Actions
         |
-        +--> Serie A calendar/live
-        +--> players and teams
+        +--> Serie A calendar
+        +--> players/teams
         +--> live/final votes
-        +--> player odds/probabilities
-        +--> player images/static source assets
+        +--> odds/images later
         v
-global normalized GitHub data
+data/serie-a/...
 ```
 
-The normalized global data must be readable by every client/group without a central application token. The final location is an explicit architecture decision:
-
-- make the relevant platform data public; or
-- use a dedicated public repository such as `Fantazone.Data`.
-
-This decision is tracked by issue #9.
+Global football data is fetched once and consumed by every group/client.
 
 ## 2. Group repository
 
-Each fantasy-football group owns one repository:
+Each fantasy group owns one repository:
 
 ```text
 Fantazone.<group-name>
 ```
 
-It stores only group-specific state:
+It stores only group-specific state: settings/members, baskets/leagues, rosters, formations, fantasy calendars/results/rankings, market data, Hall of Fame/history and finalized auction outcomes.
 
-- group settings and members;
-- baskets/leagues/competitions and yearly rules;
-- teams, budgets and ownership;
-- formations;
-- calendars generated for fantasy competitions;
-- match results and standings;
-- market/trades;
-- cards and group configuration;
-- Hall of Fame/group history;
-- finalized auction outcomes;
-- command/event logs and manifest revisions.
+### Group-owned workflow
 
-### Why group Actions must run inside the group repo
-
-A central Fantazone workflow must never need to keep the PAT for every group. A group-specific workflow runs in `Fantazone.<group>` and gets that repository's short-lived `GITHUB_TOKEN`, so it can update its own files without a Fantazone backend or central secret database.
+The bootstrap now installs this entrypoint automatically:
 
 ```text
-Fantazone.<group>
-  .github/workflows/...
-         |
-         | GITHUB_TOKEN scoped to this repo
-         v
-  calculate / rebuild / commit group data
+.github/workflows/fantazone-group.yml
 ```
 
-Group workflows include:
+Current manual jobs:
 
-- copy missing formation to the next day;
-- calculate/recalculate a fantasy day;
-- rebuild all days/standings;
-- group manager/derived state;
-- market processing;
-- Hall of Fame aggregation;
-- repository validation/repair;
-- manual administrative dispatches.
+- `recalculate-day`;
+- `recalculate-all`.
 
-They consume global normalized football data from the public global-data source.
+Execution topology:
+
+```text
+Fantazone.<group> workflow
+        |
+        +--> checkout group/      (own writable repository)
+        |
+        +--> checkout platform/   (public KeyserDSoze/Fantazone)
+                 |
+                 +--> TypeScript engine
+                 +--> data/serie-a/official votes
+        |
+        v
+shared reducers
+        |
+        v
+group/data/... updates
+        |
+        v
+commit with the group's short-lived GITHUB_TOKEN
+```
+
+The central Fantazone workflow therefore never needs a PAT for any group.
+
+Concurrent maintenance runs in one group are serialized by workflow concurrency, avoiding two recalculation commits racing each other.
+
+### Bootstrap and upgrades
+
+`ensureGroupInitialized()` is idempotent. New groups receive:
+
+- `fantazone.json`;
+- `manifest.json`;
+- `config/group.json`;
+- `.github/workflows/fantazone-group.yml`.
+
+Existing groups missing the workflow receive it the next time initialization/upgrade runs; existing files are not rewritten.
+
+Because GitHub protects workflow-file writes separately, the credential used for bootstrap must be authorized to modify `.github/workflows/*`. A classic PAT needs the `workflow` scope in addition to repository access; granular credentials need the corresponding workflow write permission. Bootstrap returns a specific error when this permission is missing.
 
 ## 3. User device
 
-The Expo React Native/web client is the application runtime.
-
-It owns:
+The Expo React Native/web client is the application runtime. It owns:
 
 - Google/Microsoft human identity;
-- the V1 group PAT credential;
-- selected group/year/league/application state;
+- V1 group credential;
+- selected group/year/league state;
 - GitHub REST reads/writes;
-- local deterministic calculations where appropriate;
-- ETag/SHA cache and optimistic-concurrency retry;
-- WebRTC connections during auctions.
+- local deterministic calculations/read models;
+- SHA/cache and optimistic concurrency;
+- WebRTC during auctions.
 
-No application API sits between the client and GitHub.
+There is no Fantazone application API between the client and GitHub.
 
-## End-to-end normal flow
+## Normal flow
 
 ```text
-                    +--------------------------+
-                    | Public global GitHub data|
-                    +-------------^------------+
+                    +---------------------------+
+                    | Public global GitHub data |
+                    +-------------^-------------+
                                   |
-                    Global Actions / ingestion
-                                  |
+                       global ingestion Actions
                                   |
 +-------------+      REST         |        +----------------------+
 | Expo client |<------------------+------->| Fantazone.<group>    |
-| native/web  |                           | group state + history |
+| native/web  |                           | canonical group state |
 +------+------+                           +----------^-----------+
        |                                             |
-       | WebRTC during auction                      | group Actions
+       | WebRTC auction                              | own Actions
        |                                             | own GITHUB_TOKEN
        v                                             |
-+------------------+                                 |
-| Auctioneer device|---------------------------------+
-| authoritative host  finalized checkpoints only
-+------------------+
++-------------------+                                |
+| Auctioneer browser|--------------------------------+
+| authoritative host|       finalized checkpoints
++-------------------+
 ```
 
-## Group-repository bootstrap
+## Responsibility examples
 
-When a group is created, the bootstrap process eventually must install not only `fantazone.json`, manifest/config/member files, but also the supported group workflow entrypoints. Two viable designs are tracked:
+- Live match/rank view: **client/local composition**, because it is derived state.
+- External votes/calendar: **platform Action**, because it is global ingestion.
+- Definitive fantasy results/rankings: **group Action**, because it mutates group-owned canonical state.
+- Auction bids: **WebRTC**, with GitHub only for durable/signaling state.
 
-1. generate the repository from a maintained GitHub template; or
-2. let the bootstrap client copy versioned workflow templates into `.github/workflows`.
+## External infrastructure that may remain
 
-The template design is preferable if it reduces PAT permissions and makes the initial repository atomic. Existing groups also need a workflow-schema/version migration strategy.
+Zero backend means zero custom Fantazone application server, not zero Internet infrastructure:
 
-## What remains external infrastructure
+- GitHub-hosted runners execute Actions;
+- WebRTC may need STUN/TURN;
+- push delivery may require Apple/Google/browser push infrastructure.
 
-The goal is zero **Fantazone application backend**, not pretending Internet primitives do not exist.
-
-- WebRTC normally uses STUN and may need TURN relay on restrictive networks.
-- Real push-notification delivery may require Apple/Google/browser push infrastructure.
-- GitHub-hosted runners are the execution environment for Actions.
-
-These do not hold Fantazone application state or expose a custom always-on API.
+None of these hosts Fantazone's always-on application API or central group state.
