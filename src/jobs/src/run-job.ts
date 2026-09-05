@@ -3,6 +3,7 @@ import { recalculateGroupAll, recalculateGroupDay } from './groupRecalculation'
 import { ingestFinalVotes } from './officialVoteIngestion'
 import { ingestLiveVotes } from './liveVoteIngestion'
 import { ingestMasterData } from './masterDataIngestion'
+import { ingestPlayerImages } from './playerImagesIngestion'
 import { ingestPlayerOdds } from './playerOddsIngestion'
 import { rebuildPlayerStats } from './playerStatsRebuild'
 import { ingestSerieACalendar } from './serieAIngestion'
@@ -85,6 +86,17 @@ const migrated: Partial<Record<JobName, (context: JobContext) => Promise<void>>>
     for (const source of result.sources) {
       console.log(`${source.source}: ${source.ok ? `${source.observations} osservazioni` : `errore: ${source.error}`}`)
     }
+  },
+  'ingest-player-images': async context => {
+    const result = await ingestPlayerImages({ season: context.season })
+    if (result.skipped) {
+      console.log(`Player images ${result.season}: skip=${result.reason ?? 'unknown'}.`)
+      return
+    }
+    console.log(
+      `Player images ${result.season}: ${result.written} nuove, ${result.existing} esistenti, ` +
+      `${result.unmatched} senza match, ${result.failed} fallite in ${result.outputDirectory}.`,
+    )
   },
   'set-next-formations': async context => {
     const roots = groupJobRoots()
