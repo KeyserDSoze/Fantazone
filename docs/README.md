@@ -12,18 +12,17 @@ This documentation is the migration contract from `KeyserDSoze/Fantasoccer` to F
 6. [`06-migration-checklist.md`](06-migration-checklist.md) — executable migration backlog.
 7. [`07-runtime-topology.md`](07-runtime-topology.md) — shared/global ingestion vs per-group GitHub Action responsibilities.
 8. [`08-legacy-service-matrix.md`](08-legacy-service-matrix.md) — old frontend services mapped to GitHub, local domain logic, Actions or WebRTC.
-9. [`09-event-demo.md`](09-event-demo.md) — short and extended paths for explaining Fantazone at events/workshops.
-10. [`10-public-security-model.md`](10-public-security-model.md) — public source repository vs private real-group data and credential boundaries.
-11. [`11-repository-json-store.md`](11-repository-json-store.md) — typed JSON cache, SHA-based optimistic concurrency and GitHub reads.
-12. [`12-calendar-migration.md`](12-calendar-migration.md) — Calendar domain + GitHub repository slice.
-13. [`13-ranking-migration.md`](13-ranking-migration.md) — season/daily Ranking domain and Action-compatible write side.
-14. [`14-group-json-login-flow.md`](14-group-json-login-flow.md) — readable Group persistence plus PAT → group → login → membership ordering.
-15. [`15-group-session-runtime.md`](15-group-session-runtime.md) — selected-group composition root, shared repository cache and pre-login gate.
-16. [`16-team-migration.md`](16-team-migration.md) — readable Team/Player persistence, season/day repositories and Ranking integration.
-17. [`17-readable-json-schema-v2.md`](17-readable-json-schema-v2.md) — removal of single-letter properties and one-time migration policy.
+9. [`09-event-demo.md`](09-event-demo.md) — event/workshop explanation path.
+10. [`10-public-security-model.md`](10-public-security-model.md) — source/data visibility and credential boundaries.
+11. [`11-repository-json-store.md`](11-repository-json-store.md) — typed JSON cache and SHA concurrency.
+12. [`12-calendar-migration.md`](12-calendar-migration.md) — Calendar migration.
+13. [`13-ranking-migration.md`](13-ranking-migration.md) — Ranking migration.
+14. [`14-group-json-login-flow.md`](14-group-json-login-flow.md) — Group + group-first login.
+15. [`15-group-session-runtime.md`](15-group-session-runtime.md) — selected-group composition root.
+16. [`16-team-migration.md`](16-team-migration.md) — Team/Player migration.
+17. [`17-readable-json-schema-v2.md`](17-readable-json-schema-v2.md) — readable schema-v2 policy.
+18. [`18-live-group-schema-v2.md`](18-live-group-schema-v2.md) — readable LiveGroup snapshot and helper migration.
 
 ## Source of truth
 
-Fantasoccer remains the product/behavior reference. Fantazone intentionally does **not** preserve its single-letter serialization names. From schema v2 onward, canonical GitHub JSON uses the same readable camelCase names as `@fantazone/domain`.
-
-Storage paths, caching and GitHub SHA handling remain infrastructure concerns; domain JSON is designed to be understandable by people, TypeScript, Python Actions and other tooling without a naming mapper.
+Fantasoccer remains the product/behavior reference. Fantazone persists readable camelCase schema-v2 domain documents directly and does not recreate single-letter `*Raw` naming models.
