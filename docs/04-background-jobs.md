@@ -9,8 +9,8 @@ The current Fantasoccer background-job project contains the following jobs. None
 | `LiveVotesJob` | ingest live fantasy votes | **global:** `ingest-live-votes` -> SignedUri/protobuf adapter -> readable live vote JSON |
 | `LiveJob` | rebuild per-group live match/rank snapshot | **retired in #30:** `GroupLiveComposer` derives `LiveGroup` locally; no Action/cache loop |
 | `FinalVotesJob` | ingest final votes | **global:** `ingest-final-votes` -> official vote JSON + completeness check + stats rebuild |
-| `PlayerOddsJob` | ingest player odds/probabilities | **global:** `ingest-player-odds` Action |
-| `PlayerImagesJob` | refresh player images | **global:** `ingest-player-images` Action/assets |
+| `PlayerOddsJob` | ingest player odds/probabilities | **global:** `ingest-player-odds` Action; implementation complete, production validation/scheduling pending (#35) |
+| `PlayerImagesJob` | refresh player images | **global:** `ingest-player-images` -> GitHub Pages WebP assets; implementation complete, production validation/scheduling pending (#36) |
 | `SetFormationJob` | copy previous formation to next day when missing | **group-owned:** deterministic `set-next-formations`, runtime-v2 workflow (#32) |
 | `GroupsManagerJob` | definitive game calculation, ranking and knockout progression | **retired in #31:** shared reducers + group-owned `recalculate-day` / `recalculate-all` workflow |
 | `NewsJob` | news ingestion, currently disabled | tracked; implement only if product keeps feature |
@@ -34,7 +34,7 @@ Only work whose output is shared by every fantasy group belongs in `KeyserDSoze/
 - `ingest-final-votes`;
 - global odds/images producers.
 
-They write shared `data/serie-a/...` once.
+They write shared `data/serie-a/...` documents or globally shared static assets once.
 
 The central workflow must **not** expose formation propagation, fantasy-day recalculation, market processing, Hall-of-Fame rebuilds or any other command that mutates one particular group's state.
 
@@ -97,6 +97,26 @@ data/serie-a/votes/live/<season-id>/<serie-a-day>.json
 ```
 
 The SignedUri/protobuf protocol and legacy event mapping are preserved. Empty provider output does not rewrite the snapshot.
+
+### `ingest-player-odds`
+
+Writes one shared readable chance snapshot to:
+
+```text
+data/serie-a/chances/<season-id>/<serie-a-day>.json
+```
+
+It targets `RealCalendar.LiveDay ?? NextDay`, resets stale current-source flags, merges Fantagazzetta/Gazzetta/injury observations, isolates source failures and preserves the previous usable snapshot when every provider fails. The implementation is complete; a real production Action run and scheduling decision remain tracked by #35.
+
+### `ingest-player-images`
+
+Reads global RealPlayers plus the Lega Serie A SDP current/previous-season catalog and writes shared static files to:
+
+```text
+src/app/public/images/players/<legacy-player-key>.webp
+```
+
+They are served by Pages as `https://fanta.plus/images/players/<legacy-player-key>.webp`. Existing files are retained, individual download failures are isolated, and unavailable provider catalogs never destroy existing files. The legacy job stored WebP payloads behind `.jpg` names; Fantazone validates the WebP signature and uses the truthful `.webp` extension. Full details: `docs/29-player-images.md` and #36.
 
 ## Retired `LiveJob`
 
