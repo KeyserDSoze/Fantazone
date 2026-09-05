@@ -1,5 +1,3 @@
-import { preserveRawLeagueSetting, serializeVoteSettings } from './groupAdmin'
-
 export enum Role {
   Undefined = -1,
   GoalKeeper = 0,
@@ -46,132 +44,10 @@ export enum RoundType {
   Elimination = 1,
 }
 
-// Compact contracts intentionally match the old Fantasoccer JSON exactly.
-export interface VoteLeagueSettingRaw {
-  g: number
-  p: number
-  s: number
-  d: number
-  w: number
-  o: number
-  a: number
-  y: number
-  r: number
-  j: number
-  m: number
-}
-
-export interface LeagueRoundRaw {
-  n: string | null
-  t: RoundType
-  f: boolean
-  s: number | null
-  e: number | null
-}
-
-export interface FromPreviousYearSettingsRaw {
-  l: string[]
-  m: number
-  t: RoundType
-}
-
-export interface CardTrainerSettingsRaw {
-  c: Record<string, number>
-}
-
-export interface LeagueTypeNumberSettingsRaw {
-  t: number
-  g: number
-  d: number
-  m: number
-  f: number
-  mg: number
-  md: number
-  mb: number
-  fb: number
-}
-
-export interface LeagueTypeSettingsRaw {
-  t: LeagueCalendarType
-  r: LeagueRoundRaw[]
-  n: LeagueTypeNumberSettingsRaw
-  fpy: FromPreviousYearSettingsRaw | null
-  ct: CardTrainerSettingsRaw
-}
-
-export interface LeagueSettingRaw {
-  v: Record<string, VoteLeagueSettingRaw>
-  frm: FormationType
-  lt: LeagueTypeSettingsRaw | null
-  s: number
-  d: number
-  c: number
-  g: number
-  t: number
-  o: number
-  f: number
-  p: number
-  a: number
-  b: number
-  h: number
-  '3': number
-  '4': number
-  '5': number
-  gp: number
-  l: number
-  m: number
-  n: number
-  q: boolean
-  vp: boolean
-  mk: MarketType
-}
-
-export interface AnnualLeagueRaw {
-  y: number
-  t: LeagueType
-  s: LeagueSettingRaw
-}
-
-export interface LeagueRaw {
-  i: string
-  n: string
-  m: boolean
-  t: LeagueType
-  y: AnnualLeagueRaw[]
-  b: string[]
-}
-
-export interface AnnualTeamRaw {
-  n: string
-  o: string
-  a: string[]
-}
-
-export interface YearlyBasketRaw {
-  y: number
-  t: AnnualTeamRaw[]
-}
-
-export interface BasketRaw {
-  i: string
-  n: string
-  y: YearlyBasketRaw[]
-}
-
-export interface UserOfAGroupRaw {
-  u: string
-  e: string
-  r: IdentityRole
-}
-
-export interface GroupRaw {
-  i: string
-  n: string
-  l: LeagueRaw[]
-  u: UserOfAGroupRaw[]
-  b: BasketRaw[]
-}
-
+/**
+ * Schema v2 deliberately persists these readable domain names directly to JSON.
+ * There is no compact/raw mirror model anymore.
+ */
 export interface VoteLeagueSetting {
   goal: number
   penalty: number
@@ -186,11 +62,48 @@ export interface VoteLeagueSetting {
   manOfTheMatch: number
 }
 
+export interface LeagueRound {
+  name: string | null
+  type: RoundType
+  fromStart: boolean
+  fromRankingStartTeam: number | null
+  fromRankingEndTeam: number | null
+}
+
+export interface FromPreviousYearSettings {
+  leaguesId: string[]
+  maxTeamsPerLeague: number
+  roundType: RoundType
+}
+
+export interface CardTrainerSettings {
+  maxCardsPerType: Record<string, number>
+}
+
+export interface LeagueTypeNumberSettings {
+  maxPlayersInTeam: number
+  maxGoalKeepersInTeam: number
+  maxDefendersInTeam: number
+  maxMidfieldersInTeam: number
+  maxForwardsInTeam: number
+  maxGoalKeepersInBench: number
+  maxDefendersInBench: number
+  maxMidfieldersInBench: number
+  maxForwardsInBench: number
+}
+
+export interface LeagueTypeSettings {
+  calendarType: LeagueCalendarType
+  rounds: LeagueRound[]
+  numbers: LeagueTypeNumberSettings
+  fromPreviousYear: FromPreviousYearSettings | null
+  cardTrainer: CardTrainerSettings
+}
+
 export interface LeagueSetting {
-  raw?: LeagueSettingRaw
   votes: Partial<Record<Role, VoteLeagueSetting>>
   formation: FormationType
-  typeSettings: LeagueTypeSettingsRaw | null
+  typeSettings: LeagueTypeSettings | null
   startingMoney: number
   delayedDay: number
   cancelledDay: number
@@ -274,154 +187,31 @@ export const DefaultVoteLeagueSetting: VoteLeagueSetting = {
   manOfTheMatch: 2,
 }
 
-export function mapRawVoteLeagueSettingToVoteLeagueSetting(raw: VoteLeagueSettingRaw): VoteLeagueSetting {
-  return {
-    goal: raw.g,
-    penalty: raw.p,
-    sufferedGoal: raw.s,
-    stoppedPenalty: raw.d,
-    wrongedPenalty: raw.w,
-    ownGoal: raw.o,
-    assist: raw.a,
-    yellowCard: raw.y,
-    redCard: raw.r,
-    injury: raw.j,
-    manOfTheMatch: raw.m,
-  }
+export const DefaultLeagueTypeNumberSettings: LeagueTypeNumberSettings = {
+  maxPlayersInTeam: 25,
+  maxGoalKeepersInTeam: 1,
+  maxDefendersInTeam: 5,
+  maxMidfieldersInTeam: 4,
+  maxForwardsInTeam: 2,
+  maxGoalKeepersInBench: 1,
+  maxDefendersInBench: 1,
+  maxMidfieldersInBench: 1,
+  maxForwardsInBench: 1,
 }
 
-export function mapRawLeagueSettingToLeagueSetting(raw: LeagueSettingRaw): LeagueSetting {
-  const votes: Partial<Record<Role, VoteLeagueSetting>> = {}
-  for (const [roleKey, voteRaw] of Object.entries(raw.v || {})) {
-    const numericRole = Number(roleKey)
-    const namedRole = Role[roleKey as keyof typeof Role]
-    const role = Number.isNaN(numericRole) ? namedRole : numericRole
-    if (typeof role === 'number') votes[role as Role] = mapRawVoteLeagueSettingToVoteLeagueSetting(voteRaw)
-  }
-  if (!votes[Role.Undefined]) votes[Role.Undefined] = { ...DefaultVoteLeagueSetting }
-
-  return {
-    raw,
-    votes,
-    formation: raw.frm ?? FormationType.Normal,
-    typeSettings: raw.lt ?? null,
-    startingMoney: raw.s,
-    delayedDay: raw.d,
-    cancelledDay: raw.c,
-    pointForFirstGoal: raw.g,
-    pointForNextGoal: raw.t,
-    pointForOwnGoal: raw.o,
-    differencePointForOwnGoal: raw.f,
-    pointInHome: raw.p,
-    pointForVictory: raw.a,
-    pointForDefeat: raw.b,
-    pointForDraw: raw.h,
-    pointForStrongDefense: raw['3'],
-    pointForStrongDefense4: raw['4'],
-    pointForStrongDefense5: raw['5'],
-    pointForGoodPeople: raw.gp,
-    pointForCleanSheet: raw.l,
-    moneyForGoal: raw.m,
-    moneyForSufferedGoal: raw.n,
-    randomAuction: raw.q,
-    rankWithValuePoints: raw.vp,
-    market: raw.mk,
-  }
+export const DefaultLeagueTypeSettings: LeagueTypeSettings = {
+  calendarType: LeagueCalendarType.Random,
+  rounds: [{
+    name: '@',
+    type: RoundType.Rank,
+    fromStart: true,
+    fromRankingStartTeam: null,
+    fromRankingEndTeam: null,
+  }],
+  numbers: { ...DefaultLeagueTypeNumberSettings },
+  fromPreviousYear: null,
+  cardTrainer: { maxCardsPerType: {} },
 }
-
-export const mapRawAnnualLeagueToAnnualLeague = (raw: AnnualLeagueRaw): AnnualLeague => ({
-  year: raw.y,
-  type: raw.t,
-  settings: mapRawLeagueSettingToLeagueSetting(raw.s),
-})
-
-export const mapRawLeagueToLeague = (raw: LeagueRaw): League => ({
-  id: raw.i,
-  name: raw.n,
-  isMain: raw.m,
-  type: raw.t,
-  years: (raw.y || []).map(mapRawAnnualLeagueToAnnualLeague),
-  basketsId: raw.b || [],
-})
-
-export const mapRawAnnualTeamToAnnualTeam = (raw: AnnualTeamRaw): AnnualTeam => ({
-  name: raw.n,
-  owner: raw.o,
-  additionalOwners: raw.a || [],
-})
-
-export const mapRawYearlyBasketToYearlyBasket = (raw: YearlyBasketRaw): YearlyBasket => ({
-  year: raw.y,
-  teams: (raw.t || []).map(mapRawAnnualTeamToAnnualTeam),
-})
-
-export const mapRawBasketToBasket = (raw: BasketRaw): Basket => ({
-  id: raw.i,
-  name: raw.n,
-  years: (raw.y || []).map(mapRawYearlyBasketToYearlyBasket),
-})
-
-export const mapRawUserOfAGroupToUserOfAGroup = (raw: UserOfAGroupRaw): UserOfAGroup => ({
-  username: raw.u,
-  email: raw.e,
-  role: raw.r,
-})
-
-export function mapRawGroupToGroup(raw: GroupRaw): Group {
-  return {
-    id: raw.i,
-    name: raw.n,
-    leagues: (raw.l || []).map(mapRawLeagueToLeague),
-    users: (raw.u || []).map(mapRawUserOfAGroupToUserOfAGroup),
-    baskets: (raw.b || []).map(mapRawBasketToBasket),
-  }
-}
-
-export const mapUserOfAGroupToRaw = (user: UserOfAGroup): UserOfAGroupRaw => ({
-  u: user.username,
-  e: user.email,
-  r: user.role,
-})
-
-export const mapAnnualTeamToRaw = (team: AnnualTeam): AnnualTeamRaw => ({
-  n: team.name,
-  o: team.owner,
-  a: team.additionalOwners || [],
-})
-
-export const mapYearlyBasketToRaw = (basket: YearlyBasket): YearlyBasketRaw => ({
-  y: basket.year,
-  t: basket.teams.map(mapAnnualTeamToRaw),
-})
-
-export const mapBasketToRaw = (basket: Basket): BasketRaw => ({
-  i: basket.id,
-  n: basket.name,
-  y: basket.years.map(mapYearlyBasketToRaw),
-})
-
-export const mapAnnualLeagueToRaw = (league: AnnualLeague): AnnualLeagueRaw => ({
-  y: league.year,
-  t: league.type,
-  s: preserveRawLeagueSetting(league.settings, serializeVoteSettings(league.settings.votes)),
-})
-
-export const mapLeagueToRaw = (league: League): LeagueRaw => ({
-  i: league.id,
-  n: league.name,
-  m: league.isMain,
-  t: league.type,
-  y: league.years.map(mapAnnualLeagueToRaw),
-  b: league.basketsId || [],
-})
-
-export const mapGroupToRaw = (group: Group): GroupRaw => ({
-  i: group.id,
-  n: group.name,
-  l: group.leagues.map(mapLeagueToRaw),
-  u: group.users.map(mapUserOfAGroupToRaw),
-  b: group.baskets.map(mapBasketToRaw),
-})
 
 export class GroupHelper {
   static isOwner(team: AnnualTeam, email: string): boolean {

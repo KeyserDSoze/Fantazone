@@ -126,40 +126,22 @@ export function GroupConnectScreen({ onConnected, onExploreDemo }: Props) {
 
             <Card borderWidth={1} borderColor="$yellow8" padding="$3">
               <Paragraph size="$2">
-                Usa un PAT fine-grained dedicato ai repository Fantazone necessari. I nuovi repository gruppo vengono creati privati perché GroupRaw contiene anche gli utenti e le loro email.
+                Usa un PAT fine-grained dedicato ai repository Fantazone necessari. I repository gruppo reali sono privati perché config/group.json contiene anche utenti ed email.
               </Paragraph>
             </Card>
 
             <YStack gap="$2">
               <Text fontWeight="700">Personal Access Token</Text>
-              <Input
-                value={pat}
-                onChangeText={setPat}
-                secureTextEntry
-                autoCapitalize="none"
-                autoCorrect={false}
-                placeholder="github_pat_..."
-              />
+              <Input value={pat} onChangeText={setPat} secureTextEntry autoCapitalize="none" autoCorrect={false} placeholder="github_pat_..." />
             </YStack>
 
             <YStack gap="$2">
               <Text fontWeight="700">Nome gruppo</Text>
-              <Input
-                value={groupName}
-                onChangeText={setGroupName}
-                autoCapitalize="words"
-                placeholder="Amici del Bar"
-              />
-              <Paragraph size="$2" color="$color9">
-                Il repository corrispondente sarà Fantazone.&lt;nome-normalizzato&gt;.
-              </Paragraph>
+              <Input value={groupName} onChangeText={setGroupName} autoCapitalize="words" placeholder="Amici del Bar" />
+              <Paragraph size="$2" color="$color9">Il repository corrispondente sarà Fantazone.&lt;nome-normalizzato&gt;.</Paragraph>
             </YStack>
 
-            {error ? (
-              <Card borderWidth={1} borderColor="$red8" padding="$3">
-                <Text>{error}</Text>
-              </Card>
-            ) : null}
+            {error ? <Card borderWidth={1} borderColor="$red8" padding="$3"><Text>{error}</Text></Card> : null}
 
             <XStack gap="$3" flexWrap="wrap">
               <Button disabled={!canSubmit} onPress={discover} flex={1} minWidth={180}>
@@ -177,13 +159,11 @@ export function GroupConnectScreen({ onConnected, onExploreDemo }: Props) {
                   <Button
                     key={repository.full_name}
                     justifyContent="flex-start"
-                    onPress={() =>
-                      onConnected({
-                        token: pat.trim(),
-                        repository,
-                        groupName: repository.name.replace(/^Fantazone\./, ''),
-                      })
-                    }
+                    onPress={() => onConnected({
+                      token: pat.trim(),
+                      repository,
+                      groupName: repository.name.replace(/^Fantazone\./, ''),
+                    })}
                   >
                     {repository.name}
                   </Button>

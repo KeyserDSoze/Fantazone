@@ -3,6 +3,7 @@ import { Linking, Platform, Share } from 'react-native'
 import { Button, Card, H1, H2, Paragraph, ScrollView, Text, XStack, YStack } from 'tamagui'
 import { createInviteFragment } from '@fantazone/github'
 import type { ExternalIdentityProvider, Group } from '@fantazone/domain'
+import { publicWebUrl } from '../config/publicOrigin'
 import type { GroupConnection } from '../services/groupSessionRuntime'
 
 type Props = {
@@ -35,11 +36,7 @@ export function GroupLoginGateScreen({
       repository: connection.repository.name,
       pat: connection.token,
     })
-    if (Platform.OS === 'web' && typeof window !== 'undefined') {
-      return `${window.location.origin}${window.location.pathname}${fragment}`
-    }
-    // Replaced once the final public domain supplied by the project is configured.
-    return `https://keyserdsoze.github.io/Fantazone/${fragment}`
+    return publicWebUrl(`/${fragment}`)
   }, [connection])
 
   async function shareGroup() {
@@ -94,29 +91,19 @@ export function GroupLoginGateScreen({
             <Text fontSize="$3" fontWeight="800" color="$blue10">2. IDENTITÀ UTENTE</Text>
             <H2 size="$7">Accedi al gruppo</H2>
             <Paragraph>
-              Google o Microsoft proveranno chi sei. Subito dopo Fantazone confronterà l’email restituita con <Text fontWeight="700">GroupRaw.u</Text> di questo repository. Il PAT non identifica l’utente Fantazone.
+              Google o Microsoft proveranno chi sei. Subito dopo Fantazone confronterà l’email restituita con <Text fontWeight="700">group.users</Text> del repository selezionato. Il PAT autorizza GitHub, ma non identifica l’utente Fantazone.
             </Paragraph>
             <XStack gap="$3" flexWrap="wrap">
-              <Button
-                flex={1}
-                minWidth={220}
-                disabled={!onLogin}
-                onPress={() => onLogin?.('microsoft')}
-              >
+              <Button flex={1} minWidth={220} disabled={!onLogin} onPress={() => onLogin?.('microsoft')}>
                 Accedi con Microsoft
               </Button>
-              <Button
-                flex={1}
-                minWidth={220}
-                disabled={!onLogin}
-                onPress={() => onLogin?.('google')}
-              >
+              <Button flex={1} minWidth={220} disabled={!onLogin} onPress={() => onLogin?.('google')}>
                 Accedi con Google
               </Button>
             </XStack>
             {!onLogin ? (
               <Paragraph size="$2" color="$color9">
-                Il boundary di login è pronto. I redirect OAuth verranno collegati al dominio definitivo senza cambiare questa sequenza.
+                Il dominio pubblico è ora fanta.plus. Il prossimo adapter collega qui i callback Google/Microsoft senza cambiare la sequenza gruppo → login → membership.
               </Paragraph>
             ) : null}
           </YStack>

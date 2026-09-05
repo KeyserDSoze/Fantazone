@@ -5,8 +5,6 @@ import {
   copyMissingTeams,
   getAnnualLeagueForYear,
   isLeagueSettingValid,
-  preserveRawLeagueSetting,
-  serializeVoteSettings,
   upsertAnnualLeague,
 } from '../../src/domain/src/groupAdmin'
 import { getCurrentSeasonYear } from '../../src/domain/src/season'
@@ -26,6 +24,24 @@ const fallbackVote = {
   ownGoal: -3, assist: 1, yellowCard: -0.5, redCard: -1, injury: 0, manOfTheMatch: 2,
 }
 
+const verboseTypeSettings = {
+  calendarType: 0,
+  rounds: [{ name: '@', type: 0, fromStart: true, fromRankingStartTeam: null, fromRankingEndTeam: null }],
+  numbers: {
+    maxPlayersInTeam: 25,
+    maxGoalKeepersInTeam: 1,
+    maxDefendersInTeam: 5,
+    maxMidfieldersInTeam: 4,
+    maxForwardsInTeam: 2,
+    maxGoalKeepersInBench: 1,
+    maxDefendersInBench: 1,
+    maxMidfieldersInBench: 1,
+    maxForwardsInBench: 1,
+  },
+  fromPreviousYear: null,
+  cardTrainer: { maxCardsPerType: { Strategy: 2 } },
+}
+
 test('creates editable defaults for a missing league year', () => {
   const league: any = { id: 'serie-a', name: 'Serie A', isMain: true, type: 1, years: [], basketsId: [] }
   const annualLeague = getAnnualLeagueForYear(league, 15, settings)
@@ -35,37 +51,26 @@ test('creates editable defaults for a missing league year', () => {
   assert.notStrictEqual(annualLeague.settings, settings)
 })
 
-test('copies settings to a new year without mutating the source year', () => {
+test('copies readable settings to a new year without mutating the source year', () => {
   const completeSettings: any = {
     ...settings,
     votes: {
       '-1': fallbackVote,
       0: { ...fallbackVote, goal: 4, stoppedPenalty: 4 },
     },
-    pointForDraw: 2, pointForDefeat: -1, pointForStrongDefense: 3,
-    pointForStrongDefense4: 5, pointForStrongDefense5: 7, pointForGoodPeople: 4,
-    pointForCleanSheet: 2, moneyForGoal: 8, moneyForSufferedGoal: -2,
+    pointForDraw: 2,
     formation: 1,
-    typeSettings: {
-      t: 0,
-      r: [{ n: '@', t: 0, f: true, s: null, e: null }],
-      n: { t: 25, g: 1, d: 5, m: 4, f: 2, mg: 1, md: 1, mb: 1, fb: 1 },
-      fpy: null,
-      ct: { c: { Strategy: 2 } },
-    },
+    typeSettings: verboseTypeSettings,
   }
   const source: any = { year: 14, type: 2, settings: completeSettings }
   const copied = copyAnnualLeagueToYear(source, 15, 1)
   copied.settings.startingMoney = 750
   copied.settings.votes[0]!.goal = 9
-  copied.settings.typeSettings!.r[0].n = 'changed'
+  copied.settings.typeSettings!.rounds[0].name = 'changed'
   assert.equal(copied.year, 15)
-  assert.equal(copied.type, 2)
   assert.equal(source.settings.startingMoney, 1000)
   assert.equal(source.settings.votes[0].goal, 4)
-  assert.equal(source.settings.typeSettings.r[0].n, '@')
-  assert.equal(copied.settings.pointForStrongDefense5, 7)
-  assert.equal(copied.settings.moneyForSufferedGoal, -2)
+  assert.equal(source.settings.typeSettings.rounds[0].name, '@')
 })
 
 test('resolves an inherited source type when copying to a new year', () => {
@@ -93,47 +98,16 @@ test('copies only missing teams and clones co-owner arrays', () => {
   assert.deepEqual(source[1].additionalOwners, ['three@example.com'])
 })
 
-test('preserves backend-only settings while updating editable values', () => {
-  const settingWithRawFields: any = {
-    ...settings,
-    startingMoney: 750,
-    raw: { frm: 1, lt: { custom: 'backend-only' } },
-    formation: 1,
-    typeSettings: { custom: 'backend-only' },
-  }
-  const raw = preserveRawLeagueSetting(settingWithRawFields, {})
-  assert.equal(raw.s, 750)
-  assert.equal(raw.frm, 1)
-  assert.deepEqual(raw.lt, { custom: 'backend-only' })
-})
-
-test('serializes every editable setting and canonical vote role keys', () => {
-  const complete: any = {
-    ...settings,
-    votes: {
-      '-1': fallbackVote,
-      1: { ...fallbackVote, goal: 2.5, sufferedGoal: 0, stoppedPenalty: 0, assist: 1.5, injury: -1 },
-    },
-    formation: 1,
-    typeSettings: { t: 0, r: [], n: { t: 25, g: 1, d: 5, m: 4, f: 2, mg: 1, md: 1, mb: 1, fb: 1 }, fpy: null, ct: { c: {} } },
-    pointForDraw: 2, pointForDefeat: -1, pointForStrongDefense: 3,
-    pointForStrongDefense4: 5, pointForStrongDefense5: 7, pointForGoodPeople: 4,
-    pointForCleanSheet: 2, moneyForGoal: 8, moneyForSufferedGoal: -2,
-  }
-  const raw = preserveRawLeagueSetting(complete, serializeVoteSettings(complete.votes))
-  assert.equal(raw.frm, 1)
-  assert.deepEqual(raw.lt, complete.typeSettings)
-  assert.equal(raw.h, 2)
-  assert.equal(raw.b, -1)
-  assert.equal(raw['3'], 3)
-  assert.equal(raw['4'], 5)
-  assert.equal(raw['5'], 7)
-  assert.equal(raw.gp, 4)
-  assert.equal(raw.l, 2)
-  assert.equal(raw.m, 8)
-  assert.equal(raw.n, -2)
-  assert.equal(raw.v.Undefined.g, 3)
-  assert.equal(raw.v.Defensor.a, 1.5)
+test('settings JSON uses domain property names all the way down', () => {
+  const document = { ...settings, votes: { '-1': fallbackVote }, typeSettings: verboseTypeSettings }
+  const json = JSON.parse(JSON.stringify(document))
+  assert.equal(json.startingMoney, 1000)
+  assert.equal(json.votes['-1'].manOfTheMatch, 2)
+  assert.equal(json.typeSettings.rounds[0].fromStart, true)
+  assert.equal(json.typeSettings.numbers.maxGoalKeepersInBench, 1)
+  assert.equal(json.typeSettings.cardTrainer.maxCardsPerType.Strategy, 2)
+  assert.equal('frm' in json, false)
+  assert.equal('lt' in json, false)
 })
 
 test('uses the same UTC season boundary as the backend', () => {

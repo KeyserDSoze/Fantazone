@@ -2,72 +2,67 @@
 
 ## Repository naming
 
-A fantasy group maps to one repository whose logical name begins with `Fantazone.`.
+One fantasy group maps to one `Fantazone.<group>` repository. The PAT is resolved before application login: validate PAT → discover repositories → select group → Google/Microsoft login → resolve the authenticated email inside that selected group's `group.users`.
 
-```text
-Fantazone.AmiciDelBar
-Fantazone.Ufficio2026
-```
+The PAT grants repository access; it never establishes Fantazone user identity.
 
-The PAT is resolved **before application login**. The client validates the PAT, discovers the visible `Fantazone.*` repositories and lets the user choose the group repository. Only after a group has been selected does Fantazone start Google/Microsoft login.
+## Schema v2: readable JSON is canonical
 
-## Onboarding and login order
+Fantazone schema v2 removes the historical single-letter serialization layer. Canonical files persist the readable domain objects directly:
 
-The order is intentionally different from legacy Fantasoccer:
+- `config/group.json` → `Group`
+- league calendar → `Calendar`
+- season/day ranking → `Rank`
+- season/day team → `Team`
+- future Live/Formation/Market/etc. documents follow the same rule.
 
-1. enter/import the GitHub PAT;
-2. validate the PAT against GitHub;
-3. discover accessible `Fantazone.*` repositories;
-4. choose exactly which group repository to enter;
-5. persist the selected group connection locally;
-6. start Google or Microsoft login;
-7. take the authenticated email and look it up in **that selected group's JSON**;
-8. continue only if the user exists in the selected group and its role allows access.
+There is no `GroupRaw`, `CalendarRaw`, `RankRaw`, `TeamRaw` or raw↔clean naming mapper in the canonical architecture.
 
-The login provider proves the external identity. Membership and Fantazone roles come from the selected group's repository, not from a central backend and not from the PAT owner.
-
-## Preserve the legacy JSON contracts
-
-Moving from Azure/blob storage to GitHub is a storage migration, not a domain-schema redesign.
-
-Canonical files must continue to store the same compact raw JSON contracts used by Fantasoccer. Examples:
-
-- Group: `GroupRaw` (`i`, `n`, `l`, `u`, `b`)
-- Calendar: `CalendarRaw`
-- Ranking: `RankRaw`
-- future Team/Live/Formation/etc. files: preserve their legacy raw contracts too
-
-Application code maps raw compact JSON to readable TypeScript domain objects exactly as before. GitHub paths, SHA handling and caching belong outside the domain model.
-
-### Group JSON
-
-`config/group.json` is the old `GroupRaw` payload itself:
+Example `config/group.json`:
 
 ```json
 {
-  "i": "amici",
-  "n": "Amici",
-  "l": [],
-  "u": [],
-  "b": []
+  "id": "amici",
+  "name": "Amici",
+  "leagues": [],
+  "users": [
+    {
+      "username": "Ale",
+      "email": "ale@example.com",
+      "role": 6
+    }
+  ],
+  "baskets": []
 }
 ```
 
-`u` is the canonical group membership list. Do not maintain a second `members.json` copy. Repositories created by an early Fantazone prototype that already contain `members/members.json` may keep that historical file, but runtime code must not use it as another source of truth.
+`users` is the only canonical membership list. Do not create a parallel members table/file.
 
-## Invite links and QR codes
+League settings also use full domain names (`startingMoney`, `pointForVictory`, `maxGoalKeepersInBench`, etc.). Names come from the original Fantasoccer domain properties, not guessed abbreviations.
 
-Do **not** place a raw PAT in a normal query string: URLs can leak through browser history, analytics, proxy logs and referrers.
+## Schema version
 
-V1 sharing uses a URL fragment, which is not sent to the static web host:
+New group repositories declare:
 
-```text
-https://fantazone.example/#join=<base64url-payload>
+```json
+{
+  "schemaVersion": 2
+}
 ```
 
-The imported connection selects the repository first. It does **not** authenticate a Fantazone user. Google/Microsoft login still follows and membership is checked against `config/group.json`.
+Compact schema-v1 aggregate documents are intentionally not accepted through a permanent compatibility mapper. Existing compact repositories require a one-time migration to v2. This keeps one canonical format after migration.
 
-The fragment is transport obfuscation, not encryption. V1 shared PATs remain bearer credentials and should be fine-grained, repository-scoped and rotatable.
+## Invite links and public origin
+
+The canonical web origin is:
+
+```text
+https://fanta.plus
+```
+
+V1 group invites carry their encoded connection payload in the URL fragment so it is not sent as part of the HTTP request. The fragment is not encryption: the PAT remains a bearer credential.
+
+Importing an invite chooses a repository; Google/Microsoft login still follows.
 
 ## Group repository layout
 
@@ -75,58 +70,29 @@ The fragment is transport obfuscation, not encryption. V1 shared PATs remain bea
 fantazone.json
 manifest.json
 config/
-  group.json                 # exact legacy GroupRaw JSON
+  group.json
 data/
   serie-a/
-    seasons/<season>/calendar.json
-    seasons/<season>/players.json
-    seasons/<season>/teams.json
-    seasons/<season>/days/<day>/live.json
-    seasons/<season>/days/<day>/votes.json
-    player-images/
-    odds/
   groups/
     seasons/<season>/leagues/<league>/calendar.json
     seasons/<season>/leagues/<league>/ranking.json
     seasons/<season>/leagues/<league>/days/<day>/ranking.json
-    seasons/<season>/teams/
-    seasons/<season>/formations/
-    seasons/<season>/results/
+    seasons/<season>/teams/<basket>/<email>.json
+    seasons/<season>/days/<day>/teams/<basket>/<email>.json
+    formations/
+    results/
     market/
     hall-of-fame.json
 commands/
-  <yyyy-mm-dd>/<uuid>.json
 events/
-  <yyyy-mm-dd>/<uuid>.json
 realtime/
-  auctions/<auctionId>/signaling/
 assets/
 ```
 
-Paths may evolve as old repositories are migrated, but the JSON payload for a migrated legacy repository type must not be silently replaced by a new normalized schema.
+## Manifest, caching and concurrency
 
-## Manifest
+Clients use the manifest, ETag/blob SHA and local cache to avoid re-reading every document. GitHub content SHA is the optimistic-concurrency version for mutable aggregate JSON.
 
-Clients poll one small file instead of every resource:
+Never silently overwrite a stale SHA. Actions and the app consume/write the same readable domain documents; there is no Action-specific compact serialization.
 
-```json
-{
-  "schemaVersion": 1,
-  "revision": 42,
-  "updatedAt": "2026-09-05T06:00:00Z",
-  "season": 2026,
-  "liveDay": 3
-}
-```
-
-Use `ETag`/conditional GET and the Git blob SHA. When `revision` changes, reload only affected resources.
-
-## Concurrency
-
-For legacy aggregate JSON files, preserve their payload while using GitHub SHA as the optimistic concurrency version. Where a new high-contention feature needs commands/events, append-only files may be added around the canonical legacy projection instead of changing the projection's JSON shape.
-
-Never silently overwrite a stale SHA. Reducer/Action outputs should be deterministic and write the same compact raw contracts consumed by the app.
-
-## Static content
-
-Images and other immutable content formerly in Azure Blob Storage should live under `assets/` or a dedicated content repository and be loaded using GitHub/static URLs. Large/binary growth is monitored separately from JSON state.
+High-contention features may use append-only command/event files, but their projections should still use readable schema-v2 property names.

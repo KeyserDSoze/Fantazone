@@ -8,7 +8,7 @@
     "orientation": "portrait",
     "experiments": {
       "tsconfigPaths": true,
-      "baseUrl": "/Fantazone"
+      "baseUrl": "/"
     },
     "plugins": ["expo-font", "expo-status-bar", "expo-secure-store"],
     "ios": {

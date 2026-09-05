@@ -3,40 +3,34 @@ import test from 'node:test'
 import {
   enhanceRank,
   enhanceRankWithTeamPositions,
-  mapRankToRawRank,
-  mapRawRankToRank,
   RankHelper,
-  type RankRaw,
+  type Rank,
 } from '../../src/domain/src/index'
 
-const raw: RankRaw = {
-  d: 7,
-  r: {
+const rank: Rank = {
+  serieADay: 7,
+  rounds: {
     '@': [
-      { n: 'Alpha', o: 'alpha@example.test', p: 10, v: 3, d: 1, e: 1, g: 8, s: 4, x: 345, w: 321, z: 20, m: 100 },
-      { n: 'Beta', o: 'beta@example.test', p: 13, v: 4, d: 1, e: 0, g: 10, s: 3, x: 360, w: 300, z: 5, m: 90 },
-      { n: 'Gamma', o: 'gamma@example.test', p: 5, v: 1, d: 2, e: 2, g: 4, s: 7, x: 310, w: 335, z: 50, m: 80 },
+      { name: 'Alpha', owner: 'alpha@example.test', point: 10, victories: 3, draws: 1, defeats: 1, goal: 8, sufferedGoal: 4, valuePoint: 345, sufferedValuePoint: 321, plusMoney: 20, money: 100, valueAssets: 120 },
+      { name: 'Beta', owner: 'beta@example.test', point: 13, victories: 4, draws: 1, defeats: 0, goal: 10, sufferedGoal: 3, valuePoint: 360, sufferedValuePoint: 300, plusMoney: 5, money: 90, valueAssets: 95 },
+      { name: 'Gamma', owner: 'gamma@example.test', point: 5, victories: 1, draws: 2, defeats: 2, goal: 4, sufferedGoal: 7, valuePoint: 310, sufferedValuePoint: 335, plusMoney: 50, money: 80, valueAssets: 130 },
     ],
     cup: [
-      { n: 'Alpha', o: 'alpha@example.test', p: 3, v: 1, d: 0, e: 0, g: 2, s: 0, x: 70, w: 60, z: 0, m: 100 },
+      { name: 'Alpha', owner: 'alpha@example.test', point: 3, victories: 1, draws: 0, defeats: 0, goal: 2, sufferedGoal: 0, valuePoint: 70, sufferedValuePoint: 60, plusMoney: 0, money: 100, valueAssets: 100 },
     ],
   },
 }
 
-test('maps compact ranking data and computes valueAssets exactly like Fantasoccer', () => {
-  const rank = mapRawRankToRank(raw)
-  const alpha = rank.rounds['@'][0]
-
-  assert.equal(rank.serieADay, 7)
-  assert.equal(alpha.name, 'Alpha')
-  assert.equal(alpha.valueAssets, 120)
-  assert.deepEqual(mapRankToRawRank(rank), raw)
+test('ranking JSON persists readable fields and valueAssets directly', () => {
+  const json = JSON.parse(JSON.stringify(rank))
+  assert.equal(json.serieADay, 7)
+  assert.equal(json.rounds['@'][0].name, 'Alpha')
+  assert.equal(json.rounds['@'][0].valueAssets, 120)
+  assert.equal('d' in json, false)
 })
 
 test('preserves point ordering, positions and value-assets ordering without mutating the source', () => {
-  const rank = mapRawRankToRank(raw)
   const originalOrder = rank.rounds['@'].map(team => team.name)
-
   assert.deepEqual(RankHelper.getTeamsSortedByPoints(rank, '@').map(team => team.name), ['Beta', 'Alpha', 'Gamma'])
   assert.equal(RankHelper.getTeamPosition(rank, '@', 'alpha@example.test'), 2)
   assert.equal(RankHelper.getTeamPosition(rank, '@', 'missing@example.test'), -1)
@@ -45,9 +39,7 @@ test('preserves point ordering, positions and value-assets ordering without muta
 })
 
 test('preserves computed ranking statistics and enhanced positions', () => {
-  const rank = mapRawRankToRank(raw)
   const alpha = rank.rounds['@'][0]
-
   assert.equal(RankHelper.getGoalDifference(alpha), 4)
   assert.equal(RankHelper.getTotalGamesPlayed(alpha), 5)
   assert.equal(RankHelper.getPointsPerGame(alpha), 2)
@@ -62,11 +54,7 @@ test('preserves computed ranking statistics and enhanced positions', () => {
 })
 
 test('adds ranked teams with the same aggregate semantics used by Fantasoccer', () => {
-  const rank = mapRawRankToRank(raw)
-  const alpha = rank.rounds['@'][0]
-  const cupAlpha = rank.rounds.cup[0]
-  const total = RankHelper.addRankedTeams(alpha, cupAlpha)
-
+  const total = RankHelper.addRankedTeams(rank.rounds['@'][0], rank.rounds.cup[0])
   assert.equal(total.name, 'Alpha')
   assert.equal(total.owner, 'alpha@example.test')
   assert.equal(total.point, 13)

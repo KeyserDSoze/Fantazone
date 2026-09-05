@@ -1,23 +1,3 @@
-export interface RankedTeamRaw {
-  n: string
-  o: string
-  p: number
-  v: number
-  d: number
-  e: number
-  g: number
-  s: number
-  x: number
-  w: number
-  z: number
-  m: number
-}
-
-export interface RankRaw {
-  d: number
-  r: Record<string, RankedTeamRaw[]>
-}
-
 export interface RankedTeam {
   name: string
   owner: string
@@ -34,6 +14,7 @@ export interface RankedTeam {
   valueAssets: number
 }
 
+/** Persisted directly as ranking.json in schema v2. */
 export interface Rank {
   serieADay: number
   rounds: Record<string, RankedTeam[]>
@@ -85,65 +66,6 @@ export interface TeamLuck {
 
 export interface EnhancedRankedTeamWithLuck extends EnhancedRankedTeam {
   luck?: TeamLuck
-}
-
-export function mapRawRankedTeamToRankedTeam(raw: RankedTeamRaw): RankedTeam {
-  return {
-    name: raw.n,
-    owner: raw.o,
-    point: raw.p,
-    victories: raw.v,
-    draws: raw.d,
-    defeats: raw.e,
-    goal: raw.g,
-    sufferedGoal: raw.s,
-    valuePoint: raw.x,
-    sufferedValuePoint: raw.w,
-    plusMoney: raw.z,
-    money: raw.m,
-    valueAssets: raw.m + raw.z,
-  }
-}
-
-export function mapRankedTeamToRawRankedTeam(team: RankedTeam): RankedTeamRaw {
-  return {
-    n: team.name,
-    o: team.owner,
-    p: team.point,
-    v: team.victories,
-    d: team.draws,
-    e: team.defeats,
-    g: team.goal,
-    s: team.sufferedGoal,
-    x: team.valuePoint,
-    w: team.sufferedValuePoint,
-    z: team.plusMoney,
-    m: team.money,
-  }
-}
-
-export function mapRawRankToRank(raw: RankRaw): Rank {
-  const rounds: Record<string, RankedTeam[]> = {}
-  for (const [roundKey, teams] of Object.entries(raw.r ?? {})) {
-    rounds[roundKey] = (teams ?? []).map(mapRawRankedTeamToRankedTeam)
-  }
-
-  return {
-    serieADay: raw.d,
-    rounds,
-  }
-}
-
-export function mapRankToRawRank(rank: Rank): RankRaw {
-  const rounds: Record<string, RankedTeamRaw[]> = {}
-  for (const [roundKey, teams] of Object.entries(rank.rounds)) {
-    rounds[roundKey] = teams.map(mapRankedTeamToRawRankedTeam)
-  }
-
-  return {
-    d: rank.serieADay,
-    r: rounds,
-  }
 }
 
 export class RankHelper {

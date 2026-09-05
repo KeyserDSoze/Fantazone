@@ -4,63 +4,52 @@ import {
   CalendarHelper,
   GameResultHelper,
   GameResultType,
-  mapRawCalendarToCalendar,
-  type CalendarRaw,
+  type Calendar,
   type GameResult,
   type LeagueSetting,
 } from '../../src/domain/src/index'
 
-const rawCalendar: CalendarRaw = {
-  y: 15,
-  r: {
-    '2-return': [
-      {
-        a: 4,
-        n: 2,
-        g: [
-          { i: 'game-2', n: 2, h: 'Alpha', o: 'a@example.test', a: 'Gamma', u: 'c@example.test', r: null },
-        ],
-      },
-    ],
-    '1-first': [
-      {
-        a: 3,
-        n: 1,
-        g: [
-          {
-            i: 'game-1',
-            n: 1,
-            h: 'Alpha',
-            o: 'a@example.test',
-            a: 'Beta',
-            u: 'b@example.test',
-            r: {
-              h: { v: 72, d: false, g: false, o: false },
-              a: { v: 65.5, d: true, g: false, o: false },
-              i: false,
-              g: 2,
-              l: 0,
-            },
-          },
-        ],
-      },
-    ],
+const calendar: Calendar = {
+  year: 15,
+  rounds: {
+    '2-return': [{
+      serieADay: 4,
+      number: 2,
+      games: [{ id: 'game-2', number: 2, home: 'Alpha', homeOwner: 'a@example.test', away: 'Gamma', awayOwner: 'c@example.test', result: null }],
+    }],
+    '1-first': [{
+      serieADay: 3,
+      number: 1,
+      games: [{
+        id: 'game-1',
+        number: 1,
+        home: 'Alpha',
+        homeOwner: 'a@example.test',
+        away: 'Beta',
+        awayOwner: 'b@example.test',
+        result: {
+          home: { value: 72, defensiveBonus: false, goodPeople: false, ownGoal: false },
+          away: { value: 65.5, defensiveBonus: true, goodPeople: false, ownGoal: false },
+          isCancelled: false,
+          homeGoals: 2,
+          awayGoals: 0,
+        },
+      }],
+    }],
   },
 }
 
-test('maps the compact Fantasoccer calendar shape without changing semantics', () => {
-  const calendar = mapRawCalendarToCalendar(rawCalendar)
-
-  assert.equal(calendar.year, 15)
-  assert.equal(calendar.rounds['1-first'][0].serieADay, 3)
-  assert.equal(calendar.rounds['1-first'][0].games[0].homeOwner, 'a@example.test')
-  assert.equal(calendar.rounds['1-first'][0].games[0].result?.home.value, 72)
-  assert.equal(calendar.rounds['1-first'][0].games[0].result?.away.defensiveBonus, true)
+test('calendar JSON exposes readable day, game and result properties directly', () => {
+  const json = JSON.parse(JSON.stringify(calendar))
+  assert.equal(json.year, 15)
+  assert.equal(json.rounds['1-first'][0].serieADay, 3)
+  assert.equal(json.rounds['1-first'][0].games[0].homeOwner, 'a@example.test')
+  assert.equal(json.rounds['1-first'][0].games[0].result.home.value, 72)
+  assert.equal(json.rounds['1-first'][0].games[0].result.away.defensiveBonus, true)
+  assert.equal('y' in json, false)
 })
 
 test('preserves round/day/game helpers including case-insensitive team lookup', () => {
-  const calendar = mapRawCalendarToCalendar(rawCalendar)
-
   assert.deepEqual(CalendarHelper.getAllRoundKeys(calendar), ['1-first', '2-return'])
   assert.deepEqual(CalendarHelper.getAllDays(calendar).map(day => day.number), [1, 2])
   assert.equal(CalendarHelper.getDayByNumber(calendar, 2)?.serieADay, 4)
@@ -69,8 +58,7 @@ test('preserves round/day/game helpers including case-insensitive team lookup', 
 })
 
 test('preserves result-type and has-value behavior', () => {
-  const result = mapRawCalendarToCalendar(rawCalendar).rounds['1-first'][0].games[0].result
-
+  const result = calendar.rounds['1-first'][0].games[0].result
   assert.equal(GameResultHelper.hasValue(result), true)
   assert.equal(GameResultHelper.getResultType(result), GameResultType.HomeWon)
   assert.equal(GameResultHelper.getResultType(null), GameResultType.Tie)

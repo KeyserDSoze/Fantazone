@@ -1,10 +1,11 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import type { Group, GroupRaw } from '../../src/domain/src/index'
+import type { Group } from '../../src/domain/src/index'
 import {
   createAndInitializeGroup,
   decodeStoredGroup,
   ensureGroupInitialized,
+  FANTAZONE_SCHEMA_VERSION,
   GitHubGroupRepository,
   GitHubJsonStore,
   GROUP_DOCUMENT_PATH,
@@ -34,15 +35,17 @@ class FakeContentClient implements RepositoryContentClient {
 }
 
 const target = { owner: 'KeyserDSoze', repo: 'Fantazone.Amici', ref: 'main' }
-const raw: GroupRaw = {
-  i: 'amici', n: 'Amici', l: [],
-  u: [{ u: 'Ale', e: 'ale@example.com', r: 6 }],
-  b: [],
+const group: Group = {
+  id: 'amici',
+  name: 'Amici',
+  leagues: [],
+  users: [{ username: 'Ale', email: 'ale@example.com', role: 6 }],
+  baskets: [],
 }
 
-test('reads users from the selected group JSON and reuses the cache', async () => {
+test('reads users from readable group JSON and reuses the cache', async () => {
   const client = new FakeContentClient()
-  client.files.set(`${target.owner}/${target.repo}/${GROUP_DOCUMENT_PATH}@main`, { sha: 'sha-0', content: JSON.stringify(raw) })
+  client.files.set(`${target.owner}/${target.repo}/${GROUP_DOCUMENT_PATH}@main`, { sha: 'sha-0', content: JSON.stringify(group) })
   const repository = new GitHubGroupRepository(new GitHubJsonStore(client), target)
 
   assert.equal((await repository.getGroup())?.name, 'Amici')
@@ -51,24 +54,29 @@ test('reads users from the selected group JSON and reuses the cache', async () =
   assert.equal(client.reads, 1)
 })
 
-test('writes exactly the old compact GroupRaw JSON shape', async () => {
+test('writes Group directly with readable property names', async () => {
   const client = new FakeContentClient()
-  client.files.set(`${target.owner}/${target.repo}/${GROUP_DOCUMENT_PATH}@main`, { sha: 'sha-0', content: JSON.stringify(raw) })
+  client.files.set(`${target.owner}/${target.repo}/${GROUP_DOCUMENT_PATH}@main`, { sha: 'sha-0', content: JSON.stringify(group) })
   const repository = new GitHubGroupRepository(new GitHubJsonStore(client), target)
-  const group = await repository.getGroup() as Group
-  group.name = 'Amici 2'
+  const edited = { ...(await repository.getGroup() as Group), name: 'Amici 2' }
 
-  await repository.writeGroup(group)
-  const stored = client.files.get(`${target.owner}/${target.repo}/${GROUP_DOCUMENT_PATH}@main`)
-  assert.deepEqual(JSON.parse(stored!.content), { ...raw, n: 'Amici 2' })
+  await repository.writeGroup(edited)
+  const stored = JSON.parse(client.files.get(`${target.owner}/${target.repo}/${GROUP_DOCUMENT_PATH}@main`)!.content)
+  assert.deepEqual(stored, { ...group, name: 'Amici 2' })
+  assert.equal('n' in stored, false)
+  assert.equal('u' in stored, false)
 })
 
-test('accepts the old Fantazone bootstrap without inventing a second schema', () => {
-  const group = decodeStoredGroup({ name: 'Amici', repository: 'KeyserDSoze/Fantazone.Amici', schemaVersion: 1 }, target)
-  assert.deepEqual(group, { id: 'Amici', name: 'Amici', leagues: [], users: [], baskets: [] })
+test('rejects the old compact group representation instead of keeping a permanent mapper', () => {
+  assert.throws(() => decodeStoredGroup({ i: 'amici', n: 'Amici', l: [], u: [], b: [] }, target), /schema v2/)
 })
 
-test('new repositories initialize config/group.json directly as GroupRaw', async () => {
+test('accepts the early bootstrap-only group document', () => {
+  const decoded = decodeStoredGroup({ name: 'Amici', repository: 'KeyserDSoze/Fantazone.Amici', schemaVersion: 1 }, target)
+  assert.deepEqual(decoded, { id: 'Amici', name: 'Amici', leagues: [], users: [], baskets: [] })
+})
+
+test('new repositories initialize readable schema v2', async () => {
   const files = new Map<string, { sha: string; content: string }>()
   let write = 0
   const setup: GroupSetupClient = {
@@ -85,26 +93,20 @@ test('new repositories initialize config/group.json directly as GroupRaw', async
 
   await ensureGroupInitialized(setup, repo, 'Amici')
 
+  assert.equal(FANTAZONE_SCHEMA_VERSION, 2)
   assert.deepEqual(JSON.parse(files.get(`KeyserDSoze/Fantazone.Amici/${GROUP_DOCUMENT_PATH}`)!.content), {
-    i: 'Amici', n: 'Amici', l: [], u: [], b: [],
+    id: 'Amici', name: 'Amici', leagues: [], users: [], baskets: [],
   })
-  assert.equal(files.has('KeyserDSoze/Fantazone.Amici/members/members.json'), false)
+  assert.equal(JSON.parse(files.get('KeyserDSoze/Fantazone.Amici/fantazone.json')!.content).schemaVersion, 2)
 })
 
-test('new group repositories are private by default because GroupRaw contains member emails', async () => {
+test('new group repositories remain private by default because group.users contains member emails', async () => {
   let requestedPrivate: boolean | undefined
   const files = new Map<string, { sha: string; content: string }>()
-  const repo: any = {
-    name: 'Fantazone.Amici',
-    full_name: 'KeyserDSoze/Fantazone.Amici',
-    owner: { login: 'KeyserDSoze' },
-  }
+  const repo: any = { name: 'Fantazone.Amici', full_name: 'KeyserDSoze/Fantazone.Amici', owner: { login: 'KeyserDSoze' } }
   const setup: GroupSetupClient = {
     async discoverFantazoneRepositories() { return [] },
-    async createRepository(input) {
-      requestedPrivate = input.isPrivate
-      return repo
-    },
+    async createRepository(input) { requestedPrivate = input.isPrivate; return repo },
     async tryGetContent(owner, repository, path) { return files.get(`${owner}/${repository}/${path}`) ?? null },
     async putContent(owner, repository, path, content) {
       files.set(`${owner}/${repository}/${path}`, { sha: 'setup', content })
