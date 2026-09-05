@@ -52,8 +52,10 @@ export class GitHubRealPlayersRepository {
 export function decodeRealPlayers(value: unknown, expectedYear?: number): RealPlayers {
   if (!value || typeof value !== 'object') throw invalidPlayers(expectedYear)
   const document = value as Partial<RealPlayers>
-  if (!Number.isInteger(document.year) || !Array.isArray(document.players)) throw invalidPlayers(expectedYear)
-  const year = document.year as number
+  const year = document.year
+  if (typeof year !== 'number' || !Number.isInteger(year) || !Array.isArray(document.players)) {
+    throw invalidPlayers(expectedYear)
+  }
   if (expectedYear != null && year !== expectedYear) {
     throw new Error(`Serie A players year mismatch: expected ${expectedYear}, found ${year}`)
   }
