@@ -25,6 +25,7 @@ This documentation is the migration contract from `KeyserDSoze/Fantasoccer` to F
 19. [`19-web-oauth-group-invites.md`](19-web-oauth-group-invites.md) — `fanta.plus` external login, group membership gate and email-bound Admin invites; Microsoft is active and Google remains feature-flagged off until configured.
 20. [`20-game-wrapper-composition.md`](20-game-wrapper-composition.md) — local ephemeral GameWrapper composition replacing the legacy `/Game/Get` aggregate endpoint.
 21. [`21-formation-write-side.md`](21-formation-write-side.md) — validated position-only TeamDay writes replacing legacy `Game/SaveTeam`.
+22. [`22-global-real-calendar.md`](22-global-real-calendar.md) — shared readable Serie A calendar, legacy timing projections and platform/group repository split.
 
 ## Source of truth
 

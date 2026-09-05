@@ -14,18 +14,21 @@ If that day document does not exist yet, the season Team is read as a template a
 
 ## Narrow write contract
 
-The client does not submit a mutable Team object. It sends only deterministic player keys and requested `position` values. The writer then:
+The client does not submit a mutable Team object and no longer submits timing context. It sends only deterministic player keys, requested `position` values and the explicit `asAdmin` intent. The writer then:
 
 1. refreshes `config/group.json` and rechecks the authenticated member;
-2. composes the selected game and checks the requested owner belongs to it;
-3. verifies owner/additional-owner permission, or an explicit SuperAdmin override;
-4. rejects a locked day unless SuperAdmin is explicitly editing the current live Serie A day;
-5. reloads TeamDay, falling back to the season Team only when TeamDay does not exist;
-6. copies only formation positions onto active players already present in that fresh document;
-7. runs the shared port of `TeamChecker.Validate`;
-8. writes TeamDay with the exact Git blob SHA, or `createOnly` when creating the day document.
+2. composes the selected game and derives editability from the shared global RealCalendar;
+3. checks the requested owner belongs to the selected game;
+4. verifies owner/additional-owner permission, or an explicit SuperAdmin override;
+5. rejects a locked day unless RealCalendar itself says that selected day is currently live and the actor is SuperAdmin;
+6. reloads TeamDay, falling back to the season Team only when TeamDay does not exist;
+7. copies only formation positions onto active players already present in that fresh document;
+8. runs the shared port of `TeamChecker.Validate`;
+9. writes TeamDay with the exact Git blob SHA, or `createOnly` when creating the day document.
 
 This preserves the important legacy protection in `GameController.SaveTeamAsync`: prices, roster membership, owner, player status, revenue and other fields cannot be replaced by a client formation payload.
+
+`nextSerieADay` and `liveSerieADay` are no longer accepted from the UI. They are projections of platform-owned Serie A data.
 
 ## Concurrency
 

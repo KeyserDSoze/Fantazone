@@ -8,12 +8,14 @@ import {
   FantaSoccerRole,
   type Calendar,
   type Group,
+  type RealCalendar,
   type Team,
 } from '../../src/domain/src/index'
 import {
   GROUP_DOCUMENT_PATH,
   calendarDocumentPath,
   dayTeamDocumentPath,
+  realCalendarDocumentPath,
   seasonTeamDocumentPath,
   type RepositoryContentClient,
 } from '../../src/github/src/index'
@@ -29,6 +31,7 @@ class FakeContentClient implements RepositoryContentClient {
   async putContent() { return { sha: 'unused' } }
 }
 
+const NOW = new Date('2026-09-02T12:00:00Z')
 const connection = {
   token: 'test-token',
   groupName: 'Amici',
@@ -118,27 +121,31 @@ function put(client: FakeContentClient, path: string, value: unknown) {
   client.files.set(`KeyserDSoze/Fantazone.Amici/${path}@main`, { sha: `sha-${path}`, content: JSON.stringify(value) })
 }
 
-async function runtimeWithFixtures() {
+function putPlatform(client: FakeContentClient, path: string, value: unknown) {
+  client.files.set(`KeyserDSoze/Fantazone/${path}@main`, { sha: `sha-${path}`, content: JSON.stringify(value) })
+}
+
+async function runtimeWithFixtures(nextSerieADay?: number) {
   const client = new FakeContentClient()
   put(client, GROUP_DOCUMENT_PATH, group)
   put(client, calendarDocumentPath('league-a', 15), calendar)
   put(client, dayTeamDocumentPath('main', 15, 4, 'alpha@example.com'), alphaDay)
   put(client, seasonTeamDocumentPath('main', 15, 'beta@example.com'), betaSeason)
-  return { client, runtime: await GroupSessionRuntime.open(connection, client) }
+  if (nextSerieADay != null) putPlatform(client, realCalendarDocumentPath(15), realCalendarWithNext(nextSerieADay))
+  return {
+    client,
+    runtime: await GroupSessionRuntime.open(connection, client, { now: () => NOW }),
+  }
 }
 
-test('composes GameWrapper locally from Calendar + TeamDay with editable season-team fallback', async () => {
-  const { runtime } = await runtimeWithFixtures()
-  const wrapper = await runtime.gameComposer.getGame({
-    leagueId: 'league-a',
-    season: 15,
-    gameId: 'game-1',
-    nextSerieADay: 4,
-  })
+test('composes GameWrapper locally and derives editability from shared RealCalendar', async () => {
+  const { runtime } = await runtimeWithFixtures(4)
+  const wrapper = await runtime.gameComposer.getGame({ leagueId: 'league-a', season: 15, gameId: 'game-1' })
 
   assert.ok(wrapper)
   assert.equal(wrapper.serieADay, 4)
   assert.equal(wrapper.fantasyDay, 2)
+  assert.equal(wrapper.nextSerieADay, 4)
   assert.equal(wrapper.canEdit, true)
   assert.equal(wrapper.editabilitySource, 'serie-a-context')
   assert.equal(GameWrapperHelper.getHomeTeam(wrapper)?.source, 'day')
@@ -150,15 +157,11 @@ test('composes GameWrapper locally from Calendar + TeamDay with editable season-
 })
 
 test('does not fall back to the mutable season team after the game becomes locked', async () => {
-  const { runtime } = await runtimeWithFixtures()
-  const wrapper = await runtime.gameComposer.getGame({
-    leagueId: 'league-a',
-    season: 15,
-    gameId: 'game-1',
-    nextSerieADay: 5,
-  })
+  const { runtime } = await runtimeWithFixtures(5)
+  const wrapper = await runtime.gameComposer.getGame({ leagueId: 'league-a', season: 15, gameId: 'game-1' })
 
   assert.ok(wrapper)
+  assert.equal(wrapper.nextSerieADay, 5)
   assert.equal(wrapper.canEdit, false)
   assert.equal(GameWrapperHelper.getHomeTeam(wrapper)?.source, 'day')
   assert.equal(GameWrapperHelper.getAwayTeam(wrapper)?.source, 'missing')
@@ -168,7 +171,7 @@ test('does not fall back to the mutable season team after the game becomes locke
 })
 
 test('keeps a stored calendar result authoritative and does not request score calculation', async () => {
-  const { client, runtime } = await runtimeWithFixtures()
+  const { client, runtime } = await runtimeWithFixtures(5)
   const withResult: Calendar = structuredClone(calendar)
   withResult.rounds['@'][0].games[0].result = {
     home: { value: 72, defensiveBonus: false, goodPeople: false, ownGoal: false },
@@ -179,7 +182,7 @@ test('keeps a stored calendar result authoritative and does not request score ca
   }
   put(client, calendarDocumentPath('league-a', 15), withResult)
 
-  const wrapper = await runtime.gameComposer.getGame({ leagueId: 'league-a', season: 15, gameId: 'game-1', nextSerieADay: 5 })
+  const wrapper = await runtime.gameComposer.getGame({ leagueId: 'league-a', season: 15, gameId: 'game-1' })
   assert.ok(wrapper)
   assert.equal(wrapper.requiresScoreCalculation, false)
   assert.equal(GameWrapperHelper.hasStoredResult(wrapper), true)
@@ -195,6 +198,39 @@ test('preserves the old missing-real-calendar fallback of next Serie A day 39', 
 })
 
 test('returns null for an unknown game instead of inventing a wrapper', async () => {
-  const { runtime } = await runtimeWithFixtures()
-  assert.equal(await runtime.gameComposer.getGame({ leagueId: 'league-a', season: 15, gameId: 'missing', nextSerieADay: 4 }), null)
+  const { runtime } = await runtimeWithFixtures(4)
+  assert.equal(await runtime.gameComposer.getGame({ leagueId: 'league-a', season: 15, gameId: 'missing' }), null)
 })
+
+function realCalendarWithNext(nextSerieADay: number): RealCalendar {
+  const previous = nextSerieADay - 1
+  return {
+    year: 15,
+    days: [
+      {
+        year: 15,
+        serieADay: previous,
+        games: [{
+          home: { name: 'Roma', abbreviation: 'ROM' },
+          away: { name: 'Milan', abbreviation: 'MIL' },
+          date: '2026-09-01T18:45:00Z',
+          homeGoals: 1,
+          awayGoals: 0,
+          delayed: false,
+        }],
+      },
+      {
+        year: 15,
+        serieADay: nextSerieADay,
+        games: [{
+          home: { name: 'Inter', abbreviation: 'INT' },
+          away: { name: 'Napoli', abbreviation: 'NAP' },
+          date: '2026-09-10T18:45:00Z',
+          homeGoals: null,
+          awayGoals: null,
+          delayed: false,
+        }],
+      },
+    ],
+  }
+}

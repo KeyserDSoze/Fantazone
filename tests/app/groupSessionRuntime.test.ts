@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { IdentityRole, type Group } from '../../src/domain/src/index'
 import { GROUP_DOCUMENT_PATH, type RepositoryContentClient } from '../../src/github/src/index'
-import { GroupSessionRuntime } from '../../src/app/services/groupSessionRuntime'
+import { DEFAULT_PLATFORM_TARGET, GroupSessionRuntime } from '../../src/app/services/groupSessionRuntime'
 
 class FakeContentClient implements RepositoryContentClient {
   readonly files = new Map<string, { sha: string; content: string }>()
@@ -43,19 +43,29 @@ function group(role: number = IdentityRole.Participant): Group {
   }
 }
 
-test('opens one selected group and composes all repositories around one store', async () => {
+test('opens one selected group and composes group plus shared platform repositories around one store', async () => {
   const client = new FakeContentClient()
   client.files.set(`KeyserDSoze/Fantazone.Amici/${GROUP_DOCUMENT_PATH}@main`, { sha: 'group-1', content: JSON.stringify(group()) })
   const runtime = await GroupSessionRuntime.open(connection, client)
 
   assert.equal(runtime.group.name, 'Amici')
   assert.deepEqual(runtime.target, { owner: 'KeyserDSoze', repo: 'Fantazone.Amici', ref: 'main' })
+  assert.deepEqual(runtime.platformTarget, DEFAULT_PLATFORM_TARGET)
   assert.ok(runtime.groupRepository)
   assert.ok(runtime.calendarRepository)
   assert.ok(runtime.rankRepository)
   assert.ok(runtime.teamRepository)
   assert.ok(runtime.liveGroupRepository)
+  assert.ok(runtime.realCalendarRepository)
   assert.equal(client.reads, 1)
+})
+
+test('allows tests or alternate deployments to override the shared platform repository target', async () => {
+  const client = new FakeContentClient()
+  client.files.set(`KeyserDSoze/Fantazone.Amici/${GROUP_DOCUMENT_PATH}@main`, { sha: 'group-1', content: JSON.stringify(group()) })
+  const platformTarget = { owner: 'ExampleOrg', repo: 'Fantazone.Data', ref: 'production' }
+  const runtime = await GroupSessionRuntime.open(connection, client, { platformTarget })
+  assert.deepEqual(runtime.platformTarget, platformTarget)
 })
 
 test('re-reads selected group.users membership when resolving external identity', async () => {

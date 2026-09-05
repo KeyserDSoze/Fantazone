@@ -2,6 +2,7 @@ import {
   CalendarHelper,
   GameResultHelper,
   GroupHelper,
+  RealCalendarHelper,
   TeamHelper,
   type Calendar,
   type CalendarDay,
@@ -12,17 +13,16 @@ import {
   type Group,
   type Team,
 } from '@fantazone/domain'
-import type { GitHubCalendarRepository, GitHubTeamRepository } from '@fantazone/github'
+import type {
+  GitHubCalendarRepository,
+  GitHubRealCalendarRepository,
+  GitHubTeamRepository,
+} from '@fantazone/github'
 
 export type ComposeGameInput = {
   leagueId: string
   season: number
   gameId: string
-  /**
-   * Next real Serie A day. Until RealCalendar is migrated callers may omit it;
-   * 39 preserves the legacy controller fallback when the real calendar was unavailable.
-   */
-  nextSerieADay?: number
 }
 
 type LocatedGame = {
@@ -31,14 +31,16 @@ type LocatedGame = {
 }
 
 /**
- * Local replacement for GET /Game/Get. It joins canonical Group, Calendar and
- * Team/TeamDay documents without creating another persisted aggregate.
+ * Local replacement for GET /Game/Get. It joins canonical Group, Calendar,
+ * global RealCalendar and Team/TeamDay documents without persisting an aggregate.
  */
 export class GroupGameComposer {
   constructor(
     private readonly getGroup: () => Group,
     private readonly calendars: GitHubCalendarRepository,
     private readonly teams: GitHubTeamRepository,
+    private readonly realCalendars: GitHubRealCalendarRepository,
+    private readonly now: () => Date = () => new Date(),
   ) {}
 
   async getGame(input: ComposeGameInput): Promise<GameWrapper | null> {
@@ -49,7 +51,10 @@ export class GroupGameComposer {
     const located = findGame(calendar, input.gameId)
     if (!located) return null
 
-    const nextSerieADay = input.nextSerieADay ?? 39
+    const realCalendar = await this.realCalendars.getCalendar(input.season)
+    const nextSerieADay = realCalendar
+      ? RealCalendarHelper.getNextSerieADay(realCalendar, this.now()) ?? 39
+      : 39
     const canEdit = located.day.serieADay >= nextSerieADay
     const group = this.getGroup()
 
@@ -67,7 +72,7 @@ export class GroupGameComposer {
       teams: [home, away],
       canEdit,
       nextSerieADay,
-      editabilitySource: input.nextSerieADay == null ? 'legacy-fallback' : 'serie-a-context',
+      editabilitySource: realCalendar ? 'serie-a-context' : 'legacy-fallback',
       requiresScoreCalculation: !canEdit && !GameResultHelper.hasValue(located.game.result),
     }
   }
@@ -136,7 +141,4 @@ function validateInput(input: ComposeGameInput): void {
   if (!input.leagueId.trim()) throw new Error('League id is required')
   if (!input.gameId.trim()) throw new Error('Game id is required')
   if (!Number.isInteger(input.season) || input.season < 1) throw new Error('Season must be a positive integer')
-  if (input.nextSerieADay != null && (!Number.isInteger(input.nextSerieADay) || input.nextSerieADay < 1)) {
-    throw new Error('Next Serie A day must be a positive integer')
-  }
 }

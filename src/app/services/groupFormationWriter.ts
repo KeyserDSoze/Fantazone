@@ -1,6 +1,7 @@
 import {
   GroupHelper,
   IdentityRole,
+  RealCalendarHelper,
   applyFormationPositions,
   validateFormation,
   type AuthenticatedGroupSession,
@@ -8,7 +9,7 @@ import {
   type Group,
   type Team,
 } from '@fantazone/domain'
-import type { GitHubTeamRepository } from '@fantazone/github'
+import type { GitHubRealCalendarRepository, GitHubTeamRepository } from '@fantazone/github'
 import type { GroupGameComposer } from './groupGameComposer'
 
 export type SaveGameFormationInput = {
@@ -17,10 +18,8 @@ export type SaveGameFormationInput = {
   season: number
   gameId: string
   owner: string
-  nextSerieADay: number
   positions: readonly FormationPositionUpdate[]
   asAdmin?: boolean
-  liveSerieADay?: number
 }
 
 export type SavedFormation = {
@@ -62,16 +61,19 @@ export class FormationValidationError extends Error {
  * Write-side replacement for Game/SaveTeam.
  * The caller sends only playerKey -> position changes. Every other Team field is
  * reloaded from GitHub before validation and cannot be overwritten by the UI.
+ * Serie A timing is resolved from the shared RealCalendar, never trusted from the client.
  */
 export class GroupFormationWriter {
   constructor(
     private readonly refreshGroup: () => Promise<Group>,
     private readonly games: GroupGameComposer,
     private readonly teams: GitHubTeamRepository,
+    private readonly realCalendars: GitHubRealCalendarRepository,
     private readonly now: () => Date = () => new Date(),
   ) {}
 
   async saveGameFormation(input: SaveGameFormationInput): Promise<SavedFormation> {
+    const operationNow = this.now()
     const group = await this.refreshGroup()
     const actor = GroupHelper.findUserByEmail(group, input.session.identity.email)
     if (!actor || actor.role === IdentityRole.None) {
@@ -82,7 +84,6 @@ export class GroupFormationWriter {
       leagueId: input.leagueId,
       season: input.season,
       gameId: input.gameId,
-      nextSerieADay: input.nextSerieADay,
     })
     if (!wrapper) throw new FormationTeamNotFoundError()
 
@@ -99,7 +100,9 @@ export class GroupFormationWriter {
     if (!isOwner && !adminOverride) throw new FormationAuthorizationError('Non sei l’owner della squadra.')
 
     if (!wrapper.canEdit) {
-      const isCurrentLiveDay = adminOverride && input.liveSerieADay != null && input.liveSerieADay === wrapper.serieADay
+      const realCalendar = await this.realCalendars.getCalendar(input.season, { refresh: true })
+      const liveSerieADay = realCalendar ? RealCalendarHelper.getLiveSerieADay(realCalendar, operationNow) : 0
+      const isCurrentLiveDay = adminOverride && liveSerieADay === wrapper.serieADay
       if (!isCurrentLiveDay) throw new FormationLockedError()
     }
 
@@ -121,7 +124,7 @@ export class GroupFormationWriter {
     const validation = validateFormation(positioned)
     if (!validation.valid) throw new FormationValidationError(validation.errors)
 
-    const updated: Team = { ...positioned, lastUpdate: this.now().toISOString() }
+    const updated: Team = { ...positioned, lastUpdate: operationNow.toISOString() }
     const sha = await this.teams.writeTeamDay(
       annual.basketId,
       input.season,

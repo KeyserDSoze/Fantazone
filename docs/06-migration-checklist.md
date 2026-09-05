@@ -19,7 +19,7 @@
 - [x] first-admin bootstrap for newly created/legacy-empty groups.
 - [x] email-bound Admin/SuperAdmin group invitation flow: census member first, then share repository/PAT/expected-email link.
 - [~] secure credential persistence and group switching; V1 web PAT still uses local storage.
-- [x] GroupSession shares Group/Calendar/Ranking/Team/LiveGroup repositories plus local Game composition and formation write-side.
+- [x] GroupSession shares per-group repositories plus the global platform RealCalendar repository around one JSON store.
 - [x] authenticated web session after provider email + selected-group membership resolution.
 - [ ] native Google/Microsoft OAuth redirects/deep links for iOS/Android.
 
@@ -40,9 +40,10 @@
 - [x] Ranking.
 - [x] Team/Player.
 - [x] LiveGroup readable snapshot/helpers/repository.
-- [~] Game/day: local GameWrapper composition and validated TeamDay formation persistence implemented; RealCalendar timing, live enrichment and score calculation still pending.
-- [~] Formations: authoritative validation + owner/SuperAdmin authorization + TeamDay GitHub write implemented; field-editing UI and chance/stat-based optimal formation still pending.
-- [ ] Real players / Serie A.
+- [x] RealCalendar readable global schema + GitHub repository + legacy live/last/next timing projections.
+- [~] Game/day: local GameWrapper composition and TeamDay formation persistence now derive editability from global RealCalendar; live player enrichment and score calculation still pending.
+- [~] Formations: authoritative validation + owner/SuperAdmin authorization + RealCalendar-controlled TeamDay GitHub write implemented; field-editing UI and chance/stat-based optimal formation still pending.
+- [ ] Real players / Serie A ingestion.
 - [ ] Statistics/chances/votes.
 - [ ] Market persistence/commands.
 

@@ -10,6 +10,7 @@ import {
   type Calendar,
   type Group,
   type Player,
+  type RealCalendar,
   type Team,
   type UserOfAGroup,
 } from '../../src/domain/src/index'
@@ -18,6 +19,7 @@ import {
   GROUP_DOCUMENT_PATH,
   calendarDocumentPath,
   dayTeamDocumentPath,
+  realCalendarDocumentPath,
   seasonTeamDocumentPath,
   type RepositoryContentClient,
 } from '../../src/github/src/index'
@@ -29,6 +31,8 @@ import {
 import { GroupSessionRuntime } from '../../src/app/services/groupSessionRuntime'
 
 type StoredFile = { sha: string; content: string }
+type Schedule = 'next4' | 'next5' | 'live4' | 'none'
+
 class FakeContentClient implements RepositoryContentClient {
   readonly files = new Map<string, StoredFile>()
   writes = 0
@@ -50,6 +54,7 @@ class FakeContentClient implements RepositoryContentClient {
   }
 }
 
+const NOW = new Date('2026-09-02T12:00:00Z')
 const group: Group = {
   id: 'amici',
   name: 'Amici',
@@ -91,14 +96,23 @@ function put(client: FakeContentClient, path: string, value: unknown, sha = `sha
   client.files.set(key('KeyserDSoze', 'Fantazone.Amici', path, 'main'), { sha, content: JSON.stringify(value) })
 }
 
-async function fixture(includeDay = false) {
+function putPlatform(client: FakeContentClient, path: string, value: unknown, sha = `sha-${path}`) {
+  client.files.set(key('KeyserDSoze', 'Fantazone', path, 'main'), { sha, content: JSON.stringify(value) })
+}
+
+async function fixture(includeDay = false, schedule: Schedule = 'next4') {
   const client = new FakeContentClient()
   const team = makeTeam()
   put(client, GROUP_DOCUMENT_PATH, group)
   put(client, calendarDocumentPath('league-a', 2026), calendar)
   put(client, seasonTeamDocumentPath('main', 2026, 'owner@example.com'), team, 'sha-season')
   if (includeDay) put(client, dayTeamDocumentPath('main', 2026, 4, 'owner@example.com'), team, 'sha-day')
-  return { client, team, runtime: await GroupSessionRuntime.open(connection, client) }
+  if (schedule !== 'none') putPlatform(client, realCalendarDocumentPath(2026), realCalendar(schedule))
+  return {
+    client,
+    team,
+    runtime: await GroupSessionRuntime.open(connection, client, { now: () => NOW }),
+  }
 }
 
 function session(email: string): AuthenticatedGroupSession {
@@ -111,18 +125,18 @@ const swap = [
   { playerKey: getPlayerKey('Fwd tribune Alpha'), position: FantaSoccerRole.Forward },
 ]
 
-test('creates TeamDay from the season Team and changes only formation positions', async () => {
+test('creates TeamDay from the season Team and derives the editable day from RealCalendar', async () => {
   const { client, runtime } = await fixture()
   const result = await runtime.formationWriter.saveGameFormation({
     session: session('owner@example.com'), leagueId: 'league-a', season: 2026, gameId: 'game-1',
-    owner: 'owner@example.com', nextSerieADay: 4, positions: swap,
+    owner: 'owner@example.com', positions: swap,
   })
   assert.equal(result.source, 'season-fallback')
   assert.equal(client.lastWriteSha, undefined)
   const day = JSON.parse(client.files.get(key('KeyserDSoze', 'Fantazone.Amici', dayTeamDocumentPath('main', 2026, 4, 'owner@example.com'), 'main'))!.content) as Team
   assert.equal(day.players.find(player => player.name === 'Fwd starter Alpha')?.position, FantaSoccerRole.Tribune)
   assert.equal(day.players.find(player => player.name === 'Fwd starter Alpha')?.price, 10)
-  assert.ok(day.lastUpdate)
+  assert.equal(day.lastUpdate, NOW.toISOString())
   const season = JSON.parse(client.files.get(key('KeyserDSoze', 'Fantazone.Amici', seasonTeamDocumentPath('main', 2026, 'owner@example.com'), 'main'))!.content) as Team
   assert.equal(season.players.find(player => player.name === 'Fwd starter Alpha')?.position, FantaSoccerRole.Forward)
   assert.equal(season.lastUpdate, null)
@@ -132,7 +146,7 @@ test('updates an existing TeamDay with its freshly-read SHA', async () => {
   const { client, runtime } = await fixture(true)
   const result = await runtime.formationWriter.saveGameFormation({
     session: session('coowner@example.com'), leagueId: 'league-a', season: 2026, gameId: 'game-1',
-    owner: 'owner@example.com', nextSerieADay: 4, positions: swap,
+    owner: 'owner@example.com', positions: swap,
   })
   assert.equal(result.source, 'day')
   assert.equal(client.lastWriteSha, 'sha-day')
@@ -143,30 +157,52 @@ test('rejects a member that is neither owner nor additional owner', async () => 
   await assert.rejects(
     runtime.formationWriter.saveGameFormation({
       session: session('other@example.com'), leagueId: 'league-a', season: 2026, gameId: 'game-1',
-      owner: 'owner@example.com', nextSerieADay: 4, positions: swap,
+      owner: 'owner@example.com', positions: swap,
     }),
     FormationAuthorizationError,
   )
 })
 
-test('rejects a locked day for a normal owner', async () => {
-  const { runtime } = await fixture(true)
+test('rejects a locked day for a normal owner using shared RealCalendar timing', async () => {
+  const { runtime } = await fixture(true, 'next5')
   await assert.rejects(
     runtime.formationWriter.saveGameFormation({
       session: session('owner@example.com'), leagueId: 'league-a', season: 2026, gameId: 'game-1',
-      owner: 'owner@example.com', nextSerieADay: 5, positions: swap,
+      owner: 'owner@example.com', positions: swap,
     }),
     FormationLockedError,
   )
 })
 
-test('allows an explicit SuperAdmin override only for the live Serie A day', async () => {
-  const { runtime } = await fixture(true)
+test('allows an explicit SuperAdmin override only when RealCalendar says the selected day is live', async () => {
+  const { runtime } = await fixture(true, 'live4')
   const saved = await runtime.formationWriter.saveGameFormation({
     session: session('admin@example.com'), leagueId: 'league-a', season: 2026, gameId: 'game-1',
-    owner: 'owner@example.com', nextSerieADay: 5, liveSerieADay: 4, asAdmin: true, positions: swap,
+    owner: 'owner@example.com', asAdmin: true, positions: swap,
   })
   assert.equal(saved.serieADay, 4)
+})
+
+test('does not let SuperAdmin override a locked non-live day', async () => {
+  const { runtime } = await fixture(true, 'next5')
+  await assert.rejects(
+    runtime.formationWriter.saveGameFormation({
+      session: session('admin@example.com'), leagueId: 'league-a', season: 2026, gameId: 'game-1',
+      owner: 'owner@example.com', asAdmin: true, positions: swap,
+    }),
+    FormationLockedError,
+  )
+})
+
+test('missing RealCalendar cannot be replaced by a client-supplied timing override', async () => {
+  const { runtime } = await fixture(true, 'none')
+  await assert.rejects(
+    runtime.formationWriter.saveGameFormation({
+      session: session('owner@example.com'), leagueId: 'league-a', season: 2026, gameId: 'game-1',
+      owner: 'owner@example.com', positions: swap,
+    }),
+    FormationLockedError,
+  )
 })
 
 test('rejects an invalid position-only payload before writing GitHub', async () => {
@@ -174,13 +210,59 @@ test('rejects an invalid position-only payload before writing GitHub', async () 
   await assert.rejects(
     runtime.formationWriter.saveGameFormation({
       session: session('owner@example.com'), leagueId: 'league-a', season: 2026, gameId: 'game-1', owner: 'owner@example.com',
-      nextSerieADay: 4,
       positions: [{ playerKey: getPlayerKey('Fwd starter Alpha'), position: FantaSoccerRole.Tribune }],
     }),
     FormationValidationError,
   )
   assert.equal(client.writes, 0)
 })
+
+function realCalendar(schedule: Exclude<Schedule, 'none'>): RealCalendar {
+  if (schedule === 'live4') {
+    return {
+      year: 2026,
+      days: [
+        {
+          year: 2026,
+          serieADay: 4,
+          games: [realGame('2026-09-02T11:30:00Z')],
+        },
+        {
+          year: 2026,
+          serieADay: 5,
+          games: [realGame('2026-09-10T18:45:00Z')],
+        },
+      ],
+    }
+  }
+  const next = schedule === 'next4' ? 4 : 5
+  return {
+    year: 2026,
+    days: [
+      {
+        year: 2026,
+        serieADay: next - 1,
+        games: [realGame('2026-09-01T18:45:00Z', 1, 0)],
+      },
+      {
+        year: 2026,
+        serieADay: next,
+        games: [realGame('2026-09-10T18:45:00Z')],
+      },
+    ],
+  }
+}
+
+function realGame(date: string, homeGoals: number | null = null, awayGoals: number | null = null) {
+  return {
+    home: { name: 'Roma', abbreviation: 'ROM' },
+    away: { name: 'Inter', abbreviation: 'INT' },
+    date,
+    homeGoals,
+    awayGoals,
+    delayed: false,
+  }
+}
 
 function makeTeam(): Team {
   const players: Player[] = []

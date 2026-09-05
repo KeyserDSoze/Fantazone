@@ -14,9 +14,11 @@ import {
   GitHubJsonStore,
   GitHubLiveGroupRepository,
   GitHubRankRepository,
+  GitHubRealCalendarRepository,
   GitHubTeamRepository,
   type GitHubRepo,
   type GroupRepositoryTarget,
+  type PlatformRepositoryTarget,
   type RepositoryContentClient,
 } from '@fantazone/github'
 import { GroupFormationWriter } from './groupFormationWriter'
@@ -29,6 +31,17 @@ export type GroupConnection = {
   expectedEmail?: string
 }
 
+export type GroupRuntimeOptions = {
+  platformTarget?: PlatformRepositoryTarget
+  now?: () => Date
+}
+
+export const DEFAULT_PLATFORM_TARGET: PlatformRepositoryTarget = {
+  owner: 'KeyserDSoze',
+  repo: 'Fantazone',
+  ref: 'main',
+}
+
 export class GroupDocumentUnavailableError extends Error {
   constructor(public readonly connection: GroupConnection) {
     super(`Il file config/group.json non è disponibile in ${connection.repository.full_name}`)
@@ -38,39 +51,59 @@ export class GroupDocumentUnavailableError extends Error {
 
 export class GroupSessionRuntime {
   readonly target: GroupRepositoryTarget
+  readonly platformTarget: PlatformRepositoryTarget
   readonly store: GitHubJsonStore
   readonly groupRepository: GitHubGroupRepository
   readonly calendarRepository: GitHubCalendarRepository
   readonly rankRepository: GitHubRankRepository
   readonly teamRepository: GitHubTeamRepository
   readonly liveGroupRepository: GitHubLiveGroupRepository
+  readonly realCalendarRepository: GitHubRealCalendarRepository
   readonly gameComposer: GroupGameComposer
   readonly formationWriter: GroupFormationWriter
 
   private currentGroup: Group | null = null
 
-  private constructor(readonly connection: GroupConnection, contentClient: RepositoryContentClient) {
+  private constructor(
+    readonly connection: GroupConnection,
+    contentClient: RepositoryContentClient,
+    options: GroupRuntimeOptions = {},
+  ) {
     this.target = {
       owner: connection.repository.owner.login,
       repo: connection.repository.name,
       ref: connection.repository.default_branch,
     }
+    this.platformTarget = options.platformTarget ?? DEFAULT_PLATFORM_TARGET
     this.store = new GitHubJsonStore(contentClient)
     this.groupRepository = new GitHubGroupRepository(this.store, this.target)
     this.calendarRepository = new GitHubCalendarRepository(this.store, this.target)
     this.rankRepository = new GitHubRankRepository(this.store, this.target)
     this.teamRepository = new GitHubTeamRepository(this.store, this.target, this.rankRepository)
     this.liveGroupRepository = new GitHubLiveGroupRepository(this.store, this.target)
-    this.gameComposer = new GroupGameComposer(() => this.group, this.calendarRepository, this.teamRepository)
+    this.realCalendarRepository = new GitHubRealCalendarRepository(this.store, this.platformTarget)
+    this.gameComposer = new GroupGameComposer(
+      () => this.group,
+      this.calendarRepository,
+      this.teamRepository,
+      this.realCalendarRepository,
+      options.now,
+    )
     this.formationWriter = new GroupFormationWriter(
       () => this.refreshGroup(),
       this.gameComposer,
       this.teamRepository,
+      this.realCalendarRepository,
+      options.now,
     )
   }
 
-  static async open(connection: GroupConnection, contentClient: RepositoryContentClient = new GitHubClient(connection.token)): Promise<GroupSessionRuntime> {
-    const runtime = new GroupSessionRuntime(connection, contentClient)
+  static async open(
+    connection: GroupConnection,
+    contentClient: RepositoryContentClient = new GitHubClient(connection.token),
+    options: GroupRuntimeOptions = {},
+  ): Promise<GroupSessionRuntime> {
+    const runtime = new GroupSessionRuntime(connection, contentClient, options)
     await runtime.refreshGroup()
     return runtime
   }
