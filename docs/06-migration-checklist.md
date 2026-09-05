@@ -19,7 +19,7 @@
 - [x] first-admin bootstrap for newly created/legacy-empty groups.
 - [x] email-bound Admin/SuperAdmin group invitation flow: census member first, then share repository/PAT/expected-email link.
 - [~] secure credential persistence and group switching; V1 web PAT still uses local storage.
-- [x] GroupSession shares per-group repositories plus the global platform RealCalendar repository around one JSON store.
+- [x] GroupSession shares per-group repositories plus global RealCalendar and vote repositories around one JSON store.
 - [x] authenticated web session after provider email + selected-group membership resolution.
 - [ ] native Google/Microsoft OAuth redirects/deep links for iOS/Android.
 
@@ -39,12 +39,14 @@
 - [x] Calendar.
 - [x] Ranking.
 - [x] Team/Player fantasy-roster domain.
-- [x] LiveGroup readable snapshot/helpers/repository.
+- [x] LiveGroup readable contract/helpers; persisted repository retained only for migration compatibility.
 - [x] RealCalendar readable global schema + GitHub repository + legacy live/last/next timing projections.
 - [x] global RealTeams/RealPlayers readable master-data schema + GitHub repositories + active/inactive/transfer reconciliation.
 - [x] canonical Vote/StatPlayer readable contracts + GitHub repositories + pure FinalValue/player-statistics reducers + rebuild job.
 - [x] live/final Serie A vote producer logic: final HTML parser, delayed-game behavior, SignedUri/protobuf live adapter, canonical repositories and manual jobs; real-source production validation/scheduling still pending operationally.
-- [~] Game/day: local GameWrapper composition and TeamDay formation persistence derive editability from global RealCalendar; live player enrichment and score calculation still pending.
+- [x] local fantasy team scoring reducer: official-over-live precedence, substitutions, Best Formation, defensive/good-people/own-goal behavior.
+- [x] local live Rank projection + `GroupLiveComposer`; legacy high-frequency `LiveJob`/`ingest-live` retired with zero live-cache writes.
+- [~] Game/day: local GameWrapper composition and TeamDay formation persistence exist; next step is reusing the new scoring reducer for definitive stored day results and UI enrichment.
 - [~] Formations: authoritative validation + owner/SuperAdmin authorization + RealCalendar-controlled TeamDay GitHub write implemented; field-editing UI and chance/stat-based optimal formation still pending.
 - [~] Serie A ingestion: calendar, RealTeams/RealPlayers and live/final vote producers implemented/tested; production data initialization/source validation, standings and scheduling still pending.
 - [~] Statistics/chances/votes: deterministic official-vote statistics + live/final vote producers implemented; chances and production source validation remain pending.
@@ -52,7 +54,7 @@
 
 ## Infrastructure backlog
 
-- [ ] Replace every legacy `buildApiUrl(...)` responsibility with local composition/GitHub/Actions/WebRTC; `/Game/Get` and `Game/SaveTeam` are removed conceptually by `GroupGameComposer` + `GroupFormationWriter`.
+- [ ] Replace every legacy `buildApiUrl(...)` responsibility with local composition/GitHub/Actions/WebRTC; `/Game/Get`, `Game/SaveTeam` and persisted LiveGroup aggregation are removed conceptually by local composers/writers.
 - [x] remove backend JWT/AppIdentity dependency from the web login boundary.
 - [~] replace `rystem.repository.client` with GitHub adapters.
 - [ ] replace Azure/static URLs.
@@ -67,6 +69,7 @@
 - [~] player/team master-data ingestion: global teams/players + reconciliation implemented; legacy count-change stats regeneration is independent; per-group Team transfer propagation remains pending.
 - [~] player statistics rebuild: pure reducer/repository/manual Action implemented and automatically triggered only on legacy `playerCountChanged`; real runtime data initialization remains pending.
 - [~] live/final votes: provider adapters + manual Actions + offline parity tests implemented; first real provider runs and scheduling decision remain pending (#29).
+- [x] legacy `LiveJob`: retired, replaced by local `GroupLiveComposer`; `ingest-live` removed from dispatcher/Action choices.
 - [ ] odds/images.
 - [ ] formation/groups manager.
 - [ ] HallOfFame/Market.

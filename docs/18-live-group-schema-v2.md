@@ -1,14 +1,16 @@
 # LiveGroup schema v2 migration
 
-`LiveGroup` is rebuilt directly on readable schema v2 rather than merging the abandoned compact migration branch.
+`LiveGroup` remains the readable contract for the live fantasy read model, but it is no longer canonical persisted runtime state.
 
-## Canonical path
+## Historical compatibility path
 
 ```text
 data/groups/live-group.json
 ```
 
-## Document
+This path was introduced while replacing the old compact storage format. `GitHubLiveGroupRepository` still reads/writes it for migration compatibility and tests, but new runtime code must prefer `GroupLiveComposer`.
+
+## Read model
 
 ```json
 {
@@ -33,6 +35,23 @@ data/groups/live-group.json
 }
 ```
 
-The old representation permitted a round value to be either one day or an array of days even though the client projection selected one day. Schema v2 removes that transport ambiguity: every live round is exactly one readable `CalendarDay`.
+The old representation permitted a round value to be either one day or an array of days even though the client projection selected one day. Schema v2 keeps every live round as exactly one readable `CalendarDay`.
 
-`GitHubLiveGroupRepository` reads/writes `LiveGroup` directly through the same `GitHubJsonStore` used by Group, Calendar, Rank and Team. Helpers preserve numeric round sorting, latest-round selection, pending-game aggregation and enhanced ranking behavior.
+## Current runtime source
+
+`GroupLiveComposer` derives this object in memory from:
+
+```text
+Group + Calendar + Rank + TeamDay
+                +
+RealCalendar + official/live votes
+                |
+                v
+            LiveGroup
+```
+
+No backend aggregate call and no periodic per-group `live-group.json` write is required.
+
+Helpers such as `LiveLeagueHelper` and `LiveGroupHelper` remain valid because they operate on the read-model contract, regardless of whether it came from an old JSON file or the new local composer.
+
+The migration and LiveJob-retirement rationale is documented in `docs/26-local-live-composition.md` and issue #30.

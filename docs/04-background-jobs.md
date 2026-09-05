@@ -1,13 +1,13 @@
 # Background jobs migration
 
-The current Fantasoccer background-job project contains the following jobs. None may disappear silently.
+The current Fantasoccer background-job project contains the following jobs. None may disappear silently: a legacy job is either migrated, split, or explicitly retired with its replacement documented.
 
 | Legacy job | Legacy intent | Fantazone target |
 |---|---|---|
 | `SerieAJob` | refresh Serie A/calendar/live source data | **implemented first slice:** `ingest-serie-a` manual Action -> global readable RealCalendar JSON; standings/live extensions still pending |
 | `AllPlayersAndAllTeamsJob` | refresh player/team master data | **global slices implemented:** `ingest-master-data` -> readable RealTeams/RealPlayers + reconciliation; `playerCountChanged` triggers independent `rebuild-player-stats`; per-group Team transfer propagation remains split into #9 |
 | `LiveVotesJob` | ingest live fantasy votes | **implemented/tested:** `ingest-live-votes` -> SignedUri/protobuf adapter -> readable live vote JSON; production source validation/scheduling still pending in #29 |
-| `LiveJob` | ingest live match state | `ingest-live` Action |
+| `LiveJob` | rebuild per-group live match/rank snapshot | **retired in #30:** no Action; `GroupLiveComposer` derives `LiveGroup` locally from canonical group + platform data |
 | `FinalVotesJob` | ingest final votes | **implemented/tested:** `ingest-final-votes` -> readable official vote JSON + completeness check + stats rebuild; production source validation/scheduling still pending in #29 |
 | `PlayerOddsJob` | ingest player odds/probabilities | `ingest-player-odds` Action |
 | `PlayerImagesJob` | refresh player images | `ingest-player-images` Action/assets |
@@ -21,7 +21,9 @@ The current Fantasoccer background-job project contains the following jobs. None
 
 ## Legacy scheduling discovered
 
-The current host configures frequent jobs including Serie A every 5 minutes, live/live-votes/push roughly every minute, daily master/market/group jobs and scheduled final-vote/odds/Hall-of-Fame refreshes. GitHub scheduled workflows have coarser operational characteristics, so exact cadence must be revalidated rather than copied blindly.
+The old host configured frequent jobs including Serie A every 5 minutes and live/live-votes/push roughly every minute, plus daily/scheduled master, market, group, final-vote, odds and Hall-of-Fame jobs.
+
+Fantazone does **not** copy that schedule blindly. A high-frequency job that only rebuilt derived state is removed rather than moved to GitHub Actions. This is already the case for legacy `LiveJob`.
 
 ## Current job runtime
 
@@ -33,7 +35,9 @@ The dispatcher receives:
 npm run job --workspace=@fantazone/jobs -- <job> [day] [season-id]
 ```
 
-`Background jobs` exposes the same inputs through `workflow_dispatch`. Implemented jobs write canonical files into the checked-out repository; the workflow commits only `data/` changes after successful execution.
+`Background jobs` exposes valid jobs through `workflow_dispatch`. Implemented producer/rebuild jobs write canonical files into the checked-out repository; the workflow commits only `data/` changes after successful execution.
+
+`ingest-live` is intentionally **not** a valid job anymore.
 
 ### `ingest-serie-a`
 
@@ -85,7 +89,17 @@ The resource season preserves legacy `internalSeason + 6`; all event mappings an
 
 Without an explicit day the provider is contacted only while RealCalendar reports an actually live match.
 
-Full vote details: `docs/24-player-statistics-and-votes.md`, `docs/25-serie-a-vote-ingestion.md`, issues #28/#29.
+### Retired `LiveJob`
+
+Legacy `LiveJob` was not an external producer. It repeatedly read Group, Calendar, Rank, TeamDay, RealCalendar and vote repositories, calculated score/rank projections and persisted `LiveGroup`.
+
+Fantazone replaces that with:
+
+```text
+canonical JSON inputs -> pure team/rank reducers -> GroupLiveComposer -> in-memory LiveGroup
+```
+
+This removes a high-frequency per-group write loop and one entire server/background responsibility. See `docs/26-local-live-composition.md` and #30.
 
 ## Manual operations required
 
@@ -100,9 +114,11 @@ The Action dispatcher supports or must support:
 - rebuild Hall of Fame;
 - repair/validate repository data.
 
+Derived live-group composition is deliberately **not** a manual Action operation.
+
 ## Migration rule
 
-Before enabling a scheduled job:
+Before enabling a scheduled producer/rebuild job:
 
 1. port its legacy tests/behavior;
 2. capture representative legacy input/output fixtures;
@@ -110,5 +126,7 @@ Before enabling a scheduled job:
 4. enable `workflow_dispatch` first;
 5. validate the real production source manually;
 6. only then enable `schedule`.
+
+Before migrating a legacy job at all, first ask whether it is only a cache builder. If the SPA can deterministically derive the same state from canonical GitHub documents, retire the job instead.
 
 Calendar, master-data, statistics and live/final vote jobs are implemented and tested. The repository does not yet contain initialized `data/serie-a` production state, so real-source validation must start by running `ingest-serie-a` then `ingest-master-data`; no automatic schedule is enabled yet.

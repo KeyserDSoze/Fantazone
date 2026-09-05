@@ -21,7 +21,7 @@ This documentation is the migration contract from `KeyserDSoze/Fantasoccer` to F
 15. [`15-group-session-runtime.md`](15-group-session-runtime.md) — selected-group composition root.
 16. [`16-team-migration.md`](16-team-migration.md) — Team/Player migration.
 17. [`17-readable-json-schema-v2.md`](17-readable-json-schema-v2.md) — readable schema-v2 policy.
-18. [`18-live-group-schema-v2.md`](18-live-group-schema-v2.md) — readable LiveGroup snapshot and helper migration.
+18. [`18-live-group-schema-v2.md`](18-live-group-schema-v2.md) — LiveGroup readable contract; persisted adapter is now legacy compatibility while runtime composition is local.
 19. [`19-web-oauth-group-invites.md`](19-web-oauth-group-invites.md) — `fanta.plus` external login, group membership gate and email-bound Admin invites; Microsoft is active and Google remains feature-flagged off until configured.
 20. [`20-game-wrapper-composition.md`](20-game-wrapper-composition.md) — local ephemeral GameWrapper composition replacing the legacy `/Game/Get` aggregate endpoint.
 21. [`21-formation-write-side.md`](21-formation-write-side.md) — validated position-only TeamDay writes replacing legacy `Game/SaveTeam`.
@@ -29,6 +29,7 @@ This documentation is the migration contract from `KeyserDSoze/Fantasoccer` to F
 23. [`23-global-serie-a-master-data.md`](23-global-serie-a-master-data.md) — readable RealTeams/RealPlayers ingestion, legacy active/inactive reconciliation and global-vs-group side-effect split.
 24. [`24-player-statistics-and-votes.md`](24-player-statistics-and-votes.md) — readable vote contract, pure FinalValue/statistics reducers and rebuild-player-stats workflow.
 25. [`25-serie-a-vote-ingestion.md`](25-serie-a-vote-ingestion.md) — official/live Fantacalcio vote producers, delayed-game parity, SignedUri/protobuf mapping and production-validation plan.
+26. [`26-local-live-composition.md`](26-local-live-composition.md) — local TeamCalculator/Rank reducers, GroupLiveComposer and retirement of the legacy high-frequency LiveJob cache builder.
 
 ## Source of truth
 

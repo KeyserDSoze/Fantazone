@@ -9,7 +9,6 @@ type JobName =
   | 'ingest-master-data'
   | 'rebuild-player-stats'
   | 'ingest-live-votes'
-  | 'ingest-live'
   | 'ingest-final-votes'
   | 'ingest-player-odds'
   | 'ingest-player-images'
