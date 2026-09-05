@@ -1,4 +1,5 @@
 import { Role } from './group'
+import { getPlayerKey } from './realPlayer'
 import {
   FantaSoccerRole,
   PlayerInTeamStatus,
@@ -15,11 +16,6 @@ export type FormationPositionUpdate = {
 export type FormationValidationResult =
   | { valid: true; errors: [] }
   | { valid: false; errors: string[] }
-
-/** Legacy-compatible computed player identity. It deliberately remains derived, not stored in JSON. */
-export function getPlayerKey(name?: string | null): string {
-  return name?.toLowerCase().replace(/[^a-z]/g, '') ?? ''
-}
 
 /**
  * Apply only formation positions to a fresh persisted Team.
