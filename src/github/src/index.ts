@@ -1,4 +1,5 @@
 export * from './calendarRepository'
+export * from './chanceRepository'
 export * from './githubClient'
 export * from './groupRepository'
 export * from './groupWorkflow'
