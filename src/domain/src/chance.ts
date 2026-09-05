@@ -5,6 +5,7 @@ import {
   type RealPlayer,
   type RealPlayers,
 } from './realPlayer'
+import type { RealTeam } from './realTeam'
 
 export enum ChanceType {
   Normal = 0,
@@ -36,6 +37,13 @@ export interface Chance {
   trend: TrendType
 }
 
+/** Parser output only. External pages never own role/master-data fields. */
+export interface ChanceObservation {
+  name: string
+  team: RealTeam
+  chance: Chance
+}
+
 export interface ChancedRealPlayer extends RealPlayer {
   chance: Chance
 }
@@ -51,7 +59,7 @@ export type ChanceMergeInput = {
   realPlayers: RealPlayers
   existing?: ChancedRealPlayers | null
   serieADay: number
-  parserResults: ReadonlyArray<readonly ChancedRealPlayer[]>
+  parserResults: ReadonlyArray<readonly ChanceObservation[]>
 }
 
 /**
@@ -150,7 +158,7 @@ export function chanceAvailabilityLabel(status: ChanceType): string {
 }
 
 /** Fallback matcher preserved from PlayerOddsJob for source spelling differences. */
-export function isSameChancePlayer(parsed: Pick<RealPlayer, 'name' | 'team'>, player: Pick<RealPlayer, 'name' | 'team'>): boolean {
+export function isSameChancePlayer(parsed: Pick<ChanceObservation, 'name' | 'team'>, player: Pick<RealPlayer, 'name' | 'team'>): boolean {
   const parsedPlayerName = normalizedLongestNamePart(parsed.name)
   const playerName = normalizedLongestNamePart(player.name)
   if (!parsedPlayerName || !playerName) return false
