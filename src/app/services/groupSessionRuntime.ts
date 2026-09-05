@@ -63,7 +63,6 @@ export class GroupSessionRuntime {
     this.liveGroupRepository = new GitHubLiveGroupRepository(this.store, this.target)
     this.gameComposer = new GroupGameComposer(() => this.group, this.calendarRepository, this.teamRepository)
     this.formationWriter = new GroupFormationWriter(
-      () => this.group,
       () => this.refreshGroup(),
       this.gameComposer,
       this.teamRepository,

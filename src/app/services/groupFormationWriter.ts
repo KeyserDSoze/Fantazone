@@ -19,9 +19,7 @@ export type SaveGameFormationInput = {
   owner: string
   nextSerieADay: number
   positions: readonly FormationPositionUpdate[]
-  /** Administrative override is effective only for a freshly verified SuperAdmin. */
   asAdmin?: boolean
-  /** Required to edit an already locked live day in administrative mode. */
   liveSerieADay?: number
 }
 
@@ -67,7 +65,6 @@ export class FormationValidationError extends Error {
  */
 export class GroupFormationWriter {
   constructor(
-    private readonly getGroup: () => Group,
     private readonly refreshGroup: () => Promise<Group>,
     private readonly games: GroupGameComposer,
     private readonly teams: GitHubTeamRepository,
@@ -77,7 +74,9 @@ export class GroupFormationWriter {
   async saveGameFormation(input: SaveGameFormationInput): Promise<SavedFormation> {
     const group = await this.refreshGroup()
     const actor = GroupHelper.findUserByEmail(group, input.session.identity.email)
-    if (!actor || actor.role === IdentityRole.None) throw new FormationAuthorizationError('Utente non valido nel gruppo selezionato.')
+    if (!actor || actor.role === IdentityRole.None) {
+      throw new FormationAuthorizationError('Utente non valido nel gruppo selezionato.')
+    }
 
     const wrapper = await this.games.getGame({
       leagueId: input.leagueId,
@@ -96,8 +95,7 @@ export class GroupFormationWriter {
     const canonicalOwner = annual.team.owner
     const isOwner = [annual.team.owner, ...(annual.team.additionalOwners ?? [])]
       .some(email => normalizeEmail(email) === normalizeEmail(actor.email))
-    const superAdmin = GroupHelper.hasRole(actor, IdentityRole.SuperAdmin)
-    const adminOverride = input.asAdmin === true && superAdmin
+    const adminOverride = input.asAdmin === true && GroupHelper.hasRole(actor, IdentityRole.SuperAdmin)
     if (!isOwner && !adminOverride) throw new FormationAuthorizationError('Non sei l’owner della squadra.')
 
     if (!wrapper.canEdit) {
