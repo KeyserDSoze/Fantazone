@@ -1,3 +1,4 @@
+import { propagateNextFormations } from './formationPropagation'
 import { recalculateGroupAll, recalculateGroupDay } from './groupRecalculation'
 import { ingestFinalVotes } from './officialVoteIngestion'
 import { ingestLiveVotes } from './liveVoteIngestion'
@@ -14,7 +15,6 @@ type JobName =
   | 'ingest-player-odds'
   | 'ingest-player-images'
   | 'set-next-formations'
-  | 'rebuild-groups'
   | 'rebuild-hall-of-fame'
   | 'process-market'
   | 'recalculate-day'
@@ -67,6 +67,19 @@ const migrated: Partial<Record<JobName, (context: JobContext) => Promise<void>>>
     console.log(
       `Voti live: ${result.incomingPlayers} giocatori ricevuti; ` +
       `${result.written ? `snapshot aggiornato in ${result.path}` : 'nessun aggiornamento persistito'}.`,
+    )
+  },
+  'set-next-formations': async context => {
+    const roots = groupJobRoots()
+    const result = await propagateNextFormations({ ...roots, season: context.season })
+    if (result.targetSerieADay == null) {
+      console.log(`Formazioni ${result.season}: nessuna propagazione necessaria.`)
+      return
+    }
+    console.log(
+      `Formazioni ${result.season}: giorno ${result.sourceSerieADay} -> ${result.targetSerieADay}; ` +
+      `${result.copiedOwners.length} copiate, ${result.existingOwners.length} già presenti, ` +
+      `${result.missingSourceOwners.length} senza sorgente.`,
     )
   },
   'recalculate-day': async context => {
