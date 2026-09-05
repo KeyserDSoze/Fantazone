@@ -1,6 +1,6 @@
-import { GameResultHelper, type CalendarDay, type GameResult } from './calendar'
+import { GameResultHelper, type Calendar, type CalendarDay, type GameResult } from './calendar'
 import type { LeagueSetting } from './group'
-import type { Rank, RankedTeam } from './rank'
+import { DefaultRankedTeam, type Rank, type RankedTeam } from './rank'
 
 export type LiveRounds = Record<string, CalendarDay>
 
@@ -40,6 +40,43 @@ export function applyLiveRoundsToRank(rank: Rank, rounds: LiveRounds, settings: 
   return projected
 }
 
+/**
+ * Pure port of DefaultLeague.GetRank.
+ * Used for canonical season/daily ranks after definitive Calendar results are persisted.
+ */
+export function calculateRankFromCalendar(
+  calendar: Calendar,
+  settings: LeagueSetting,
+  excludedRounds: ReadonlySet<string> | readonly string[] = [],
+): Rank {
+  const excluded = excludedRounds instanceof Set ? excludedRounds : new Set(excludedRounds)
+  const rank: Rank = { serieADay: 0, rounds: {} }
+
+  for (const [roundKey, days] of Object.entries(calendar.rounds)) {
+    if (excluded.has(roundKey) || days.length === 0) continue
+    const teams = createRoundTeams(days)
+    rank.rounds[roundKey] = teams
+
+    for (const day of days) {
+      for (const game of day.games) {
+        const home = teams.find(team => team.owner === game.homeOwner)
+        const away = teams.find(team => team.owner === game.awayOwner)
+        if (!home || !away) {
+          throw new Error(`Rank round '${roundKey}' cannot resolve game owners '${game.homeOwner}'/'${game.awayOwner}'`)
+        }
+        const homeApplied = applyGameToRankedTeam(home, true, game.result, settings)
+        const awayApplied = applyGameToRankedTeam(away, false, game.result, settings)
+        if ((homeApplied || awayApplied) && rank.serieADay < day.serieADay) rank.serieADay = day.serieADay
+      }
+    }
+
+    rank.rounds[roundKey] = [...teams].sort((a, b) =>
+      b.point - a.point || b.valuePoint - a.valuePoint,
+    )
+  }
+  return rank
+}
+
 export function applyGameToRankedTeam(
   team: RankedTeam,
   isHome: boolean,
@@ -73,6 +110,21 @@ export function applyGameToRankedTeam(
   team.plusMoney += settings.moneyForGoal * goalTeam
   team.plusMoney += settings.moneyForSufferedGoal * goalOpponent
   return true
+}
+
+function createRoundTeams(days: CalendarDay[]): RankedTeam[] {
+  const firstDay = days[0]
+  const teams = new Map<string, RankedTeam>()
+  for (const game of firstDay.games) {
+    add(game.homeOwner, game.home)
+    add(game.awayOwner, game.away)
+  }
+  return [...teams.values()]
+
+  function add(owner: string, name: string): void {
+    if (!owner?.trim()) throw new Error('Rank team owner is required')
+    if (!teams.has(owner)) teams.set(owner, { ...DefaultRankedTeam, owner, name })
+  }
 }
 
 function cloneRank(rank: Rank): Rank {
