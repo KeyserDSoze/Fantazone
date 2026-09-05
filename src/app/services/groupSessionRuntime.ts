@@ -9,6 +9,7 @@ import {
   GitHubClient,
   GitHubGroupRepository,
   GitHubJsonStore,
+  GitHubLiveGroupRepository,
   GitHubRankRepository,
   GitHubTeamRepository,
   type GitHubRepo,
@@ -36,6 +37,7 @@ export class GroupSessionRuntime {
   readonly calendarRepository: GitHubCalendarRepository
   readonly rankRepository: GitHubRankRepository
   readonly teamRepository: GitHubTeamRepository
+  readonly liveGroupRepository: GitHubLiveGroupRepository
 
   private currentGroup: Group | null = null
 
@@ -53,6 +55,7 @@ export class GroupSessionRuntime {
     this.calendarRepository = new GitHubCalendarRepository(this.store, this.target)
     this.rankRepository = new GitHubRankRepository(this.store, this.target)
     this.teamRepository = new GitHubTeamRepository(this.store, this.target, this.rankRepository)
+    this.liveGroupRepository = new GitHubLiveGroupRepository(this.store, this.target)
   }
 
   static async open(
