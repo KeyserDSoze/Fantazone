@@ -98,7 +98,7 @@ export function GroupConnectScreen({ onConnected, onExploreDemo }: Props) {
     try {
       const client = new GitHubClient(pat.trim())
       await client.validateToken()
-      const initialized = await createAndInitializeGroup(client, groupName.trim(), { isPrivate: false })
+      const initialized = await createAndInitializeGroup(client, groupName.trim(), { isPrivate: true })
       onConnected({ token: pat.trim(), repository: initialized.repository, groupName: initialized.groupName })
     } catch (caught) {
       setError(toMessage(caught))
@@ -123,13 +123,13 @@ export function GroupConnectScreen({ onConnected, onExploreDemo }: Props) {
             <YStack gap="$2">
               <H2>Collega un gruppo Fantazone</H2>
               <Paragraph color="$color10">
-                Per la V1 sperimentale inserisci il PAT GitHub del gruppo. Cercheremo i repository accessibili che iniziano con Fantazone.
+                Prima scegliamo il repository del gruppo tramite PAT. Il login Fantazone con Google/Microsoft avverrà solo dopo questa selezione.
               </Paragraph>
             </YStack>
 
             <Card borderWidth={1} borderColor="$yellow8" padding="$3">
               <Paragraph size="$2">
-                Usa solo un PAT fine-grained dedicato al demo/gruppo. Il PAT condiviso è una soluzione didattica temporanea e verrà sostituito da GitHub App/OAuth.
+                Usa un PAT fine-grained dedicato ai repository Fantazone necessari. I nuovi repository gruppo vengono creati privati perché GroupRaw contiene anche gli utenti e le loro email.
               </Paragraph>
             </Card>
 
