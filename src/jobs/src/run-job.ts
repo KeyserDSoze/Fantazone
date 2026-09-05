@@ -1,9 +1,11 @@
 import { ingestMasterData } from './masterDataIngestion'
+import { rebuildPlayerStats } from './playerStatsRebuild'
 import { ingestSerieACalendar } from './serieAIngestion'
 
 type JobName =
   | 'ingest-serie-a'
   | 'ingest-master-data'
+  | 'rebuild-player-stats'
   | 'ingest-live-votes'
   | 'ingest-live'
   | 'ingest-final-votes'
@@ -34,6 +36,18 @@ const migrated: Partial<Record<JobName, (context: JobContext) => Promise<void>>>
       `Serie A master data ${result.players.year}: ${result.teams.teams.length} squadre, ${result.players.players.length} giocatori; ` +
       `${result.reconciliation.addedKeys.length} nuovi, ${result.reconciliation.inactiveKeys.length} inattivi, ` +
       `${result.reconciliation.transferredKeys.length} trasferimenti.`,
+    )
+    if (result.reconciliation.playerCountChanged) {
+      const stats = await rebuildPlayerStats({ season: result.players.year })
+      console.log(
+        `Player count changed: statistiche ${stats.stats.year} rigenerate fino alla giornata ${stats.stats.untilSerieADay}.`,
+      )
+    }
+  },
+  'rebuild-player-stats': async context => {
+    const result = await rebuildPlayerStats(context)
+    console.log(
+      `Statistiche giocatori ${result.stats.year}: ${result.stats.players.length} giocatori fino alla giornata ${result.stats.untilSerieADay} salvati in ${result.path}`,
     )
   },
 }

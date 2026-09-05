@@ -10,6 +10,7 @@ on:
         options:
           - ingest-serie-a
           - ingest-master-data
+          - rebuild-player-stats
           - ingest-live-votes
           - ingest-live
           - ingest-final-votes
