@@ -66,7 +66,7 @@ test('full ingestion writes the current internal season id and all returned days
     fetchJson: async url => {
       const day = Number(new URL(url).searchParams.get('day'))
       requested.push(day)
-      return { data: { games: [{ matches: [match('SCHEDULED', `2026-09-${String(Math.min(day, 28)).padStart(2, '0')}T18:45:00Z')] }] } }
+      return { data: { games: [{ matches: [match('SCHEDULED', `2026-09-${String(Math.min(day, 28)).padStart(2, '0')}T18:45:00Z`)] }] } }
     },
   })
 
