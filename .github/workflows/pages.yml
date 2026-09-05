@@ -29,6 +29,9 @@ jobs:
       - name: Test
         run: npm test
       - name: Export Expo web application
+        env:
+          EXPO_PUBLIC_GOOGLE_CLIENT_ID: ${{ vars.EXPO_PUBLIC_GOOGLE_CLIENT_ID }}
+          EXPO_PUBLIC_MICROSOFT_AUTHORITY_TENANT: common
         run: npm run export:web --workspace=fantazone-app
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5

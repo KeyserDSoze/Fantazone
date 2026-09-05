@@ -10,7 +10,12 @@ export function parseInviteFragment(fragment: string): GroupInvitePayload | null
   if (!encoded) return null
   const payload = JSON.parse(fromBase64Url(encoded)) as GroupInvitePayload
   if (payload.v !== 1 || !payload.group || !payload.repository || !payload.pat) return null
-  return payload
+  if (payload.email != null && !normalizeEmail(payload.email)) return null
+  return payload.email ? { ...payload, email: normalizeEmail(payload.email) } : payload
+}
+
+function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase()
 }
 
 function toBase64Url(value: string): string {

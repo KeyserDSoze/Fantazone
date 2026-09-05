@@ -31,6 +31,7 @@ type Props = {
 export function GroupConnectScreen({ onConnected, onExploreDemo }: Props) {
   const [pat, setPat] = useState('')
   const [groupName, setGroupName] = useState('')
+  const [expectedEmail, setExpectedEmail] = useState('')
   const [repositories, setRepositories] = useState<GitHubRepo[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -44,7 +45,31 @@ export function GroupConnectScreen({ onConnected, onExploreDemo }: Props) {
       if (!invite) return
       setPat(invite.pat)
       setGroupName(invite.group)
+      setExpectedEmail(invite.email ?? '')
       window.history.replaceState({}, document.title, `${window.location.pathname}${window.location.search}`)
+
+      void (async () => {
+        setLoading(true)
+        setError(null)
+        try {
+          const client = new GitHubClient(invite.pat)
+          await client.validateToken()
+          const found = await client.discoverFantazoneRepositories()
+          const exact = found.find(repository => repository.name.toLowerCase() === invite.repository.toLowerCase())
+            ?? await client.findGroup(invite.group)
+          if (!exact) throw new Error(`Il PAT non può aprire il repository ${invite.repository}.`)
+          onConnected({
+            token: invite.pat,
+            repository: exact,
+            groupName: invite.group,
+            expectedEmail: invite.email,
+          })
+        } catch (caught) {
+          setError(toMessage(caught))
+        } finally {
+          setLoading(false)
+        }
+      })()
     } catch {
       setError('Il link di invito non è valido.')
     }
@@ -63,7 +88,12 @@ export function GroupConnectScreen({ onConnected, onExploreDemo }: Props) {
       if (groupName.trim()) {
         const exact = await client.findGroup(groupName)
         if (exact) {
-          onConnected({ token: pat.trim(), repository: exact, groupName: groupName.trim() })
+          onConnected({
+            token: pat.trim(),
+            repository: exact,
+            groupName: groupName.trim(),
+            expectedEmail: expectedEmail.trim().toLowerCase() || undefined,
+          })
           return
         }
       }
@@ -74,6 +104,7 @@ export function GroupConnectScreen({ onConnected, onExploreDemo }: Props) {
           token: pat.trim(),
           repository,
           groupName: repository.name.replace(/^Fantazone\./, ''),
+          expectedEmail: expectedEmail.trim().toLowerCase() || undefined,
         })
       } else if (found.length === 0) {
         setError('Nessun repository Fantazone.* trovato. Puoi creare il gruppo qui sotto.')
@@ -120,13 +151,20 @@ export function GroupConnectScreen({ onConnected, onExploreDemo }: Props) {
             <YStack gap="$2">
               <H2>Collega un gruppo Fantazone</H2>
               <Paragraph color="$color10">
-                Prima scegliamo il repository del gruppo tramite PAT. Il login Fantazone con Google/Microsoft avverrà solo dopo questa selezione.
+                Prima apriamo il repository del gruppo. Solo dopo Google/Microsoft verifica l’identità dell’utente contro le email censite in config/group.json.
               </Paragraph>
             </YStack>
 
+            {expectedEmail ? (
+              <Card borderWidth={1} borderColor="$green8" padding="$3">
+                <Text fontWeight="700">Invito per {expectedEmail}</Text>
+                <Paragraph size="$2">Dopo l’apertura del gruppo dovrai autenticarti con questa email.</Paragraph>
+              </Card>
+            ) : null}
+
             <Card borderWidth={1} borderColor="$yellow8" padding="$3">
               <Paragraph size="$2">
-                Usa un PAT fine-grained dedicato ai repository Fantazone necessari. I repository gruppo reali sono privati perché config/group.json contiene anche utenti ed email.
+                Usa un PAT fine-grained dedicato ai repository Fantazone necessari. Il PAT apre GitHub, ma non sostituisce la verifica dell’email nel gruppo.
               </Paragraph>
             </Card>
 
@@ -163,6 +201,7 @@ export function GroupConnectScreen({ onConnected, onExploreDemo }: Props) {
                       token: pat.trim(),
                       repository,
                       groupName: repository.name.replace(/^Fantazone\./, ''),
+                      expectedEmail: expectedEmail.trim().toLowerCase() || undefined,
                     })}
                   >
                     {repository.name}

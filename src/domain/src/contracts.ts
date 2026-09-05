@@ -19,6 +19,8 @@ export type GroupInvitePayload = {
   repository: string
   pat: string
   owner?: string
+  /** Email that the invited person is expected to prove with Google/Microsoft. */
+  email?: string
 }
 
 export type RepositoryWrite<T> = {
