@@ -27,6 +27,7 @@ This documentation is the migration contract from `KeyserDSoze/Fantasoccer` to F
 21. [`21-formation-write-side.md`](21-formation-write-side.md) — validated position-only TeamDay writes replacing legacy `Game/SaveTeam`.
 22. [`22-global-real-calendar.md`](22-global-real-calendar.md) — shared readable Serie A calendar, legacy timing projections and platform/group repository split.
 23. [`23-global-serie-a-master-data.md`](23-global-serie-a-master-data.md) — readable RealTeams/RealPlayers ingestion, legacy active/inactive reconciliation and global-vs-group side-effect split.
+24. [`24-player-statistics-and-votes.md`](24-player-statistics-and-votes.md) — readable vote contract, pure FinalValue/statistics reducers and rebuild-player-stats workflow.
 
 ## Source of truth
 
