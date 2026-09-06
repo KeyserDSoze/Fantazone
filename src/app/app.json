@@ -12,7 +12,12 @@
       "tsconfigPaths": true,
       "baseUrl": "/"
     },
-    "plugins": ["expo-font", "expo-status-bar", "expo-secure-store"],
+    "plugins": [
+      "expo-font",
+      "expo-status-bar",
+      "expo-secure-store",
+      "./plugins/withFantazoneDataChannelWebRtc"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.keyserdsoze.fantaplus",
@@ -20,6 +25,11 @@
     },
     "android": {
       "package": "com.keyserdsoze.fantazone",
+      "permissions": [
+        "android.permission.INTERNET",
+        "android.permission.ACCESS_NETWORK_STATE",
+        "android.permission.CHANGE_NETWORK_STATE"
+      ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FFD100"
