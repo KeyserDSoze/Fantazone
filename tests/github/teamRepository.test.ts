@@ -1,11 +1,13 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { FantaSoccerRole, PlayerInTeamStatus, Role, type Team } from '../../src/domain/src/index'
+import { FantaSoccerRole, PlayerInTeamStatus, Role, type RealPlayers, type Team } from '../../src/domain/src/index'
 import {
   GitHubJsonStore,
   GitHubRankRepository,
+  GitHubRealPlayersRepository,
   GitHubTeamRepository,
   dayTeamDocumentPath,
+  realPlayersDocumentPath,
   seasonTeamDocumentPath,
   type RepositoryContentClient,
 } from '../../src/github/src/index'
@@ -27,24 +29,57 @@ class FakeContentClient implements RepositoryContentClient {
 }
 
 const target = { owner: 'KeyserDSoze', repo: 'Fantazone.Amici', ref: 'main' }
+const platform = { owner: 'KeyserDSoze', repo: 'Fantazone', ref: 'main' }
 const team: Team = {
   name: 'Alpha', owner: 'Ale@Example.com', additionalOwners: [], moneyFromRank: 0, lastUpdate: null,
   players: [{ name: 'Portiere', team: { name: 'Roma', abbreviation: 'ROM' }, role: Role.GoalKeeper, isActive: true, visible: true, price: 12, revenue: 12, status: PlayerInTeamStatus.Active, position: FantaSoccerRole.GoalKeeper }],
 }
 
-test('uses repository-scoped paths while storing Team directly', async () => {
+function master(realTeam = 'Roma'): RealPlayers {
+  return {
+    year: 15,
+    players: [{
+      name: 'Portiere',
+      team: { name: realTeam, abbreviation: realTeam.slice(0, 3).toUpperCase() },
+      role: Role.GoalKeeper,
+      isActive: true,
+      visible: true,
+    }],
+  }
+}
+
+test('writes mutable Team as player references and hydrates it from the global master', async () => {
   const client = new FakeContentClient()
-  const repository = new GitHubTeamRepository(new GitHubJsonStore(client), target)
+  const store = new GitHubJsonStore(client)
+  const realPlayers = new GitHubRealPlayersRepository(store, platform)
+  const repository = new GitHubTeamRepository(store, target, undefined, realPlayers)
   const seasonPath = seasonTeamDocumentPath('main', 15, 'Ale@Example.com')
+  const masterPath = realPlayersDocumentPath(15)
   client.files.set(`${target.owner}/${target.repo}/${seasonPath}@main`, { sha: 'team-1', content: JSON.stringify(team) })
+  client.files.set(`${platform.owner}/${platform.repo}/${masterPath}@main`, { sha: 'master-1', content: JSON.stringify(master()) })
 
   const loaded = await repository.getTeam('main', 15, 'Ale@Example.com')
-  assert.equal(loaded?.name, 'Alpha')
-  await repository.getTeamPlayers('main', 15, 'Ale@Example.com')
-  assert.equal(client.reads, 1)
-
+  assert.equal(loaded?.players[0].team.name, 'Roma')
   await repository.writeTeam('main', 15, 'Ale@Example.com', loaded!)
-  assert.deepEqual(JSON.parse(client.files.get(`${target.owner}/${target.repo}/${seasonPath}@main`)!.content), team)
+
+  const persisted = JSON.parse(client.files.get(`${target.owner}/${target.repo}/${seasonPath}@main`)!.content)
+  assert.deepEqual(persisted, {
+    version: 3,
+    name: 'Alpha',
+    owner: 'Ale@Example.com',
+    additionalOwners: [],
+    players: [{ playerKey: 'portiere', price: 12, revenue: 12, status: 0, position: 0 }],
+    moneyFromRank: 0,
+    lastUpdate: null,
+  })
+  assert.equal('name' in persisted.players[0], false)
+  assert.equal('team' in persisted.players[0], false)
+  assert.equal('role' in persisted.players[0], false)
+
+  client.files.set(`${platform.owner}/${platform.repo}/${masterPath}@main`, { sha: 'master-2', content: JSON.stringify(master('Milan')) })
+  const refreshed = await repository.getTeam('main', 15, 'Ale@Example.com', { refresh: true })
+  assert.equal(refreshed?.players[0].team.name, 'Milan')
+  assert.equal(refreshed?.players[0].price, 12)
   assert.equal(dayTeamDocumentPath('main', 15, 3, 'Ale@Example.com'), 'data/groups/seasons/15/days/3/teams/main/Ale%40Example.com.json')
 })
 
