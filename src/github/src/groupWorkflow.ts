@@ -11,8 +11,9 @@ export const GROUP_RECALCULATION_WORKFLOW_PATH = '.github/workflows/fantazone-gr
  * - engine: pinned to the immutable/never-moved group-runtime-vN compatibility ref;
  * - platform-data: follows the current global data ref so votes/calendar never freeze.
  *
- * Bump GROUP_REPOSITORY_RUNTIME_VERSION whenever a mandatory group-managed artifact
- * changes, validate the engine, then publish the matching group-runtime-vN ref.
+ * Bump GROUP_REPOSITORY_RUNTIME_VERSION when the compatible engine contract changes.
+ * Workflow-only orchestration patches can stay on the same engine ref: bootstrap
+ * compares the managed workflow contents and installs the latest compatible patch.
  */
 export const GROUP_RECALCULATION_WORKFLOW = [
   '# Managed by Fantazone. Local edits to this file are overwritten by runtime upgrades.',
@@ -101,9 +102,10 @@ export const GROUP_RECALCULATION_WORKFLOW = [
   '            echo "No canonical group data changes"',
   '            exit 0',
   '          fi',
+  '          node -e "const fs=require(\'fs\');const p=\'manifest.json\';const m=JSON.parse(fs.readFileSync(p,\'utf8\'));m.revision=(Number.isInteger(m.revision)?m.revision:0)+1;m.updatedAt=new Date().toISOString();fs.writeFileSync(p,JSON.stringify(m,null,2)+\'\\n\')"',
   '          git config user.name "fantazone-actions[bot]"',
   '          git config user.email "fantazone-actions[bot]@users.noreply.github.com"',
-  '          git add -A -- data',
+  '          git add -A -- data manifest.json',
   '          git commit -m "data: $FANTAZONE_JOB"',
   '          git push',
   '',
