@@ -8,7 +8,8 @@
 - [~] Expo/React Native/Tamagui app.
 - [~] shared TypeScript domain/GitHub client/Actions runner.
 - [x] GitHub Pages production deployment at canonical `https://fanta.plus` with automatic deploy from `main`.
-- [x] readable JSON schema v2; no single-letter persistence for migrated features.
+- [x] readable canonical JSON; migrated documents avoid compact/single-letter persistence. Mutable season Team uses explicit reference schema v3 while the overall group model remains readable.
+- [x] layered validation: deterministic unit/contract/filesystem tests plus Playwright Chromium desktop/mobile in CI; guarded real-GitHub integration workflow available with a dedicated test PAT.
 
 ## Identity and groups
 
@@ -44,11 +45,13 @@
 - [x] Calendar.
 - [x] Ranking.
 - [x] Team/Player fantasy-roster domain.
+- [x] mutable season Team normalized to `playerKey + fantasy-owned fields`; RealPlayer data resolves from global master and legacy full Team documents migrate lazily on their next write.
+- [x] immutable TeamDay keeps the full RealPlayer snapshot needed for historical correctness; future-day propagation refreshes mutable RealPlayer fields from the current master without rewriting older days.
 - [x] LiveGroup readable contract/helpers; persisted adapter retained only for migration compatibility.
 - [x] RealCalendar readable global schema + GitHub repository + timing projections.
 - [x] global RealTeams/RealPlayers readable master-data + reconciliation.
 - [x] Vote/StatPlayer readable contracts + FinalValue/statistics reducers + rebuild job.
-- [x] live/final Serie A vote producer logic and canonical repositories; real-source production validation/scheduling remains operational work.
+- [x] live/final Serie A vote producer logic and canonical repositories; live producer is scheduled with calendar guard while remaining real-source producer validation/scheduling is operational work.
 - [x] PlayerOdds/chance readable domain + global reducer/parsers/Action; real-source production validation/scheduling remains operational work (#35).
 - [x] player-image catalog matching + global static WebP ingestion + frontend URL/fallback helper; real-source production validation/scheduling remains operational work (#36).
 - [x] local fantasy team scoring reducer: official-over-live precedence, substitutions, Best Formation, defence/good-people/own-goal behavior.
@@ -56,11 +59,11 @@
 - [x] definitive fantasy-day reducer using official votes only, including missing TeamDay and home-advantage parity.
 - [x] full canonical Rank rebuild from calculated Calendar.
 - [x] deterministic Cup/NewCup progression including Finals, Europa League and Supercoppa; perfect-tie randomness intentionally replaced by stable seeded choice.
-- [~] Game/day: read composition and scoring core are migrated; `TeamDay` is now an Action-owned immutable day snapshot, while actual screens/UI enrichment remain pending.
-- [~] Formations: owner/SuperAdmin authorization + formation validation + current Team write are migrated; GitHub Action selects/finalizes the correct day snapshot from the commit timestamp; UI and chance/stat automatic formation remain pending.
-- [~] Serie A ingestion: core calendar/master/vote/chance/image producers implemented; production initialization/source validation/scheduling remain pending.
+- [~] Game/day: read composition and scoring core are migrated; `TeamDay` is an Action-owned immutable day snapshot, while actual screens/UI enrichment remain pending.
+- [~] Formations: owner/SuperAdmin authorization + formation validation + normalized current Team write are migrated; GitHub Action selects/finalizes the correct hydrated day snapshot from the commit timestamp; UI and chance/stat automatic formation remain pending.
+- [~] Serie A ingestion: core calendar/master/vote/chance/image producers implemented; production initialization/source validation/scheduling remain pending except guarded live-vote schedule.
 - [~] Statistics/chances/votes: deterministic reducers + producers implemented; production data bootstrap/validation remain pending.
-- [x] Market persistence/commands: append-only client commands + canonical group Action reducer with legacy voting/execution/expiry parity.
+- [x] Market persistence/commands: append-only client commands + canonical group Action reducer with legacy voting/execution/expiry parity; Team mutations hydrate from global master and persist normalized references.
 - [x] Hall of Fame readable cross-season reducer/repository + group-owned rebuild Action; legacy TODO player-record fields remain intentionally null.
 - [~] Auction: readable V1 host reducer, outcomes, active-session discovery, GitHub slow signaling, browser RTCPeerConnection/DataChannel/reconnect, native WebRTC bridge/runtime dependency and first realtime UI implemented; native build validation, TURN and end-to-end device validation remain pending.
 
@@ -72,6 +75,7 @@
 - [x] legacy Azure/static application URLs removed from current runtime inventory; player images use `https://fanta.plus`.
 - [x] SHA cache + optimistic concurrency for migrated mutable JSON.
 - [x] managed group-workflow upgrades use current GitHub blob SHA and advance runtime metadata only after success.
+- [x] current Team no longer duplicates global Serie A player master fields, eliminating per-group transfer fan-out and unnecessary nightly commits.
 - [ ] ETag conditional reads.
 - [ ] one-time schema-v1→v2 migration tooling only if compact runtime repositories that need recovery are discovered.
 - [x] zero-backend authorization limitation documented: frontend/Actions enforce business rules, but a shared client-visible PAT cannot provide a cryptographic per-user write boundary.
@@ -79,19 +83,21 @@
 ## Background jobs
 
 - [~] Serie A calendar ingestion: implementation/tests/manual global Action ready; scheduling waits for production validation.
-- [~] player/team master-data ingestion: global teams/players + reconciliation implemented; per-group transfer propagation remains pending.
+- [~] player/team master-data ingestion: global teams/players + reconciliation implemented; no per-group transfer propagation is required after current-Team normalization. Production scheduling/validation of `ingest-master-data` remains.
 - [~] player statistics rebuild implemented; real runtime data initialization remains pending.
-- [~] live/final votes: provider adapters + manual global Actions + offline parity tests implemented; first real provider runs and scheduling remain pending (#29).
+- [~] live/final votes: provider adapters + global Actions + offline parity tests implemented; `ingest-live-votes` is scheduled every five minutes with RealCalendar guard and no-op unchanged writes; final-vote production scheduling/validation remains.
 - [~] player odds: reducer + three provider parsers + global Action implemented; first real provider run and scheduling remain pending (#35).
 - [~] player images: SDP catalog + matching + static WebP ingestion + global Action implemented; first real provider run/Pages asset validation and scheduling remain pending (#36).
 - [x] legacy `LiveJob`: retired; local `GroupLiveComposer` replaces it.
+- [x] legacy `AllPlayersAndAllTeamsJob` group-roster transfer side effect: retired; mutable Teams resolve RealPlayer fields from global master by `playerKey`.
 - [x] legacy `GroupsManagerJob`: retired; definitive scoring/ranking/progression use shared reducers and group-owned `recalculate-day` / `recalculate-all`.
 - [x] day/full-season recalculation: filesystem orchestration + tests + group workflow implemented.
 - [x] formation snapshot maintenance: current-Team pushes automatically trigger group runtime processing; commit timestamp selects the eligible day, snapshots remain frozen after cutoff and no day 39 is created.
+- [x] next-formation propagation: fantasy formation fields copy forward only when target is missing; the new TeamDay refreshes RealPlayer snapshots from current master.
 - [x] central Background jobs workflow contains only global/shared jobs; group mutations are excluded.
 - [x] Market group workflow/reducer: serialized command processing + daily 02:00 UTC expiry maintenance.
 - [x] HallOfFame group workflow/reducer: weekly Tuesday 03:00 UTC rebuild + manual dispatch.
-- [x] Auction assignment outcome processing: realtime host emits one append-only assignment request; group runtime v6 revalidates and commits Team + outcome result atomically.
+- [x] Auction assignment outcome processing: realtime host emits one append-only assignment request; group runtime revalidates and commits normalized Team + outcome result atomically.
 
 ## Auction
 
@@ -102,8 +108,8 @@
 - [x] active-auction pointer/discovery lets clients resolve one canonical league/season session without technical auction IDs or GitHub directory listing.
 - [~] browser/Tamagui Auction V1 UI supports creation/resume, legacy queue modes, host controls, participant bids, repair substitutions, explicit finish/reopen/archive and realtime reconnect status; real multi-device validation and UX enrichment remain pending.
 - [~] native iOS/Android RTCPeerConnection bridge + `react-native-webrtc@124.0.8` runtime import implemented; Expo dev-client/prebuild/device validation remains pending. Expo-57 config-plugin support is not yet declared upstream, so no unsupported config plugin is committed.
-- [ ] production TURN credential strategy for restrictive NAT/firewall networks.
+- [ ] production TURN credential strategy for restrictive NAT/firewall networks; not a zero-backend refactor blocker.
 
 ## Definition of done
 
-A feature preserves desired Fantasoccer behavior, uses readable schema-v2 JSON, has representative tests and no longer depends on the legacy backend/storage transport. Group-owned behavior must be deployable and upgradeable inside each `Fantazone.<group>` repository rather than being centralized in the platform repository.
+A feature preserves desired Fantasoccer behavior, uses readable canonical JSON, has representative deterministic tests and no longer depends on the legacy backend/storage transport. Browser-facing changes also pass Playwright desktop/mobile. Group-owned behavior must be deployable and upgradeable inside each `Fantazone.<group>` repository rather than being centralized in the platform repository.

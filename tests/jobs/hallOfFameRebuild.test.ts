@@ -14,12 +14,14 @@ import {
   type Group,
   type HallOfFame,
   type Rank,
+  type RealPlayers,
   type Team,
 } from '../../src/domain/src/index'
 import {
   GROUP_DOCUMENT_PATH,
   calendarDocumentPath,
   hallOfFameDocumentPath,
+  realPlayersDocumentPath,
   seasonRankDocumentPath,
   seasonTeamDocumentPath,
 } from '../../src/github/src/index'
@@ -28,18 +30,19 @@ import { rebuildGroupHallOfFame } from '../../src/jobs/src/hallOfFameRebuild'
 const OWNER = 'owner@example.com'
 const RIVAL = 'rival@example.com'
 
- test('rebuilds one cross-season Hall of Fame document from canonical group data', async () => {
+test('rebuilds one cross-season Hall of Fame document from canonical group data', async () => {
   const root = await mkdtemp(join(tmpdir(), 'fantazone-hall-of-fame-'))
   await writeJson(join(root, GROUP_DOCUMENT_PATH), group())
 
   for (const year of [14, 15]) {
+    await writeJson(join(root, realPlayersDocumentPath(year)), master(year))
     await writeJson(join(root, seasonRankDocumentPath('league', year)), rank(year === 14 ? 12 : 20))
     await writeJson(join(root, calendarDocumentPath('league', year)), calendar(year, year === 14))
     await writeJson(join(root, seasonTeamDocumentPath('main', year, OWNER)), team(OWNER, `Champion ${year}`))
     await writeJson(join(root, seasonTeamDocumentPath('main', year, RIVAL)), team(RIVAL, `Rival ${year}`))
   }
 
-  const result = await rebuildGroupHallOfFame({ groupRepoRoot: root, now: new Date('2026-09-06T12:00:00Z') })
+  const result = await rebuildGroupHallOfFame({ groupRepoRoot: root, platformRepoRoot: root, now: new Date('2026-09-06T12:00:00Z') })
 
   assert.equal(result.currentSeason, 15)
   assert.deepEqual(result.leagues[0].seasons, [15, 14])
@@ -51,6 +54,19 @@ const RIVAL = 'rival@example.com'
   assert.equal(hall.recordPlayer, null)
   assert.equal(hall.playerWithMostPointsInYear, null)
 })
+
+function master(year: number): RealPlayers {
+  return {
+    year,
+    players: [`Champion ${year}`, `Rival ${year}`].map(name => ({
+      name,
+      team: { name: 'Roma', abbreviation: 'ROM' },
+      role: Role.Forward,
+      isActive: true,
+      visible: true,
+    })),
+  }
+}
 
 function group(): Group {
   return {
@@ -111,10 +127,7 @@ function team(owner: string, playerName: string): Team {
   }
 }
 
-async function readJson<T>(path: string): Promise<T> {
-  return JSON.parse(await readFile(path, 'utf8')) as T
-}
-
+async function readJson<T>(path: string): Promise<T> { return JSON.parse(await readFile(path, 'utf8')) as T }
 async function writeJson(path: string, value: unknown): Promise<void> {
   await mkdir(dirname(path), { recursive: true })
   await writeFile(path, `${JSON.stringify(value, null, 2)}\n`, 'utf8')

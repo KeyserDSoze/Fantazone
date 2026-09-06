@@ -13,6 +13,7 @@ import {
   type AuctionAssignmentOutcome,
   type Group,
   type RealPlayers,
+  type SeasonTeamDocument,
   type Team,
 } from '../../src/domain/src/index'
 import {
@@ -51,11 +52,7 @@ test('applies pending outcomes in order so later assignments see earlier canonic
   await writeJson(join(roots.groupRepoRoot, firstPath), outcome(3, 'starforward', 25, '2026-09-06T16:00:03Z'))
   await writeJson(join(roots.groupRepoRoot, secondPath), outcome(6, 'secondforward', 30, '2026-09-06T16:01:03Z'))
 
-  const result = await processAuctionOutcomes({
-    ...roots,
-    season: SEASON,
-    now: new Date('2026-09-06T17:00:00Z'),
-  })
+  const result = await processAuctionOutcomes({ ...roots, season: SEASON, now: new Date('2026-09-06T17:00:00Z') })
 
   assert.deepEqual(result, {
     deferred: false,
@@ -65,10 +62,12 @@ test('applies pending outcomes in order so later assignments see earlier canonic
     rejectedOutcomes: 0,
     changedTeams: 1,
   })
-  const team = await readJson<Team>(join(roots.groupRepoRoot, seasonTeamDocumentPath('main', SEASON, ALICE)))
-  assert.deepEqual(team.players.map(player => player.name), ['Star Forward', 'Second Forward'])
+  const team = await readJson<SeasonTeamDocument>(join(roots.groupRepoRoot, seasonTeamDocumentPath('main', SEASON, ALICE)))
+  assert.equal(team.version, 3)
+  assert.deepEqual(team.players.map(player => player.playerKey), ['starforward', 'secondforward'])
   assert.equal(team.players[0].status, PlayerInTeamStatus.Active)
   assert.equal(team.players[1].price, 30)
+  assert.equal('team' in team.players[0], false)
   assert.equal((await readJson<AuctionAssignmentOutcome>(join(roots.groupRepoRoot, firstPath))).status, 'applied')
   assert.equal((await readJson<AuctionAssignmentOutcome>(join(roots.groupRepoRoot, secondPath))).status, 'applied')
 })
@@ -136,10 +135,7 @@ function outcome(sequence: number, playerKey: string, price: number, assignedAt:
   }
 }
 
-async function readJson<T>(path: string): Promise<T> {
-  return JSON.parse(await readFile(path, 'utf8')) as T
-}
-
+async function readJson<T>(path: string): Promise<T> { return JSON.parse(await readFile(path, 'utf8')) as T }
 async function writeJson(path: string, value: unknown): Promise<void> {
   await mkdir(dirname(path), { recursive: true })
   await writeFile(path, `${JSON.stringify(value, null, 2)}\n`, 'utf8')

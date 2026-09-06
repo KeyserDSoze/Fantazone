@@ -17,12 +17,15 @@ import {
   type MarketCommand,
   type MarketWrapper,
   type Player,
+  type RealPlayers,
+  type SeasonTeamDocument,
   type Team,
 } from '../../src/domain/src/index'
 import {
   GROUP_DOCUMENT_PATH,
   marketCommandDocumentPath,
   marketDocumentPath,
+  realPlayersDocumentPath,
   seasonTeamDocumentPath,
 } from '../../src/github/src/index'
 import { processGroupMarket } from '../../src/jobs/src/marketProcessing'
@@ -31,7 +34,7 @@ const SEASON = 15
 const BUYER = 'buyer@example.com'
 const SELLER = 'seller@example.com'
 
-test('processes an append-only command using its Git commit time and writes canonical teams/state/result', async () => {
+test('processes an append-only command using its Git commit time and writes normalized canonical teams', async () => {
   const root = await fixture(MarketType.WithoutVote)
   const command = createCommand()
   const commandPath = marketCommandDocumentPath('league', SEASON, command.id)
@@ -39,7 +42,7 @@ test('processes an append-only command using its Git commit time and writes cano
   git(root, 'add', commandPath)
   commit(root, 'market command', '2026-09-06T10:00:00Z')
 
-  const result = await processGroupMarket({ groupRepoRoot: root, season: SEASON, now: new Date('2026-09-06T12:00:00Z') })
+  const result = await processGroupMarket({ groupRepoRoot: root, platformRepoRoot: root, season: SEASON, now: new Date('2026-09-06T12:00:00Z') })
 
   assert.equal(result.deferred, false)
   assert.equal(result.processedCommands, 1)
@@ -52,8 +55,8 @@ test('processes an append-only command using its Git commit time and writes cano
   const state = await readJson<MarketWrapper>(join(root, marketDocumentPath('league', SEASON)))
   assert.equal(state.markets[0].creationTime, '2026-09-06T10:00:00.000Z')
   assert.equal(state.markets[0].status, MarketStatus.Approved)
-  assert.equal((await readJson<Team>(join(root, seasonTeamDocumentPath('main', SEASON, BUYER)))).players[0].name, 'Seller Forward')
-  assert.equal((await readJson<Team>(join(root, seasonTeamDocumentPath('main', SEASON, SELLER)))).players[0].name, 'Buyer Forward')
+  assert.equal((await readJson<SeasonTeamDocument>(join(root, seasonTeamDocumentPath('main', SEASON, BUYER)))).players[0].playerKey, 'sellerforward')
+  assert.equal((await readJson<SeasonTeamDocument>(join(root, seasonTeamDocumentPath('main', SEASON, SELLER)))).players[0].playerKey, 'buyerforward')
 })
 
 test('later commands in the same Action see team mutations from earlier commands', async () => {
@@ -70,7 +73,7 @@ test('later commands in the same Action see team mutations from earlier commands
   git(root, 'add', secondPath)
   commit(root, 'second market command', '2026-09-06T10:01:00Z')
 
-  const result = await processGroupMarket({ groupRepoRoot: root, season: SEASON, now: new Date('2026-09-06T12:00:00Z') })
+  const result = await processGroupMarket({ groupRepoRoot: root, platformRepoRoot: root, season: SEASON, now: new Date('2026-09-06T12:00:00Z') })
 
   assert.equal(result.processedCommands, 2)
   assert.equal(result.appliedCommands, 1)
@@ -79,8 +82,8 @@ test('later commands in the same Action see team mutations from earlier commands
   const rejected = await readJson<MarketCommand>(join(root, secondPath))
   assert.equal(rejected.status, 'rejected')
   assert.match(rejected.result?.message ?? '', /giocatori non sono disponibili/i)
-  assert.equal((await readJson<Team>(join(root, seasonTeamDocumentPath('main', SEASON, BUYER)))).players[0].name, 'Seller Forward')
-  assert.equal((await readJson<Team>(join(root, seasonTeamDocumentPath('main', SEASON, SELLER)))).players[0].name, 'Buyer Forward')
+  assert.equal((await readJson<SeasonTeamDocument>(join(root, seasonTeamDocumentPath('main', SEASON, BUYER)))).players[0].playerKey, 'sellerforward')
+  assert.equal((await readJson<SeasonTeamDocument>(join(root, seasonTeamDocumentPath('main', SEASON, SELLER)))).players[0].playerKey, 'buyerforward')
 })
 
 test('defers while RepositoryRevision is updating and preserves the pending command', async () => {
@@ -90,7 +93,7 @@ test('defers while RepositoryRevision is updating and preserves the pending comm
   await writeJson(join(root, commandPath), command)
   await writeJson(join(root, 'manifest.json'), { schemaVersion: 2, revision: 2, updating: true })
 
-  const result = await processGroupMarket({ groupRepoRoot: root, season: SEASON })
+  const result = await processGroupMarket({ groupRepoRoot: root, platformRepoRoot: root, season: SEASON })
 
   assert.equal(result.deferred, true)
   assert.equal((await readJson<MarketCommand>(join(root, commandPath))).status, 'pending')
@@ -111,7 +114,7 @@ test('daily processing expires old pending markets without requiring a new comma
   }
   await writeJson(join(root, marketDocumentPath('league', SEASON)), state)
 
-  const result = await processGroupMarket({ groupRepoRoot: root, season: SEASON, now: new Date('2026-09-06T12:00:00Z') })
+  const result = await processGroupMarket({ groupRepoRoot: root, platformRepoRoot: root, season: SEASON, now: new Date('2026-09-06T12:00:00Z') })
 
   assert.equal(result.expiredMarkets, 1)
   assert.equal((await readJson<MarketWrapper>(join(root, marketDocumentPath('league', SEASON)))).markets[0].status, MarketStatus.Expired)
@@ -124,11 +127,22 @@ async function fixture(market: MarketType): Promise<string> {
   git(root, 'config', 'user.email', 'fantazone-test@example.com')
   await writeJson(join(root, 'manifest.json'), { schemaVersion: 2, revision: 1, updating: false })
   await writeJson(join(root, GROUP_DOCUMENT_PATH), group(market))
+  await writeJson(join(root, realPlayersDocumentPath(SEASON)), master())
   await writeJson(join(root, seasonTeamDocumentPath('main', SEASON, BUYER)), team(BUYER, player('Buyer Forward', 10, FantaSoccerRole.Forward)))
   await writeJson(join(root, seasonTeamDocumentPath('main', SEASON, SELLER)), team(SELLER, player('Seller Forward', 20, FantaSoccerRole.FirstBackupForward)))
   git(root, 'add', '.')
   commit(root, 'initialize', '2026-09-01T12:00:00Z')
   return root
+}
+
+function master(): RealPlayers {
+  return {
+    year: SEASON,
+    players: [
+      { name: 'Buyer Forward', team: { name: 'Roma', abbreviation: 'ROM' }, role: Role.Forward, isActive: true, visible: true },
+      { name: 'Seller Forward', team: { name: 'Roma', abbreviation: 'ROM' }, role: Role.Forward, isActive: true, visible: true },
+    ],
+  }
 }
 
 function group(market: MarketType): Group {

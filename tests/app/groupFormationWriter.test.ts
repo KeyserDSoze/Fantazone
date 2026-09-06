@@ -11,6 +11,7 @@ import {
   type Group,
   type Player,
   type RealCalendar,
+  type SeasonTeamDocument,
   type Team,
   type UserOfAGroup,
 } from '../../src/domain/src/index'
@@ -125,7 +126,7 @@ const swap = [
   { playerKey: getPlayerKey('Fwd tribune Alpha'), position: FantaSoccerRole.Forward },
 ]
 
-test('saves the current season Team and leaves TeamDay creation to GitHub Actions', async () => {
+test('saves the current season Team as normalized player references and leaves TeamDay creation to GitHub Actions', async () => {
   const { client, runtime } = await fixture()
   const result = await runtime.formationWriter.saveGameFormation({
     session: session('owner@example.com'), leagueId: 'league-a', season: 2026, gameId: 'game-1',
@@ -134,9 +135,12 @@ test('saves the current season Team and leaves TeamDay creation to GitHub Action
   assert.equal(result.source, 'season')
   assert.equal(client.lastWriteSha, 'sha-season')
   assert.equal(client.files.has(key('KeyserDSoze', 'Fantazone.Amici', dayTeamDocumentPath('main', 2026, 4, 'owner@example.com'), 'main')), false)
-  const season = JSON.parse(client.files.get(key('KeyserDSoze', 'Fantazone.Amici', seasonTeamDocumentPath('main', 2026, 'owner@example.com'), 'main'))!.content) as Team
-  assert.equal(season.players.find(player => player.name === 'Fwd starter Alpha')?.position, FantaSoccerRole.Tribune)
-  assert.equal(season.players.find(player => player.name === 'Fwd starter Alpha')?.price, 10)
+  const season = JSON.parse(client.files.get(key('KeyserDSoze', 'Fantazone.Amici', seasonTeamDocumentPath('main', 2026, 'owner@example.com'), 'main'))!.content) as SeasonTeamDocument
+  assert.equal(season.version, 3)
+  assert.equal(season.players.find(player => player.playerKey === getPlayerKey('Fwd starter Alpha'))?.position, FantaSoccerRole.Tribune)
+  assert.equal(season.players.find(player => player.playerKey === getPlayerKey('Fwd starter Alpha'))?.price, 10)
+  assert.equal('name' in season.players[0], false)
+  assert.equal('team' in season.players[0], false)
   assert.equal(season.lastUpdate, NOW.toISOString())
 })
 
@@ -236,16 +240,8 @@ function realCalendar(schedule: Exclude<Schedule, 'none'>): RealCalendar {
     return {
       year: 2026,
       days: [
-        {
-          year: 2026,
-          serieADay: 4,
-          games: [realGame('2026-09-02T11:30:00Z')],
-        },
-        {
-          year: 2026,
-          serieADay: 5,
-          games: [realGame('2026-09-10T18:45:00Z')],
-        },
+        { year: 2026, serieADay: 4, games: [realGame('2026-09-02T11:30:00Z')] },
+        { year: 2026, serieADay: 5, games: [realGame('2026-09-10T18:45:00Z')] },
       ],
     }
   }
@@ -253,16 +249,8 @@ function realCalendar(schedule: Exclude<Schedule, 'none'>): RealCalendar {
   return {
     year: 2026,
     days: [
-      {
-        year: 2026,
-        serieADay: next - 1,
-        games: [realGame('2026-09-01T18:45:00Z', 1, 0)],
-      },
-      {
-        year: 2026,
-        serieADay: next,
-        games: [realGame('2026-09-10T18:45:00Z')],
-      },
+      { year: 2026, serieADay: next - 1, games: [realGame('2026-09-01T18:45:00Z', 1, 0)] },
+      { year: 2026, serieADay: next, games: [realGame('2026-09-10T18:45:00Z')] },
     ],
   }
 }

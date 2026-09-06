@@ -1,6 +1,8 @@
 import {
   TeamHelper,
+  encodeSeasonTeamDocument,
   enhanceTeam,
+  hydrateSeasonTeamDocument,
   type EnhancedTeam,
   type LeagueSetting,
   type Player,
@@ -16,12 +18,14 @@ import {
 } from './repositoryStore'
 import type { GroupRepositoryTarget } from './repositoryTarget'
 import type { GitHubRankRepository } from './rankRepository'
+import type { GitHubRealPlayersRepository } from './realPlayerRepository'
 
 export class GitHubTeamRepository {
   constructor(
     private readonly store: GitHubJsonStore,
     private readonly repository: GroupRepositoryTarget,
     private readonly rankRepository?: GitHubRankRepository,
+    private readonly realPlayersRepository?: GitHubRealPlayersRepository,
   ) {}
 
   async getTeam(basketId: string, season: number, email: string, options: RepositoryJsonReadOptions = {}): Promise<Team | null> {
@@ -33,7 +37,13 @@ export class GitHubTeamRepository {
   }
 
   async getTeamSnapshot(basketId: string, season: number, email: string, options: RepositoryJsonReadOptions = {}): Promise<RepositoryJsonSnapshot<Team> | null> {
-    return this.store.tryReadJson<Team>(this.location(seasonTeamDocumentPath(basketId, season, email)), options)
+    const snapshot = await this.store.tryReadJson<unknown>(this.location(seasonTeamDocumentPath(basketId, season, email)), options)
+    if (!snapshot) return null
+    const needsMaster = isNormalizedSeasonTeam(snapshot.value)
+    const master = needsMaster && this.realPlayersRepository
+      ? await this.realPlayersRepository.getPlayers(season, options)
+      : null
+    return { ...snapshot, value: hydrateSeasonTeamDocument(snapshot.value, master) }
   }
 
   async getTeamDaySnapshot(basketId: string, season: number, day: number, email: string, options: RepositoryJsonReadOptions = {}): Promise<RepositoryJsonSnapshot<Team> | null> {
@@ -70,7 +80,8 @@ export class GitHubTeamRepository {
   }
 
   async writeTeam(basketId: string, season: number, email: string, team: Team, message = 'chore: update season team', options: RepositoryJsonWriteOptions = {}): Promise<string> {
-    return (await this.store.writeJson(this.location(seasonTeamDocumentPath(basketId, season, email)), team, message, options)).sha
+    const document = encodeSeasonTeamDocument(team)
+    return (await this.store.writeJson(this.location(seasonTeamDocumentPath(basketId, season, email)), document, message, options)).sha
   }
 
   async writeTeamDay(basketId: string, season: number, day: number, email: string, team: Team, message = 'chore: update day team', options: RepositoryJsonWriteOptions = {}): Promise<string> {
@@ -100,6 +111,10 @@ export function dayTeamDocumentPath(basketId: string, season: number, day: numbe
   validateTeamKey(basketId, season, email)
   if (!Number.isInteger(day) || day < 1) throw new Error('Day must be a positive integer')
   return `data/groups/seasons/${season}/days/${day}/teams/${encodeURIComponent(basketId.trim())}/${encodeURIComponent(email.trim())}.json`
+}
+
+function isNormalizedSeasonTeam(value: unknown): boolean {
+  return Boolean(value && typeof value === 'object' && (value as { version?: unknown }).version === 3)
 }
 
 function validateTeamKey(basketId: string, season: number, email: string): void {
