@@ -58,9 +58,17 @@ Persistent-cache failures are deliberately non-fatal. GitHub remains the source 
 
 Every group repository contains `manifest.json` with a monotonically increasing `revision`.
 
-Application writes go through `RepositoryRevisionContentClient`, which advances the manifest revision before writing the changed group document. Advancing first can produce a harmless no-op revision if the later document write conflicts, but it avoids the unsafe opposite state where canonical data changed without advancing the sync clock.
+Application writes go through `RepositoryRevisionContentClient` and publish the revision in two phases:
 
-Managed group jobs also increment `manifest.revision` whenever they commit canonical `data/` changes.
+1. advance `manifest.revision` and set `updating: true`;
+2. write the canonical group document using its Git blob SHA;
+3. advance `manifest.revision` again and set `updating: false`.
+
+The two-phase state closes the polling race between the manifest update and the GitHub Contents API write. A watcher that observes `updating: true` always treats the repository as potentially stale, invalidates its group cache and refreshes again on subsequent checks until it sees a stable manifest. If a process or network failure leaves the manifest in the updating state, the system therefore remains conservative rather than silently accepting stale data.
+
+When the canonical document write itself conflicts, the client best-effort publishes a stable follow-up revision before rethrowing the original conflict. A failure to close the transition leaves `updating: true`, which is still safe because watchers continue to invalidate.
+
+Managed group jobs update canonical `data/` and `manifest.json` in the same Git commit, so they only need one revision increment and explicitly publish `updating: false`.
 
 While a group is open, the app checks only `manifest.json`:
 
@@ -68,9 +76,9 @@ While a group is open, the app checks only `manifest.json`:
 - every 60 seconds;
 - whenever the application returns to the foreground.
 
-If the revision is unchanged, no group documents are invalidated or downloaded. If it changes, cached documents for that group repository are removed while the freshly fetched manifest is preserved; `config/group.json` is then refreshed immediately so membership and group metadata are authoritative. Other documents are fetched lazily when their repositories/screens request them.
+If a stable revision is unchanged, no group documents are invalidated or downloaded. If the revision changes, or if the manifest is marked `updating`, cached documents for that group repository are removed while the freshly fetched manifest is preserved; `config/group.json` is then refreshed immediately so membership and group metadata are authoritative. Other documents are fetched lazily when their repositories/screens request them.
 
-A revision observed from the app's own write is kept in the runtime, preventing the next poll from treating that local write as an unrelated remote update.
+A stable revision observed from the app's own write is kept in the runtime, preventing the next poll from treating that local write as an unrelated remote update.
 
 ## Public reads
 
