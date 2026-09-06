@@ -15,10 +15,7 @@ import {
   BrowserAuctionHostConnectionCoordinator,
   BrowserAuctionParticipantConnectionCoordinator,
 } from '../../src/app/services/auctionBrowserConnection'
-import type {
-  BrowserAuctionRtcCallbacks,
-  BrowserAuctionRtcOptions,
-} from '../../src/app/services/auctionBrowserWebRtc'
+import type { BrowserAuctionRtcOptions } from '../../src/app/services/auctionBrowserWebRtc'
 import type { AuctionRtcNegotiator } from '../../src/app/services/auctionWebRtcSignaling'
 
 const room = createAuctionSignalingRoom({
@@ -143,14 +140,14 @@ test('host coordinator wires signaling peers to the realtime host and recreates 
   await coordinator.start()
   assert.equal(repository.roomWrites, 1)
   assert.deepEqual(attached, ['alice-device'])
-  assert.equal(repository.descriptions.get('alice-device:offer')?.generation, 0)
+  assert.equal(repository.descriptions.get('alice-device:offer')?.generation, 1)
 
   repository.descriptions.set('alice-device:answer', createAuctionSessionDescriptionSignal({
     room,
     peerId: 'alice-device',
-    generation: 0,
+    generation: 1,
     kind: 'answer',
-    sdp: 'answer-generation-0',
+    sdp: 'answer-generation-1',
   }))
   await coordinator.pollNow()
   assert.equal(negotiators[0]?.appliedAnswers, 1)
@@ -165,7 +162,7 @@ test('host coordinator wires signaling peers to the realtime host and recreates 
   await coordinator.pollNow()
   assert.equal(negotiators.length, 2)
   assert.equal(negotiators[0]?.closed, true)
-  assert.equal(repository.descriptions.get('alice-device:offer')?.generation, 1)
+  assert.equal(repository.descriptions.get('alice-device:offer')?.generation, 2)
   assert.deepEqual(attached, ['alice-device', 'alice-device'])
 
   coordinator.close()
@@ -192,13 +189,13 @@ test('participant reconnects on failed state, increments generation and requests
   })
 
   await coordinator.start()
-  assert.equal(coordinator.generation, 0)
+  assert.equal(coordinator.generation, 1)
   repository.descriptions.set('alice-device:offer', createAuctionSessionDescriptionSignal({
     room,
     peerId: 'alice-device',
-    generation: 0,
+    generation: 1,
     kind: 'offer',
-    sdp: 'offer-generation-0',
+    sdp: 'offer-generation-1',
   }))
   await coordinator.pollNow()
 
@@ -215,7 +212,7 @@ test('participant reconnects on failed state, increments generation and requests
 
   negotiators[0]?.options.callbacks?.onConnectionState?.('failed')
   await coordinator.waitForReconnect()
-  assert.equal(coordinator.generation, 1)
+  assert.equal(coordinator.generation, 2)
   assert.equal(negotiators.length, 2)
   assert.equal(negotiators[0]?.closed, true)
   assert.equal(coordinator.connected, false)
@@ -223,9 +220,9 @@ test('participant reconnects on failed state, increments generation and requests
   repository.descriptions.set('alice-device:offer', createAuctionSessionDescriptionSignal({
     room,
     peerId: 'alice-device',
-    generation: 1,
+    generation: 2,
     kind: 'offer',
-    sdp: 'offer-generation-1',
+    sdp: 'offer-generation-2',
   }))
   await coordinator.pollNow()
   assert.equal(coordinator.connected, true)
