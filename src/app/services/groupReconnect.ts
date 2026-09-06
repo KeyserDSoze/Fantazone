@@ -7,6 +7,11 @@ export interface StoredGroupReconnectClient {
   discoverFantazoneRepositories(): Promise<GitHubRepo[]>
 }
 
+export type KnownGroupReference = {
+  name: string
+  repository: string
+}
+
 export class StoredGroupRepositoryAccessError extends Error {
   constructor(readonly repository: string) {
     super(`Il PAT non può aprire il repository ${repository}.`)
@@ -15,18 +20,17 @@ export class StoredGroupRepositoryAccessError extends Error {
 }
 
 /**
- * Reconnects a group already known by the Microsoft/OneDrive catalog.
- *
- * The stored repository full name is authoritative: reconnecting must never fall
- * back to another Fantazone.* repository or create a replacement group.
+ * Connects a group whose exact repository is already authoritative (from either
+ * OneDrive settings or a secret-free invitation). It never falls back to another
+ * Fantazone.* repository and never creates a replacement group.
  */
-export async function reconnectStoredGroup(
+export async function connectKnownGroup(
   token: string,
-  group: StoredGroup,
+  group: KnownGroupReference,
   client: StoredGroupReconnectClient = new GitHubClient(token.trim()),
 ): Promise<GroupConnection> {
   const normalizedToken = token.trim()
-  if (!normalizedToken) throw new Error('Inserisci il PAT GitHub per ricollegare questo gruppo.')
+  if (!normalizedToken) throw new Error('Inserisci il PAT GitHub per collegare questo gruppo.')
 
   await client.validateToken()
   const repositories = await client.discoverFantazoneRepositories()
@@ -38,6 +42,14 @@ export async function reconnectStoredGroup(
     repository,
     groupName: group.name,
   }
+}
+
+export async function reconnectStoredGroup(
+  token: string,
+  group: StoredGroup,
+  client: StoredGroupReconnectClient = new GitHubClient(token.trim()),
+): Promise<GroupConnection> {
+  return connectKnownGroup(token, group, client)
 }
 
 export function shouldRecoverStoredGroupCredential(error: unknown): boolean {
