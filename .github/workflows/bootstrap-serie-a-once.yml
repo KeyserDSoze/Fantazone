@@ -7,54 +7,41 @@ on:
       - .github/workflows/bootstrap-serie-a-once.yml
 
 permissions:
-  contents: write
-
-env:
-  FANTAZONE_JOB: ingest-final-votes
-  FANTAZONE_DAY: '2'
-  FANTAZONE_SEASON: '15'
-  FANTAZONE_SERIE_A_CALENDAR_BASE_URL: ${{ vars.FANTAZONE_SERIE_A_CALENDAR_BASE_URL }}
-  FANTAZONE_PLAYERS_SOURCE_URL: ${{ vars.FANTAZONE_PLAYERS_SOURCE_URL }}
-  FANTAZONE_FINAL_VOTES_BASE_URL: ${{ vars.FANTAZONE_FINAL_VOTES_BASE_URL }}
-  FANTAZONE_LIVE_SIGNED_URI_URL: ${{ vars.FANTAZONE_LIVE_SIGNED_URI_URL }}
-  FANTAZONE_LIVE_RESOURCE_BASE_URL: ${{ vars.FANTAZONE_LIVE_RESOURCE_BASE_URL }}
-  FANTAZONE_FANTAGAZZETTA_FORMATIONS_URL: ${{ vars.FANTAZONE_FANTAGAZZETTA_FORMATIONS_URL }}
-  FANTAZONE_GAZZETTA_FORMATIONS_URL: ${{ vars.FANTAZONE_GAZZETTA_FORMATIONS_URL }}
-  FANTAZONE_INJURY_URL: ${{ vars.FANTAZONE_INJURY_URL }}
-  FANTAZONE_PLAYER_IMAGES_API_BASE_URL: ${{ vars.FANTAZONE_PLAYER_IMAGES_API_BASE_URL }}
-  FANTAZONE_PLAYER_IMAGES_MEDIA_BASE_URL: ${{ vars.FANTAZONE_PLAYER_IMAGES_MEDIA_BASE_URL }}
+  contents: read
 
 jobs:
-  validate:
+  diagnose-official-votes:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
         with:
           node-version: 22
-      - name: Install workspace dependencies
-        run: npm install
-      - name: Typecheck jobs
-        run: npm run typecheck --workspace=@fantazone/jobs
-      - name: Run one-shot Serie A producer
-        run: npm run job --workspace=@fantazone/jobs -- "$FANTAZONE_JOB" "$FANTAZONE_DAY" "$FANTAZONE_SEASON"
-      - name: Upload raw/debug outputs
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: fantazone-${{ env.FANTAZONE_JOB }}-${{ github.run_id }}
-          path: src/jobs/.artifacts/
-          if-no-files-found: ignore
-          retention-days: 7
-      - name: Commit canonical Serie A data
+      - name: Capture current official-votes HTML contract
         shell: bash
         run: |
-          if [ -z "$(git status --porcelain -- data src/app/public/images/players)" ]; then
-            echo "No canonical Serie A/static image changes"
-            exit 0
-          fi
-          git config user.name "fantazone-actions[bot]"
-          git config user.email "fantazone-actions[bot]@users.noreply.github.com"
-          git add -A -- data src/app/public/images/players
-          git commit -m "data: $FANTAZONE_JOB"
-          git push
+          mkdir -p src/jobs/.artifacts
+          node <<'NODE'
+          const fs = require('node:fs')
+          const url = 'https://www.fantacalcio.it/voti-fantacalcio-serie-a/2026-27/2'
+          const response = await fetch(url, { headers: {
+            'User-Agent': 'Mozilla/5.0 (compatible; Fantazone/1.0; +https://fanta.plus)',
+            'Accept-Language': 'it-IT,it;q=0.9,en-US;q=0.8,en;q=0.7',
+            'Cache-Control': 'no-cache',
+            'Referer': 'https://www.fantacalcio.it/'
+          }})
+          if (!response.ok) throw new Error(`HTTP ${response.status}`)
+          const html = await response.text()
+          fs.writeFileSync('src/jobs/.artifacts/official-day2.html', html)
+          const classes = [...html.matchAll(/class=["']([^"']+)["']/gi)].flatMap(m => m[1].split(/\s+/)).filter(Boolean)
+          const counts = [...new Set(classes)].map(name => [name, classes.filter(v => v === name).length]).sort((a,b) => b[1]-a[1])
+          console.log(`Captured ${html.length} bytes`)
+          console.log('Relevant class counts:')
+          for (const [name,count] of counts.filter(([name]) => /team|player|vote|rating|bonus|malus|table|row|lineup|match/i.test(name)).slice(0,100)) console.log(`${name}: ${count}`)
+          NODE
+      - name: Upload provider HTML for parser diagnosis
+        uses: actions/upload-artifact@v4
+        with:
+          name: official-votes-html-${{ github.run_id }}
+          path: src/jobs/.artifacts/official-day2.html
+          retention-days: 1
