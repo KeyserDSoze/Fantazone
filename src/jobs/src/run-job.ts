@@ -1,4 +1,5 @@
 import { propagateNextFormations } from './formationPropagation'
+import { snapshotSavedFormations } from './formationSnapshot'
 import { recalculateGroupAll, recalculateGroupDay } from './groupRecalculation'
 import { ingestFinalVotes } from './officialVoteIngestion'
 import { ingestLiveVotes } from './liveVoteIngestion'
@@ -18,6 +19,7 @@ type JobName =
   | 'ingest-final-votes'
   | 'ingest-player-odds'
   | 'ingest-player-images'
+  | 'snapshot-formations'
   | 'set-next-formations'
   | 'rebuild-hall-of-fame'
   | 'process-market'
@@ -112,6 +114,22 @@ const migrated: Partial<Record<JobName, (context: JobContext) => Promise<void>>>
     console.log(
       `Player images ${result.season}: ${result.written} nuove, ${result.existing} esistenti, ` +
       `${result.unmatched} senza match, ${result.failed} fallite in ${result.outputDirectory}.`,
+    )
+  },
+  'snapshot-formations': async () => {
+    const roots = groupJobRoots()
+    const result = await snapshotSavedFormations({
+      ...roots,
+      fallbackBefore: process.env.FANTAZONE_SOURCE_BEFORE,
+    })
+    if (result.deferred) {
+      console.log('Formazioni: manifest in aggiornamento, consolidamento rinviato al prossimo push stabile.')
+      return
+    }
+    console.log(
+      `Formazioni: ${result.inspectedCommits} commit ispezionate, ${result.changedTeamFiles} squadre salvate; ` +
+      `${result.writtenSnapshots} snapshot aggiornati, ${result.staleSnapshots} obsoleti ignorati, ` +
+      `${result.noTargetSnapshots} senza giornata futura.`,
     )
   },
   'set-next-formations': async context => {
