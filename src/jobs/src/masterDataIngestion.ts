@@ -25,6 +25,17 @@ export const DEFAULT_FANTACALCIO_PLAYERS_URL = 'https://www.fantacalcio.it/quota
 const REPO_ROOT = fileURLToPath(new URL('../../../', import.meta.url))
 const DEFAULT_MINIMUM_SERIE_A_TEAMS = 20
 
+/**
+ * Provider abbreviations are transport data, not canonical team identity.
+ * Keep observed differences explicit and fail closed for every unknown alias.
+ *
+ * 2026/27 production validation: Fantacalcio uses MON, while Gazzetta's
+ * canonical calendar currently exposes Monza as MONZ.
+ */
+const FANTACALCIO_TEAM_ABBREVIATION_ALIASES: Readonly<Record<string, string>> = {
+  mon: 'monz',
+}
+
 export type TextFetcher = (url: string) => Promise<string>
 
 export type MasterDataIngestionOptions = {
@@ -143,7 +154,7 @@ export function parseFantacalcioPlayers(html: string, teams: RealTeams): RealPla
     const role = extractRole(row)
     if (!name || !teamAbbreviation || role === Role.Undefined) continue
 
-    const team = teamByAbbreviation.get(teamAbbreviation.toLocaleLowerCase('it-IT'))
+    const team = resolveFantacalcioTeam(teamAbbreviation, teamByAbbreviation)
     if (!team) {
       throw new Error(`La sorgente giocatori usa la squadra '${teamAbbreviation}' che non esiste nel RealCalendar ${teams.year}.`)
     }
@@ -156,6 +167,17 @@ export function parseFantacalcioPlayers(html: string, teams: RealTeams): RealPla
     })
   }
   return players
+}
+
+function resolveFantacalcioTeam(
+  providerAbbreviation: string,
+  teamByAbbreviation: ReadonlyMap<string, RealTeam>,
+): RealTeam | undefined {
+  const abbreviation = providerAbbreviation.trim().toLocaleLowerCase('it-IT')
+  const exact = teamByAbbreviation.get(abbreviation)
+  if (exact) return exact
+  const canonicalAlias = FANTACALCIO_TEAM_ABBREVIATION_ALIASES[abbreviation]
+  return canonicalAlias ? teamByAbbreviation.get(canonicalAlias) : undefined
 }
 
 function extractPlayerName(row: string): string {
