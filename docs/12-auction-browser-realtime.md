@@ -1,4 +1,4 @@
-# Auction browser realtime lifecycle
+# Auction realtime lifecycle
 
 Fantazone uses GitHub only as a slow rendezvous and durability boundary for auctions. Bid traffic must not become repository commits.
 
@@ -21,8 +21,14 @@ Every reopened DataChannel asks for a full checkpoint before normal realtime tra
 
 ## Network traversal
 
-The browser adapter defaults to Cloudflare STUN (`stun:stun.cloudflare.com:3478`) and accepts an injected ICE-server list. TURN credentials are deliberately not embedded in the client. A production TURN strategy remains required for restrictive NAT/firewall cases.
+The default ICE configuration uses Cloudflare STUN (`stun:stun.cloudflare.com:3478`) and accepts an injected ICE-server list. TURN credentials are deliberately not embedded in the client. A production TURN strategy remains required for restrictive NAT/firewall cases.
 
-## Native
+## Browser
 
-The domain, signaling repository and realtime controllers are transport-agnostic. iOS/Android still require a native `RTCPeerConnection` adapter wired to the same contracts.
+`BrowserAuctionRtcNegotiator` wraps the browser `RTCPeerConnection`, waits for complete non-trickle ICE gathering and exposes the ordered DataChannel through the transport-agnostic realtime controller.
+
+## Native iOS/Android
+
+`auctionNativeWebRtc.ts` is a structural bridge for the `react-native-webrtc` module. The upstream native API exposes the same peer-connection/data-channel surface used by the browser negotiator, so Fantazone deliberately reuses the already-tested negotiation, signaling and reconnect implementation instead of maintaining a second protocol stack.
+
+The bridge is injected: importing the web bundle or running Node CI does not load a native module. The actual Expo development/production build still needs the compatible `react-native-webrtc` package and `@config-plugins/react-native-webrtc` config plugin installed and configured. This final package/native-build integration is kept separate so an unsupported native dependency cannot break the web application.
