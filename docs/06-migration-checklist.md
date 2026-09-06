@@ -59,7 +59,8 @@
 - [~] Formations: validation + owner/SuperAdmin authorization + TeamDay write implemented; UI and chance/stat automatic formation remain pending.
 - [~] Serie A ingestion: core calendar/master/vote/chance/image producers implemented; production initialization/source validation/scheduling remain pending.
 - [~] Statistics/chances/votes: deterministic reducers + producers implemented; production data bootstrap/validation remains pending.
-- [ ] Market persistence/commands.
+- [x] Market persistence/commands: append-only client commands + canonical group Action reducer with legacy voting/execution/expiry parity.
+- [x] Hall of Fame readable cross-season reducer/repository + group-owned rebuild Action; legacy TODO player-record fields remain intentionally null.
 
 ## Infrastructure backlog
 
@@ -86,7 +87,8 @@
 - [x] day/full-season recalculation: filesystem orchestration + tests + group workflow implemented.
 - [x] legacy `SetFormationJob` behavior: deterministic `set-next-formations` group job + parity tests; automatic schedule intentionally not enabled yet (#32).
 - [x] central Background jobs workflow contains only global/shared jobs; group mutations are excluded.
-- [ ] HallOfFame/Market group workflows/reducers.
+- [x] Market group workflow/reducer: serialized command processing + daily 02:00 UTC expiry maintenance.
+- [x] HallOfFame group workflow/reducer: weekly Tuesday 03:00 UTC rebuild + manual dispatch.
 
 ## Auction
 
