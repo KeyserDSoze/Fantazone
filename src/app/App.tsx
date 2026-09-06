@@ -12,6 +12,7 @@ import { PlatformOverviewScreen } from './screens/platform-overview'
 import {
   credentialOwnerKey,
   loadRepositoryToken,
+  removeRepositoryToken,
   saveGroupConnection,
 } from './services/groupCredentialStorage'
 import { GroupSessionRuntime } from './services/groupSessionRuntime'
@@ -27,6 +28,7 @@ import {
   createStoredGroup,
   emptyUserSettings,
   loadUserSettings,
+  removeStoredGroup,
   saveUserSettings,
   upsertStoredGroup,
   type StoredGroup,
@@ -172,6 +174,25 @@ export default function App() {
     }
   }
 
+  async function removeRememberedGroup(group: StoredGroup) {
+    if (!microsoftSession || !settings) return
+    setLoading(true)
+    setError(null)
+    try {
+      const session = await freshMicrosoftSession()
+      const ownerKey = credentialOwnerKey(session.identity)
+      await removeRepositoryToken(group.repository, ownerKey)
+      const next = removeStoredGroup(settings, group.id)
+      await saveUserSettings(session.graphAccessToken, next)
+      setSettings(next)
+      setAddingGroup(next.groups.length === 0)
+    } catch (caught) {
+      setError(toMessage(caught))
+    } finally {
+      setLoading(false)
+    }
+  }
+
   async function freshMicrosoftSession(): Promise<MicrosoftAppSession> {
     if (!microsoftSession) throw new Error('Sessione Microsoft non disponibile.')
     const refreshed = await ensureMicrosoftAppSession(microsoftSession)
@@ -275,6 +296,7 @@ export default function App() {
               error={error}
               onOpen={openStoredGroup}
               onAdd={() => { setAddingGroup(true); setError(null) }}
+              onRemove={removeRememberedGroup}
               onLogout={logoutMicrosoft}
             />
           ) : (
