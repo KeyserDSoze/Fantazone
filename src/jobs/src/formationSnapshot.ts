@@ -3,12 +3,16 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 import {
   getFormationSnapshotTargetSerieADay,
+  hydrateSeasonTeamDocument,
   type RealCalendar,
+  type RealPlayers,
 } from '@fantazone/domain'
 import {
   GROUP_RECALCULATION_WORKFLOW_PATH,
   dayTeamDocumentPath,
+  decodeRealPlayers,
   realCalendarDocumentPath,
+  realPlayersDocumentPath,
 } from '@fantazone/github'
 
 export const FORMATION_SNAPSHOT_CURSOR_PATH = 'data/groups/runtime/formation-snapshot-cursor.json'
@@ -28,7 +32,7 @@ export type FormationSnapshotSource = {
 export type SnapshotSavedFormationsOptions = {
   groupRepoRoot: string
   platformRepoRoot: string
-  /** GitHub push `before` SHA. Used only as a final fallback when no v3 runtime marker exists. */
+  /** GitHub push `before` SHA. Used only as a final fallback when no runtime marker exists. */
   fallbackBefore?: string
   now?: Date
 }
@@ -51,12 +55,11 @@ type SeasonTeamPath = {
 }
 
 /**
- * Consolidates every unprocessed season-Team commit into the correct immutable
- * TeamDay snapshot. The Git commit timestamp is the authoritative deadline clock.
- *
- * A persisted cursor makes this safe with GitHub Actions concurrency: even if an
- * intermediate pending workflow run is replaced, the next run scans every commit
- * after the cursor and therefore cannot lose a pre-kickoff save.
+ * Consolidates every unprocessed mutable season-Team commit into the correct
+ * immutable TeamDay snapshot. Season Team documents contain only playerKey +
+ * fantasy-owned fields; TeamDay is deliberately hydrated with the current
+ * canonical Serie A master so historical calculation never depends on a later
+ * transfer or master-data change.
  */
 export async function snapshotSavedFormations(
   options: SnapshotSavedFormationsOptions,
@@ -70,13 +73,11 @@ export async function snapshotSavedFormations(
   const baseline = resolveBaseline(options.groupRepoRoot, head, cursor, options.fallbackBefore)
   const commits = listCommits(options.groupRepoRoot, baseline, head)
   if (commits.length === 0) {
-    return {
-      ...emptyResult(false),
-      processedThroughCommit: cursor?.processedThroughCommit ?? null,
-    }
+    return { ...emptyResult(false), processedThroughCommit: cursor?.processedThroughCommit ?? null }
   }
 
   const calendars = new Map<number, RealCalendar | null>()
+  const masters = new Map<number, RealPlayers>()
   let changedTeamFiles = 0
   let writtenSnapshots = 0
   let staleSnapshots = 0
@@ -99,9 +100,7 @@ export async function snapshotSavedFormations(
 
       let calendar = calendars.get(teamPath.season)
       if (calendar === undefined) {
-        calendar = await readOptionalJson<RealCalendar>(
-          resolve(options.platformRepoRoot, realCalendarDocumentPath(teamPath.season)),
-        )
+        calendar = await readOptionalJson<RealCalendar>(resolve(options.platformRepoRoot, realCalendarDocumentPath(teamPath.season)))
         calendars.set(teamPath.season, calendar)
       }
       if (!calendar) {
@@ -115,21 +114,21 @@ export async function snapshotSavedFormations(
         continue
       }
 
-      const targetPath = resolve(
-        options.groupRepoRoot,
-        dayTeamDocumentPath(teamPath.basketId, teamPath.season, targetDay, teamPath.owner),
-      )
-      const sourcePath = resolve(
-        options.groupRepoRoot,
-        formationSnapshotSourceDocumentPath(teamPath.basketId, teamPath.season, targetDay, teamPath.owner),
-      )
+      const targetPath = resolve(options.groupRepoRoot, dayTeamDocumentPath(teamPath.basketId, teamPath.season, targetDay, teamPath.owner))
+      const sourcePath = resolve(options.groupRepoRoot, formationSnapshotSourceDocumentPath(teamPath.basketId, teamPath.season, targetDay, teamPath.owner))
       const existingSource = decodeSource(await readOptionalJson<unknown>(sourcePath))
       if (existingSource && !isNewerSource(options.groupRepoRoot, existingSource, commit, committedAt)) {
         staleSnapshots += 1
         continue
       }
 
-      await writeText(targetPath, sourceText)
+      let master = masters.get(teamPath.season)
+      if (!master) {
+        master = await loadMasterPlayers(options.platformRepoRoot, teamPath.season)
+        masters.set(teamPath.season, master)
+      }
+      const snapshot = hydrateSeasonTeamDocument(parsed, master)
+      await writeJson(targetPath, snapshot)
       await writeJson(sourcePath, {
         version: 1,
         sourceCommit: commit,
@@ -154,6 +153,13 @@ export async function snapshotSavedFormations(
     staleSnapshots,
     noTargetSnapshots,
   }
+}
+
+async function loadMasterPlayers(root: string, season: number): Promise<RealPlayers> {
+  const path = resolve(root, realPlayersDocumentPath(season))
+  const value = await readOptionalJson<unknown>(path)
+  if (!value) throw new Error(`Serie A players ${season} not found in ${path}`)
+  return decodeRealPlayers(value, season)
 }
 
 export function formationSnapshotSourceDocumentPath(
@@ -199,21 +205,11 @@ function resolveBaseline(
   cursor: FormationSnapshotCursor | null,
   fallbackBefore: string | undefined,
 ): string | null {
-  if (cursor?.processedThroughCommit && isAncestor(root, cursor.processedThroughCommit, head)) {
-    return cursor.processedThroughCommit
-  }
-
-  // The managed runtime workflow is updated to v3 before it can observe season-Team
-  // pushes. Its install commit is therefore the safest first cursor: every relevant
-  // save is after it, while historical TeamDay state from older runtimes is ignored.
+  if (cursor?.processedThroughCommit && isAncestor(root, cursor.processedThroughCommit, head)) return cursor.processedThroughCommit
   const runtimeInstallCommit = lastPathCommit(root, GROUP_RECALCULATION_WORKFLOW_PATH)
   if (runtimeInstallCommit && isAncestor(root, runtimeInstallCommit, head)) return runtimeInstallCommit
-
   const fallback = fallbackBefore?.trim()
   if (!fallback || /^0+$/.test(fallback) || !isAncestor(root, fallback, head)) return parentOf(root, head)
-
-  // Include the `before` commit itself. On a normal RepositoryRevision write the
-  // stable-manifest push has the Team commit as its `before` SHA.
   return parentOf(root, fallback)
 }
 
@@ -227,18 +223,12 @@ function lastPathCommit(root: string, path: string): string | null {
 }
 
 function listCommits(root: string, baseline: string | null, head: string): string[] {
-  const output = baseline
-    ? gitLine(root, 'rev-list', '--reverse', `${baseline}..${head}`)
-    : gitLine(root, 'rev-list', '--reverse', head)
+  const output = baseline ? gitLine(root, 'rev-list', '--reverse', `${baseline}..${head}`) : gitLine(root, 'rev-list', '--reverse', head)
   return output.split('\n').map(value => value.trim()).filter(Boolean)
 }
 
 function parentOf(root: string, commit: string): string | null {
-  try {
-    return gitLine(root, 'rev-parse', `${commit}^`)
-  } catch {
-    return null
-  }
+  try { return gitLine(root, 'rev-parse', `${commit}^`) } catch { return null }
 }
 
 function isNewerSource(
@@ -257,10 +247,7 @@ function isNewerSource(
 
 function isAncestor(root: string, ancestor: string, descendant: string): boolean {
   try {
-    execFileSync('git', ['merge-base', '--is-ancestor', ancestor, descendant], {
-      cwd: root,
-      stdio: 'ignore',
-    })
+    execFileSync('git', ['merge-base', '--is-ancestor', ancestor, descendant], { cwd: root, stdio: 'ignore' })
     return true
   } catch {
     return false
@@ -268,11 +255,7 @@ function isAncestor(root: string, ancestor: string, descendant: string): boolean
 }
 
 function gitFileAtCommit(root: string, commit: string, path: string): string | null {
-  try {
-    return gitRaw(root, 'show', `${commit}:${path}`)
-  } catch {
-    return null
-  }
+  try { return gitRaw(root, 'show', `${commit}:${path}`) } catch { return null }
 }
 
 function gitLine(root: string, ...args: string[]): string {
@@ -300,9 +283,7 @@ function decodeSource(value: unknown): FormationSnapshotSource | null {
 }
 
 async function readOptionalJson<T>(path: string): Promise<T | null> {
-  try {
-    return JSON.parse(await readFile(path, 'utf8')) as T
-  } catch (error) {
+  try { return JSON.parse(await readFile(path, 'utf8')) as T } catch (error) {
     if (isFileNotFound(error)) return null
     throw error
   }
