@@ -17,6 +17,7 @@ import {
   removeRepositoryToken,
   saveGroupConnection,
 } from './services/groupCredentialStorage'
+import { reconnectStoredGroup, shouldRecoverStoredGroupCredential } from './services/groupReconnect'
 import { repositoryPersistentCache } from './services/repositoryPersistentCache'
 import { GroupSessionRuntime } from './services/groupSessionRuntime'
 import {
@@ -208,17 +209,22 @@ export default function App() {
         setReconnectingGroup(group)
         return
       }
-      const client = new GitHubClient(token)
-      await client.validateToken()
-      const repositories = await client.discoverFantazoneRepositories()
-      const repository = repositories.find(candidate => candidate.full_name.toLowerCase() === group.repository.toLowerCase())
-      if (!repository) throw new Error(`Il PAT non può aprire ${group.repository}.`)
-      const connection: ConnectedGroup = { token, repository, groupName: group.name }
-      const opened = await openGroupConnection(connection)
-      await saveGroupConnection(connection, ownerKey)
-      await authorizeIdentity(opened, session.identity)
-      setRuntime(opened)
-      setReconnectingGroup(null)
+
+      try {
+        const connection = await reconnectStoredGroup(token, group)
+        const opened = await openGroupConnection(connection)
+        await saveGroupConnection(connection, ownerKey)
+        await authorizeIdentity(opened, session.identity)
+        setRuntime(opened)
+        setReconnectingGroup(null)
+      } catch (caught) {
+        if (shouldRecoverStoredGroupCredential(caught)) {
+          await removeRepositoryToken(group.repository, ownerKey)
+          setReconnectingGroup(group)
+          return
+        }
+        throw caught
+      }
     } catch (caught) {
       setError(toMessage(caught))
     } finally {
