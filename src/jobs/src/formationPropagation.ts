@@ -3,14 +3,19 @@ import { dirname, resolve } from 'node:path'
 import {
   getCurrentSeasonYear,
   getFormationPropagationWindow,
+  refreshTeamRealPlayerSnapshots,
   type Group,
   type RealCalendar,
+  type RealPlayers,
+  type Team,
 } from '@fantazone/domain'
 import {
   GROUP_DOCUMENT_PATH,
   dayTeamDocumentPath,
+  decodeRealPlayers,
   isGroupDocument,
   realCalendarDocumentPath,
+  realPlayersDocumentPath,
 } from '@fantazone/github'
 
 export type FormationPropagationOptions = {
@@ -32,7 +37,9 @@ export type FormationPropagationResult = {
 
 /**
  * Group-owned filesystem port of legacy SetFormationJob.
- * It never overwrites an existing target TeamDay and copies source JSON byte-for-byte.
+ * It never overwrites an existing target TeamDay. Fantasy formation fields are
+ * copied from the previous snapshot, while mutable RealPlayer fields are refreshed
+ * from the current season master before the new immutable TeamDay is written.
  */
 export async function propagateNextFormations(
   options: FormationPropagationOptions,
@@ -46,6 +53,7 @@ export async function propagateNextFormations(
   )
   const window = calendar ? getFormationPropagationWindow(calendar, options.now ?? new Date()) : null
   if (!window) return emptyResult(season)
+  const master = await loadMasterPlayers(options.platformRepoRoot, season)
 
   const copiedOwners: string[] = []
   const existingOwners: string[] = []
@@ -71,16 +79,15 @@ export async function propagateNextFormations(
         options.groupRepoRoot,
         dayTeamDocumentPath(basket.id, season, window.sourceSerieADay, owner),
       )
-      const sourceText = await readOptionalText(sourcePath)
-      if (sourceText == null) {
+      const source = await readOptionalJson<Team>(sourcePath)
+      if (source == null) {
         missingSourceOwners.push(owner)
         continue
       }
 
-      // Match repository-object semantics: malformed source state must fail rather than propagate corruption.
-      JSON.parse(sourceText)
+      const target = refreshTeamRealPlayerSnapshots(source, master)
       await mkdir(dirname(targetPath), { recursive: true })
-      await writeFile(targetPath, sourceText, 'utf8')
+      await writeFile(targetPath, `${JSON.stringify(target, null, 2)}\n`, 'utf8')
       copiedOwners.push(owner)
     }
   }
@@ -94,6 +101,13 @@ export async function propagateNextFormations(
     existingOwners,
     missingSourceOwners,
   }
+}
+
+async function loadMasterPlayers(root: string, season: number): Promise<RealPlayers> {
+  const path = resolve(root, realPlayersDocumentPath(season))
+  const value = await readOptionalJson<unknown>(path)
+  if (!value) throw new Error(`Serie A players ${season} not found in ${path}`)
+  return decodeRealPlayers(value, season)
 }
 
 async function readGroup(root: string): Promise<Group> {
