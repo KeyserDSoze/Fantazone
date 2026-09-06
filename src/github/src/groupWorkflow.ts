@@ -1,4 +1,4 @@
-export const GROUP_REPOSITORY_RUNTIME_VERSION = 5
+export const GROUP_REPOSITORY_RUNTIME_VERSION = 6
 export const GROUP_RUNTIME_ENGINE_REF = `group-runtime-v${GROUP_REPOSITORY_RUNTIME_VERSION}`
 export const GROUP_GLOBAL_DATA_REF = 'main'
 export const GROUP_RECALCULATION_WORKFLOW_PATH = '.github/workflows/fantazone-group.yml'
@@ -6,9 +6,10 @@ export const GROUP_RECALCULATION_WORKFLOW_PATH = '.github/workflows/fantazone-gr
 /**
  * Managed Fantazone group workflow installed into every Fantazone.<group> repository.
  *
- * Runtime v5 owns formation snapshot consolidation, canonical market command
- * processing and the weekly Hall of Fame rebuild. Group mutations execute under
- * one repository-scoped Actions concurrency lock using the group's GITHUB_TOKEN.
+ * Runtime v6 owns formation snapshot consolidation, canonical market command and
+ * auction assignment processing, plus the weekly Hall of Fame rebuild. Group
+ * mutations execute under one repository-scoped Actions concurrency lock using
+ * the group's GITHUB_TOKEN.
  */
 export const GROUP_RECALCULATION_WORKFLOW = [
   '# Managed by Fantazone. Local edits to this file are overwritten by runtime upgrades.',
@@ -21,6 +22,7 @@ export const GROUP_RECALCULATION_WORKFLOW = [
   "      - 'manifest.json'",
   "      - 'data/groups/seasons/*/teams/*/*.json'",
   "      - 'data/groups/seasons/*/markets/*/commands/*.json'",
+  "      - 'data/groups/seasons/*/auctions/*/outcomes/*.json'",
   '  schedule:',
   "    - cron: '0 2 * * *'",
   "    - cron: '0 3 * * 2'",
@@ -35,6 +37,7 @@ export const GROUP_RECALCULATION_WORKFLOW = [
   '          - recalculate-all',
   '          - set-next-formations',
   '          - process-market',
+  '          - process-auction-outcomes',
   '          - rebuild-hall-of-fame',
   '      day:',
   '        description: Optional Serie A day (required by recalculate-day)',
@@ -112,6 +115,7 @@ export const GROUP_RECALCULATION_WORKFLOW = [
   '          if [ "$GITHUB_EVENT_NAME" = "push" ]; then',
   '            npm run job --workspace=@fantazone/jobs -- snapshot-formations',
   '            npm run job --workspace=@fantazone/jobs -- process-market',
+  '            npm run job --workspace=@fantazone/jobs -- process-auction-outcomes',
   '          else',
   '            npm run job --workspace=@fantazone/jobs -- "$FANTAZONE_JOB" "$FANTAZONE_DAY" "$FANTAZONE_SEASON"',
   '          fi',
