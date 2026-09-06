@@ -268,16 +268,18 @@ export class BrowserAuctionParticipantConnectionCoordinator {
     this.stopPolling()
     this.clearDisconnectTimer()
     this.signaling.close()
-    this.currentTransport?.close?.()
+    const transport = this.currentTransport
     this.currentTransport = null
     this.realtime = null
+    transport?.close?.()
   }
 
   private async performRestart(): Promise<number> {
     this.clearDisconnectTimer()
-    this.currentTransport?.close?.()
+    const previousTransport = this.currentTransport
     this.currentTransport = null
     this.realtime = null
+    previousTransport?.close?.()
     const next = this.createNegotiator()
     this.currentNegotiator = next
     const generation = await this.signaling.restart(next)
