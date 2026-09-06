@@ -23,7 +23,7 @@ const teams = Array.from({ length: TEAM_COUNT }, (_, index) => ({
 
 const roles = ['p', 'd', 'c', 'a'] as const
 const playersHtml = `<table>${teams.map((team, index) =>
-  `<tr class="player-row"><span>Player ${String(index + 1).padStart(2, '0')}</span><td class="player-team">${team.abbreviation}</td><span class="role" data-value="${roles[index % roles.length]}"></span></tr>`,
+  `<tr class="player-row"><span>Player ${String.fromCharCode(65 + index)}</span><td class="player-team">${team.abbreviation}</td><span class="role" data-value="${roles[index % roles.length]}"></span></tr>`,
 ).join('')}</table>`
 
 test('bootstraps calendar, master data and initial stats in dependency order', async () => {
