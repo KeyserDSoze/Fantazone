@@ -61,7 +61,7 @@
 - [~] Statistics/chances/votes: deterministic reducers + producers implemented; production data bootstrap/validation remains pending.
 - [x] Market persistence/commands: append-only client commands + canonical group Action reducer with legacy voting/execution/expiry parity.
 - [x] Hall of Fame readable cross-season reducer/repository + group-owned rebuild Action; legacy TODO player-record fields remain intentionally null.
-- [~] Auction: readable V1 host reducer, outcomes, GitHub slow signaling, browser RTCPeerConnection/DataChannel/reconnect and structural native WebRTC bridge implemented; native package/prebuild integration, TURN and UI/finalization remain pending.
+- [~] Auction: readable V1 host reducer, outcomes, GitHub slow signaling, browser RTCPeerConnection/DataChannel/reconnect and native WebRTC bridge/runtime dependency implemented; native build validation, TURN and UI/finalization remain pending.
 
 ## Infrastructure backlog
 
@@ -98,7 +98,7 @@
 - [x] GitHub signaling + browser offer/answer + ordered DataChannel adapter + host/participant realtime wiring implemented with tests.
 - [x] timer/bid/idempotency/sequence-gap recovery, checkpoint resync and browser connection-state reconnect generation implemented.
 - [x] canonical roster assignment crosses an append-only outcome boundary and is revalidated by the serialized group Action.
-- [~] native iOS/Android RTCPeerConnection bridge implemented/tested structurally; install/configure `react-native-webrtc` + Expo config plugin in a native dev build remains pending.
+- [~] native iOS/Android RTCPeerConnection bridge + `react-native-webrtc@124.0.8` runtime import implemented; Expo dev-client/prebuild/device validation remains pending. Expo-57 config-plugin support is not yet declared upstream, so no unsupported config plugin is committed.
 - [ ] production TURN credential strategy for restrictive NAT/firewall networks.
 - [ ] Auction screens/UI and final end-to-end device validation.
 
