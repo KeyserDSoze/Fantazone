@@ -31,7 +31,7 @@ const SEASON = 15
 const BUYER = 'buyer@example.com'
 const SELLER = 'seller@example.com'
 
- test('processes an append-only command using its Git commit time and writes canonical teams/state/result', async () => {
+test('processes an append-only command using its Git commit time and writes canonical teams/state/result', async () => {
   const root = await fixture(MarketType.WithoutVote)
   const command = createCommand()
   const commandPath = marketCommandDocumentPath('league', SEASON, command.id)
@@ -52,6 +52,33 @@ const SELLER = 'seller@example.com'
   const state = await readJson<MarketWrapper>(join(root, marketDocumentPath('league', SEASON)))
   assert.equal(state.markets[0].creationTime, '2026-09-06T10:00:00.000Z')
   assert.equal(state.markets[0].status, MarketStatus.Approved)
+  assert.equal((await readJson<Team>(join(root, seasonTeamDocumentPath('main', SEASON, BUYER)))).players[0].name, 'Seller Forward')
+  assert.equal((await readJson<Team>(join(root, seasonTeamDocumentPath('main', SEASON, SELLER)))).players[0].name, 'Buyer Forward')
+})
+
+test('later commands in the same Action see team mutations from earlier commands', async () => {
+  const root = await fixture(MarketType.WithoutVote)
+  const first = createCommand()
+  const firstPath = marketCommandDocumentPath('league', SEASON, first.id)
+  await writeJson(join(root, firstPath), first)
+  git(root, 'add', firstPath)
+  commit(root, 'first market command', '2026-09-06T10:00:00Z')
+
+  const second: MarketCommand = { ...createCommand(), id: 'command-2' }
+  const secondPath = marketCommandDocumentPath('league', SEASON, second.id)
+  await writeJson(join(root, secondPath), second)
+  git(root, 'add', secondPath)
+  commit(root, 'second market command', '2026-09-06T10:01:00Z')
+
+  const result = await processGroupMarket({ groupRepoRoot: root, season: SEASON, now: new Date('2026-09-06T12:00:00Z') })
+
+  assert.equal(result.processedCommands, 2)
+  assert.equal(result.appliedCommands, 1)
+  assert.equal(result.rejectedCommands, 1)
+  assert.equal((await readJson<MarketCommand>(join(root, firstPath))).result?.marketStatus, MarketStatus.Approved)
+  const rejected = await readJson<MarketCommand>(join(root, secondPath))
+  assert.equal(rejected.status, 'rejected')
+  assert.match(rejected.result?.message ?? '', /giocatori non sono disponibili/i)
   assert.equal((await readJson<Team>(join(root, seasonTeamDocumentPath('main', SEASON, BUYER)))).players[0].name, 'Seller Forward')
   assert.equal((await readJson<Team>(join(root, seasonTeamDocumentPath('main', SEASON, SELLER)))).players[0].name, 'Buyer Forward')
 })
