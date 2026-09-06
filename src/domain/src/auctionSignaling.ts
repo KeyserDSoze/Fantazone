@@ -34,6 +34,7 @@ export type AuctionSessionDescriptionSignal = {
   auctionId: string
   sessionId: string
   peerId: string
+  generation: number
   kind: 'offer' | 'answer'
   description: AuctionSessionDescription
   createdAt: string
@@ -100,6 +101,7 @@ export function upsertAuctionSignalingPeer(
 export function createAuctionSessionDescriptionSignal(input: {
   room: AuctionSignalingRoom
   peerId: string
+  generation: number
   kind: 'offer' | 'answer'
   sdp: string
   now?: Date
@@ -107,11 +109,15 @@ export function createAuctionSessionDescriptionSignal(input: {
   validateAuctionSignalingRoom(input.room)
   const peerId = required(input.peerId, 'Peer id')
   const sdp = required(input.sdp, 'SDP')
+  if (!Number.isInteger(input.generation) || input.generation < 1) {
+    throw new Error('Signaling generation must be a positive integer')
+  }
   return {
     version: 1,
     auctionId: input.room.auctionId,
     sessionId: input.room.sessionId,
     peerId,
+    generation: input.generation,
     kind: input.kind,
     description: { type: input.kind, sdp },
     createdAt: (input.now ?? new Date()).toISOString(),
@@ -158,6 +164,7 @@ export function validateAuctionSessionDescriptionSignal(signal: AuctionSessionDe
   required(signal.auctionId, 'Auction id')
   required(signal.sessionId, 'Session id')
   required(signal.peerId, 'Peer id')
+  if (!Number.isInteger(signal.generation) || signal.generation < 1) throw new Error('Invalid signaling generation')
   if (signal.kind !== 'offer' && signal.kind !== 'answer') throw new Error('Invalid signaling description kind')
   if (signal.description?.type !== signal.kind) throw new Error('SDP type does not match signaling kind')
   required(signal.description.sdp, 'SDP')
