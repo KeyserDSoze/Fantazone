@@ -6,6 +6,7 @@ import {
   type RealCalendar,
 } from '@fantazone/domain'
 import {
+  GROUP_RECALCULATION_WORKFLOW_PATH,
   dayTeamDocumentPath,
   realCalendarDocumentPath,
 } from '@fantazone/github'
@@ -27,7 +28,7 @@ export type FormationSnapshotSource = {
 export type SnapshotSavedFormationsOptions = {
   groupRepoRoot: string
   platformRepoRoot: string
-  /** GitHub push `before` SHA. Used only to seed a repository that has no cursor yet. */
+  /** GitHub push `before` SHA. Used only as a final fallback when no v3 runtime marker exists. */
   fallbackBefore?: string
   now?: Date
 }
@@ -202,12 +203,27 @@ function resolveBaseline(
     return cursor.processedThroughCommit
   }
 
+  // The managed runtime workflow is updated to v3 before it can observe season-Team
+  // pushes. Its install commit is therefore the safest first cursor: every relevant
+  // save is after it, while historical TeamDay state from older runtimes is ignored.
+  const runtimeInstallCommit = lastPathCommit(root, GROUP_RECALCULATION_WORKFLOW_PATH)
+  if (runtimeInstallCommit && isAncestor(root, runtimeInstallCommit, head)) return runtimeInstallCommit
+
   const fallback = fallbackBefore?.trim()
   if (!fallback || /^0+$/.test(fallback) || !isAncestor(root, fallback, head)) return parentOf(root, head)
 
   // Include the `before` commit itself. On a normal RepositoryRevision write the
   // stable-manifest push has the Team commit as its `before` SHA.
   return parentOf(root, fallback)
+}
+
+function lastPathCommit(root: string, path: string): string | null {
+  try {
+    const value = gitLine(root, 'log', '-1', '--format=%H', '--', path)
+    return value || null
+  } catch {
+    return null
+  }
 }
 
 function listCommits(root: string, baseline: string | null, head: string): string[] {
