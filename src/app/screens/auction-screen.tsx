@@ -22,6 +22,7 @@ import {
   BrowserAuctionHostConnectionCoordinator,
   BrowserAuctionParticipantConnectionCoordinator,
 } from '../services/auctionBrowserConnection'
+import { remainingAuctionSeconds } from '../services/auctionCountdown'
 import { GroupAuctionRealtimeHostController } from '../services/auctionRealtimeSession'
 import { createAuctionPlatformNegotiatorFactory } from '../services/auctionRtcPlatform'
 import type { GroupAuctionHostSession } from '../services/groupAuctionHostSession'
@@ -41,6 +42,7 @@ type AuctionLiveView = {
   sequence: number
   currentRole: Role
   secondsPerAuction: number
+  biddingStartedAt: string | null
   playerName: string | null
   playerTeam: string | null
   price: number
@@ -54,6 +56,8 @@ const ROLE_LABELS: Record<Role.GoalKeeper | Role.Defensor | Role.Midfielder | Ro
   [Role.Midfielder]: 'Centrocampisti',
   [Role.Forward]: 'Attaccanti',
 }
+
+const TIMER_PRESETS = [5, 10, 15, 20, 30] as const
 
 export function AuctionScreen({ runtime, session, onBack }: Props) {
   const season = getCurrentSeasonYear()
@@ -77,6 +81,7 @@ export function AuctionScreen({ runtime, session, onBack }: Props) {
   const [myPlayers, setMyPlayers] = useState<Player[]>([])
   const [substitutedPlayerKey, setSubstitutedPlayerKey] = useState<string | null>(null)
   const [lastMessage, setLastMessage] = useState<string | null>(null)
+  const [clockNow, setClockNow] = useState(() => Date.now())
 
   const hostConnection = useRef<BrowserAuctionHostConnectionCoordinator | null>(null)
   const participantConnection = useRef<BrowserAuctionParticipantConnectionCoordinator | null>(null)
@@ -89,14 +94,29 @@ export function AuctionScreen({ runtime, session, onBack }: Props) {
 
   useEffect(() => {
     void refreshActiveAuction()
-    return () => closeRealtime()
-    // The runtime and selected league define the discovery scope; closeRealtime is intentionally cleanup-only.
+    return () => closeRealtime(false)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [leagueId, runtime])
 
   useEffect(() => {
     setSubstitutedPlayerKey(null)
   }, [view?.currentRole, checkpoint?.kind])
+
+  useEffect(() => {
+    if (!view?.playerName) return
+    setBidText(String(Math.max(1, view.price + 1)))
+  }, [view?.playerName, view?.price])
+
+  useEffect(() => {
+    if (!view?.biddingStartedAt) return
+    setClockNow(Date.now())
+    const timer = setInterval(() => setClockNow(Date.now()), 250)
+    return () => clearInterval(timer)
+  }, [view?.biddingStartedAt, view?.secondsPerAuction])
+
+  const remainingSeconds = view
+    ? remainingAuctionSeconds(view.biddingStartedAt, view.secondsPerAuction, new Date(clockNow))
+    : null
 
   async function refreshActiveAuction() {
     if (!leagueId || mode !== 'none') return
@@ -343,15 +363,17 @@ export function AuctionScreen({ runtime, session, onBack }: Props) {
     }
   }
 
-  function closeRealtime() {
+  function closeRealtime(updateUi = true) {
     hostConnection.current?.close()
     participantConnection.current?.close()
     hostConnection.current = null
     participantConnection.current = null
     realtimeHost.current = null
-    setMode('none')
-    setRealtimeReady(false)
-    setConnectionLabel('Non connesso')
+    if (updateUi) {
+      setMode('none')
+      setRealtimeReady(false)
+      setConnectionLabel('Non connesso')
+    }
   }
 
   const substitutionCandidates = useMemo(() => {
@@ -405,37 +427,22 @@ export function AuctionScreen({ runtime, session, onBack }: Props) {
         {loading ? <Spinner size="large" /> : null}
 
         {!checkpoint ? (
-          <Card borderWidth={1} borderColor="$borderColor" padding="$4">
-            <YStack gap="$3">
-              <H2 size="$6">Nessuna asta attiva</H2>
-              <Paragraph>I partecipanti vedranno automaticamente l’asta quando un Admin la crea per questa lega.</Paragraph>
-              {canHost ? (
-                <>
-                  <Text fontWeight="700">Tipo ordinamento</Text>
-                  <XStack gap="$2" flexWrap="wrap">
-                    {([
-                      [AuctionType.Normal, 'Normale'],
-                      [AuctionType.RandomByLetter, 'Lettera casuale'],
-                      [AuctionType.RandomList, 'Lista casuale'],
-                    ] as const).map(([value, label]) => (
-                      <Button key={value} theme={auctionType === value ? 'accent' : undefined} onPress={() => setAuctionType(value)}>
-                        {label}
-                      </Button>
-                    ))}
-                  </XStack>
-                  <Text fontWeight="700">Tipo asta</Text>
-                  <XStack gap="$2" flexWrap="wrap">
-                    <Button theme={auctionKind === AuctionKind.Starting ? 'accent' : undefined} onPress={() => setAuctionKind(AuctionKind.Starting)}>Iniziale</Button>
-                    <Button theme={auctionKind === AuctionKind.Repairing ? 'accent' : undefined} onPress={() => setAuctionKind(AuctionKind.Repairing)}>Riparazione</Button>
-                  </XStack>
-                  <Button theme="accent" disabled={loading} onPress={createAuction}>Crea e ospita asta</Button>
-                </>
-              ) : null}
-            </YStack>
-          </Card>
+          <CreateAuctionCard
+            canHost={canHost}
+            loading={loading}
+            auctionType={auctionType}
+            auctionKind={auctionKind}
+            onType={setAuctionType}
+            onKind={setAuctionKind}
+            onCreate={createAuction}
+          />
         ) : (
           <>
-            <AuctionStateCard checkpoint={checkpoint} view={view ?? liveViewFromCheckpoint(checkpoint)} />
+            <AuctionStateCard
+              checkpoint={checkpoint}
+              view={view ?? liveViewFromCheckpoint(checkpoint)}
+              remainingSeconds={remainingSeconds}
+            />
 
             {mode === 'none' ? (
               <Card borderWidth={1} borderColor="$borderColor" padding="$4">
@@ -450,33 +457,16 @@ export function AuctionScreen({ runtime, session, onBack }: Props) {
             ) : null}
 
             {view?.playerName && view.status !== AuctionStatus.Finished && mode !== 'none' ? (
-              <Card borderWidth={1} borderColor="$green8" padding="$4">
-                <YStack gap="$3">
-                  <H2 size="$6">Fai un’offerta</H2>
-                  <XStack gap="$2" alignItems="center" flexWrap="wrap">
-                    <Input width={140} keyboardType="number-pad" value={bidText} onChangeText={setBidText} />
-                    <Button theme="accent" disabled={mode === 'participant' && !realtimeReady} onPress={sendBid}>Offri</Button>
-                  </XStack>
-                  {checkpoint.kind === AuctionKind.Repairing ? (
-                    <YStack gap="$2">
-                      <Text fontWeight="700">Giocatore da sostituire (opzionale)</Text>
-                      {substitutionCandidates.length ? (
-                        <XStack gap="$2" flexWrap="wrap">
-                          <Button size="$3" theme={substitutedPlayerKey === null ? 'accent' : undefined} onPress={() => setSubstitutedPlayerKey(null)}>Nessuno</Button>
-                          {substitutionCandidates.map(player => {
-                            const key = getPlayerKey(player.name)
-                            return (
-                              <Button key={key} size="$3" theme={substitutedPlayerKey === key ? 'accent' : undefined} onPress={() => setSubstitutedPlayerKey(key)}>
-                                {player.name}
-                              </Button>
-                            )
-                          })}
-                        </XStack>
-                      ) : <Paragraph size="$2">Non hai giocatori attivi di questo ruolo da sostituire.</Paragraph>}
-                    </YStack>
-                  ) : null}
-                </YStack>
-              </Card>
+              <BidCard
+                bidText={bidText}
+                onBidText={setBidText}
+                onBid={sendBid}
+                disabled={mode === 'participant' && !realtimeReady}
+                repairing={checkpoint.kind === AuctionKind.Repairing}
+                substitutionCandidates={substitutionCandidates}
+                substitutedPlayerKey={substitutedPlayerKey}
+                onSubstitution={setSubstitutedPlayerKey}
+              />
             ) : null}
 
             {mode === 'host' && canHost ? (
@@ -494,7 +484,57 @@ export function AuctionScreen({ runtime, session, onBack }: Props) {
   )
 }
 
-function AuctionStateCard({ checkpoint, view }: { checkpoint: AuctionCheckpoint; view: AuctionLiveView }) {
+function CreateAuctionCard(props: {
+  canHost: boolean
+  loading: boolean
+  auctionType: AuctionType
+  auctionKind: AuctionKind
+  onType: (value: AuctionType) => void
+  onKind: (value: AuctionKind) => void
+  onCreate: () => void
+}) {
+  return (
+    <Card borderWidth={1} borderColor="$borderColor" padding="$4">
+      <YStack gap="$3">
+        <H2 size="$6">Nessuna asta attiva</H2>
+        <Paragraph>I partecipanti vedranno automaticamente l’asta quando un Admin la crea per questa lega.</Paragraph>
+        {props.canHost ? (
+          <>
+            <Text fontWeight="700">Tipo ordinamento</Text>
+            <XStack gap="$2" flexWrap="wrap">
+              {([
+                [AuctionType.Normal, 'Normale'],
+                [AuctionType.RandomByLetter, 'Lettera casuale'],
+                [AuctionType.RandomList, 'Lista casuale'],
+              ] as const).map(([value, label]) => (
+                <Button key={value} theme={props.auctionType === value ? 'accent' : undefined} onPress={() => props.onType(value)}>
+                  {label}
+                </Button>
+              ))}
+            </XStack>
+            <Text fontWeight="700">Tipo asta</Text>
+            <XStack gap="$2" flexWrap="wrap">
+              <Button theme={props.auctionKind === AuctionKind.Starting ? 'accent' : undefined} onPress={() => props.onKind(AuctionKind.Starting)}>Iniziale</Button>
+              <Button theme={props.auctionKind === AuctionKind.Repairing ? 'accent' : undefined} onPress={() => props.onKind(AuctionKind.Repairing)}>Riparazione</Button>
+            </XStack>
+            <Button theme="accent" disabled={props.loading} onPress={props.onCreate}>Crea e ospita asta</Button>
+          </>
+        ) : null}
+      </YStack>
+    </Card>
+  )
+}
+
+function AuctionStateCard({ checkpoint, view, remainingSeconds }: {
+  checkpoint: AuctionCheckpoint
+  view: AuctionLiveView
+  remainingSeconds: number | null
+}) {
+  const timerLabel = view.biddingStartedAt === null
+    ? `${view.secondsPerAuction}s · parte alla prima offerta`
+    : remainingSeconds === 0
+      ? 'tempo scaduto · host in chiusura'
+      : `${remainingSeconds ?? view.secondsPerAuction}s rimanenti`
   return (
     <Card borderWidth={1} borderColor="$blue8" padding="$4">
       <YStack gap="$2">
@@ -506,10 +546,52 @@ function AuctionStateCard({ checkpoint, view }: { checkpoint: AuctionCheckpoint;
         <Text>Ruolo: {roleLabel(view.currentRole)}</Text>
         <Text>Prezzo: {view.price}</Text>
         <Text>Offerta migliore: {view.ownerName ?? view.ownerEmail ?? '—'}</Text>
-        <Text>Timer: {view.secondsPerAuction}s · Stato: {statusLabel(view.status)}</Text>
+        <Text>Timer: {timerLabel}</Text>
+        <Text>Stato: {statusLabel(view.status)}</Text>
         <Text fontSize="$2" color="$color9">
           Asta {checkpoint.kind === AuctionKind.Starting ? 'iniziale' : 'di riparazione'} · {checkpoint.type === AuctionType.Normal ? 'ordine normale' : checkpoint.type === AuctionType.RandomByLetter ? 'lettera casuale' : 'lista casuale'}
         </Text>
+      </YStack>
+    </Card>
+  )
+}
+
+function BidCard(props: {
+  bidText: string
+  onBidText: (value: string) => void
+  onBid: () => void
+  disabled: boolean
+  repairing: boolean
+  substitutionCandidates: Player[]
+  substitutedPlayerKey: string | null
+  onSubstitution: (key: string | null) => void
+}) {
+  return (
+    <Card borderWidth={1} borderColor="$green8" padding="$4">
+      <YStack gap="$3">
+        <H2 size="$6">Fai un’offerta</H2>
+        <XStack gap="$2" alignItems="center" flexWrap="wrap">
+          <Input width={140} keyboardType="number-pad" value={props.bidText} onChangeText={props.onBidText} />
+          <Button theme="accent" disabled={props.disabled} onPress={props.onBid}>Offri</Button>
+        </XStack>
+        {props.repairing ? (
+          <YStack gap="$2">
+            <Text fontWeight="700">Giocatore da sostituire (opzionale)</Text>
+            {props.substitutionCandidates.length ? (
+              <XStack gap="$2" flexWrap="wrap">
+                <Button size="$3" theme={props.substitutedPlayerKey === null ? 'accent' : undefined} onPress={() => props.onSubstitution(null)}>Nessuno</Button>
+                {props.substitutionCandidates.map(player => {
+                  const key = getPlayerKey(player.name)
+                  return (
+                    <Button key={key} size="$3" theme={props.substitutedPlayerKey === key ? 'accent' : undefined} onPress={() => props.onSubstitution(key)}>
+                      {player.name}
+                    </Button>
+                  )
+                })}
+              </XStack>
+            ) : <Paragraph size="$2">Non hai giocatori attivi di questo ruolo da sostituire.</Paragraph>}
+          </YStack>
+        ) : null}
       </YStack>
     </Card>
   )
@@ -526,13 +608,30 @@ function HostControls({ checkpoint, actor, onCommand, onArchive }: {
       <YStack gap="$3">
         <H2 size="$6">Controlli host</H2>
         {checkpoint.status !== AuctionStatus.Finished ? (
-          <XStack gap="$2" flexWrap="wrap">
-            {auctionRoles().map(role => (
-              <Button key={role} onPress={() => onCommand(makeCommand(checkpoint.id, actor, { type: 'SHOW_PLAYER', role }))}>
-                Prossimo {ROLE_LABELS[role]}
-              </Button>
-            ))}
-          </XStack>
+          <>
+            <YStack gap="$2">
+              <Text fontWeight="700">Timer</Text>
+              <XStack gap="$2" flexWrap="wrap">
+                {TIMER_PRESETS.map(seconds => (
+                  <Button
+                    key={seconds}
+                    size="$3"
+                    theme={checkpoint.secondsPerAuction === seconds ? 'accent' : undefined}
+                    onPress={() => onCommand(makeCommand(checkpoint.id, actor, { type: 'SET_TIMER', seconds }))}
+                  >
+                    {seconds}s
+                  </Button>
+                ))}
+              </XStack>
+            </YStack>
+            <XStack gap="$2" flexWrap="wrap">
+              {auctionRoles().map(role => (
+                <Button key={role} onPress={() => onCommand(makeCommand(checkpoint.id, actor, { type: 'SHOW_PLAYER', role }))}>
+                  Prossimo {ROLE_LABELS[role]}
+                </Button>
+              ))}
+            </XStack>
+          </>
         ) : null}
         <XStack gap="$2" flexWrap="wrap">
           {checkpoint.status !== AuctionStatus.Finished ? (
@@ -565,6 +664,7 @@ function liveViewFromCheckpoint(checkpoint: AuctionCheckpoint): AuctionLiveView 
     sequence: checkpoint.sequence,
     currentRole: checkpoint.current?.player.role ?? checkpoint.currentRole,
     secondsPerAuction: checkpoint.secondsPerAuction,
+    biddingStartedAt: checkpoint.current?.biddingStartedAt ?? null,
     playerName: checkpoint.current?.player.name ?? null,
     playerTeam: checkpoint.current?.player.team.name ?? null,
     price: checkpoint.current?.price ?? 0,
@@ -579,6 +679,7 @@ function applyAuctionEvent(current: AuctionLiveView | null, event: AuctionEvent)
     sequence: 0,
     currentRole: Role.GoalKeeper,
     secondsPerAuction: 10,
+    biddingStartedAt: null,
     playerName: null,
     playerTeam: null,
     price: 0,
@@ -592,6 +693,7 @@ function applyAuctionEvent(current: AuctionLiveView | null, event: AuctionEvent)
         ...next,
         status: AuctionStatus.InProgress,
         currentRole: Number(event.data.role) as Role,
+        biddingStartedAt: null,
         playerName: String(event.data.playerName ?? ''),
         playerTeam: null,
         price: 0,
@@ -601,13 +703,22 @@ function applyAuctionEvent(current: AuctionLiveView | null, event: AuctionEvent)
     case 'BID_ACCEPTED':
       return {
         ...next,
+        biddingStartedAt: event.hostTime,
         price: Number(event.data.amount ?? next.price),
         ownerEmail: String(event.data.bidderEmail ?? '') || null,
         ownerName: String(event.data.bidderName ?? '') || null,
       }
     case 'PLAYER_ASSIGNED':
     case 'CURRENT_CLOSED':
-      return { ...next, playerName: null, playerTeam: null, price: 0, ownerEmail: null, ownerName: null }
+      return {
+        ...next,
+        biddingStartedAt: null,
+        playerName: null,
+        playerTeam: null,
+        price: 0,
+        ownerEmail: null,
+        ownerName: null,
+      }
     case 'ROLE_CHANGED':
       return { ...next, currentRole: Number(event.data.role) as Role }
     case 'TIMER_CHANGED':
