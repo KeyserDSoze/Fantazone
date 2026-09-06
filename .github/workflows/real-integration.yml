@@ -1,0 +1,44 @@
+name: Real integration
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '37 4 * * 1'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fantazone-real-integration
+  cancel-in-progress: false
+
+jobs:
+  github:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Check integration secret
+        id: integration_secret
+        shell: bash
+        env:
+          FANTAZONE_TEST_PAT: ${{ secrets.FANTAZONE_TEST_PAT }}
+        run: |
+          if [ -n "$FANTAZONE_TEST_PAT" ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "FANTAZONE_TEST_PAT is not configured; real GitHub integration is skipped."
+          fi
+      - uses: actions/setup-node@v6
+        if: steps.integration_secret.outputs.available == 'true'
+        with:
+          node-version: 22
+      - name: Install workspace dependencies
+        if: steps.integration_secret.outputs.available == 'true'
+        run: npm install
+      - name: Run real GitHub integration
+        if: steps.integration_secret.outputs.available == 'true'
+        env:
+          FANTAZONE_TEST_PAT: ${{ secrets.FANTAZONE_TEST_PAT }}
+          FANTAZONE_TEST_REPOSITORY: ${{ vars.FANTAZONE_TEST_REPOSITORY || 'KeyserDSoze/Fantazone.IntegrationTests' }}
+        run: npm run test:integration:github
