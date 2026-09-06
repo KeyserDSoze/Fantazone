@@ -31,8 +31,16 @@ The PKCE login requests `Files.ReadWrite.AppFolder` in addition to OpenID profil
 
 ## Branding
 
-The product display name is now `fanta.plus`, with the black/yellow hornet-football brand mark under `src/app/public/brand/`. The supplied raster artwork remains the visual source of truth for the final native launcher icon set; native PNG launcher assets are tracked as a follow-up because GitHub's text contents API cannot safely upload the supplied binary files from this chat connection.
+The product display name is `fanta.plus`. The supplied black/yellow hornet-football artwork is the visual source for the installed launcher assets:
+
+- `src/app/assets/icon.png` for the Expo/iOS application icon;
+- `src/app/assets/adaptive-icon.png` as the Android adaptive foreground over `#FFD100`;
+- `src/app/assets/favicon.png` for the web build;
+- `src/app/public/apple-touch-icon.png` and `src/app/public/favicon.png` for static web consumers;
+- `src/app/public/brand/logo.svg` for the login wordmark.
+
+`app.json` wires the icon, iOS icon, Android adaptive icon and web favicon so Expo produces the correct platform metadata from one checked-in brand set.
 
 ## Native auth follow-up
 
-The current Microsoft OAuth adapter remains web-oriented (`https://fanta.plus` redirect). Expo configuration now declares the `fantaplus` scheme; iOS/Android deep-link OAuth wiring must be completed before native Microsoft login is considered production-ready.
+The current Microsoft OAuth adapter remains web-oriented (`https://fanta.plus` redirect). Expo configuration declares the `fantaplus` scheme; iOS/Android deep-link OAuth wiring must be completed before native Microsoft login is considered production-ready.
