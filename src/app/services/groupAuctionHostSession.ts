@@ -128,8 +128,9 @@ export class GroupAuctionHostSession {
 
   /**
    * Durable ordering is checkpoint first, assignment outcome second. Bids return
-   * immediately without Git writes. Outcome create-only conflicts are tolerated only
-   * when the repository already contains the exact same assignment event.
+   * immediately without Git writes. Outcome create-only conflicts are tolerated when
+   * the existing document represents the same request, even if the Action already
+   * moved it from pending to applied/rejected while a client retry was in flight.
    */
   async persistDurableResult(result: GroupAuctionDispatchResult): Promise<GroupAuctionDurabilityResult> {
     if (!isAuctionDurableBoundary(result)) return { checkpoint: null, assignmentOutcome: null }
@@ -147,7 +148,7 @@ export class GroupAuctionHostSession {
         result.assignmentOutcome.sequence,
         { refresh: true },
       )
-      if (!existing || !sameJson(existing.value, result.assignmentOutcome)) throw error
+      if (!existing || !sameAssignmentRequest(existing.value, result.assignmentOutcome)) throw error
       return { checkpoint, assignmentOutcome: existing }
     }
   }
@@ -178,6 +179,17 @@ function cloneJson<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T
 }
 
-function sameJson(left: unknown, right: unknown): boolean {
-  return JSON.stringify(left) === JSON.stringify(right)
+function sameAssignmentRequest(left: AuctionAssignmentOutcome, right: AuctionAssignmentOutcome): boolean {
+  return left.version === right.version &&
+    left.auctionId === right.auctionId &&
+    left.sequence === right.sequence &&
+    left.leagueId === right.leagueId &&
+    left.season === right.season &&
+    left.kind === right.kind &&
+    left.actor === right.actor &&
+    left.owner === right.owner &&
+    left.playerKey === right.playerKey &&
+    left.price === right.price &&
+    left.substitutedPlayerKey === right.substitutedPlayerKey &&
+    left.assignedAt === right.assignedAt
 }
