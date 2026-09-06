@@ -198,7 +198,11 @@ export default function App() {
                 </Card>
               ) : null}
               {error ? <Card margin="$4" padding="$3" borderWidth={1} borderColor="$red8"><Text>{error}</Text></Card> : null}
-              <GroupConnectScreen onConnected={connectAndRemember} onExploreDemo={() => setView('architecture')} />
+              <GroupConnectScreen
+                onConnected={connectAndRemember}
+                onExploreDemo={() => setView('architecture')}
+                defaultCreatorEmail={microsoftSession.identity.email}
+              />
             </YStack>
           ) : settings ? (
             <GroupPickerScreen
