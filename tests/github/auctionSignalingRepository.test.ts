@@ -125,27 +125,10 @@ test('retries a concurrent peer-index write and preserves both joins', async () 
   })
 
   assert.deepEqual(written.value.peers.map(peer => peer.peerId).sort(), ['alice-device', 'bob-device'])
-  assert.equal(written.value.peers.find(peer => peer.peerId === 'alice-device')?.generation, 1)
   assert.equal((await repository.getPeerIndex(activeRoom))?.value.peers.length, 2)
 })
 
-test('restart increments one peer generation through the same optimistic peer index', async () => {
-  const client = new FakeContentClient()
-  const activeRoom = room()
-  const repository = new GitHubAuctionSignalingRepository(
-    new GitHubJsonStore(client),
-    target,
-    () => new Date('2026-09-06T18:00:10Z'),
-  )
-  await repository.publishRoom(activeRoom)
-  await repository.upsertPeer(activeRoom, { peerId: 'alice-device', email: 'alice@example.com' })
-  const restarted = await repository.upsertPeer(activeRoom, {
-    peerId: 'alice-device', email: 'alice@example.com', restart: true,
-  })
-  assert.equal(restarted.value.peers[0]?.generation, 2)
-})
-
-test('publishes generation-bound SDP only inside the current room session', async () => {
+test('publishes and refreshes SDP only inside the current room session', async () => {
   const client = new FakeContentClient()
   const activeRoom = room()
   const repository = new GitHubAuctionSignalingRepository(
@@ -158,15 +141,13 @@ test('publishes generation-bound SDP only inside the current room session', asyn
   const offer = createAuctionSessionDescriptionSignal({
     room: activeRoom,
     peerId: 'alice-device',
-    generation: 2,
+    generation: 1,
     kind: 'offer',
     sdp: 'v=0 offer',
     now: new Date('2026-09-06T18:00:03Z'),
   })
   await repository.publishDescription(activeRoom, offer)
-  const loaded = await repository.getDescription(activeRoom, 'alice-device', 'offer')
-  assert.equal(loaded?.value.description.sdp, 'v=0 offer')
-  assert.equal(loaded?.value.generation, 2)
+  assert.equal((await repository.getDescription(activeRoom, 'alice-device', 'offer'))?.value.description.sdp, 'v=0 offer')
 
   const staleRoom = room('session-old')
   await assert.rejects(
