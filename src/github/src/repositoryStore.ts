@@ -26,6 +26,25 @@ export type RepositoryJsonWriteOptions = {
   createOnly?: boolean
 }
 
+export type RepositoryJsonCacheEntry = {
+  value: unknown
+  sha: string
+}
+
+/**
+ * Optional durable cache used by applications to persist JSON snapshots across
+ * process restarts. The GitHub layer only deals in opaque cache keys so the app
+ * can choose IndexedDB, AsyncStorage, SQLite, etc. without coupling this package
+ * to one runtime.
+ */
+export interface RepositoryJsonPersistentCache {
+  get(key: string): Promise<RepositoryJsonCacheEntry | null>
+  set(key: string, entry: RepositoryJsonCacheEntry): Promise<void>
+  delete(key: string): Promise<void>
+  deleteByPrefix(prefix: string, preserveKeys?: readonly string[]): Promise<void>
+  clear(): Promise<void>
+}
+
 export interface RepositoryContentClient {
   tryGetContent(owner: string, repo: string, path: string, ref?: string): Promise<{ sha: string; content: string } | null>
   putContent(
@@ -76,7 +95,10 @@ type CacheEntry = {
 export class GitHubJsonStore {
   private readonly cache = new Map<string, CacheEntry>()
 
-  constructor(private readonly client: RepositoryContentClient) {}
+  constructor(
+    private readonly client: RepositoryContentClient,
+    private readonly persistentCache?: RepositoryJsonPersistentCache,
+  ) {}
 
   async readJson<T>(location: RepositoryJsonLocation, options: RepositoryJsonReadOptions = {}): Promise<RepositoryJsonSnapshot<T>> {
     const snapshot = await this.tryReadJson<T>(location, options)
@@ -84,16 +106,29 @@ export class GitHubJsonStore {
     return snapshot
   }
 
+  /** Returns only an in-memory/durable cache snapshot and never performs a GitHub request. */
+  async readCachedJson<T>(location: RepositoryJsonLocation): Promise<RepositoryJsonSnapshot<T> | null> {
+    const key = cacheKey(location)
+    const memory = this.cache.get(key)
+    if (memory) return snapshotFromCache<T>(memory)
+
+    const persisted = await this.safePersistentGet(key)
+    if (!persisted) return null
+    const entry: CacheEntry = { value: cloneJson(persisted.value), sha: persisted.sha }
+    this.cache.set(key, entry)
+    return snapshotFromCache<T>(entry)
+  }
+
   async tryReadJson<T>(location: RepositoryJsonLocation, options: RepositoryJsonReadOptions = {}): Promise<RepositoryJsonSnapshot<T> | null> {
     const key = cacheKey(location)
-    const cached = this.cache.get(key)
-    if (cached && !options.refresh) {
-      return { value: cloneJson(cached.value as T), sha: cached.sha, fromCache: true }
+    if (!options.refresh) {
+      const cached = await this.readCachedJson<T>(location)
+      if (cached) return cached
     }
 
     const content = await this.client.tryGetContent(location.owner, location.repo, location.path, location.ref)
     if (!content) {
-      this.cache.delete(key)
+      await this.forget(key)
       return null
     }
 
@@ -104,7 +139,8 @@ export class GitHubJsonStore {
       throw new RepositoryJsonParseError(location, error)
     }
 
-    this.cache.set(key, { value: cloneJson(value), sha: content.sha })
+    const entry: CacheEntry = { value: cloneJson(value), sha: content.sha }
+    await this.remember(key, entry)
     return { value: cloneJson(value), sha: content.sha, fromCache: false }
   }
 
@@ -134,7 +170,8 @@ export class GitHubJsonStore {
         expectedSha,
         writeLocation.ref,
       )
-      this.cache.set(key, { value: cloneJson(value), sha: result.sha })
+      const entry: CacheEntry = { value: cloneJson(value), sha: result.sha }
+      await this.remember(key, entry)
       return { value: cloneJson(value), sha: result.sha, fromCache: false }
     } catch (error) {
       const conflict = error instanceof GitHubApiError && (
@@ -142,29 +179,96 @@ export class GitHubJsonStore {
         (error.status === 422 && (Boolean(expectedSha) || options.createOnly === true))
       )
       if (conflict) {
-        this.cache.delete(key)
+        await this.forget(key)
         throw new RepositoryWriteConflictError(writeLocation, error.status, error)
       }
       throw error
     }
   }
 
-  invalidate(location?: RepositoryJsonLocation): void {
+  async invalidate(location?: RepositoryJsonLocation): Promise<void> {
     if (!location) {
       this.cache.clear()
+      await this.safePersistentClear()
       return
     }
-    this.cache.delete(cacheKey(location))
+    await this.forget(cacheKey(location))
   }
 
-  invalidateRepository(owner: string, repo: string): void {
-    const prefix = `${owner.toLowerCase()}/${repo.toLowerCase()}/`
-    for (const key of this.cache.keys()) if (key.startsWith(prefix)) this.cache.delete(key)
+  async invalidateRepository(
+    owner: string,
+    repo: string,
+    preserveLocations: readonly RepositoryJsonLocation[] = [],
+  ): Promise<void> {
+    const prefix = repositoryCachePrefix(owner, repo)
+    const preserveKeys = new Set(preserveLocations.map(cacheKey))
+    for (const key of this.cache.keys()) {
+      if (key.startsWith(prefix) && !preserveKeys.has(key)) this.cache.delete(key)
+    }
+    await this.safePersistentDeleteByPrefix(prefix, [...preserveKeys])
+  }
+
+  private async remember(key: string, entry: CacheEntry): Promise<void> {
+    const cloned: CacheEntry = { value: cloneJson(entry.value), sha: entry.sha }
+    this.cache.set(key, cloned)
+    if (!this.persistentCache) return
+    try {
+      await this.persistentCache.set(key, { value: cloneJson(cloned.value), sha: cloned.sha })
+    } catch {
+      // Durable caching is an optimization. GitHub remains the source of truth.
+    }
+  }
+
+  private async forget(key: string): Promise<void> {
+    this.cache.delete(key)
+    if (!this.persistentCache) return
+    try {
+      await this.persistentCache.delete(key)
+    } catch {
+      // Ignore storage failures; a future refresh can repopulate the cache.
+    }
+  }
+
+  private async safePersistentGet(key: string): Promise<RepositoryJsonCacheEntry | null> {
+    if (!this.persistentCache) return null
+    try {
+      const entry = await this.persistentCache.get(key)
+      if (!entry || typeof entry.sha !== 'string') return null
+      return { value: cloneJson(entry.value), sha: entry.sha }
+    } catch {
+      return null
+    }
+  }
+
+  private async safePersistentDeleteByPrefix(prefix: string, preserveKeys: readonly string[]): Promise<void> {
+    if (!this.persistentCache) return
+    try {
+      await this.persistentCache.deleteByPrefix(prefix, preserveKeys)
+    } catch {
+      // Ignore storage failures; in-memory invalidation still takes effect.
+    }
+  }
+
+  private async safePersistentClear(): Promise<void> {
+    if (!this.persistentCache) return
+    try {
+      await this.persistentCache.clear()
+    } catch {
+      // Ignore storage failures; in-memory invalidation still takes effect.
+    }
   }
 }
 
+function snapshotFromCache<T>(entry: CacheEntry): RepositoryJsonSnapshot<T> {
+  return { value: cloneJson(entry.value as T), sha: entry.sha, fromCache: true }
+}
+
 function cacheKey(location: RepositoryJsonLocation): string {
-  return `${location.owner.toLowerCase()}/${location.repo.toLowerCase()}/${location.path}@${location.ref ?? ''}`
+  return `${repositoryCachePrefix(location.owner, location.repo)}${location.path}@${location.ref ?? ''}`
+}
+
+function repositoryCachePrefix(owner: string, repo: string): string {
+  return `${owner.toLowerCase()}/${repo.toLowerCase()}/`
 }
 
 function formatLocation(location: RepositoryJsonLocation): string {
