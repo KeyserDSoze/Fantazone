@@ -7,41 +7,79 @@ on:
       - .github/workflows/bootstrap-serie-a-once.yml
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  diagnose-official-votes:
+  fix-official-votes-parser:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
         with:
           node-version: 22
-      - name: Capture current official-votes HTML contract
+      - name: Apply current Fantacalcio markup compatibility fix
         shell: bash
         run: |
-          mkdir -p src/jobs/.artifacts
-          node --input-type=module <<'NODE'
-          import fs from 'node:fs'
-          const url = 'https://www.fantacalcio.it/voti-fantacalcio-serie-a/2026-27/2'
-          const response = await fetch(url, { headers: {
-            'User-Agent': 'Mozilla/5.0 (compatible; Fantazone/1.0; +https://fanta.plus)',
-            'Accept-Language': 'it-IT,it;q=0.9,en-US;q=0.8,en;q=0.7',
-            'Cache-Control': 'no-cache',
-            'Referer': 'https://www.fantacalcio.it/'
-          }})
-          if (!response.ok) throw new Error(`HTTP ${response.status}`)
-          const html = await response.text()
-          fs.writeFileSync('src/jobs/.artifacts/official-day2.html', html)
-          const classes = [...html.matchAll(/class=["']([^"']+)["']/gi)].flatMap(m => m[1].split(/\s+/)).filter(Boolean)
-          const counts = [...new Set(classes)].map(name => [name, classes.filter(v => v === name).length]).sort((a,b) => b[1]-a[1])
-          console.log(`Captured ${html.length} bytes`)
-          console.log('Relevant class counts:')
-          for (const [name,count] of counts.filter(([name]) => /team|player|vote|rating|bonus|malus|table|row|lineup|match/i.test(name)).slice(0,100)) console.log(`${name}: ${count}`)
-          NODE
-      - name: Upload provider HTML for parser diagnosis
-        uses: actions/upload-artifact@v4
-        with:
-          name: official-votes-html-${{ github.run_id }}
-          path: src/jobs/.artifacts/official-day2.html
-          retention-days: 1
+          python <<'PY'
+          from pathlib import Path
+
+          def replace_once(text: str, old: str, new: str, label: str) -> str:
+              if text.count(old) != 1:
+                  raise SystemExit(f'{label}: expected exactly one anchor, found {text.count(old)}')
+              return text.replace(old, new, 1)
+
+          source_path = Path('src/jobs/src/officialVoteIngestion.ts')
+          source = source_path.read_text()
+          source = replace_once(
+              source,
+              "  const expectedPlayedTeams = calendarDay.games.filter(game => !game.delayed).length * 2\n  const parsedPlayedTeams = new Set(parsed.map(player => normalizeTeamName(player.team.name))).size\n",
+              "  const expectedPlayedTeams = calendarDay.games.filter(game => !game.delayed).length * 2\n  if (parsed.length === 0 && expectedPlayedTeams > 0) {\n    throw new Error(\n      `La sorgente voti ufficiali non ha restituito alcun giocatore valido per la giornata ${serieADay}; il documento canonico esistente non viene modificato.`,\n    )\n  }\n  const parsedPlayedTeams = new Set(parsed.map(player => normalizeTeamName(player.team.name))).size\n",
+              'zero-player fail-closed guard',
+          )
+          source = replace_once(
+              source,
+              "    const rawTeamName = extractAttribute(anchor.tag, 'content')\n",
+              "    const rawTeamName = extractAttribute(anchor.tag, 'content') ?? extractNestedTeamName(section)\n",
+              'nested team-name compatibility',
+          )
+          source = replace_once(
+              source,
+              "function extractPlayerName(element: string): string {\n",
+              "function extractNestedTeamName(section: string): string | null {\n  const tbodyIndex = section.search(/<tbody\\b/i)\n  const header = tbodyIndex >= 0 ? section.slice(0, tbodyIndex) : section\n  for (const meta of header.matchAll(/<meta\\b([^>]*)>/gi)) {\n    const attributes = meta[1] ?? ''\n    if (extractAttribute(attributes, 'itemprop')?.trim().toLocaleLowerCase('it-IT') !== 'name') continue\n    const content = extractAttribute(attributes, 'content')\n    if (content) return content\n  }\n  return null\n}\n\nfunction extractPlayerName(element: string): string {\n",
+              'nested team-name helper',
+          )
+          source_path.write_text(source)
+
+          test_path = Path('tests/jobs/finalVoteIngestion.test.ts')
+          tests = test_path.read_text()
+          modern_test = r'''\n\ntest('parses the current 2026/27 nested team metadata markup', () => {\n  const html = `\n    <ul class="teams my-3">\n      <li class="team-table">\n        <a class="team-name team-link">\n          <meta itemprop="name" content="Atalanta" />\n          Atalanta\n        </a>\n        <table><tbody><tr>\n          <td>\n            <div class="player-item cell">\n              <span class="role" data-value="p"></span>\n              <a class="player-name player-link"><span>Carnesecchi</span></a>\n            </div>\n          </td>\n          <td>\n            <div class="group">\n              <span class="player-grade" data-value="7"></span>\n              <span class="player-fanta-grade" data-value="7"></span>\n            </div>\n          </td>\n          <td><div class="group">\n            <span class="player-bonus" data-value="0"></span>\n            <span class="player-bonus" data-value="0"></span>\n            <span class="player-bonus" data-value="0"></span>\n            <span class="player-bonus" data-value="0"></span>\n            <span class="player-bonus" data-value="0"></span>\n            <span class="player-bonus" data-value="0"></span>\n            <span class="player-bonus" data-value="0"></span>\n            <span class="player-bonus" data-value="0"></span>\n          </div></td>\n        </tr></tbody></table>\n      </li>\n    </ul>`\n\n  const player = assertSingle(parseOfficialVotesHtml(html))\n  assert.equal(player.name, 'Carnesecchi')\n  assert.equal(player.team.name, 'Atalanta')\n  assert.equal(player.role, Role.GoalKeeper)\n  assert.equal(player.vote?.value, 7)\n  assert.equal(player.vote?.hasVote, true)\n})'''.replace('\\n', '\n')
+          tests = replace_once(
+              tests,
+              "\ntest('returns no players for missing teams markup and tolerates missing bonus cells', () => {\n",
+              modern_test + "\n\ntest('returns no players for missing teams markup and tolerates missing bonus cells', () => {\n",
+              'modern markup test',
+          )
+          fail_closed_test = r'''\n\ntest('zero-player provider output fails closed instead of persisting an empty official document', async () => {\n  const root = await mkdtemp(join(tmpdir(), 'fantazone-final-empty-provider-'))\n  await writeJson(join(root, realCalendarDocumentPath(YEAR)), calendarWithGame(false))\n\n  await assert.rejects(\n    ingestFinalVotes({\n      repoRoot: root,\n      season: YEAR,\n      day: 1,\n      now: NOW,\n      fetchText: async () => '<ul class="teams my-3"></ul>',\n    }),\n    /non ha restituito alcun giocatore valido/,\n  )\n})'''.replace('\\n', '\n')
+          tests = replace_once(
+              tests,
+              "\ntest('delayed games receive legacy default-six votes from complete RealPlayers without counting as played teams', async () => {\n",
+              fail_closed_test + "\n\ntest('delayed games receive legacy default-six votes from complete RealPlayers without counting as played teams', async () => {\n",
+              'zero-player fail-closed test',
+          )
+          test_path.write_text(tests)
+          PY
+          git rm -f --ignore-unmatch data/serie-a/votes/official/15/2.json
+      - name: Install workspace dependencies
+        run: npm install
+      - name: Typecheck application
+        run: npm run typecheck
+      - name: Run all tests
+        run: npm test
+      - name: Commit validated parser fix
+        shell: bash
+        run: |
+          git config user.name "fantazone-actions[bot]"
+          git config user.email "fantazone-actions[bot]@users.noreply.github.com"
+          git add src/jobs/src/officialVoteIngestion.ts tests/jobs/finalVoteIngestion.test.ts data/serie-a/votes/official/15/2.json
+          git commit -m "fix: adapt official votes parser to current Fantacalcio markup"
+          git push
