@@ -1,4 +1,3 @@
-import { Platform } from 'react-native'
 import { parseInviteFragment } from '@fantazone/github'
 import type { GroupInvitePayload } from '@fantazone/domain'
 
@@ -57,5 +56,5 @@ function stripInviteFragment(): void {
 }
 
 function isWebBrowser(): boolean {
-  return Platform.OS === 'web' && typeof window !== 'undefined'
+  return typeof window !== 'undefined'
 }
