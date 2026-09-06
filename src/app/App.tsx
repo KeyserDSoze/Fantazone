@@ -2,11 +2,12 @@ import React, { useEffect, useState } from 'react'
 import { AppState } from 'react-native'
 import { StatusBar } from 'expo-status-bar'
 import { Button, Card, Paragraph, Spinner, TamaguiProvider, Text, Theme, XStack, YStack } from 'tamagui'
-import type { AuthenticatedGroupSession, ExternalIdentity } from '@fantazone/domain'
+import type { AuthenticatedGroupSession, ExternalIdentity, GroupInvitePayload } from '@fantazone/domain'
 import { ensureGroupInitialized, GitHubClient } from '@fantazone/github'
 import config from './tamagui.config'
 import { GroupConnectScreen, type ConnectedGroup } from './screens/group-connect'
 import { GroupDashboardScreen } from './screens/group-dashboard'
+import { GroupInviteScreen } from './screens/group-invite'
 import { GroupPickerScreen } from './screens/group-picker'
 import { GroupReconnectScreen } from './screens/group-reconnect'
 import { LoginScreen } from './screens/login'
@@ -18,6 +19,7 @@ import {
   saveGroupConnection,
 } from './services/groupCredentialStorage'
 import { reconnectStoredGroup, shouldRecoverStoredGroupCredential } from './services/groupReconnect'
+import { clearPendingGroupInvite, loadPendingGroupInvite } from './services/pendingGroupInvite'
 import { repositoryPersistentCache } from './services/repositoryPersistentCache'
 import { GroupSessionRuntime } from './services/groupSessionRuntime'
 import {
@@ -51,6 +53,7 @@ export default function App() {
   const [settings, setSettings] = useState<UserSettings | null>(null)
   const [runtime, setRuntime] = useState<GroupSessionRuntime | null>(null)
   const [authenticatedSession, setAuthenticatedSession] = useState<AuthenticatedGroupSession | null>(null)
+  const [pendingInvite, setPendingInvite] = useState<GroupInvitePayload | null>(null)
   const [view, setView] = useState<ViewName>('groups')
   const [addingGroup, setAddingGroup] = useState(false)
   const [reconnectingGroup, setReconnectingGroup] = useState<StoredGroup | null>(null)
@@ -62,6 +65,9 @@ export default function App() {
     let active = true
     async function restoreMicrosoftSession() {
       try {
+        const invite = loadPendingGroupInvite()
+        if (active) setPendingInvite(invite)
+
         const completed = await completePendingMicrosoftAppLogin() ?? await restoreMicrosoftAppSession()
         if (!active || !completed) return
         const remoteSettings = await loadUserSettings(completed.graphAccessToken)
@@ -159,7 +165,7 @@ export default function App() {
     setLoginLoading(true)
     setError(null)
     try {
-      const completed = await beginMicrosoftAppLogin()
+      const completed = await beginMicrosoftAppLogin(pendingInvite?.email)
       if (!completed) return
       const remoteSettings = await loadUserSettings(completed.graphAccessToken)
       setMicrosoftSession(completed)
@@ -195,6 +201,38 @@ export default function App() {
     } finally {
       setLoading(false)
     }
+  }
+
+  async function joinInvitedGroup(connection: ConnectedGroup) {
+    if (!microsoftSession || !pendingInvite) throw new Error('Invito Fantazone non disponibile.')
+    if (microsoftSession.identity.email.toLowerCase() !== pendingInvite.email) {
+      throw new Error(`Questo invito è per ${pendingInvite.email}.`)
+    }
+    if (connection.repository.full_name.toLowerCase() !== pendingInvite.repository.toLowerCase()) {
+      throw new Error(`Il PAT deve aprire esattamente ${pendingInvite.repository}.`)
+    }
+
+    const session = await freshMicrosoftSession()
+    const invitedConnection: ConnectedGroup = { ...connection, expectedEmail: pendingInvite.email }
+    const opened = await openGroupConnection(invitedConnection)
+    await authorizeIdentity(opened, session.identity)
+    await saveGroupConnection(invitedConnection, credentialOwnerKey(session.identity))
+
+    const current = settings ?? emptyUserSettings()
+    const existing = current.groups.find(group => group.repository.toLowerCase() === pendingInvite.repository.toLowerCase())
+    const next = existing
+      ? current
+      : upsertStoredGroup(current, createStoredGroup({ name: pendingInvite.group, repository: pendingInvite.repository }))
+    if (!existing) await saveUserSettings(session.graphAccessToken, next)
+
+    setSettings(next)
+    setRuntime(opened)
+    setPendingInvite(null)
+    setAddingGroup(false)
+    setReconnectingGroup(null)
+    clearPendingGroupInvite()
+    setError(null)
+    setView('groups')
   }
 
   async function openStoredGroup(group: StoredGroup) {
@@ -288,6 +326,12 @@ export default function App() {
     throw new Error(`L’email ${identity.email} non è censita nel gruppo ${opened.group.name}.`)
   }
 
+  function cancelPendingInvite() {
+    clearPendingGroupInvite()
+    setPendingInvite(null)
+    setError(null)
+  }
+
   function closeGroup() {
     setRuntime(null)
     setAuthenticatedSession(null)
@@ -338,6 +382,14 @@ export default function App() {
             </YStack>
           ) : !microsoftSession ? (
             <LoginScreen loading={loginLoading} error={error} onMicrosoftLogin={loginWithMicrosoft} />
+          ) : pendingInvite ? (
+            <GroupInviteScreen
+              invite={pendingInvite}
+              identityEmail={microsoftSession.identity.email}
+              onConnected={joinInvitedGroup}
+              onCancel={cancelPendingInvite}
+              onUseAnotherAccount={logoutMicrosoft}
+            />
           ) : view === 'architecture' ? (
             <PlatformOverviewScreen onConnectGroup={() => setView('groups')} />
           ) : runtime && authenticatedSession ? (
