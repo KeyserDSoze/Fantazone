@@ -50,7 +50,7 @@ export function generatePlayerStatistics(input: {
   const settings = input.settings ?? DefaultLeagueSetting
   validateDay(untilSerieADay)
 
-  const players = realPlayers.players.map(createStatPlayer)
+  const players = realPlayers.players.map(createEmptyStatPlayer)
   for (let serieADay = untilSerieADay; serieADay > 0; serieADay -= 1) {
     const votes = officialVotesByDay.get(serieADay)
     if (votes && (votes.year !== realPlayers.year || votes.serieADay !== serieADay)) {
@@ -93,7 +93,8 @@ export const StatPlayerHelper = {
   },
 }
 
-function createStatPlayer(realPlayer: RealPlayer): StatPlayer {
+/** Builds an auction-safe StatPlayer before the first statistics snapshot exists. */
+export function createEmptyStatPlayer(realPlayer: RealPlayer): StatPlayer {
   return {
     ...cloneRealPlayer(realPlayer),
     summatory: 0,
@@ -160,43 +161,37 @@ function applyVoteToStats(
   player.assists += vote.assist
   if (vote.assist > 0) game.positiveness += 1
 
-  player.ownGoals += vote.ownGoal
-  if (vote.ownGoal > 0) game.positiveness -= 2
-
   player.goals += vote.goal
   if (vote.goal > 0) game.positiveness += 2
 
   player.wrongedPenalties += vote.wrongedPenalty
   if (vote.wrongedPenalty > 0) game.positiveness -= 2
 
-  if (vote.status === Behaviour.RedCard) {
-    player.redCards += 1
-    game.positiveness -= 2
-  }
-  if (vote.status === Behaviour.YellowCard) {
-    player.yellowCards += 1
-    game.positiveness -= 1
-  }
-  if (vote.value >= 6) {
-    player.enoughVotes += 1
-    if (player.role === Role.GoalKeeper || player.role === Role.Defensor) game.positiveness += 1
-  }
-  if (vote.manOfTheMatch) {
-    player.manOfTheMatch += 1
-    game.positiveness += 1
-  }
-  if (vote.injured) {
-    player.injured += 1
-    game.positiveness -= 2
-  }
+  player.ownGoals += vote.ownGoal
+  if (vote.ownGoal > 0) game.positiveness -= 2
 
-  player.summatory += vote.value
-  const finalValue = calculateVoteValue(player.role, vote, settings)
-  player.fantaSummatory += finalValue.value
-  if (finalValue.special) {
-    player.withSpecial += 1
-    game.positiveness += 1
+  player.yellowCards += vote.yellowCard
+  if (vote.yellowCard > 0) game.positiveness -= 1
+
+  player.redCards += vote.redCard
+  if (vote.redCard > 0) game.positiveness -= 2
+
+  player.manOfTheMatch += vote.manOfTheMatch
+  if (vote.manOfTheMatch > 0) game.positiveness += 1
+
+  player.injured += vote.injury
+  if (vote.injury > 0) game.positiveness -= 1
+
+  if (vote.behaviour === Behaviour.Normal) player.withoutVote += 1
+  else player.withSpecial += 1
+
+  const finalValue = calculateVoteValue(votedPlayer, settings)
+  if (finalValue != null) {
+    player.summatory += vote.value
+    player.fantaSummatory += finalValue
+    player.enoughVotes += vote.value >= 6 ? 1 : 0
   }
+  game.vote = finalValue
   return game
 }
 
@@ -204,8 +199,8 @@ function indexVotes(players: VotedRealPlayer[], serieADay: number): Map<string, 
   const result = new Map<string, VotedRealPlayer>()
   for (const player of players) {
     const key = getPlayerKey(player.name)
-    if (!key) throw new Error(`Invalid vote player key on Serie A day ${serieADay}`)
-    if (result.has(key)) throw new Error(`Duplicate official vote player key '${key}' on Serie A day ${serieADay}`)
+    if (!key) throw new Error(`Official vote day ${serieADay} contains a player without a stable key`)
+    if (result.has(key)) throw new Error(`Official vote day ${serieADay} contains duplicate player '${player.name}'`)
     result.set(key, player)
   }
   return result
