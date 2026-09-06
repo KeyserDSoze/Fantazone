@@ -22,7 +22,7 @@ export interface MarketRuleMarket {
   approvers: string[]
   deniers: string[]
   status: MarketStatus
-  creationTime: Date
+  creationTime: Date | string
 }
 
 export const MarketStatusHelper = {
@@ -88,11 +88,11 @@ export class MarketHelper {
   }
 
   static sortByNewest<T extends MarketRuleMarket>(markets: T[]): T[] {
-    return [...markets].sort((first, second) => second.creationTime.getTime() - first.creationTime.getTime())
+    return [...markets].sort((first, second) => marketTime(second) - marketTime(first))
   }
 
   static sortByOldest<T extends MarketRuleMarket>(markets: T[]): T[] {
-    return [...markets].sort((first, second) => first.creationTime.getTime() - second.creationTime.getTime())
+    return [...markets].sort((first, second) => marketTime(first) - marketTime(second))
   }
 
   static filterByStatus<T extends MarketRuleMarket>(markets: T[], status: MarketStatus): T[] {
@@ -125,4 +125,8 @@ export class MarketHelper {
     if (market.deniers.some(denier => denier.toLowerCase() === email)) return 'deny'
     return null
   }
+}
+
+function marketTime(market: MarketRuleMarket): number {
+  return market.creationTime instanceof Date ? market.creationTime.getTime() : Date.parse(market.creationTime)
 }
