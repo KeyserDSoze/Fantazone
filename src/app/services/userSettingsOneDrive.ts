@@ -48,6 +48,16 @@ export function upsertStoredGroup(settings: UserSettings, group: StoredGroup): U
   return { version: 1, groups }
 }
 
+export function removeStoredGroup(settings: UserSettings, groupId: string): UserSettings {
+  const normalizedId = groupId.trim()
+  const current = decodeUserSettings(settings)
+  if (!normalizedId) return current
+  return {
+    version: 1,
+    groups: current.groups.filter(group => group.id !== normalizedId),
+  }
+}
+
 export function decodeUserSettings(value: unknown): UserSettings {
   if (!value || typeof value !== 'object') return emptyUserSettings()
   const raw = value as { version?: unknown; groups?: unknown }
