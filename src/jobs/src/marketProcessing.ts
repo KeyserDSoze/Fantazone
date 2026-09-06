@@ -3,23 +3,28 @@ import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises'
 import { dirname, resolve, relative } from 'node:path'
 import {
   emptyMarketWrapper,
+  encodeSeasonTeamDocument,
   expirePendingMarkets,
   getCurrentSeasonYear,
+  hydrateSeasonTeamDocument,
   processMarketCommand,
   type Group,
   type MarketCommand,
   type MarketTeams,
   type MarketWrapper,
-  type Team,
+  type RealPlayers,
 } from '@fantazone/domain'
 import {
   GROUP_DOCUMENT_PATH,
+  decodeRealPlayers,
   marketDocumentPath,
+  realPlayersDocumentPath,
   seasonTeamDocumentPath,
 } from '@fantazone/github'
 
 export type MarketProcessingOptions = {
   groupRepoRoot: string
+  platformRepoRoot: string
   season?: number
   now?: Date
 }
@@ -55,7 +60,8 @@ export async function processGroupMarket(options: MarketProcessingOptions): Prom
   if (manifest?.updating === true) return emptyResult(season, true)
 
   const group = await readJson<Group>(resolve(options.groupRepoRoot, GROUP_DOCUMENT_PATH))
-  let teams = await loadSeasonTeams(options.groupRepoRoot, group, season)
+  const master = await loadMasterPlayers(options.platformRepoRoot, season)
+  let teams = await loadSeasonTeams(options.groupRepoRoot, group, season, master)
   const commands = await loadPendingCommands(options.groupRepoRoot, season)
   const marketStates = new Map<string, MarketWrapper>()
   const originalStates = new Map<string, string>()
@@ -103,7 +109,10 @@ export async function processGroupMarket(options: MarketProcessingOptions): Prom
   for (const owner of changedOwners) {
     const entry = teams.get(owner)
     if (!entry) continue
-    await writeJson(resolve(options.groupRepoRoot, seasonTeamDocumentPath(entry.basketId, season, entry.team.owner)), entry.team)
+    await writeJson(
+      resolve(options.groupRepoRoot, seasonTeamDocumentPath(entry.basketId, season, entry.team.owner)),
+      encodeSeasonTeamDocument(entry.team),
+    )
   }
 
   return {
@@ -118,14 +127,21 @@ export async function processGroupMarket(options: MarketProcessingOptions): Prom
   }
 }
 
-async function loadSeasonTeams(root: string, group: Group, season: number): Promise<MarketTeams> {
+async function loadMasterPlayers(root: string, season: number): Promise<RealPlayers> {
+  const path = resolve(root, realPlayersDocumentPath(season))
+  const value = await readOptionalJson<unknown>(path)
+  if (!value) throw new Error(`Serie A players ${season} not found in ${path}`)
+  return decodeRealPlayers(value, season)
+}
+
+async function loadSeasonTeams(root: string, group: Group, season: number, master: RealPlayers): Promise<MarketTeams> {
   const result: MarketTeams = new Map()
   for (const basket of group.baskets) {
     const yearly = basket.years.find(year => year.year === season)
     if (!yearly) continue
     for (const annualTeam of yearly.teams) {
-      const team = await readOptionalJson<Team>(resolve(root, seasonTeamDocumentPath(basket.id, season, annualTeam.owner)))
-      if (team) result.set(normalize(annualTeam.owner), { basketId: basket.id, team })
+      const value = await readOptionalJson<unknown>(resolve(root, seasonTeamDocumentPath(basket.id, season, annualTeam.owner)))
+      if (value) result.set(normalize(annualTeam.owner), { basketId: basket.id, team: hydrateSeasonTeamDocument(value, master) })
     }
   }
   return result
