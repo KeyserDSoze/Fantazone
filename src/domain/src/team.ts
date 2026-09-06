@@ -292,6 +292,30 @@ export function hydrateSeasonTeamDocument(value: unknown, master?: RealPlayers |
   }
 }
 
+/**
+ * Refresh only the RealPlayer portion of a full Team snapshot. Used when creating
+ * a new TeamDay from an older TeamDay so transfers/role/activity changes are
+ * captured for the new day without mutating fantasy-owned price/status/position.
+ */
+export function refreshTeamRealPlayerSnapshots(team: Team, master: RealPlayers): Team {
+  const masterByKey = new Map(master.players.map(player => [requirePlayerKey(player.name), player] as const))
+  return {
+    ...team,
+    additionalOwners: [...team.additionalOwners],
+    players: team.players.map(player => {
+      const canonical = masterByKey.get(requirePlayerKey(player.name))
+      if (!canonical) return { ...player, team: { ...player.team } }
+      return {
+        ...cloneRealPlayer(canonical),
+        price: player.price,
+        revenue: player.revenue,
+        status: player.status,
+        position: player.position,
+      }
+    }),
+  }
+}
+
 export const enhanceTeam = (team: Team): EnhancedTeam => TeamHelper.enhance(team)
 
 function decodeTeamBase(document: Partial<SeasonTeamDocument> & Partial<Team>): Omit<Team, 'players'> {
