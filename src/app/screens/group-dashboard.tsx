@@ -5,7 +5,7 @@ import { createInviteFragment } from '@fantazone/github'
 import { GroupHelper, IdentityRole, type AuthenticatedGroupSession } from '@fantazone/domain'
 import { publicWebUrl } from '../config/publicOrigin'
 import type { GroupSessionRuntime } from '../services/groupSessionRuntime'
-import { AuctionScreen } from './auction'
+import { AuctionScreen } from './auction-screen'
 
 type Props = {
   runtime: GroupSessionRuntime
