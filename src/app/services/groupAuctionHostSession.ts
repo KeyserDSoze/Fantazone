@@ -1,5 +1,7 @@
 import {
+  createAuctionAssignmentOutcome,
   processAuctionCommand,
+  type AuctionAssignmentOutcome,
   type AuctionCheckpoint,
   type AuctionCommand,
   type AuctionCommandResult,
@@ -19,6 +21,11 @@ export type GroupAuctionHostSessionContext = {
   players: readonly StatPlayer[]
   teams: AuctionTeams
   now?: () => Date
+}
+
+export type GroupAuctionDispatchResult = AuctionCommandResult & {
+  /** Present only after an accepted ASSIGN_CURRENT; submit it once to the group repository. */
+  assignmentOutcome: AuctionAssignmentOutcome | null
 }
 
 /**
@@ -82,18 +89,24 @@ export class GroupAuctionHostSession {
     return cloneTeams(this.teams)
   }
 
-  dispatch(command: AuctionCommand, at: Date = this.now()): AuctionCommandResult {
+  dispatch(command: AuctionCommand, at: Date = this.now()): GroupAuctionDispatchResult {
+    const checkpointBefore = cloneJson(this.state)
     const result = processAuctionCommand(this.state, command, {
       ...this.context,
       teams: this.teams,
       now: at,
     })
+    const assignmentOutcome = command.type === 'ASSIGN_CURRENT' && result.status === 'accepted'
+      ? createAuctionAssignmentOutcome({ checkpointBefore, command, result })
+      : null
+
     this.state = result.checkpoint
     this.teams = result.teams
     return {
       ...result,
       checkpoint: cloneJson(result.checkpoint),
       teams: cloneTeams(result.teams),
+      assignmentOutcome,
     }
   }
 
