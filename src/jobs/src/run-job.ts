@@ -2,7 +2,6 @@ import { processAuctionOutcomes } from './auctionOutcomeProcessing'
 import { propagateNextFormations } from './formationPropagation'
 import { snapshotSavedFormations } from './formationSnapshot'
 import { recalculateGroupAll, recalculateGroupDay } from './groupRecalculation'
-import { syncGroupPlayerTransfers } from './groupPlayerTransferSync'
 import { rebuildGroupHallOfFame } from './hallOfFameRebuild'
 import { processGroupMarket } from './marketProcessing'
 import { ingestFinalVotes } from './officialVoteIngestion'
@@ -25,17 +24,13 @@ type JobName =
   | 'ingest-player-images'
   | 'snapshot-formations'
   | 'set-next-formations'
-  | 'sync-player-transfers'
   | 'rebuild-hall-of-fame'
   | 'process-market'
   | 'process-auction-outcomes'
   | 'recalculate-day'
   | 'recalculate-all'
 
-type JobContext = {
-  day?: number
-  season?: number
-}
+type JobContext = { day?: number; season?: number }
 
 const migrated: Partial<Record<JobName, (context: JobContext) => Promise<void>>> = {
   'bootstrap-serie-a': async context => {
@@ -45,9 +40,7 @@ const migrated: Partial<Record<JobName, (context: JobContext) => Promise<void>>>
       `${result.master.teams.teams.length} squadre, ${result.master.players.players.length} giocatori.`,
     )
     if (result.stats) {
-      console.log(
-        `Bootstrap statistiche: ${result.stats.stats.players.length} giocatori fino alla giornata ${result.stats.stats.untilSerieADay}.`,
-      )
+      console.log(`Bootstrap statistiche: ${result.stats.stats.players.length} giocatori fino alla giornata ${result.stats.stats.untilSerieADay}.`)
     } else {
       console.log('Bootstrap statistiche: nessuna rigenerazione necessaria perché il numero giocatori non è cambiato.')
     }
@@ -90,26 +83,17 @@ const migrated: Partial<Record<JobName, (context: JobContext) => Promise<void>>>
       console.log('Nessuna partita live: ingest-live-votes non esegue chiamate al provider.')
       return
     }
-    console.log(
-      `Voti live: ${result.incomingPlayers} giocatori ricevuti; ` +
-      `${result.written ? `snapshot aggiornato in ${result.path}` : 'nessun aggiornamento persistito'}.`,
-    )
+    console.log(`Voti live: ${result.incomingPlayers} giocatori ricevuti; ${result.written ? `snapshot aggiornato in ${result.path}` : 'nessun aggiornamento persistito'}.`)
   },
   'ingest-player-odds': async context => {
     const result = await ingestPlayerOdds({ season: context.season })
     if (result.skipped) {
       console.log(`Player odds ${result.season}: skip=${result.reason ?? 'unknown'}.`)
-      for (const source of result.sources.filter(source => !source.ok)) {
-        console.warn(`${source.source}: ${source.error ?? 'provider error'}`)
-      }
+      for (const source of result.sources.filter(source => !source.ok)) console.warn(`${source.source}: ${source.error ?? 'provider error'}`)
       return
     }
-    console.log(
-      `Player odds ${result.season}/${result.serieADay}: ${result.snapshot?.players.length ?? 0} giocatori salvati in ${result.path}.`,
-    )
-    for (const source of result.sources) {
-      console.log(`${source.source}: ${source.ok ? `${source.observations} osservazioni` : `errore: ${source.error}`}`)
-    }
+    console.log(`Player odds ${result.season}/${result.serieADay}: ${result.snapshot?.players.length ?? 0} giocatori salvati in ${result.path}.`)
+    for (const source of result.sources) console.log(`${source.source}: ${source.ok ? `${source.observations} osservazioni` : `errore: ${source.error}`}`)
   },
   'ingest-player-images': async context => {
     const result = await ingestPlayerImages({ season: context.season })
@@ -117,25 +101,18 @@ const migrated: Partial<Record<JobName, (context: JobContext) => Promise<void>>>
       console.log(`Player images ${result.season}: skip=${result.reason ?? 'unknown'}.`)
       return
     }
-    console.log(
-      `Player images ${result.season}: ${result.written} nuove, ${result.existing} esistenti, ` +
-      `${result.unmatched} senza match, ${result.failed} fallite in ${result.outputDirectory}.`,
-    )
+    console.log(`Player images ${result.season}: ${result.written} nuove, ${result.existing} esistenti, ${result.unmatched} senza match, ${result.failed} fallite in ${result.outputDirectory}.`)
   },
   'snapshot-formations': async () => {
     const roots = groupJobRoots()
-    const result = await snapshotSavedFormations({
-      ...roots,
-      fallbackBefore: process.env.FANTAZONE_SOURCE_BEFORE,
-    })
+    const result = await snapshotSavedFormations({ ...roots, fallbackBefore: process.env.FANTAZONE_SOURCE_BEFORE })
     if (result.deferred) {
       console.log('Formazioni: manifest in aggiornamento, consolidamento rinviato al prossimo push stabile.')
       return
     }
     console.log(
       `Formazioni: ${result.inspectedCommits} commit ispezionate, ${result.changedTeamFiles} squadre salvate; ` +
-      `${result.writtenSnapshots} snapshot aggiornati, ${result.staleSnapshots} obsoleti ignorati, ` +
-      `${result.noTargetSnapshots} senza giornata futura.`,
+      `${result.writtenSnapshots} snapshot aggiornati, ${result.staleSnapshots} obsoleti ignorati, ${result.noTargetSnapshots} senza giornata futura.`,
     )
   },
   'set-next-formations': async context => {
@@ -147,33 +124,17 @@ const migrated: Partial<Record<JobName, (context: JobContext) => Promise<void>>>
     }
     console.log(
       `Formazioni ${result.season}: giorno ${result.sourceSerieADay} -> ${result.targetSerieADay}; ` +
-      `${result.copiedOwners.length} copiate, ${result.existingOwners.length} già presenti, ` +
-      `${result.missingSourceOwners.length} senza sorgente.`,
-    )
-  },
-  'sync-player-transfers': async context => {
-    const roots = groupJobRoots()
-    const result = await syncGroupPlayerTransfers({ ...roots, season: context.season })
-    if (result.deferred) {
-      console.log(`Trasferimenti ${result.season}: manifest in aggiornamento, sincronizzazione rinviata.`)
-      return
-    }
-    console.log(
-      `Trasferimenti ${result.season}: ${result.inspectedTeams} squadre controllate, ` +
-      `${result.changedTeams} aggiornate, ${result.changedPlayers} giocatori trasferiti, ` +
-      `${result.missingTeams} Team mancanti.`,
+      `${result.copiedOwners.length} copiate, ${result.existingOwners.length} già presenti, ${result.missingSourceOwners.length} senza sorgente.`,
     )
   },
   'rebuild-hall-of-fame': async () => {
     const roots = groupJobRoots()
-    const result = await rebuildGroupHallOfFame({ groupRepoRoot: roots.groupRepoRoot })
-    console.log(
-      `Hall of Fame: ${result.leagues.length} leghe ricostruite; stagione corrente ${result.currentSeason}.`,
-    )
+    const result = await rebuildGroupHallOfFame(roots)
+    console.log(`Hall of Fame: ${result.leagues.length} leghe ricostruite; stagione corrente ${result.currentSeason}.`)
   },
   'process-market': async context => {
     const roots = groupJobRoots()
-    const result = await processGroupMarket({ groupRepoRoot: roots.groupRepoRoot, season: context.season })
+    const result = await processGroupMarket({ ...roots, season: context.season })
     console.log(
       `Mercato ${result.season}: ${result.processedCommands} comandi; ` +
       `${result.appliedCommands} applicati, ${result.rejectedCommands} rifiutati, ` +
@@ -187,11 +148,7 @@ const migrated: Partial<Record<JobName, (context: JobContext) => Promise<void>>>
       console.log(`Asta ${result.season}: manifest in aggiornamento, outcome rinviati al prossimo push stabile.`)
       return
     }
-    console.log(
-      `Asta ${result.season}: ${result.processedOutcomes} outcome; ` +
-      `${result.appliedOutcomes} applicati, ${result.rejectedOutcomes} rifiutati, ` +
-      `${result.changedTeams} squadre aggiornate.`,
-    )
+    console.log(`Asta ${result.season}: ${result.processedOutcomes} outcome; ${result.appliedOutcomes} applicati, ${result.rejectedOutcomes} rifiutati, ${result.changedTeams} squadre aggiornate.`)
   },
   'recalculate-day': async context => {
     const roots = groupJobRoots()
@@ -239,8 +196,6 @@ function optionalPositiveInteger(value: string | undefined, label: string): numb
   const normalized = value?.trim()
   if (!normalized) return undefined
   const parsed = Number.parseInt(normalized, 10)
-  if (!Number.isInteger(parsed) || parsed < 1 || String(parsed) !== normalized) {
-    throw new Error(`${label} must be a positive integer`)
-  }
+  if (!Number.isInteger(parsed) || parsed < 1 || String(parsed) !== normalized) throw new Error(`${label} must be a positive integer`)
   return parsed
 }
