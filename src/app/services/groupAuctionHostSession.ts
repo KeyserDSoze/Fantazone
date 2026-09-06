@@ -11,6 +11,7 @@ import {
 } from '@fantazone/domain'
 import {
   GitHubAuctionRepository,
+  RepositoryWriteConflictError,
   type RepositoryJsonSnapshot,
 } from '@fantazone/github'
 
@@ -26,6 +27,11 @@ export type GroupAuctionHostSessionContext = {
 export type GroupAuctionDispatchResult = AuctionCommandResult & {
   /** Present only after an accepted ASSIGN_CURRENT; submit it once to the group repository. */
   assignmentOutcome: AuctionAssignmentOutcome | null
+}
+
+export type GroupAuctionDurabilityResult = {
+  checkpoint: RepositoryJsonSnapshot<AuctionCheckpoint> | null
+  assignmentOutcome: RepositoryJsonSnapshot<AuctionAssignmentOutcome> | null
 }
 
 /**
@@ -119,6 +125,33 @@ export class GroupAuctionHostSession {
     this.checkpointSha = written.sha
     return written
   }
+
+  /**
+   * Durable ordering is checkpoint first, assignment outcome second. Bids return
+   * immediately without Git writes. Outcome create-only conflicts are tolerated when
+   * the existing document represents the same request, even if the Action already
+   * moved it from pending to applied/rejected while a client retry was in flight.
+   */
+  async persistDurableResult(result: GroupAuctionDispatchResult): Promise<GroupAuctionDurabilityResult> {
+    if (!isAuctionDurableBoundary(result)) return { checkpoint: null, assignmentOutcome: null }
+    const checkpoint = await this.persistCheckpoint()
+    if (!result.assignmentOutcome) return { checkpoint, assignmentOutcome: null }
+
+    try {
+      const assignmentOutcome = await this.repository.submitAssignmentOutcome(result.assignmentOutcome)
+      return { checkpoint, assignmentOutcome }
+    } catch (error) {
+      if (!(error instanceof RepositoryWriteConflictError)) throw error
+      const existing = await this.repository.getAssignmentOutcome(
+        result.assignmentOutcome.season,
+        result.assignmentOutcome.auctionId,
+        result.assignmentOutcome.sequence,
+        { refresh: true },
+      )
+      if (!existing || !sameAssignmentRequest(existing.value, result.assignmentOutcome)) throw error
+      return { checkpoint, assignmentOutcome: existing }
+    }
+  }
 }
 
 /** Events worth checkpointing immediately. BID_ACCEPTED stays realtime-only. */
@@ -144,4 +177,19 @@ function cloneTeams(teams: AuctionTeams): AuctionTeams {
 
 function cloneJson<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T
+}
+
+function sameAssignmentRequest(left: AuctionAssignmentOutcome, right: AuctionAssignmentOutcome): boolean {
+  return left.version === right.version &&
+    left.auctionId === right.auctionId &&
+    left.sequence === right.sequence &&
+    left.leagueId === right.leagueId &&
+    left.season === right.season &&
+    left.kind === right.kind &&
+    left.actor === right.actor &&
+    left.owner === right.owner &&
+    left.playerKey === right.playerKey &&
+    left.price === right.price &&
+    left.substitutedPlayerKey === right.substitutedPlayerKey &&
+    left.assignedAt === right.assignedAt
 }

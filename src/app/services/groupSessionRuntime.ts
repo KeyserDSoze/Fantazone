@@ -10,6 +10,7 @@ import {
 import {
   decodeRepositoryRevisionManifest,
   GitHubAuctionRepository,
+  GitHubAuctionSignalingRepository,
   GitHubCalendarRepository,
   GitHubClient,
   GitHubGroupRepository,
@@ -77,6 +78,7 @@ export class GroupSessionRuntime {
   readonly marketRepository: GitHubMarketRepository
   readonly hallOfFameRepository: GitHubHallOfFameRepository
   readonly auctionRepository: GitHubAuctionRepository
+  readonly auctionSignalingRepository: GitHubAuctionSignalingRepository
   /** Legacy persisted cache adapter kept temporarily for migration compatibility. Prefer liveComposer. */
   readonly liveGroupRepository: GitHubLiveGroupRepository
   readonly realCalendarRepository: GitHubRealCalendarRepository
@@ -111,6 +113,7 @@ export class GroupSessionRuntime {
     this.marketRepository = new GitHubMarketRepository(this.store, this.target)
     this.hallOfFameRepository = new GitHubHallOfFameRepository(this.store, this.target)
     this.auctionRepository = new GitHubAuctionRepository(this.store, this.target)
+    this.auctionSignalingRepository = new GitHubAuctionSignalingRepository(this.store, this.target, options.now)
     this.liveGroupRepository = new GitHubLiveGroupRepository(this.store, this.target)
     this.realCalendarRepository = new GitHubRealCalendarRepository(this.store, this.platformTarget)
     this.liveVoteRepository = new GitHubSerieAVoteRepository(this.store, this.platformTarget, 'live')

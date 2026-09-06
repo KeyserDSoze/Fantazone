@@ -1,5 +1,6 @@
 export * from './auction'
 export * from './auctionOutcome'
+export * from './auctionSignaling'
 export * from './calendar'
 export * from './chance'
 export * from './contracts'

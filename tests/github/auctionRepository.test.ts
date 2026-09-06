@@ -14,7 +14,6 @@ import {
   RepositoryWriteConflictError,
   auctionAssignmentOutcomeDocumentPath,
   auctionCheckpointDocumentPath,
-  auctionSignalDocumentPath,
   type RepositoryContentClient,
 } from '../../src/github/src/index'
 
@@ -112,14 +111,9 @@ test('assignment outcomes are append-only create-only documents keyed by accepte
   )
 })
 
-test('createCheckpoint is create-only and signaling paths remain separate from canonical data', async () => {
+test('createCheckpoint remains create-only', async () => {
   const client = new FakeContentClient()
   const repository = new GitHubAuctionRepository(new GitHubJsonStore(client), target)
   await repository.createCheckpoint(checkpoint())
   await assert.rejects(repository.createCheckpoint(checkpoint()), RepositoryWriteConflictError)
-
-  assert.equal(
-    auctionSignalDocumentPath('asta amici', 'peer/alice', 'offer'),
-    'realtime/auctions/asta%20amici/signaling/peer%2Falice/offer.json',
-  )
 })
