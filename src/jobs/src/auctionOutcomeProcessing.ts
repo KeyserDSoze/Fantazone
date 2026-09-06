@@ -3,8 +3,10 @@ import { dirname, relative, resolve } from 'node:path'
 import {
   GroupHelper,
   applyAuctionAssignmentOutcome,
+  encodeSeasonTeamDocument,
   getCurrentSeasonYear,
   getPlayerKey,
+  hydrateSeasonTeamDocument,
   type AuctionAssignmentOutcome,
   type Group,
   type RealPlayer,
@@ -35,21 +37,9 @@ export type AuctionOutcomeProcessingResult = {
   changedTeams: number
 }
 
-type PendingOutcome = {
-  path: string
-  outcome: AuctionAssignmentOutcome
-}
+type PendingOutcome = { path: string; outcome: AuctionAssignmentOutcome }
+type CachedTeam = { path: string; team: Team }
 
-type CachedTeam = {
-  path: string
-  team: Team
-}
-
-/**
- * Serial group-Action boundary for realtime auction assignments. The client only
- * appends pending outcomes; this job revalidates them against canonical repository
- * state and lets the managed workflow commit Team + outcome status atomically.
- */
 export async function processAuctionOutcomes(
   options: AuctionOutcomeProcessingOptions,
 ): Promise<AuctionOutcomeProcessingResult> {
@@ -99,28 +89,22 @@ export async function processAuctionOutcomes(
     let cached = teamCache.get(teamKey)
     if (!cached) {
       const path = resolve(options.groupRepoRoot, seasonTeamDocumentPath(basketId, season, outcome.owner))
-      const team = await readOptionalJson<Team>(path)
-      if (!team) {
+      const value = await readOptionalJson<unknown>(path)
+      if (!value) {
         outcome = rejectOutcome(outcome, operationNow, 'Canonical auction team was not found')
         await writeJson(item.path, outcome)
         rejectedOutcomes += 1
         continue
       }
-      cached = { path, team }
+      cached = { path, team: hydrateSeasonTeamDocument(value, master) }
       teamCache.set(teamKey, cached)
     }
 
-    const applied = applyAuctionAssignmentOutcome({
-      group,
-      outcome,
-      team: cached.team,
-      player,
-      processedAt: operationNow,
-    })
+    const applied = applyAuctionAssignmentOutcome({ group, outcome, team: cached.team, player, processedAt: operationNow })
     await writeJson(item.path, applied.outcome)
     if (applied.outcome.status === 'applied') {
       cached.team = applied.team
-      await writeJson(cached.path, cached.team)
+      await writeJson(cached.path, encodeSeasonTeamDocument(cached.team))
       changedOwners.add(normalize(cached.team.owner))
       appliedOutcomes += 1
     } else {
@@ -173,11 +157,7 @@ function validateOutcomeLocation(root: string, season: number, item: PendingOutc
 }
 
 function rejectOutcome(outcome: AuctionAssignmentOutcome, processedAt: Date, message: string): AuctionAssignmentOutcome {
-  return {
-    ...outcome,
-    status: 'rejected',
-    result: { processedAt: processedAt.toISOString(), message },
-  }
+  return { ...outcome, status: 'rejected', result: { processedAt: processedAt.toISOString(), message } }
 }
 
 async function listFiles(root: string, suffix: string): Promise<string[]> {
@@ -200,9 +180,7 @@ async function readJson<T>(path: string): Promise<T> {
 }
 
 async function readOptionalJson<T>(path: string): Promise<T | null> {
-  try {
-    return await readJson<T>(path)
-  } catch (error) {
+  try { return await readJson<T>(path) } catch (error) {
     if (isNotFound(error)) return null
     throw error
   }
@@ -217,10 +195,7 @@ function emptyResult(season: number, deferred: boolean): AuctionOutcomeProcessin
   return { deferred, season, processedOutcomes: 0, appliedOutcomes: 0, rejectedOutcomes: 0, changedTeams: 0 }
 }
 
-function normalize(value: string): string {
-  return value.trim().toLowerCase()
-}
-
+function normalize(value: string): string { return value.trim().toLowerCase() }
 function isNotFound(error: unknown): boolean {
   return Boolean(error && typeof error === 'object' && 'code' in error && error.code === 'ENOENT')
 }
