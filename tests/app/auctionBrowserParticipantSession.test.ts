@@ -101,20 +101,20 @@ test('reconnects a failed browser participant with the same peer id and next gen
   })
 
   await session.start()
-  assert.equal(session.generation, 0)
+  assert.equal(session.generation, 1)
   assert.equal(pcs.length, 1)
 
   repository.descriptions.set('alice-device:offer', createAuctionSessionDescriptionSignal({
     room: repository.room,
     peerId: 'alice-device',
-    generation: 0,
+    generation: 1,
     kind: 'offer',
-    sdp: 'offer-0',
+    sdp: 'offer-1',
     now,
   }))
   await session.pollSignaling()
-  assert.equal(repository.descriptions.get('alice-device:answer')?.generation, 0)
-  assert.equal(pcs[0]?.remoteDescription?.sdp, 'offer-0')
+  assert.equal(repository.descriptions.get('alice-device:answer')?.generation, 1)
+  assert.equal(pcs[0]?.remoteDescription?.sdp, 'offer-1')
 
   const firstChannel = new FakeDataChannel()
   pcs[0]?.emitChannel(firstChannel)
@@ -127,24 +127,24 @@ test('reconnects a failed browser participant with the same peer id and next gen
   await tick()
   await tick()
 
-  assert.equal(session.generation, 1)
+  assert.equal(session.generation, 2)
   assert.equal(pcs.length, 2)
   assert.equal(repository.peerIndex.peers[0]?.peerId, 'alice-device')
-  assert.equal(repository.peerIndex.peers[0]?.generation, 1)
+  assert.equal(repository.peerIndex.peers[0]?.generation, 2)
   assert.equal(pcs[0]?.closed, true)
   assert.ok(statuses.includes('reconnecting'))
 
   repository.descriptions.set('alice-device:offer', createAuctionSessionDescriptionSignal({
     room: repository.room,
     peerId: 'alice-device',
-    generation: 1,
+    generation: 2,
     kind: 'offer',
-    sdp: 'offer-1',
+    sdp: 'offer-2',
     now,
   }))
   await session.pollSignaling()
-  assert.equal(repository.descriptions.get('alice-device:answer')?.generation, 1)
-  assert.equal(pcs[1]?.remoteDescription?.sdp, 'offer-1')
+  assert.equal(repository.descriptions.get('alice-device:answer')?.generation, 2)
+  assert.equal(pcs[1]?.remoteDescription?.sdp, 'offer-2')
 
   const secondChannel = new FakeDataChannel()
   pcs[1]?.emitChannel(secondChannel)
@@ -179,12 +179,12 @@ test('waits through transient disconnected state and cancels restart if connecti
   await session.start()
   pcs[0]?.setState('disconnected')
   assert.ok(scheduled)
-  assert.equal(session.generation, 0)
+  assert.equal(session.generation, 1)
 
   pcs[0]?.setState('connected')
   assert.equal(cleared, true)
   assert.equal(scheduled, null)
-  assert.equal(session.generation, 0)
+  assert.equal(session.generation, 1)
   assert.equal(pcs.length, 1)
 })
 
