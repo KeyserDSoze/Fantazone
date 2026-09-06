@@ -1,6 +1,8 @@
 name: Background jobs
 
 on:
+  schedule:
+    - cron: '*/5 * * * *'
   workflow_dispatch:
     inputs:
       job:
@@ -28,8 +30,12 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: fantazone-platform-background-jobs
+  cancel-in-progress: false
+
 env:
-  FANTAZONE_JOB: ${{ inputs.job }}
+  FANTAZONE_JOB: ${{ github.event_name == 'schedule' && 'ingest-live-votes' || inputs.job }}
   FANTAZONE_DAY: ${{ inputs.day }}
   FANTAZONE_SEASON: ${{ inputs.season }}
   FANTAZONE_SERIE_A_CALENDAR_BASE_URL: ${{ vars.FANTAZONE_SERIE_A_CALENDAR_BASE_URL }}
@@ -48,24 +54,42 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+      - name: Check whether scheduled live ingestion is needed
+        id: live_guard
+        shell: bash
+        run: |
+          if [ "$GITHUB_EVENT_NAME" != "schedule" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          SHOULD_RUN="$(node scripts/live-votes-schedule-guard.mjs)"
+          echo "run=$SHOULD_RUN" >> "$GITHUB_OUTPUT"
+          if [ "$SHOULD_RUN" != "true" ]; then
+            echo "No Serie A match is live; skipping dependency install and provider calls."
+          fi
       - uses: actions/setup-node@v6
+        if: steps.live_guard.outputs.run == 'true'
         with:
           node-version: 22
       - name: Install workspace dependencies
+        if: steps.live_guard.outputs.run == 'true'
         run: npm install
       - name: Typecheck jobs
+        if: steps.live_guard.outputs.run == 'true'
         run: npm run typecheck --workspace=@fantazone/jobs
       - name: Run selected global job
+        if: steps.live_guard.outputs.run == 'true'
         run: npm run job --workspace=@fantazone/jobs -- "$FANTAZONE_JOB" "$FANTAZONE_DAY" "$FANTAZONE_SEASON"
       - name: Upload raw/debug outputs
-        if: always()
+        if: ${{ always() && steps.live_guard.outputs.run == 'true' }}
         uses: actions/upload-artifact@v4
         with:
-          name: fantazone-${{ inputs.job }}-${{ github.run_id }}
+          name: fantazone-${{ env.FANTAZONE_JOB }}-${{ github.run_id }}
           path: src/jobs/.artifacts/
           if-no-files-found: ignore
           retention-days: 7
       - name: Commit canonical platform data and static asset changes
+        if: steps.live_guard.outputs.run == 'true'
         shell: bash
         run: |
           if [ -z "$(git status --porcelain -- data src/app/public/images/players)" ]; then
@@ -76,4 +100,5 @@ jobs:
           git config user.email "fantazone-actions[bot]@users.noreply.github.com"
           git add -A -- data src/app/public/images/players
           git commit -m "data: $FANTAZONE_JOB"
-          git push
+          git pull --rebase origin "$GITHUB_REF_NAME"
+          git push origin HEAD:"$GITHUB_REF_NAME"

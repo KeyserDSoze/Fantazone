@@ -96,6 +96,22 @@ FANTAZONE_LIVE_SIGNED_URI_URL
 FANTAZONE_LIVE_RESOURCE_BASE_URL
 ```
 
+## Scheduled production live ingestion
+
+The platform Background jobs workflow runs on GitHub's minimum supported cron cadence:
+
+```text
+*/5 * * * *
+```
+
+A scheduled run always maps to `ingest-live-votes`. Before installing workspace dependencies, a dependency-free guard reads the canonical `data/serie-a/calendars/*.json` files and checks the same legacy per-match live window used by `RealCalendarHelper`: kickoff through kickoff + 2h15, excluding delayed matches.
+
+If no Serie A match is currently live, the workflow exits after checkout + guard and does not install dependencies or call the provider. The `ingestLiveVotes()` implementation repeats the canonical `RealCalendar` guard before the network boundary, so the lightweight workflow check is only an optimization and cannot bypass the business rule.
+
+When live data is produced, the workflow commits only when Git reports a canonical data diff. Rewriting the same JSON bytes therefore produces no commit. Platform background jobs share one non-cancelling concurrency group and rebase before push so scheduled live ingestion does not race other global data producers.
+
+This deliberately replaces the legacy one-minute server cron with a five-minute GitHub schedule while preserving its `LiveDay + IsLive` behavior.
+
 ## Testing
 
 All provider adapters are dependency-injected at the network boundary and are tested offline.
@@ -104,11 +120,13 @@ Official-vote fixtures cover parsing, missing markup/bonus values, incomplete te
 
 Live-vote tests build a protobuf fixture byte-by-byte and verify SignedUri request/body/headers, protobuf decoding, event semantics, merge behavior, provider no-result handling and the RealCalendar live guard.
 
-## Production validation and scheduling
+The scheduled workflow also has tests for the five-minute cron and for the dependency-free guard's live, future, delayed and missing-calendar cases.
 
-Functional migration does not by itself prove that today's third-party provider markup/endpoints are still available. Production source validation remains required before enabling schedules.
+## Production validation
 
-At the time this document was written, the Fantazone repository had no initialized `data/serie-a` directory yet. The first production validation therefore requires running the dependency chain in order:
+Functional migration does not by itself prove that today's third-party provider endpoints are still available. The first real scheduled match remains the operational validation of the current SignedUri/protobuf source.
+
+The dependency chain for a new season remains:
 
 ```text
 ingest-serie-a
@@ -117,6 +135,4 @@ ingest-serie-a
 -> rebuild-player-stats (automatic when final votes are complete)
 ```
 
-`ingest-live-votes` can be validated against the real provider only during an actual live Serie A match (or by explicit manual day/provider testing where appropriate).
-
-No automatic schedule should be enabled until those manual production runs succeed.
+`ingest-live-votes` can also be invoked manually with an explicit day for controlled provider diagnostics, while normal scheduled executions always rely on the live calendar guard.
