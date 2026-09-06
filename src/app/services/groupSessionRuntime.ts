@@ -12,6 +12,7 @@ import {
   GitHubCalendarRepository,
   GitHubClient,
   GitHubGroupRepository,
+  GitHubHallOfFameRepository,
   GitHubJsonStore,
   GitHubLiveGroupRepository,
   GitHubMarketRepository,
@@ -73,6 +74,7 @@ export class GroupSessionRuntime {
   readonly rankRepository: GitHubRankRepository
   readonly teamRepository: GitHubTeamRepository
   readonly marketRepository: GitHubMarketRepository
+  readonly hallOfFameRepository: GitHubHallOfFameRepository
   /** Legacy persisted cache adapter kept temporarily for migration compatibility. Prefer liveComposer. */
   readonly liveGroupRepository: GitHubLiveGroupRepository
   readonly realCalendarRepository: GitHubRealCalendarRepository
@@ -105,6 +107,7 @@ export class GroupSessionRuntime {
     this.rankRepository = new GitHubRankRepository(this.store, this.target)
     this.teamRepository = new GitHubTeamRepository(this.store, this.target, this.rankRepository)
     this.marketRepository = new GitHubMarketRepository(this.store, this.target)
+    this.hallOfFameRepository = new GitHubHallOfFameRepository(this.store, this.target)
     this.liveGroupRepository = new GitHubLiveGroupRepository(this.store, this.target)
     this.realCalendarRepository = new GitHubRealCalendarRepository(this.store, this.platformTarget)
     this.liveVoteRepository = new GitHubSerieAVoteRepository(this.store, this.platformTarget, 'live')
