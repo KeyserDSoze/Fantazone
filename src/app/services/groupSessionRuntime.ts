@@ -98,7 +98,7 @@ export class GroupSessionRuntime {
     this.store = new GitHubJsonStore(this.revisionClient, options.persistentCache)
     this.groupRepository = new GitHubGroupRepository(this.store, this.target)
     this.calendarRepository = new GitHubCalendarRepository(this.store, this.target)
-    this.rankRepository = new GitHubRankRepository(this.store, this.target, this.rankRepository)
+    this.rankRepository = new GitHubRankRepository(this.store, this.target)
     this.teamRepository = new GitHubTeamRepository(this.store, this.target, this.rankRepository)
     this.liveGroupRepository = new GitHubLiveGroupRepository(this.store, this.target)
     this.realCalendarRepository = new GitHubRealCalendarRepository(this.store, this.platformTarget)
