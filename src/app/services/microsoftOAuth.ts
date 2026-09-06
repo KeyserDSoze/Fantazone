@@ -1,4 +1,4 @@
-export const MICROSOFT_SCOPE = 'openid profile email Files.ReadWrite.AppFolder'
+export const MICROSOFT_SCOPE = 'openid profile email offline_access Files.ReadWrite.AppFolder'
 
 export type MicrosoftAuthorizationInput = {
   authorityTenant: string
@@ -17,6 +17,11 @@ export type MicrosoftTokenRequestInput = {
   verifier: string
 }
 
+export type MicrosoftRefreshTokenRequestInput = {
+  clientId: string
+  refreshToken: string
+}
+
 export function buildMicrosoftAuthorizationUrl(input: MicrosoftAuthorizationInput): string {
   const params = new URLSearchParams({
     client_id: input.clientId,
@@ -28,6 +33,7 @@ export function buildMicrosoftAuthorizationUrl(input: MicrosoftAuthorizationInpu
     nonce: input.nonce,
     code_challenge: input.codeChallenge,
     code_challenge_method: 'S256',
+    prompt: 'select_account',
   })
   const loginHint = input.loginHint?.trim().toLowerCase()
   if (loginHint) params.set('login_hint', loginHint)
@@ -57,5 +63,14 @@ export function buildMicrosoftTokenRequestBody(input: MicrosoftTokenRequestInput
     redirect_uri: input.redirectUri,
     grant_type: 'authorization_code',
     code_verifier: input.verifier,
+  }).toString()
+}
+
+export function buildMicrosoftRefreshTokenRequestBody(input: MicrosoftRefreshTokenRequestInput): string {
+  return new URLSearchParams({
+    client_id: input.clientId,
+    scope: MICROSOFT_SCOPE,
+    refresh_token: input.refreshToken,
+    grant_type: 'refresh_token',
   }).toString()
 }
