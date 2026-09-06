@@ -65,15 +65,19 @@ class IndexedDbRepositoryJsonCache implements RepositoryJsonPersistentCache {
 
   async deleteByPrefix(prefix: string, preserveKeys: readonly string[] = []): Promise<void> {
     const db = await this.database()
-    const transaction = db.transaction(WEB_STORE_NAME, 'readwrite')
-    const completed = transactionCompleted(transaction)
-    const store = transaction.objectStore(WEB_STORE_NAME)
-    const keys = await requestResult<unknown[]>(store.getAllKeys())
+    const readTransaction = db.transaction(WEB_STORE_NAME, 'readonly')
+    const keys = await requestResult<unknown[]>(readTransaction.objectStore(WEB_STORE_NAME).getAllKeys())
     const preserve = new Set(preserveKeys)
-    for (const candidate of keys) {
+    const removable = keys.filter(candidate => {
       const key = String(candidate)
-      if (key.startsWith(prefix) && !preserve.has(key)) store.delete(candidate)
-    }
+      return key.startsWith(prefix) && !preserve.has(key)
+    })
+    if (removable.length === 0) return
+
+    const writeTransaction = db.transaction(WEB_STORE_NAME, 'readwrite')
+    const completed = transactionCompleted(writeTransaction)
+    const store = writeTransaction.objectStore(WEB_STORE_NAME)
+    for (const candidate of removable) store.delete(candidate)
     await completed
   }
 
@@ -86,7 +90,12 @@ class IndexedDbRepositoryJsonCache implements RepositoryJsonPersistentCache {
   }
 
   private database(): Promise<any> {
-    if (!this.databasePromise) this.databasePromise = openDatabase()
+    if (!this.databasePromise) {
+      this.databasePromise = openDatabase().catch(error => {
+        this.databasePromise = null
+        throw error
+      })
+    }
     return this.databasePromise
   }
 }
