@@ -25,6 +25,7 @@ export type MarketProcessingOptions = {
 }
 
 export type MarketProcessingResult = {
+  deferred: boolean
   season: number
   processedCommands: number
   appliedCommands: number
@@ -42,16 +43,16 @@ type PendingCommand = {
 
 /**
  * Group-owned replacement for legacy MarketManager writes + MarketJob expiry.
- *
- * Commands are append-only client writes. This job serializes them using the group
- * workflow concurrency lock, reloads canonical Group/Team/Market state from the
- * checked-out repository, and applies the pure legacy-compatible reducer. Command
- * creation commit time is the authoritative request time; device clocks are not.
+ * Commands are append-only client writes; the Action serializes and revalidates
+ * them against canonical Group/Team/Market state. Git commit time is authoritative.
  */
 export async function processGroupMarket(options: MarketProcessingOptions): Promise<MarketProcessingResult> {
   const operationNow = options.now ?? new Date()
   const season = options.season ?? getCurrentSeasonYear(operationNow)
   if (!Number.isInteger(season) || season < 1) throw new Error('Season must be a positive integer')
+
+  const manifest = await readOptionalJson<{ updating?: boolean }>(resolve(options.groupRepoRoot, 'manifest.json'))
+  if (manifest?.updating === true) return emptyResult(season, true)
 
   const group = await readJson<Group>(resolve(options.groupRepoRoot, GROUP_DOCUMENT_PATH))
   const teams = await loadSeasonTeams(options.groupRepoRoot, group, season)
@@ -82,12 +83,9 @@ export async function processGroupMarket(options: MarketProcessingOptions): Prom
     else if (result.command.status === 'rejected') rejectedCommands += 1
   }
 
-  // Legacy MarketJob expired pending offers every day even when no command arrived.
-  // Scan every market state for the season so the scheduled workflow preserves it.
   for (const statePath of await listFiles(resolve(options.groupRepoRoot, `data/groups/seasons/${season}/markets`), 'state.json')) {
     const leagueId = decodeLeagueIdFromStatePath(options.groupRepoRoot, season, statePath)
-    if (!leagueId) continue
-    await loadMarketState(options.groupRepoRoot, leagueId, season, marketStates, originalStates)
+    if (leagueId) await loadMarketState(options.groupRepoRoot, leagueId, season, marketStates, originalStates)
   }
 
   let expiredMarkets = 0
@@ -96,8 +94,7 @@ export async function processGroupMarket(options: MarketProcessingOptions): Prom
     const beforeStatuses = new Map(state.markets.map(market => [market.id, market.status]))
     expirePendingMarkets(state, operationNow)
     expiredMarkets += state.markets.filter(market => beforeStatuses.get(market.id) !== market.status).length
-    const current = stableJson(state)
-    if (current === originalStates.get(leagueId)) continue
+    if (stableJson(state) === originalStates.get(leagueId)) continue
     await writeJson(resolve(options.groupRepoRoot, marketDocumentPath(leagueId, season)), state)
     changedMarketDocuments += 1
   }
@@ -105,13 +102,11 @@ export async function processGroupMarket(options: MarketProcessingOptions): Prom
   for (const owner of changedOwners) {
     const entry = teams.get(owner)
     if (!entry) continue
-    await writeJson(
-      resolve(options.groupRepoRoot, seasonTeamDocumentPath(entry.basketId, season, entry.team.owner)),
-      entry.team,
-    )
+    await writeJson(resolve(options.groupRepoRoot, seasonTeamDocumentPath(entry.basketId, season, entry.team.owner)), entry.team)
   }
 
   return {
+    deferred: false,
     season,
     processedCommands: commands.length,
     appliedCommands,
@@ -128,8 +123,7 @@ async function loadSeasonTeams(root: string, group: Group, season: number): Prom
     const yearly = basket.years.find(year => year.year === season)
     if (!yearly) continue
     for (const annualTeam of yearly.teams) {
-      const path = resolve(root, seasonTeamDocumentPath(basket.id, season, annualTeam.owner))
-      const team = await readOptionalJson<Team>(path)
+      const team = await readOptionalJson<Team>(resolve(root, seasonTeamDocumentPath(basket.id, season, annualTeam.owner)))
       if (team) result.set(normalize(annualTeam.owner), { basketId: basket.id, team })
     }
   }
@@ -137,14 +131,13 @@ async function loadSeasonTeams(root: string, group: Group, season: number): Prom
 }
 
 async function loadPendingCommands(root: string, season: number): Promise<PendingCommand[]> {
-  const marketRoot = resolve(root, `data/groups/seasons/${season}/markets`)
-  const files = await listFiles(marketRoot, '.json')
+  const files = await listFiles(resolve(root, `data/groups/seasons/${season}/markets`), '.json')
   const pending: PendingCommand[] = []
   for (const path of files.filter(path => path.includes('/commands/') || path.includes('\\commands\\'))) {
     const command = await readOptionalJson<MarketCommand>(path)
     if (!command || command.version !== 1 || command.status !== 'pending') continue
     const repoPath = relative(root, path).split('\\').join('/')
-    pending.push({ path, command, committedAt: commandCreationTime(root, repoPath) })
+    pending.push({ path, command, committedAt: commandCreationTime(root, repoPath, command.requestedAt) })
   }
   return pending.sort((a, b) => a.committedAt.getTime() - b.committedAt.getTime() || a.path.localeCompare(b.path))
 }
@@ -164,18 +157,14 @@ async function loadMarketState(
   return state
 }
 
-function commandCreationTime(root: string, path: string): Date {
+function commandCreationTime(root: string, path: string, fallbackText: string): Date {
   try {
-    const output = execFileSync('git', ['log', '--diff-filter=A', '-1', '--format=%cI', '--', path], {
-      cwd: root,
-      encoding: 'utf8',
-    }).trim()
+    const output = execFileSync('git', ['log', '--diff-filter=A', '-1', '--format=%cI', '--', path], { cwd: root, encoding: 'utf8' }).trim()
     const value = new Date(output)
     if (output && Number.isFinite(value.getTime())) return value
-  } catch {
-    // Fallback below keeps manual/local filesystem tests possible.
-  }
-  const fallback = new Date()
+  } catch { /* local fixture fallback */ }
+  const fallback = new Date(fallbackText)
+  if (!Number.isFinite(fallback.getTime())) throw new Error(`Invalid requestedAt for market command ${path}`)
   return fallback
 }
 
@@ -217,14 +206,12 @@ async function writeJson(path: string, value: unknown): Promise<void> {
   await writeFile(path, `${JSON.stringify(value, null, 2)}\n`, 'utf8')
 }
 
-function stableJson(value: unknown): string {
-  return JSON.stringify(value)
+function emptyResult(season: number, deferred: boolean): MarketProcessingResult {
+  return { deferred, season, processedCommands: 0, appliedCommands: 0, rejectedCommands: 0, expiredMarkets: 0, changedTeams: 0, changedMarketDocuments: 0 }
 }
 
-function normalize(value: string): string {
-  return value.trim().toLowerCase()
-}
-
+function stableJson(value: unknown): string { return JSON.stringify(value) }
+function normalize(value: string): string { return value.trim().toLowerCase() }
 function isNotFound(error: unknown): boolean {
   return Boolean(error && typeof error === 'object' && 'code' in error && error.code === 'ENOENT')
 }
