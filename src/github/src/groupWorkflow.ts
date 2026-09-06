@@ -1,4 +1,4 @@
-export const GROUP_REPOSITORY_RUNTIME_VERSION = 4
+export const GROUP_REPOSITORY_RUNTIME_VERSION = 5
 export const GROUP_RUNTIME_ENGINE_REF = `group-runtime-v${GROUP_REPOSITORY_RUNTIME_VERSION}`
 export const GROUP_GLOBAL_DATA_REF = 'main'
 export const GROUP_RECALCULATION_WORKFLOW_PATH = '.github/workflows/fantazone-group.yml'
@@ -6,9 +6,9 @@ export const GROUP_RECALCULATION_WORKFLOW_PATH = '.github/workflows/fantazone-gr
 /**
  * Managed Fantazone group workflow installed into every Fantazone.<group> repository.
  *
- * Runtime v4 owns both formation snapshot consolidation and canonical market command
- * processing. Client writes remain optimistic/append-only; group mutations execute
- * under one repository-scoped Actions concurrency lock using the group's GITHUB_TOKEN.
+ * Runtime v5 owns formation snapshot consolidation, canonical market command
+ * processing and the weekly Hall of Fame rebuild. Group mutations execute under
+ * one repository-scoped Actions concurrency lock using the group's GITHUB_TOKEN.
  */
 export const GROUP_RECALCULATION_WORKFLOW = [
   '# Managed by Fantazone. Local edits to this file are overwritten by runtime upgrades.',
@@ -23,6 +23,7 @@ export const GROUP_RECALCULATION_WORKFLOW = [
   "      - 'data/groups/seasons/*/markets/*/commands/*.json'",
   '  schedule:',
   "    - cron: '0 2 * * *'",
+  "    - cron: '0 3 * * 2'",
   '  workflow_dispatch:',
   '    inputs:',
   '      job:',
@@ -34,6 +35,7 @@ export const GROUP_RECALCULATION_WORKFLOW = [
   '          - recalculate-all',
   '          - set-next-formations',
   '          - process-market',
+  '          - rebuild-hall-of-fame',
   '      day:',
   '        description: Optional Serie A day (required by recalculate-day)',
   '        required: false',
@@ -51,7 +53,7 @@ export const GROUP_RECALCULATION_WORKFLOW = [
   '  cancel-in-progress: false',
   '',
   'env:',
-  "  FANTAZONE_JOB: ${{ github.event_name == 'push' && 'sync-group' || github.event_name == 'schedule' && 'process-market' || inputs.job }}",
+  "  FANTAZONE_JOB: ${{ github.event_name == 'push' && 'sync-group' || github.event_name == 'schedule' && github.event.schedule == '0 3 * * 2' && 'rebuild-hall-of-fame' || github.event_name == 'schedule' && 'process-market' || inputs.job }}",
   '  FANTAZONE_DAY: ${{ inputs.day }}',
   '  FANTAZONE_SEASON: ${{ inputs.season }}',
   '  FANTAZONE_SOURCE_BEFORE: ${{ github.event.before }}',
