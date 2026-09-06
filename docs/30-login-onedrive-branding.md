@@ -29,6 +29,20 @@ This is an intentional security correction to the initial idea of putting the PA
 
 The PKCE login requests `Files.ReadWrite.AppFolder` in addition to OpenID profile/email scopes. The Graph adapter only accesses the app-specific OneDrive folder and stores `settings.json` there.
 
+Web keeps the existing SPA callback on `https://fanta.plus`. iOS and Android now use the same authorization-code + PKCE protocol through the system authentication browser and return to the Expo deep link `fantaplus://auth`. The native redirect can be overridden at build time with `EXPO_PUBLIC_MICROSOFT_NATIVE_REDIRECT_URI`, but the configured URI must match the Microsoft Entra app registration exactly.
+
+The native flow validates `state`, validates the ID-token audience/nonce/expiry, exchanges the code with the same redirect URI and PKCE verifier, and then reads the Microsoft OIDC user profile before OneDrive settings are opened.
+
+### Entra registration required for native builds
+
+The Microsoft application registration must expose the native redirect as a **Mobile and desktop application** redirect URI and allow public-client authorization-code + PKCE. For the current build contract the URI is:
+
+```text
+fantaplus://auth
+```
+
+Until that URI is registered in Microsoft Entra, the native application code is complete but a real device login will be rejected by Entra with a redirect-URI mismatch. This is an external app-registration setting and is not stored in this repository.
+
 ## Branding
 
 The product display name is `fanta.plus`. The supplied black/yellow hornet-football artwork is the visual source for the installed launcher assets:
@@ -39,8 +53,4 @@ The product display name is `fanta.plus`. The supplied black/yellow hornet-footb
 - `src/app/public/apple-touch-icon.png` and `src/app/public/favicon.png` for static web consumers;
 - `src/app/public/brand/logo.svg` for the login wordmark.
 
-`app.json` wires the icon, iOS icon, Android adaptive icon and web favicon so Expo produces the correct platform metadata from one checked-in brand set.
-
-## Native auth follow-up
-
-The current Microsoft OAuth adapter remains web-oriented (`https://fanta.plus` redirect). Expo configuration declares the `fantaplus` scheme; iOS/Android deep-link OAuth wiring must be completed before native Microsoft login is considered production-ready.
+`app.json` wires the icon, iOS icon, Android adaptive icon and web favicon so Expo produces the correct platform metadata from one checked-in brand set. The app scheme is `fantaplus`, which is also the callback scheme used by native Microsoft authentication.
