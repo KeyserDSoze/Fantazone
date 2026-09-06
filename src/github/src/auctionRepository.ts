@@ -1,4 +1,9 @@
-import type { AuctionAssignmentOutcome, AuctionCheckpoint } from '@fantazone/domain'
+import {
+  validateActiveAuctionPointer,
+  type ActiveAuctionPointer,
+  type AuctionAssignmentOutcome,
+  type AuctionCheckpoint,
+} from '@fantazone/domain'
 import type { GroupRepositoryTarget } from './repositoryTarget'
 import {
   GitHubJsonStore,
@@ -14,6 +19,13 @@ export function auctionCheckpointDocumentPath(season: number, auctionId: string)
   return `data/groups/seasons/${season}/auctions/${encodeURIComponent(auctionId.trim())}/checkpoint.json`
 }
 
+/** One canonical pointer per league/year so clients can discover the active auction without directory listing. */
+export function activeAuctionDocumentPath(season: number, leagueId: string): string {
+  validateSeason(season)
+  validateSegment(leagueId, 'League id')
+  return `data/groups/seasons/${season}/auctions/active/${encodeURIComponent(leagueId.trim())}.json`
+}
+
 /** Append-only durable assignment outcome. One accepted assignment maps to one sequence file. */
 export function auctionAssignmentOutcomeDocumentPath(season: number, auctionId: string, sequence: number): string {
   validateSeason(season)
@@ -27,6 +39,38 @@ export class GitHubAuctionRepository {
     private readonly store: GitHubJsonStore,
     private readonly repository: GroupRepositoryTarget,
   ) {}
+
+  async getActiveAuction(
+    season: number,
+    leagueId: string,
+    options: RepositoryJsonReadOptions = {},
+  ): Promise<RepositoryJsonSnapshot<ActiveAuctionPointer> | null> {
+    const snapshot = await this.store.tryReadJson<ActiveAuctionPointer>(
+      this.location(activeAuctionDocumentPath(season, leagueId)),
+      options,
+    )
+    if (!snapshot) return null
+    validateActiveAuctionPointer(snapshot.value)
+    if (snapshot.value.season !== season || snapshot.value.leagueId !== leagueId) {
+      throw new Error('Active auction pointer path does not match its payload')
+    }
+    return snapshot
+  }
+
+  async writeActiveAuction(
+    pointer: ActiveAuctionPointer,
+    options: RepositoryJsonWriteOptions = {},
+  ): Promise<RepositoryJsonSnapshot<ActiveAuctionPointer>> {
+    validateActiveAuctionPointer(pointer)
+    return this.store.writeJson(
+      this.location(activeAuctionDocumentPath(pointer.season, pointer.leagueId)),
+      pointer,
+      pointer.auctionId
+        ? `auction: activate ${pointer.auctionId}`
+        : `auction: clear active ${pointer.leagueId}`,
+      options,
+    )
+  }
 
   async getCheckpoint(
     season: number,

@@ -5,6 +5,7 @@ import {
   AuctionStatus,
   AuctionType,
   Role,
+  createActiveAuctionPointer,
   type AuctionAssignmentOutcome,
   type AuctionCheckpoint,
 } from '../../src/domain/src/index'
@@ -12,6 +13,7 @@ import {
   GitHubAuctionRepository,
   GitHubJsonStore,
   RepositoryWriteConflictError,
+  activeAuctionDocumentPath,
   auctionAssignmentOutcomeDocumentPath,
   auctionCheckpointDocumentPath,
   type RepositoryContentClient,
@@ -75,6 +77,31 @@ function outcome(): AuctionAssignmentOutcome {
     status: 'pending',
   }
 }
+
+test('stores one active-auction pointer per league and season', async () => {
+  const client = new FakeContentClient()
+  const repository = new GitHubAuctionRepository(new GitHubJsonStore(client), target)
+  const active = createActiveAuctionPointer({
+    leagueId: 'league',
+    season: 15,
+    auctionId: 'asta amici',
+    updatedAt: new Date('2026-09-06T15:59:00Z'),
+  })
+
+  const written = await repository.writeActiveAuction(active)
+  assert.equal(activeAuctionDocumentPath(15, 'league'), 'data/groups/seasons/15/auctions/active/league.json')
+  assert.equal(written.sha, 'write-1')
+  assert.deepEqual((await repository.getActiveAuction(15, 'league'))?.value, active)
+
+  const cleared = createActiveAuctionPointer({
+    leagueId: 'league',
+    season: 15,
+    auctionId: null,
+    updatedAt: new Date('2026-09-06T18:00:00Z'),
+  })
+  await repository.writeActiveAuction(cleared, { expectedSha: written.sha })
+  assert.equal((await repository.getActiveAuction(15, 'league'))?.value.auctionId, null)
+})
 
 test('stores one season-scoped durable checkpoint and updates it with optimistic SHA', async () => {
   const client = new FakeContentClient()
