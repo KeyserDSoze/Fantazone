@@ -1,3 +1,4 @@
+export * from './auctionRepository'
 export * from './calendarRepository'
 export * from './chanceRepository'
 export * from './githubClient'
