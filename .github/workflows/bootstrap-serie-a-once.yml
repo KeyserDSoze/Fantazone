@@ -1,4 +1,4 @@
-name: Bootstrap Serie A once
+name: Serie A production validation once
 
 on:
   push:
@@ -10,14 +10,22 @@ permissions:
   contents: write
 
 env:
-  FANTAZONE_JOB: bootstrap-serie-a
-  FANTAZONE_DAY: ''
+  FANTAZONE_JOB: ingest-final-votes
+  FANTAZONE_DAY: '2'
   FANTAZONE_SEASON: '15'
   FANTAZONE_SERIE_A_CALENDAR_BASE_URL: ${{ vars.FANTAZONE_SERIE_A_CALENDAR_BASE_URL }}
   FANTAZONE_PLAYERS_SOURCE_URL: ${{ vars.FANTAZONE_PLAYERS_SOURCE_URL }}
+  FANTAZONE_FINAL_VOTES_BASE_URL: ${{ vars.FANTAZONE_FINAL_VOTES_BASE_URL }}
+  FANTAZONE_LIVE_SIGNED_URI_URL: ${{ vars.FANTAZONE_LIVE_SIGNED_URI_URL }}
+  FANTAZONE_LIVE_RESOURCE_BASE_URL: ${{ vars.FANTAZONE_LIVE_RESOURCE_BASE_URL }}
+  FANTAZONE_FANTAGAZZETTA_FORMATIONS_URL: ${{ vars.FANTAZONE_FANTAGAZZETTA_FORMATIONS_URL }}
+  FANTAZONE_GAZZETTA_FORMATIONS_URL: ${{ vars.FANTAZONE_GAZZETTA_FORMATIONS_URL }}
+  FANTAZONE_INJURY_URL: ${{ vars.FANTAZONE_INJURY_URL }}
+  FANTAZONE_PLAYER_IMAGES_API_BASE_URL: ${{ vars.FANTAZONE_PLAYER_IMAGES_API_BASE_URL }}
+  FANTAZONE_PLAYER_IMAGES_MEDIA_BASE_URL: ${{ vars.FANTAZONE_PLAYER_IMAGES_MEDIA_BASE_URL }}
 
 jobs:
-  bootstrap:
+  validate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -41,12 +49,12 @@ jobs:
       - name: Commit canonical Serie A data
         shell: bash
         run: |
-          if [ -z "$(git status --porcelain -- data)" ]; then
-            echo "No canonical Serie A changes"
+          if [ -z "$(git status --porcelain -- data src/app/public/images/players)" ]; then
+            echo "No canonical Serie A/static image changes"
             exit 0
           fi
           git config user.name "fantazone-actions[bot]"
           git config user.email "fantazone-actions[bot]@users.noreply.github.com"
-          git add -A -- data
+          git add -A -- data src/app/public/images/players
           git commit -m "data: $FANTAZONE_JOB"
           git push
