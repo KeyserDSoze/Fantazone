@@ -55,7 +55,7 @@ export async function processGroupMarket(options: MarketProcessingOptions): Prom
   if (manifest?.updating === true) return emptyResult(season, true)
 
   const group = await readJson<Group>(resolve(options.groupRepoRoot, GROUP_DOCUMENT_PATH))
-  const teams = await loadSeasonTeams(options.groupRepoRoot, group, season)
+  let teams = await loadSeasonTeams(options.groupRepoRoot, group, season)
   const commands = await loadPendingCommands(options.groupRepoRoot, season)
   const marketStates = new Map<string, MarketWrapper>()
   const originalStates = new Map<string, string>()
@@ -77,6 +77,7 @@ export async function processGroupMarket(options: MarketProcessingOptions): Prom
       currentSeason: getCurrentSeasonYear(pending.committedAt),
     })
     marketStates.set(leagueId, result.market)
+    teams = result.teams
     for (const owner of result.changedTeams) changedOwners.add(owner)
     await writeJson(pending.path, result.command)
     if (result.command.status === 'applied') appliedCommands += 1
