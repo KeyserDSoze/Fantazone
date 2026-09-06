@@ -10,7 +10,7 @@ permissions:
   contents: write
 
 env:
-  FANTAZONE_JOB: ingest-serie-a
+  FANTAZONE_JOB: bootstrap-serie-a
   FANTAZONE_DAY: ''
   FANTAZONE_SEASON: '15'
   FANTAZONE_SERIE_A_CALENDAR_BASE_URL: ${{ vars.FANTAZONE_SERIE_A_CALENDAR_BASE_URL }}
