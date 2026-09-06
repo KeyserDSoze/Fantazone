@@ -6,9 +6,9 @@ import {
   GROUP_RUNTIME_ENGINE_REF,
 } from '../../src/github/src/index'
 
-test('group runtime v7 serializes formation, market, auction, transfer and Hall of Fame maintenance', () => {
-  assert.equal(GROUP_REPOSITORY_RUNTIME_VERSION, 7)
-  assert.equal(GROUP_RUNTIME_ENGINE_REF, 'group-runtime-v7')
+test('group runtime v8 serializes formation, market, auction and Hall of Fame maintenance without transfer sync', () => {
+  assert.equal(GROUP_REPOSITORY_RUNTIME_VERSION, 8)
+  assert.equal(GROUP_RUNTIME_ENGINE_REF, 'group-runtime-v8')
   assert.match(GROUP_RECALCULATION_WORKFLOW, /push:/)
   assert.match(GROUP_RECALCULATION_WORKFLOW, /manifest\.json/)
   assert.match(GROUP_RECALCULATION_WORKFLOW, /data\/groups\/seasons\/\*\/teams\/\*\/\*\.json/)
@@ -17,12 +17,11 @@ test('group runtime v7 serializes formation, market, auction, transfer and Hall 
   assert.match(GROUP_RECALCULATION_WORKFLOW, /snapshot-formations/)
   assert.match(GROUP_RECALCULATION_WORKFLOW, /process-market/)
   assert.match(GROUP_RECALCULATION_WORKFLOW, /process-auction-outcomes/)
-  assert.match(GROUP_RECALCULATION_WORKFLOW, /sync-player-transfers/)
+  assert.doesNotMatch(GROUP_RECALCULATION_WORKFLOW, /sync-player-transfers/)
+  assert.doesNotMatch(GROUP_RECALCULATION_WORKFLOW, /30 5 \* \* \*/)
   assert.match(GROUP_RECALCULATION_WORKFLOW, /rebuild-hall-of-fame/)
   assert.match(GROUP_RECALCULATION_WORKFLOW, /cron: '0 2 \* \* \*'/)
-  assert.match(GROUP_RECALCULATION_WORKFLOW, /cron: '30 5 \* \* \*'/)
   assert.match(GROUP_RECALCULATION_WORKFLOW, /cron: '0 3 \* \* 2'/)
-  assert.match(GROUP_RECALCULATION_WORKFLOW, /github\.event\.schedule == '30 5 \* \* \*'/)
   assert.match(GROUP_RECALCULATION_WORKFLOW, /github\.event\.schedule == '0 3 \* \* 2'/)
   assert.match(GROUP_RECALCULATION_WORKFLOW, /FANTAZONE_SOURCE_BEFORE: \$\{\{ github\.event\.before \}\}/)
   assert.match(GROUP_RECALCULATION_WORKFLOW, /fetch-depth: 0/)
