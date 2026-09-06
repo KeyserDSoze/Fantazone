@@ -39,7 +39,10 @@ export class GitHubTeamRepository {
   async getTeamSnapshot(basketId: string, season: number, email: string, options: RepositoryJsonReadOptions = {}): Promise<RepositoryJsonSnapshot<Team> | null> {
     const snapshot = await this.store.tryReadJson<unknown>(this.location(seasonTeamDocumentPath(basketId, season, email)), options)
     if (!snapshot) return null
-    const master = this.realPlayersRepository ? await this.realPlayersRepository.getPlayers(season, options) : null
+    const needsMaster = isNormalizedSeasonTeam(snapshot.value)
+    const master = needsMaster && this.realPlayersRepository
+      ? await this.realPlayersRepository.getPlayers(season, options)
+      : null
     return { ...snapshot, value: hydrateSeasonTeamDocument(snapshot.value, master) }
   }
 
@@ -108,6 +111,10 @@ export function dayTeamDocumentPath(basketId: string, season: number, day: numbe
   validateTeamKey(basketId, season, email)
   if (!Number.isInteger(day) || day < 1) throw new Error('Day must be a positive integer')
   return `data/groups/seasons/${season}/days/${day}/teams/${encodeURIComponent(basketId.trim())}/${encodeURIComponent(email.trim())}.json`
+}
+
+function isNormalizedSeasonTeam(value: unknown): boolean {
+  return Boolean(value && typeof value === 'object' && (value as { version?: unknown }).version === 3)
 }
 
 function validateTeamKey(basketId: string, season: number, email: string): void {
