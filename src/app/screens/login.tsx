@@ -17,7 +17,7 @@ export function LoginScreen({ loading, error, onMicrosoftLogin }: {
             style={{ width: 320, height: 180, resizeMode: 'contain' }}
           />
           <YStack gap="$2" alignItems="center">
-            <H2 textAlign="center">Il tuo fantacalcio, senza backend.</H2>
+            <H2 accessibilityRole="header" textAlign="center">Il tuo fantacalcio, senza backend.</H2>
             <Paragraph textAlign="center" color="$color10">
               Accedi con Microsoft. I tuoi gruppi vengono sincronizzati nel tuo OneDrive, nello spazio privato dedicato a fanta.plus.
             </Paragraph>
