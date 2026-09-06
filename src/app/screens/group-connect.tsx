@@ -17,6 +17,7 @@ import {
   GitHubClient,
   type GitHubRepo,
 } from '@fantazone/github'
+import { connectKnownGroup } from '../services/groupReconnect'
 import type { GroupConnection } from '../services/groupSessionRuntime'
 
 export type ConnectedGroup = GroupConnection
@@ -55,25 +56,39 @@ export function GroupConnectScreen({ onConnected, onExploreDemo, defaultCreatorE
       if (groupName.trim()) {
         const exact = await client.findGroup(groupName)
         if (exact) {
-          onConnected({
-            token: pat.trim(),
-            repository: exact,
-            groupName: groupName.trim(),
-          })
+          await connectRepository(exact, groupName.trim(), client)
           return
         }
       }
 
       if (found.length === 1) {
         const repository = found[0]
-        onConnected({
-          token: pat.trim(),
-          repository,
-          groupName: repository.name.replace(/^Fantazone\./, ''),
-        })
+        await connectRepository(repository, repository.name.replace(/^Fantazone\./, ''), client)
       } else if (found.length === 0) {
         setError('Nessun repository Fantazone.* trovato. Puoi creare il gruppo qui sotto.')
       }
+    } catch (caught) {
+      setError(toMessage(caught))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function connectRepository(repository: GitHubRepo, name: string, client?: GitHubClient) {
+    const connection = await connectKnownGroup(
+      pat.trim(),
+      { name, repository: repository.full_name },
+      client ?? new GitHubClient(pat.trim()),
+    )
+    onConnected(connection)
+  }
+
+  async function chooseRepository(repository: GitHubRepo) {
+    if (!canSubmit) return
+    setLoading(true)
+    setError(null)
+    try {
+      await connectRepository(repository, repository.name.replace(/^Fantazone\./, ''))
     } catch (caught) {
       setError(toMessage(caught))
     } finally {
@@ -131,12 +146,12 @@ export function GroupConnectScreen({ onConnected, onExploreDemo, defaultCreatorE
 
             <Card borderWidth={1} borderColor="$yellow8" padding="$3">
               <Paragraph size="$2">
-                Usa un PAT fine-grained dedicato ai repository Fantazone necessari. Il catalogo gruppi viene sincronizzato in OneDrive; la credenziale GitHub resta sul dispositivo.
+                Questo PAT diventa la credenziale condivisa del gruppo. Dopo il preflight viene salvato nei settings privati OneDrive dell’app e anche sul dispositivo. I partecipanti invitati non devono avere un account GitHub.
               </Paragraph>
             </Card>
 
             <YStack gap="$2">
-              <Text fontWeight="700">Personal Access Token</Text>
+              <Text fontWeight="700">Personal Access Token del gruppo</Text>
               <Input value={pat} onChangeText={setPat} secureTextEntry autoCapitalize="none" autoCorrect={false} placeholder="github_pat_..." />
             </YStack>
 
@@ -174,11 +189,8 @@ export function GroupConnectScreen({ onConnected, onExploreDemo, defaultCreatorE
                   <Button
                     key={repository.full_name}
                     justifyContent="flex-start"
-                    onPress={() => onConnected({
-                      token: pat.trim(),
-                      repository,
-                      groupName: repository.name.replace(/^Fantazone\./, ''),
-                    })}
+                    disabled={loading}
+                    onPress={() => { void chooseRepository(repository) }}
                   >
                     {repository.name}
                   </Button>

@@ -184,14 +184,15 @@ export default function App() {
     try {
       const session = await freshMicrosoftSession()
       const opened = await openGroupConnection(connection)
+      await authorizeIdentity(opened, session.identity)
       await saveGroupConnection(connection, credentialOwnerKey(session.identity))
       const next = upsertStoredGroup(settings ?? emptyUserSettings(), createStoredGroup({
         name: connection.groupName,
         repository: connection.repository.full_name,
+        pat: connection.token,
       }))
       await saveUserSettings(session.graphAccessToken, next)
       setSettings(next)
-      await authorizeIdentity(opened, session.identity)
       setRuntime(opened)
       setAddingGroup(false)
       setReconnectingGroup(null)
@@ -220,10 +221,11 @@ export default function App() {
 
     const current = settings ?? emptyUserSettings()
     const existing = current.groups.find(group => group.repository.toLowerCase() === pendingInvite.repository.toLowerCase())
-    const next = existing
-      ? current
-      : upsertStoredGroup(current, createStoredGroup({ name: pendingInvite.group, repository: pendingInvite.repository }))
-    if (!existing) await saveUserSettings(session.graphAccessToken, next)
+    const stored = existing
+      ? { ...existing, name: pendingInvite.group, repository: pendingInvite.repository, pat: invitedConnection.token }
+      : createStoredGroup({ name: pendingInvite.group, repository: pendingInvite.repository, pat: invitedConnection.token })
+    const next = upsertStoredGroup(current, stored)
+    await saveUserSettings(session.graphAccessToken, next)
 
     setSettings(next)
     setRuntime(opened)
@@ -242,7 +244,8 @@ export default function App() {
     try {
       const session = await freshMicrosoftSession()
       const ownerKey = credentialOwnerKey(session.identity)
-      const token = await loadRepositoryToken(group.repository, ownerKey)
+      const localToken = await loadRepositoryToken(group.repository, ownerKey)
+      const token = group.pat?.trim() || localToken
       if (!token) {
         setReconnectingGroup(group)
         return
@@ -251,8 +254,16 @@ export default function App() {
       try {
         const connection = await reconnectStoredGroup(token, group)
         const opened = await openGroupConnection(connection)
-        await saveGroupConnection(connection, ownerKey)
         await authorizeIdentity(opened, session.identity)
+        await saveGroupConnection(connection, ownerKey)
+
+        if (group.pat !== connection.token) {
+          const current = settings ?? emptyUserSettings()
+          const next = upsertStoredGroup(current, { ...group, pat: connection.token })
+          await saveUserSettings(session.graphAccessToken, next)
+          setSettings(next)
+        }
+
         setRuntime(opened)
         setReconnectingGroup(null)
       } catch (caught) {
@@ -278,8 +289,16 @@ export default function App() {
 
     const session = await freshMicrosoftSession()
     const opened = await openGroupConnection(connection)
-    await saveGroupConnection(connection, credentialOwnerKey(session.identity))
     await authorizeIdentity(opened, session.identity)
+    await saveGroupConnection(connection, credentialOwnerKey(session.identity))
+    const next = upsertStoredGroup(settings ?? emptyUserSettings(), {
+      ...reconnectingGroup,
+      name: connection.groupName,
+      repository: connection.repository.full_name,
+      pat: connection.token,
+    })
+    await saveUserSettings(session.graphAccessToken, next)
+    setSettings(next)
     setRuntime(opened)
     setReconnectingGroup(null)
     setAddingGroup(false)

@@ -37,10 +37,10 @@ export function GroupReconnectScreen({ group, onConnected, onCancel }: Props) {
         <Card borderWidth={1} borderColor="$borderColor" padding="$5" width="100%" maxWidth={560}>
           <YStack gap="$4">
             <YStack gap="$2">
-              <Text fontWeight="800" color="$blue10">GRUPPO GIÀ SINCRONIZZATO</Text>
+              <Text fontWeight="800" color="$blue10">CREDENZIALE GRUPPO DA AGGIORNARE</Text>
               <H2>Ricollega {group.name}</H2>
               <Paragraph color="$color10">
-                OneDrive conosce già questo gruppo, ma su questo dispositivo non è ancora presente la credenziale GitHub locale.
+                Il gruppo è già nei settings OneDrive, ma la credenziale condivisa manca oppure non è più valida. Inserisci il PAT corrente del gruppo per sostituirla.
               </Paragraph>
             </YStack>
 
@@ -56,12 +56,12 @@ export function GroupReconnectScreen({ group, onConnected, onCancel }: Props) {
 
             <Card borderWidth={1} borderColor="$yellow8" padding="$3">
               <Paragraph size="$2">
-                Il PAT viene verificato contro questo repository esatto e resta solo sul dispositivo. Non viene salvato né sincronizzato in OneDrive.
+                fanta.plus verifica token, repository esatto, lettura, scrittura e documenti canonici. Se il runtime deve essere aggiornato, viene verificata anche la possibilità effettiva di modificare il workflow. Dopo il successo il PAT viene salvato in OneDrive e sul dispositivo.
               </Paragraph>
             </Card>
 
             <YStack gap="$2">
-              <Text fontWeight="700">Personal Access Token</Text>
+              <Text fontWeight="700">Personal Access Token del gruppo</Text>
               <Input
                 value={pat}
                 onChangeText={setPat}
@@ -79,7 +79,7 @@ export function GroupReconnectScreen({ group, onConnected, onCancel }: Props) {
             <XStack gap="$3" flexWrap="wrap">
               <Button disabled={loading} onPress={onCancel} flex={1} minWidth={160}>Annulla</Button>
               <Button disabled={!canSubmit} onPress={reconnect} flex={1} minWidth={220} theme="accent">
-                {loading ? <Spinner /> : 'Verifica PAT e apri gruppo'}
+                {loading ? <Spinner /> : 'Verifica PAT e aggiorna gruppo'}
               </Button>
             </XStack>
           </YStack>

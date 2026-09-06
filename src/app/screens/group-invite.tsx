@@ -14,10 +14,11 @@ type Props = {
 }
 
 export function GroupInviteScreen({ invite, identityEmail, onConnected, onCancel, onUseAnotherAccount }: Props) {
-  const [pat, setPat] = useState('')
+  const [legacyPat, setLegacyPat] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const emailMatches = identityEmail.trim().toLowerCase() === invite.email
+  const pat = invite.v === 3 ? invite.pat : legacyPat
   const canSubmit = useMemo(() => emailMatches && pat.trim().length > 0 && !loading, [emailMatches, pat, loading])
 
   async function join() {
@@ -43,7 +44,9 @@ export function GroupInviteScreen({ invite, identityEmail, onConnected, onCancel
               <Text fontWeight="800" color="$blue10">INVITO FANTAZONE</Text>
               <H2>Unisciti a {invite.group}</H2>
               <Paragraph color="$color10">
-                L’invito identifica il gruppo e l’email attesa, ma non contiene credenziali GitHub.
+                {invite.v === 3
+                  ? 'L’invito contiene la credenziale GitHub condivisa del gruppo. fanta.plus la verifica e la salva nelle impostazioni private OneDrive del tuo account.'
+                  : 'Questo è un invito precedente: identifica gruppo ed email, ma richiede di inserire una volta la credenziale GitHub condivisa del gruppo.'}
               </Paragraph>
             </YStack>
 
@@ -65,18 +68,24 @@ export function GroupInviteScreen({ invite, identityEmail, onConnected, onCancel
                   <Button onPress={onUseAnotherAccount}>Usa un altro account Microsoft</Button>
                 </YStack>
               </Card>
+            ) : invite.v === 3 ? (
+              <Card borderWidth={1} borderColor="$yellow8" padding="$3">
+                <Paragraph size="$2">
+                  Il link è una credenziale di accesso al gruppo: condividilo solo con l’utente invitato. Il frammento con il PAT viene rimosso dalla barra degli indirizzi appena fanta.plus lo acquisisce.
+                </Paragraph>
+              </Card>
             ) : (
               <>
                 <Card borderWidth={1} borderColor="$yellow8" padding="$3">
                   <Paragraph size="$2">
-                    Inserisci un PAT GitHub che possa aprire esattamente questo repository. Il PAT resta solo sul dispositivo e non viene salvato nel link né in OneDrive.
+                    Inserisci il PAT condiviso del gruppo. Dopo la verifica verrà salvato sia nelle impostazioni OneDrive dell’app sia nella cache credenziali del dispositivo.
                   </Paragraph>
                 </Card>
                 <YStack gap="$2">
-                  <Text fontWeight="700">Personal Access Token</Text>
+                  <Text fontWeight="700">Personal Access Token del gruppo</Text>
                   <Input
-                    value={pat}
-                    onChangeText={setPat}
+                    value={legacyPat}
+                    onChangeText={setLegacyPat}
                     secureTextEntry
                     autoFocus
                     autoCapitalize="none"
@@ -94,7 +103,7 @@ export function GroupInviteScreen({ invite, identityEmail, onConnected, onCancel
               <Button disabled={loading} onPress={onCancel} flex={1} minWidth={160}>Annulla invito</Button>
               {emailMatches ? (
                 <Button disabled={!canSubmit} onPress={join} flex={1} minWidth={220} theme="accent">
-                  {loading ? <Spinner /> : 'Verifica PAT e unisciti'}
+                  {loading ? <Spinner /> : invite.v === 3 ? 'Verifica e unisciti' : 'Salva PAT e unisciti'}
                 </Button>
               ) : null}
             </XStack>

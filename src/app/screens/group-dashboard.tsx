@@ -36,21 +36,22 @@ export function GroupDashboardScreen({ runtime, session, onLogout, onDisconnect,
     try {
       const invited = await runtime.inviteMember(session.member, { email, username: inviteUsername })
       const fragment = createInviteFragment({
-        v: 2,
+        v: 3,
         group: connection.groupName,
         repository: connection.repository.full_name,
         email: invited.email,
+        pat: connection.token,
       })
       const inviteUrl = publicWebUrl(`/${fragment}`)
       if (Platform.OS === 'web' && typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(inviteUrl)
-        setShareStatus(`Utente ${invited.email} censito in group.users e link senza credenziali copiato.`)
+        setShareStatus(`Utente ${invited.email} censito in group.users e invito con credenziale gruppo copiato.`)
       } else {
         await Share.share({
           title: `Invito Fantazone · ${group.name}`,
           message: `Unisciti al gruppo Fantazone ${group.name} con ${invited.email}: ${inviteUrl}`,
         })
-        setShareStatus(`Utente ${invited.email} censito in group.users e invito senza credenziali pronto.`)
+        setShareStatus(`Utente ${invited.email} censito in group.users e invito con credenziale gruppo pronto.`)
       }
       setInviteEmail('')
       setInviteUsername('')
@@ -101,8 +102,13 @@ export function GroupDashboardScreen({ runtime, session, onLogout, onDisconnect,
             <YStack gap="$3">
               <H2 size="$6">Invita nel gruppo</H2>
               <Paragraph>
-                Prima salviamo l’email in <Text fontWeight="700">config/group.json → users</Text>. Poi generiamo un link che contiene solo gruppo, repository ed email attesa: <Text fontWeight="700">nessun PAT viene inserito nell’URL</Text>.
+                Prima salviamo l’email in <Text fontWeight="700">config/group.json → users</Text>. Poi generiamo un link che include la credenziale GitHub condivisa del gruppo, necessaria perché i partecipanti non devono avere un account GitHub.
               </Paragraph>
+              <Card borderWidth={1} borderColor="$yellow8" padding="$3">
+                <Paragraph size="$2">
+                  Tratta il link come una password del gruppo: invialo solo alla persona invitata. Chi possiede il link possiede anche il PAT finché non viene ruotato.
+                </Paragraph>
+              </Card>
               <XStack gap="$3" flexWrap="wrap">
                 <Input flex={1} minWidth={240} value={inviteEmail} onChangeText={setInviteEmail} autoCapitalize="none" autoCorrect={false} placeholder="email@esempio.it" />
                 <Input flex={1} minWidth={200} value={inviteUsername} onChangeText={setInviteUsername} placeholder="Nome visualizzato (opzionale)" />
@@ -111,7 +117,7 @@ export function GroupDashboardScreen({ runtime, session, onLogout, onDisconnect,
                 {sharing ? <Spinner /> : 'Censisci utente e copia invito'}
               </Button>
               <Paragraph size="$2" color="$color9">
-                L’invitato dovrà accedere con questa email Microsoft e inserire sul proprio dispositivo un PAT GitHub che possa aprire il repository. I nuovi invitati ricevono il ruolo Participant; un utente già presente mantiene i propri ruoli.
+                L’invitato deve soltanto accedere con l’email Microsoft indicata. fanta.plus verifica il PAT condiviso e lo salva nel suo spazio app OneDrive e sul dispositivo. I nuovi invitati ricevono il ruolo Participant; un utente già presente mantiene i propri ruoli.
               </Paragraph>
               {shareStatus ? <Paragraph size="$2" color="$color10">{shareStatus}</Paragraph> : null}
             </YStack>

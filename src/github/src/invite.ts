@@ -16,11 +16,13 @@ export function createInviteFragment(payload: GroupInvitePayload): string {
 }
 
 /**
- * Reads both the current secret-free v2 contract and legacy v1 links.
+ * Reads current v3 shared-credential invitations plus older v2/v1 links.
  *
- * Legacy PAT material is intentionally discarded. The returned value is always a
- * v2 payload and can therefore be persisted temporarily without carrying a GitHub
- * credential forward from the URL.
+ * v3 intentionally carries the group PAT because Fantazone has no trusted backend
+ * and participants are not required to own a GitHub account. The browser strips
+ * the fragment immediately after parsing it. v2 remains supported and asks the
+ * participant for the shared PAT once. Legacy v1 is normalized to v3 when its PAT
+ * is present.
  */
 export function parseInviteFragment(fragment: string): GroupInvitePayload | null {
   try {
@@ -29,17 +31,25 @@ export function parseInviteFragment(fragment: string): GroupInvitePayload | null
     if (!encoded) return null
     const payload = JSON.parse(fromBase64Url(encoded)) as LegacyGroupInvitePayload
 
-    if (payload.v === 2) {
+    if (payload.v === 3 || payload.v === 2) {
       return normalizeInvitePayload(payload)
     }
 
     if (payload.v === 1) {
       const owner = text(payload.owner)
       const repository = text(payload.repository)
-      return normalizeInvitePayload({
+      const pat = text(payload.pat)
+      const normalizedRepository = repository.includes('/') ? repository : owner ? `${owner}/${repository}` : ''
+      return normalizeInvitePayload(pat ? {
+        v: 3,
+        group: text(payload.group),
+        repository: normalizedRepository,
+        email: text(payload.email),
+        pat,
+      } : {
         v: 2,
         group: text(payload.group),
-        repository: repository.includes('/') ? repository : owner ? `${owner}/${repository}` : '',
+        repository: normalizedRepository,
         email: text(payload.email),
       })
     }
@@ -53,14 +63,18 @@ export function parseInviteFragment(fragment: string): GroupInvitePayload | null
 function normalizeInvitePayload(value: unknown): GroupInvitePayload | null {
   if (!value || typeof value !== 'object') return null
   const raw = value as Record<string, unknown>
-  if (raw.v !== 2) return null
+  if (raw.v !== 2 && raw.v !== 3) return null
 
   const group = text(raw.group)
   const repository = normalizeRepository(text(raw.repository))
   const email = normalizeEmail(text(raw.email))
   if (!group || !repository || !email || !email.includes('@')) return null
 
-  return { v: 2, group, repository, email }
+  if (raw.v === 2) return { v: 2, group, repository, email }
+
+  const pat = text(raw.pat)
+  if (!pat) return null
+  return { v: 3, group, repository, email, pat }
 }
 
 function normalizeRepository(value: string): string {
