@@ -25,6 +25,8 @@ const BUYER = 'buyer@example.com'
 const SELLER = 'seller@example.com'
 const VOTER = 'voter@example.com'
 const FOURTH = 'fourth@example.com'
+const FIFTH = 'fifth@example.com'
+const SIXTH = 'sixth@example.com'
 
 function group(market = MarketType.WithVote, startingMoney = 100): Group {
   return {
@@ -81,9 +83,16 @@ function createCommand(): MarketCommand {
   }
 }
 
-function process(command: MarketCommand, market = emptyMarketWrapper(), teamState = teams(), marketType = MarketType.WithVote, startingMoney = 100) {
+function process(
+  command: MarketCommand,
+  market = emptyMarketWrapper(),
+  teamState = teams(),
+  marketType = MarketType.WithVote,
+  startingMoney = 100,
+  groupState: Group = group(marketType, startingMoney),
+) {
   return processMarketCommand({
-    group: group(marketType, startingMoney),
+    group: groupState,
     leagueId: 'league',
     season: SEASON,
     command,
@@ -158,18 +167,32 @@ test('execution fails with NoPlayers when an offered player is no longer active'
   assert.equal(result.command.status, 'rejected')
 })
 
-test('neutral denial reaches quorum while involved users cannot vote', () => {
-  const created = process(createCommand())
+test('neutral denial reaches the same six-team majority used by legacy MarketManager', () => {
+  const sixTeamGroup = group()
+  sixTeamGroup.users.push(
+    { username: FIFTH, email: FIFTH, role: IdentityRole.Participant },
+    { username: SIXTH, email: SIXTH, role: IdentityRole.Participant },
+  )
+  sixTeamGroup.baskets[0].years[0].teams.push(
+    { name: FIFTH, owner: FIFTH, additionalOwners: [] },
+    { name: SIXTH, owner: SIXTH, additionalOwners: [] },
+  )
+
+  const created = process(createCommand(), emptyMarketWrapper(), teams(), MarketType.WithVote, 100, sixTeamGroup)
   const invalid: MarketCommand = {
     version: 1, id: 'buyer-vote', kind: 'deny', leagueId: 'league', season: SEASON,
     actor: BUYER, requestedAt: NOW.toISOString(), status: 'pending', marketId: 'market-1',
   }
-  assert.equal(process(invalid, created.market, created.teams).command.status, 'rejected')
+  assert.equal(process(invalid, created.market, created.teams, MarketType.WithVote, 100, sixTeamGroup).command.status, 'rejected')
 
-  const first = process({ ...invalid, id: 'deny-1', actor: VOTER }, created.market, created.teams)
+  const first = process({ ...invalid, id: 'deny-1', actor: VOTER }, created.market, created.teams, MarketType.WithVote, 100, sixTeamGroup)
   assert.equal(first.market.markets[0].status, MarketStatus.Pending)
-  const second = process({ ...invalid, id: 'deny-2', actor: FOURTH }, first.market, first.teams)
-  assert.equal(second.market.markets[0].status, MarketStatus.Denied)
+  const second = process({ ...invalid, id: 'deny-2', actor: FOURTH }, first.market, first.teams, MarketType.WithVote, 100, sixTeamGroup)
+  assert.equal(second.market.markets[0].status, MarketStatus.Pending)
+  const third = process({ ...invalid, id: 'deny-3', actor: FIFTH }, second.market, second.teams, MarketType.WithVote, 100, sixTeamGroup)
+  assert.equal(third.market.markets[0].status, MarketStatus.Pending)
+  const fourth = process({ ...invalid, id: 'deny-4', actor: SIXTH }, third.market, third.teams, MarketType.WithVote, 100, sixTeamGroup)
+  assert.equal(fourth.market.markets[0].status, MarketStatus.Denied)
 })
 
 test('only buyer or seller can cancel a pending market', () => {
