@@ -29,6 +29,10 @@ The default ICE configuration uses Cloudflare STUN (`stun:stun.cloudflare.com:34
 
 ## Native iOS/Android
 
-`auctionNativeWebRtc.ts` is a structural bridge for the `react-native-webrtc` module. The upstream native API exposes the same peer-connection/data-channel surface used by the browser negotiator, so Fantazone deliberately reuses the already-tested negotiation, signaling and reconnect implementation instead of maintaining a second protocol stack.
+`auctionNativeWebRtc.ts` is the structural bridge for `react-native-webrtc`. The upstream native API exposes the peer-connection/data-channel surface used by the browser negotiator, so Fantazone deliberately reuses the already-tested negotiation, signaling and reconnect implementation instead of maintaining a second protocol stack.
 
-The bridge is injected: importing the web bundle or running Node CI does not load a native module. The actual Expo development/production build still needs the compatible `react-native-webrtc` package and `@config-plugins/react-native-webrtc` config plugin installed and configured. This final package/native-build integration is kept separate so an unsupported native dependency cannot break the web application.
+The application now installs `react-native-webrtc@124.0.8`. The concrete package import lives only in `auctionNativeWebRtcRuntime.native.ts`, which converts the installed native module into the existing auction negotiator factory. The web bundle therefore never evaluates `react-native-webrtc` native code.
+
+Expo Go is not supported because the package contains native code; native auction testing must use the existing `expo-dev-client` / generated native build. We intentionally do **not** add `@config-plugins/react-native-webrtc` yet: its published compatibility table currently stops at Expo SDK 56 while Fantazone targets SDK 57. The package is left to React Native/Expo autolinking until SDK-57 config-plugin support is explicitly published and reviewed.
+
+The remaining native gate is a clean Expo prebuild plus iOS/Android device build and an end-to-end DataChannel auction test. No camera or microphone permission is required for the auction transport itself because it uses DataChannel only.
