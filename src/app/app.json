@@ -7,6 +7,7 @@
     "userInterfaceStyle": "automatic",
     "orientation": "portrait",
     "scheme": "fantaplus",
+    "icon": "./assets/icon.png",
     "experiments": {
       "tsconfigPaths": true,
       "baseUrl": "/"
@@ -14,16 +15,22 @@
     "plugins": ["expo-font", "expo-status-bar", "expo-secure-store"],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.keyserdsoze.fantaplus"
+      "bundleIdentifier": "com.keyserdsoze.fantaplus",
+      "icon": "./assets/icon.png"
     },
     "android": {
-      "package": "com.keyserdsoze.fantazone"
+      "package": "com.keyserdsoze.fantazone",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#FFD100"
+      }
     },
     "web": {
       "bundler": "metro",
       "output": "single",
       "name": "fanta.plus",
       "shortName": "fanta.plus",
+      "favicon": "./assets/favicon.png",
       "themeColor": "#ffd100",
       "backgroundColor": "#ffffff"
     }
