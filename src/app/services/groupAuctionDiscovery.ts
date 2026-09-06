@@ -5,7 +5,6 @@ import {
 } from '@fantazone/domain'
 import {
   GitHubAuctionRepository,
-  RepositoryWriteConflictError,
   type RepositoryJsonSnapshot,
 } from '@fantazone/github'
 
@@ -15,9 +14,7 @@ export type ActiveGroupAuction = {
 }
 
 export class ActiveAuctionCheckpointMissingError extends Error {
-  constructor(
-    public readonly pointer: ActiveAuctionPointer,
-  ) {
+  constructor(public readonly pointer: ActiveAuctionPointer) {
     super(`L'asta attiva '${pointer.auctionId}' non ha un checkpoint disponibile.`)
     this.name = 'ActiveAuctionCheckpointMissingError'
   }
@@ -33,10 +30,17 @@ export class ActiveAuctionCheckpointMismatchError extends Error {
   }
 }
 
-/**
- * UI-facing auction discovery boundary. Screens work with league/year + auction id;
- * repository paths and pointer validation stay inside this service.
- */
+export class ActiveAuctionAlreadyExistsError extends Error {
+  constructor(
+    public readonly pointer: ActiveAuctionPointer,
+    public readonly requestedAuctionId: string,
+  ) {
+    super(`La lega ha già l'asta attiva '${pointer.auctionId}'.`)
+    this.name = 'ActiveAuctionAlreadyExistsError'
+  }
+}
+
+/** UI-facing discovery/activation boundary for one league-season auction. */
 export class GroupAuctionDiscoveryService {
   constructor(
     private readonly repository: GitHubAuctionRepository,
@@ -48,16 +52,11 @@ export class GroupAuctionDiscoveryService {
     season: number,
     options: { refresh?: boolean } = { refresh: true },
   ): Promise<ActiveGroupAuction | null> {
-    const pointer = await this.repository.getActiveAuction(season, leagueId, {
-      refresh: options.refresh !== false,
-    })
+    const refresh = options.refresh !== false
+    const pointer = await this.repository.getActiveAuction(season, leagueId, { refresh })
     if (!pointer || !pointer.value.auctionId) return null
 
-    const checkpoint = await this.repository.getCheckpoint(
-      season,
-      pointer.value.auctionId,
-      { refresh: options.refresh !== false },
-    )
+    const checkpoint = await this.repository.getCheckpoint(season, pointer.value.auctionId, { refresh })
     if (!checkpoint) throw new ActiveAuctionCheckpointMissingError(pointer.value)
     this.assertCheckpoint(pointer.value, checkpoint.value)
     return { pointer, checkpoint }
@@ -73,9 +72,7 @@ export class GroupAuctionDiscoveryService {
       checkpoint.id,
       { refresh: true },
     )
-    if (!durable) {
-      throw new Error(`Il checkpoint '${checkpoint.id}' deve essere salvato prima di attivare l'asta.`)
-    }
+    if (!durable) throw new Error(`Il checkpoint '${checkpoint.id}' deve essere salvato prima di attivare l'asta.`)
     if (!sameAuctionIdentity(durable.value, checkpoint)) {
       throw new Error(`Il checkpoint salvato per '${checkpoint.id}' non corrisponde alla sessione richiesta.`)
     }
@@ -86,23 +83,19 @@ export class GroupAuctionDiscoveryService {
       auctionId: checkpoint.id,
       updatedAt: this.now(),
     })
-    const current = await this.repository.getActiveAuction(
-      pointer.season,
-      pointer.leagueId,
-      { refresh: true },
-    )
+    const current = await this.repository.getActiveAuction(pointer.season, pointer.leagueId, { refresh: true })
 
-    const expectedSha = options.expectedPointerSha ?? current?.sha
-    if (current && current.value.auctionId && current.value.auctionId !== checkpoint.id && !options.expectedPointerSha) {
-      throw new RepositoryWriteConflictError({
-        owner: '', repo: '', path: `active-auction:${pointer.leagueId}`,
-      }, 409)
+    if (
+      current &&
+      current.value.auctionId &&
+      current.value.auctionId !== checkpoint.id &&
+      !options.expectedPointerSha
+    ) {
+      throw new ActiveAuctionAlreadyExistsError(current.value, checkpoint.id)
     }
 
-    return this.repository.writeActiveAuction(
-      pointer,
-      expectedSha ? { expectedSha } : { createOnly: true },
-    )
+    const expectedSha = options.expectedPointerSha ?? current?.sha
+    return this.repository.writeActiveAuction(pointer, expectedSha ? { expectedSha } : { createOnly: true })
   }
 
   async clearActiveAuction(
@@ -111,17 +104,9 @@ export class GroupAuctionDiscoveryService {
     options: { expectedPointerSha?: string } = {},
   ): Promise<RepositoryJsonSnapshot<ActiveAuctionPointer>> {
     const current = await this.repository.getActiveAuction(season, leagueId, { refresh: true })
-    const pointer = createActiveAuctionPointer({
-      leagueId,
-      season,
-      auctionId: null,
-      updatedAt: this.now(),
-    })
+    const pointer = createActiveAuctionPointer({ leagueId, season, auctionId: null, updatedAt: this.now() })
     const expectedSha = options.expectedPointerSha ?? current?.sha
-    return this.repository.writeActiveAuction(
-      pointer,
-      expectedSha ? { expectedSha } : { createOnly: true },
-    )
+    return this.repository.writeActiveAuction(pointer, expectedSha ? { expectedSha } : { createOnly: true })
   }
 
   private assertCheckpoint(pointer: ActiveAuctionPointer, checkpoint: AuctionCheckpoint): void {
