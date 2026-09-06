@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { AppState } from 'react-native'
 import { StatusBar } from 'expo-status-bar'
 import { Button, Card, Paragraph, Spinner, TamaguiProvider, Text, Theme, XStack, YStack } from 'tamagui'
 import type { AuthenticatedGroupSession, ExternalIdentity } from '@fantazone/domain'
@@ -15,6 +16,7 @@ import {
   removeRepositoryToken,
   saveGroupConnection,
 } from './services/groupCredentialStorage'
+import { repositoryPersistentCache } from './services/repositoryPersistentCache'
 import { GroupSessionRuntime } from './services/groupSessionRuntime'
 import {
   beginMicrosoftAppLogin,
@@ -39,6 +41,7 @@ type ThemeName = 'light' | 'dark'
 type ViewName = 'groups' | 'architecture'
 const SESSION_REFRESH_LEAD_MS = 2 * 60 * 1000
 const SESSION_REFRESH_RETRY_MS = 30 * 1000
+const GROUP_SYNC_INTERVAL_MS = 60 * 1000
 
 export default function App() {
   const [theme, setTheme] = useState<ThemeName>('dark')
@@ -103,6 +106,51 @@ export default function App() {
       if (timer) clearTimeout(timer)
     }
   }, [microsoftSession?.expiresAt, microsoftSession?.refreshToken])
+
+  useEffect(() => {
+    if (!runtime || !microsoftSession) return
+    let active = true
+    let syncing = false
+    const activeRuntime = runtime
+    const identity = microsoftSession.identity
+
+    async function synchronizeOpenGroup() {
+      if (syncing) return
+      syncing = true
+      try {
+        const result = await activeRuntime.syncRepositoryRevision()
+        if (!active) return
+        if (result.changed) {
+          try {
+            await authorizeIdentity(activeRuntime, identity, false)
+          } catch (caught) {
+            if (!active) return
+            setRuntime(null)
+            setAuthenticatedSession(null)
+            setError(`Il gruppo è stato aggiornato e l’accesso deve essere verificato di nuovo: ${toMessage(caught)}`)
+            return
+          }
+        }
+        setError(current => current?.startsWith('Sincronizzazione gruppo non riuscita:') ? null : current)
+      } catch (caught) {
+        if (active) setError(`Sincronizzazione gruppo non riuscita: ${toMessage(caught)}`)
+      } finally {
+        syncing = false
+      }
+    }
+
+    void synchronizeOpenGroup()
+    const timer = setInterval(() => { void synchronizeOpenGroup() }, GROUP_SYNC_INTERVAL_MS)
+    const subscription = AppState.addEventListener('change', state => {
+      if (state === 'active') void synchronizeOpenGroup()
+    })
+
+    return () => {
+      active = false
+      clearInterval(timer)
+      subscription.remove()
+    }
+  }, [runtime, microsoftSession?.identity.subject])
 
   async function loginWithMicrosoft() {
     setLoginLoading(true)
@@ -200,8 +248,8 @@ export default function App() {
     return refreshed
   }
 
-  async function authorizeIdentity(opened: GroupSessionRuntime, identity: ExternalIdentity) {
-    const resolution = await opened.resolveIdentity(identity)
+  async function authorizeIdentity(opened: GroupSessionRuntime, identity: ExternalIdentity, refreshMembership = true) {
+    const resolution = await opened.resolveIdentity(identity, { refreshMembership })
     if (resolution.status === 'authorized') {
       setAuthenticatedSession({ group: opened.group, identity, member: resolution.member })
       return
@@ -316,7 +364,7 @@ export default function App() {
 async function openGroupConnection(connection: ConnectedGroup): Promise<GroupSessionRuntime> {
   const client = new GitHubClient(connection.token)
   await ensureGroupInitialized(client, connection.repository, connection.groupName)
-  return GroupSessionRuntime.open(connection, client)
+  return GroupSessionRuntime.open(connection, client, { persistentCache: repositoryPersistentCache })
 }
 
 function toMessage(error: unknown): string {

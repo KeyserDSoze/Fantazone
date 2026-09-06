@@ -7,6 +7,8 @@ import {
   RepositoryJsonParseError,
   RepositoryWriteConflictError,
   type RepositoryContentClient,
+  type RepositoryJsonCacheEntry,
+  type RepositoryJsonPersistentCache,
 } from '../../src/github/src/index'
 
 type StoredFile = { sha: string; content: string }
@@ -37,6 +39,33 @@ class FakeContentClient implements RepositoryContentClient {
   }
 }
 
+class FakePersistentCache implements RepositoryJsonPersistentCache {
+  readonly entries = new Map<string, RepositoryJsonCacheEntry>()
+
+  async get(key: string): Promise<RepositoryJsonCacheEntry | null> {
+    return this.entries.get(key) ?? null
+  }
+
+  async set(key: string, entry: RepositoryJsonCacheEntry): Promise<void> {
+    this.entries.set(key, JSON.parse(JSON.stringify(entry)) as RepositoryJsonCacheEntry)
+  }
+
+  async delete(key: string): Promise<void> {
+    this.entries.delete(key)
+  }
+
+  async deleteByPrefix(prefix: string, preserveKeys: readonly string[] = []): Promise<void> {
+    const preserve = new Set(preserveKeys)
+    for (const key of this.entries.keys()) {
+      if (key.startsWith(prefix) && !preserve.has(key)) this.entries.delete(key)
+    }
+  }
+
+  async clear(): Promise<void> {
+    this.entries.clear()
+  }
+}
+
 const location = { owner: 'KeyserDSoze', repo: 'Fantazone.Demo', path: 'config/group.json', ref: 'main' }
 
 test('caches parsed JSON and returns defensive copies', async () => {
@@ -52,6 +81,22 @@ test('caches parsed JSON and returns defensive copies', async () => {
   assert.equal(client.reads, 1)
 })
 
+test('reuses a durable snapshot across new store instances without hitting GitHub', async () => {
+  const cache = new FakePersistentCache()
+  const firstClient = new FakeContentClient()
+  firstClient.files.set(key(location.owner, location.repo, location.path, location.ref), { sha: 'sha-1', content: '{"name":"Demo"}' })
+  await new GitHubJsonStore(firstClient, cache).readJson(location)
+
+  const secondClient = new FakeContentClient()
+  const secondStore = new GitHubJsonStore(secondClient, cache)
+  const cached = await secondStore.readJson<{ name: string }>(location)
+
+  assert.equal(cached.fromCache, true)
+  assert.equal(cached.value.name, 'Demo')
+  assert.equal(cached.sha, 'sha-1')
+  assert.equal(secondClient.reads, 0)
+})
+
 test('refresh bypasses cache and captures a new repository SHA', async () => {
   const client = new FakeContentClient()
   const fileKey = key(location.owner, location.repo, location.path, location.ref)
@@ -64,6 +109,41 @@ test('refresh bypasses cache and captures a new repository SHA', async () => {
   assert.equal(refreshed.sha, 'sha-2')
   assert.equal(refreshed.fromCache, false)
   assert.equal(client.reads, 2)
+})
+
+test('refresh replaces a stale durable cache entry', async () => {
+  const cache = new FakePersistentCache()
+  const client = new FakeContentClient()
+  const fileKey = key(location.owner, location.repo, location.path, location.ref)
+  client.files.set(fileKey, { sha: 'sha-1', content: '{"revision":1}' })
+  const firstStore = new GitHubJsonStore(client, cache)
+  await firstStore.readJson(location)
+
+  client.files.set(fileKey, { sha: 'sha-2', content: '{"revision":2}' })
+  const secondStore = new GitHubJsonStore(client, cache)
+  const refreshed = await secondStore.readJson<{ revision: number }>(location, { refresh: true })
+  const thirdStore = new GitHubJsonStore(new FakeContentClient(), cache)
+  const persisted = await thirdStore.readJson<{ revision: number }>(location)
+
+  assert.equal(refreshed.value.revision, 2)
+  assert.equal(persisted.value.revision, 2)
+  assert.equal(persisted.sha, 'sha-2')
+})
+
+test('repository invalidation can preserve the fresh manifest while dropping stale documents', async () => {
+  const cache = new FakePersistentCache()
+  const client = new FakeContentClient()
+  const manifestLocation = { owner: location.owner, repo: location.repo, path: 'manifest.json', ref: 'main' }
+  client.files.set(key(location.owner, location.repo, location.path, location.ref), { sha: 'group-1', content: '{"name":"Demo"}' })
+  client.files.set(key(manifestLocation.owner, manifestLocation.repo, manifestLocation.path, manifestLocation.ref), { sha: 'manifest-1', content: '{"schemaVersion":2,"revision":1,"updatedAt":"2026-09-06T00:00:00.000Z"}' })
+  const store = new GitHubJsonStore(client, cache)
+  await store.readJson(location)
+  await store.readJson(manifestLocation)
+
+  await store.invalidateRepository(location.owner, location.repo, [manifestLocation])
+
+  assert.equal(await store.readCachedJson(location), null)
+  assert.equal((await store.readCachedJson<{ revision: number }>(manifestLocation))?.value.revision, 1)
 })
 
 test('writes reuse the cached SHA and replace it with GitHub returned SHA', async () => {

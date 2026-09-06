@@ -8,6 +8,7 @@ import {
   type UserOfAGroup,
 } from '@fantazone/domain'
 import {
+  decodeRepositoryRevisionManifest,
   GitHubCalendarRepository,
   GitHubClient,
   GitHubGroupRepository,
@@ -17,10 +18,13 @@ import {
   GitHubRealCalendarRepository,
   GitHubSerieAVoteRepository,
   GitHubTeamRepository,
+  REPOSITORY_MANIFEST_PATH,
+  RepositoryRevisionContentClient,
   type GitHubRepo,
   type GroupRepositoryTarget,
   type PlatformRepositoryTarget,
   type RepositoryContentClient,
+  type RepositoryJsonPersistentCache,
 } from '@fantazone/github'
 import { GroupFormationWriter } from './groupFormationWriter'
 import { GroupGameComposer } from './groupGameComposer'
@@ -36,6 +40,13 @@ export type GroupConnection = {
 export type GroupRuntimeOptions = {
   platformTarget?: PlatformRepositoryTarget
   now?: () => Date
+  persistentCache?: RepositoryJsonPersistentCache
+}
+
+export type GroupRepositorySyncResult = {
+  changed: boolean
+  previousRevision: number | null
+  revision: number
 }
 
 export const DEFAULT_PLATFORM_TARGET: PlatformRepositoryTarget = {
@@ -69,6 +80,8 @@ export class GroupSessionRuntime {
   readonly formationWriter: GroupFormationWriter
 
   private currentGroup: Group | null = null
+  private observedRevision: number | null = null
+  private readonly revisionClient: RepositoryRevisionContentClient
 
   private constructor(
     readonly connection: GroupConnection,
@@ -81,7 +94,8 @@ export class GroupSessionRuntime {
       ref: connection.repository.default_branch,
     }
     this.platformTarget = options.platformTarget ?? DEFAULT_PLATFORM_TARGET
-    this.store = new GitHubJsonStore(contentClient)
+    this.revisionClient = new RepositoryRevisionContentClient(contentClient, this.target, options.now)
+    this.store = new GitHubJsonStore(this.revisionClient, options.persistentCache)
     this.groupRepository = new GitHubGroupRepository(this.store, this.target)
     this.calendarRepository = new GitHubCalendarRepository(this.store, this.target)
     this.rankRepository = new GitHubRankRepository(this.store, this.target)
@@ -136,6 +150,34 @@ export class GroupSessionRuntime {
     if (!group) throw new GroupDocumentUnavailableError(this.connection)
     this.currentGroup = group
     return group
+  }
+
+  /**
+   * Fetches only manifest.json to decide whether cached group documents are stale.
+   * A changed stable revision invalidates the group repository cache. A manifest
+   * marked `updating` is always treated as changed: this makes polling safe even if
+   * it lands between the two phases of an application write or a writer crashes.
+   */
+  async syncRepositoryRevision(): Promise<GroupRepositorySyncResult> {
+    const manifestLocation = { ...this.target, path: REPOSITORY_MANIFEST_PATH }
+    const cachedManifest = await this.store.readCachedJson<unknown>(manifestLocation)
+    const cachedRevision = cachedManifest
+      ? decodeRepositoryRevisionManifest(cachedManifest.value).revision
+      : null
+    const previousRevision = this.revisionClient.lastRevision ?? this.observedRevision ?? cachedRevision
+
+    const freshSnapshot = await this.store.readJson<unknown>(manifestLocation, { refresh: true })
+    const freshManifest = decodeRepositoryRevisionManifest(freshSnapshot.value)
+    const revision = freshManifest.revision
+    this.observedRevision = revision
+
+    if (freshManifest.updating !== true && (previousRevision == null || previousRevision === revision)) {
+      return { changed: false, previousRevision, revision }
+    }
+
+    await this.store.invalidateRepository(this.target.owner, this.target.repo, [manifestLocation])
+    await this.refreshGroup()
+    return { changed: true, previousRevision, revision }
   }
 
   async resolveIdentity(identity: ExternalIdentity, options: { refreshMembership?: boolean; expectedEmail?: string } = {}): Promise<GroupLoginResolution> {

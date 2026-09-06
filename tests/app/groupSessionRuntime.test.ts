@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { IdentityRole, type Group } from '../../src/domain/src/index'
-import { GROUP_DOCUMENT_PATH, type RepositoryContentClient } from '../../src/github/src/index'
+import { GROUP_DOCUMENT_PATH, REPOSITORY_MANIFEST_PATH, type RepositoryContentClient } from '../../src/github/src/index'
 import { DEFAULT_PLATFORM_TARGET, GroupSessionRuntime } from '../../src/app/services/groupSessionRuntime'
 
 class FakeContentClient implements RepositoryContentClient {
@@ -33,14 +33,23 @@ const connection = {
   },
 }
 
-function group(role: number = IdentityRole.Participant): Group {
+function group(role: number = IdentityRole.Participant, name = 'Amici'): Group {
   return {
     id: 'amici',
-    name: 'Amici',
+    name,
     leagues: [],
     users: [{ username: 'Ale', email: 'ale@example.com', role }],
     baskets: [],
   }
+}
+
+function manifest(revision: number, updating = false) {
+  return JSON.stringify({
+    schemaVersion: 2,
+    revision,
+    updatedAt: `2026-09-06T10:00:0${revision}.000Z`,
+    updating,
+  })
 }
 
 test('opens one selected group and composes group plus shared platform repositories around one store', async () => {
@@ -66,6 +75,50 @@ test('allows tests or alternate deployments to override the shared platform repo
   const platformTarget = { owner: 'ExampleOrg', repo: 'Fantazone.Data', ref: 'production' }
   const runtime = await GroupSessionRuntime.open(connection, client, { platformTarget })
   assert.deepEqual(runtime.platformTarget, platformTarget)
+})
+
+test('uses manifest revision as the group cache invalidation clock', async () => {
+  const client = new FakeContentClient()
+  const groupKey = `KeyserDSoze/Fantazone.Amici/${GROUP_DOCUMENT_PATH}@main`
+  const manifestKey = `KeyserDSoze/Fantazone.Amici/${REPOSITORY_MANIFEST_PATH}@main`
+  client.files.set(groupKey, { sha: 'group-1', content: JSON.stringify(group()) })
+  client.files.set(manifestKey, { sha: 'manifest-1', content: manifest(1) })
+  const runtime = await GroupSessionRuntime.open(connection, client)
+
+  const initial = await runtime.syncRepositoryRevision()
+  assert.deepEqual(initial, { changed: false, previousRevision: null, revision: 1 })
+
+  client.files.set(groupKey, { sha: 'group-2', content: JSON.stringify(group(IdentityRole.Participant, 'Amici aggiornati')) })
+  client.files.set(manifestKey, { sha: 'manifest-2', content: manifest(2) })
+  const updated = await runtime.syncRepositoryRevision()
+
+  assert.deepEqual(updated, { changed: true, previousRevision: 1, revision: 2 })
+  assert.equal(runtime.group.name, 'Amici aggiornati')
+})
+
+test('treats an in-flight manifest revision as stale on every poll until it becomes stable', async () => {
+  const client = new FakeContentClient()
+  const groupKey = `KeyserDSoze/Fantazone.Amici/${GROUP_DOCUMENT_PATH}@main`
+  const manifestKey = `KeyserDSoze/Fantazone.Amici/${REPOSITORY_MANIFEST_PATH}@main`
+  client.files.set(groupKey, { sha: 'group-1', content: JSON.stringify(group()) })
+  client.files.set(manifestKey, { sha: 'manifest-1', content: manifest(1) })
+  const runtime = await GroupSessionRuntime.open(connection, client)
+  await runtime.syncRepositoryRevision()
+
+  client.files.set(groupKey, { sha: 'group-2', content: JSON.stringify(group(IdentityRole.Participant, 'Durante update')) })
+  client.files.set(manifestKey, { sha: 'manifest-2', content: manifest(2, true) })
+  const firstInFlight = await runtime.syncRepositoryRevision()
+  const secondInFlight = await runtime.syncRepositoryRevision()
+
+  assert.deepEqual(firstInFlight, { changed: true, previousRevision: 1, revision: 2 })
+  assert.deepEqual(secondInFlight, { changed: true, previousRevision: 2, revision: 2 })
+  assert.equal(runtime.group.name, 'Durante update')
+
+  client.files.set(groupKey, { sha: 'group-3', content: JSON.stringify(group(IdentityRole.Participant, 'Update completato')) })
+  client.files.set(manifestKey, { sha: 'manifest-3', content: manifest(3, false) })
+  const stable = await runtime.syncRepositoryRevision()
+  assert.deepEqual(stable, { changed: true, previousRevision: 2, revision: 3 })
+  assert.equal(runtime.group.name, 'Update completato')
 })
 
 test('re-reads selected group.users membership when resolving external identity', async () => {
