@@ -15,7 +15,7 @@ import {
 } from './services/groupCredentialStorage'
 import { GroupSessionRuntime } from './services/groupSessionRuntime'
 import {
-  beginExternalLogin,
+  beginMicrosoftAppLogin,
   completePendingMicrosoftAppLogin,
   type MicrosoftAppSession,
 } from './services/webIdentityAuth'
@@ -50,9 +50,10 @@ export default function App() {
       try {
         const completed = await completePendingMicrosoftAppLogin()
         if (!active || !completed) return
-        setMicrosoftSession(completed)
         const remoteSettings = await loadUserSettings(completed.graphAccessToken)
-        if (active) setSettings(remoteSettings)
+        if (!active) return
+        setMicrosoftSession(completed)
+        setSettings(remoteSettings)
       } catch (caught) {
         if (active) setError(toMessage(caught))
       } finally {
@@ -67,9 +68,14 @@ export default function App() {
     setLoginLoading(true)
     setError(null)
     try {
-      await beginExternalLogin('microsoft')
+      const completed = await beginMicrosoftAppLogin()
+      if (!completed) return
+      const remoteSettings = await loadUserSettings(completed.graphAccessToken)
+      setMicrosoftSession(completed)
+      setSettings(remoteSettings)
     } catch (caught) {
       setError(toMessage(caught))
+    } finally {
       setLoginLoading(false)
     }
   }
