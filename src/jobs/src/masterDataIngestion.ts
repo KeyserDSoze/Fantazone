@@ -22,6 +22,8 @@ import {
 } from '@fantazone/github'
 
 export const DEFAULT_FANTACALCIO_PLAYERS_URL = 'https://www.fantacalcio.it/quotazioni-fantacalcio'
+export const DEFAULT_MINIMUM_SERIE_A_PLAYERS = 400
+export const DEFAULT_MINIMUM_ACTIVE_RETENTION_RATIO = 0.85
 const REPO_ROOT = fileURLToPath(new URL('../../../', import.meta.url))
 const DEFAULT_MINIMUM_SERIE_A_TEAMS = 20
 
@@ -45,6 +47,8 @@ export type MasterDataIngestionOptions = {
   fetchText?: TextFetcher
   now?: Date
   minimumTeamCount?: number
+  minimumPlayerCount?: number
+  minimumActiveRetentionRatio?: number
 }
 
 export type MasterDataIngestionResult = {
@@ -88,12 +92,15 @@ export async function ingestMasterData(
   const fetchText = options.fetchText ?? defaultFetchText
   const html = await fetchText(sourceUrl)
   const currentPlayers = parseFantacalcioPlayers(html, teams)
-  if (currentPlayers.length === 0) {
-    throw new Error('La sorgente Fantacalcio non ha restituito giocatori validi; il master data esistente non viene modificato.')
-  }
+  const minimumPlayerCount = options.minimumPlayerCount ?? DEFAULT_MINIMUM_SERIE_A_PLAYERS
+  validateMinimumPlayerCount(currentPlayers, minimumPlayerCount)
+  validateTeamCoverage(currentPlayers, teams)
 
   const playersPath = resolve(repoRoot, realPlayersDocumentPath(season))
   const existingPlayers = await readExistingPlayers(playersPath, season)
+  const minimumActiveRetentionRatio = options.minimumActiveRetentionRatio ?? DEFAULT_MINIMUM_ACTIVE_RETENTION_RATIO
+  validateActiveRetention(currentPlayers, existingPlayers, minimumActiveRetentionRatio)
+
   const reconciliation = reconcileRealPlayers(existingPlayers, currentPlayers, season)
   const teamsPath = resolve(repoRoot, realTeamsDocumentPath(season))
 
@@ -178,6 +185,45 @@ function resolveFantacalcioTeam(
   if (exact) return exact
   const canonicalAlias = FANTACALCIO_TEAM_ABBREVIATION_ALIASES[abbreviation]
   return canonicalAlias ? teamByAbbreviation.get(canonicalAlias) : undefined
+}
+
+function validateMinimumPlayerCount(players: readonly RealPlayer[], minimumPlayerCount: number): void {
+  if (!Number.isInteger(minimumPlayerCount) || minimumPlayerCount < 1) {
+    throw new Error('minimumPlayerCount must be a positive integer')
+  }
+  if (players.length < minimumPlayerCount) {
+    throw new Error(
+      `La sorgente Fantacalcio ha restituito solo ${players.length} giocatori validi; ne servono almeno ${minimumPlayerCount}. Il master data esistente non viene modificato.`,
+    )
+  }
+}
+
+function validateTeamCoverage(players: readonly RealPlayer[], teams: RealTeams): void {
+  const represented = new Set(players.map(player => normalizeTeamName(player.team.name)))
+  const missing = teams.teams.filter(team => !represented.has(normalizeTeamName(team.name)))
+  if (missing.length === 0) return
+  throw new Error(
+    `La sorgente Fantacalcio non copre tutte le squadre del RealCalendar ${teams.year}: ${missing.map(team => team.name).join(', ')}. Il master data esistente non viene modificato.`,
+  )
+}
+
+function validateActiveRetention(
+  currentPlayers: readonly RealPlayer[],
+  existingPlayers: RealPlayers | null,
+  minimumRatio: number,
+): void {
+  if (!Number.isFinite(minimumRatio) || minimumRatio <= 0 || minimumRatio > 1) {
+    throw new Error('minimumActiveRetentionRatio must be greater than 0 and at most 1')
+  }
+  if (!existingPlayers) return
+  const existingActiveCount = existingPlayers.players.filter(player => player.isActive).length
+  if (existingActiveCount === 0) return
+  const required = Math.ceil(existingActiveCount * minimumRatio)
+  if (currentPlayers.length >= required) return
+  throw new Error(
+    `La sorgente Fantacalcio ha restituito ${currentPlayers.length} giocatori contro ${existingActiveCount} attivi nel master esistente; ` +
+    `la soglia di sicurezza richiede almeno ${required} (${Math.round(minimumRatio * 100)}%). Il master data esistente non viene modificato.`,
+  )
 }
 
 function extractPlayerName(row: string): string {
@@ -267,6 +313,10 @@ async function defaultFetchText(url: string): Promise<string> {
   })
   if (!response.ok) throw new Error(`Fantacalcio players source returned HTTP ${response.status} for ${url}`)
   return response.text()
+}
+
+function normalizeTeamName(name: string): string {
+  return name.trim().toLocaleLowerCase('it-IT')
 }
 
 function assertSeason(year: number): void {

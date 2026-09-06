@@ -49,7 +49,7 @@
 - [x] immutable TeamDay keeps the full RealPlayer snapshot needed for historical correctness; future-day propagation refreshes mutable RealPlayer fields from the current master without rewriting older days.
 - [x] LiveGroup readable contract/helpers; persisted adapter retained only for migration compatibility.
 - [x] RealCalendar readable global schema + GitHub repository + timing projections.
-- [x] global RealTeams/RealPlayers readable master-data + reconciliation.
+- [x] global RealTeams/RealPlayers readable master-data + reconciliation; real provider path validated and daily production scheduling enabled with fail-closed structural guards.
 - [x] Vote/StatPlayer readable contracts + FinalValue/statistics reducers + rebuild job.
 - [x] live/final Serie A vote producer logic and canonical repositories; live producer is scheduled with calendar guard while remaining real-source producer validation/scheduling is operational work.
 - [x] PlayerOdds/chance readable domain + global reducer/parsers/Action; real-source production validation/scheduling remains operational work (#35).
@@ -61,8 +61,8 @@
 - [x] deterministic Cup/NewCup progression including Finals, Europa League and Supercoppa; perfect-tie randomness intentionally replaced by stable seeded choice.
 - [~] Game/day: read composition and scoring core are migrated; `TeamDay` is an Action-owned immutable day snapshot, while actual screens/UI enrichment remain pending.
 - [~] Formations: owner/SuperAdmin authorization + formation validation + normalized current Team write are migrated; GitHub Action selects/finalizes the correct hydrated day snapshot from the commit timestamp; UI and chance/stat automatic formation remain pending.
-- [~] Serie A ingestion: core calendar/master/vote/chance/image producers implemented; production initialization/source validation/scheduling remain pending except guarded live-vote schedule.
-- [~] Statistics/chances/votes: deterministic reducers + producers implemented; production data bootstrap/validation remain pending.
+- [~] Serie A ingestion: core calendar/master/vote/chance/image producers implemented; master data and guarded live votes are production-scheduled, while remaining producers still need production validation/scheduling.
+- [~] Statistics/chances/votes: deterministic reducers + producers implemented; production data bootstrap/validation remains pending for unscheduled producers.
 - [x] Market persistence/commands: append-only client commands + canonical group Action reducer with legacy voting/execution/expiry parity; Team mutations hydrate from global master and persist normalized references.
 - [x] Hall of Fame readable cross-season reducer/repository + group-owned rebuild Action; legacy TODO player-record fields remain intentionally null.
 - [~] Auction: readable V1 host reducer, outcomes, active-session discovery, GitHub slow signaling, browser RTCPeerConnection/DataChannel/reconnect, native WebRTC bridge/runtime dependency and first realtime UI implemented; native build validation, TURN and end-to-end device validation remain pending.
@@ -83,7 +83,7 @@
 ## Background jobs
 
 - [~] Serie A calendar ingestion: implementation/tests/manual global Action ready; scheduling waits for production validation.
-- [~] player/team master-data ingestion: global teams/players + reconciliation implemented; no per-group transfer propagation is required after current-Team normalization. Production scheduling/validation of `ingest-master-data` remains.
+- [x] player/team master-data ingestion: real `bootstrap-serie-a` Action validated the provider path on 2026-09-06; `ingest-master-data` is scheduled daily at 04:17 UTC with minimum roster/team coverage and active-retention guards. No per-group transfer propagation is required.
 - [~] player statistics rebuild implemented; real runtime data initialization remains pending.
 - [~] live/final votes: provider adapters + global Actions + offline parity tests implemented; `ingest-live-votes` is scheduled every five minutes with RealCalendar guard and no-op unchanged writes; final-vote production scheduling/validation remains.
 - [~] player odds: reducer + three provider parsers + global Action implemented; first real provider run and scheduling remain pending (#35).
