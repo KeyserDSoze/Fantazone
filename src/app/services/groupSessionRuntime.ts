@@ -154,9 +154,9 @@ export class GroupSessionRuntime {
 
   /**
    * Fetches only manifest.json to decide whether cached group documents are stale.
-   * When revision changes, all cached documents for this group repository are
-   * invalidated except the freshly fetched manifest, then config/group.json is
-   * refreshed so membership and group metadata become immediately authoritative.
+   * A changed stable revision invalidates the group repository cache. A manifest
+   * marked `updating` is always treated as changed: this makes polling safe even if
+   * it lands between the two phases of an application write or a writer crashes.
    */
   async syncRepositoryRevision(): Promise<GroupRepositorySyncResult> {
     const manifestLocation = { ...this.target, path: REPOSITORY_MANIFEST_PATH }
@@ -166,11 +166,12 @@ export class GroupSessionRuntime {
       : null
     const previousRevision = this.revisionClient.lastRevision ?? this.observedRevision ?? cachedRevision
 
-    const freshManifest = await this.store.readJson<unknown>(manifestLocation, { refresh: true })
-    const revision = decodeRepositoryRevisionManifest(freshManifest.value).revision
+    const freshSnapshot = await this.store.readJson<unknown>(manifestLocation, { refresh: true })
+    const freshManifest = decodeRepositoryRevisionManifest(freshSnapshot.value)
+    const revision = freshManifest.revision
     this.observedRevision = revision
 
-    if (previousRevision == null || previousRevision === revision) {
+    if (freshManifest.updating !== true && (previousRevision == null || previousRevision === revision)) {
       return { changed: false, previousRevision, revision }
     }
 
