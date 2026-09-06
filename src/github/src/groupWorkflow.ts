@@ -1,4 +1,4 @@
-export const GROUP_REPOSITORY_RUNTIME_VERSION = 7
+export const GROUP_REPOSITORY_RUNTIME_VERSION = 8
 export const GROUP_RUNTIME_ENGINE_REF = `group-runtime-v${GROUP_REPOSITORY_RUNTIME_VERSION}`
 export const GROUP_GLOBAL_DATA_REF = 'main'
 export const GROUP_RECALCULATION_WORKFLOW_PATH = '.github/workflows/fantazone-group.yml'
@@ -6,10 +6,10 @@ export const GROUP_RECALCULATION_WORKFLOW_PATH = '.github/workflows/fantazone-gr
 /**
  * Managed Fantazone group workflow installed into every Fantazone.<group> repository.
  *
- * Runtime v7 owns formation snapshot consolidation, canonical market command and
- * auction assignment processing, daily Serie A player-transfer propagation, plus
- * the weekly Hall of Fame rebuild. Group mutations execute under one repository-
- * scoped Actions concurrency lock using the group's GITHUB_TOKEN.
+ * Runtime v8 stores mutable season Teams as player references resolved from the
+ * global Serie A master, while immutable TeamDay snapshots remain fully hydrated.
+ * This removes per-group player-transfer propagation entirely. Group mutations
+ * execute under one repository-scoped Actions concurrency lock.
  */
 export const GROUP_RECALCULATION_WORKFLOW = [
   '# Managed by Fantazone. Local edits to this file are overwritten by runtime upgrades.',
@@ -25,7 +25,6 @@ export const GROUP_RECALCULATION_WORKFLOW = [
   "      - 'data/groups/seasons/*/auctions/*/outcomes/*.json'",
   '  schedule:',
   "    - cron: '0 2 * * *'",
-  "    - cron: '30 5 * * *'",
   "    - cron: '0 3 * * 2'",
   '  workflow_dispatch:',
   '    inputs:',
@@ -37,7 +36,6 @@ export const GROUP_RECALCULATION_WORKFLOW = [
   '          - recalculate-day',
   '          - recalculate-all',
   '          - set-next-formations',
-  '          - sync-player-transfers',
   '          - process-market',
   '          - process-auction-outcomes',
   '          - rebuild-hall-of-fame',
@@ -58,7 +56,7 @@ export const GROUP_RECALCULATION_WORKFLOW = [
   '  cancel-in-progress: false',
   '',
   'env:',
-  "  FANTAZONE_JOB: ${{ github.event_name == 'push' && 'sync-group' || github.event_name == 'schedule' && github.event.schedule == '0 3 * * 2' && 'rebuild-hall-of-fame' || github.event_name == 'schedule' && github.event.schedule == '30 5 * * *' && 'sync-player-transfers' || github.event_name == 'schedule' && 'process-market' || inputs.job }}",
+  "  FANTAZONE_JOB: ${{ github.event_name == 'push' && 'sync-group' || github.event_name == 'schedule' && github.event.schedule == '0 3 * * 2' && 'rebuild-hall-of-fame' || github.event_name == 'schedule' && 'process-market' || inputs.job }}",
   '  FANTAZONE_DAY: ${{ inputs.day }}',
   '  FANTAZONE_SEASON: ${{ inputs.season }}',
   '  FANTAZONE_SOURCE_BEFORE: ${{ github.event.before }}',
