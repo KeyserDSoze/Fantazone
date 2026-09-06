@@ -10,12 +10,14 @@ import {
   Role,
   type Group,
   type RealCalendar,
+  type RealPlayers,
   type Team,
 } from '../../src/domain/src/index'
 import {
   GROUP_DOCUMENT_PATH,
   dayTeamDocumentPath,
   realCalendarDocumentPath,
+  realPlayersDocumentPath,
 } from '../../src/github/src/index'
 import { propagateNextFormations } from '../../src/jobs/src/formationPropagation'
 
@@ -55,11 +57,10 @@ const sourceTeam: Team = {
   }],
 }
 
-test('copies current TeamDay byte-for-byte to the next day', async () => {
+test('copies fantasy formation fields but snapshots current Serie A master into the next TeamDay', async () => {
   const { groupRoot, platformRoot } = await fixtureRoots(completedCalendar(7))
   const sourcePath = join(groupRoot, dayTeamDocumentPath(BASKET, SEASON, 7, OWNER))
-  const sourceText = `${JSON.stringify(sourceTeam, null, 4)}\n`
-  await writeText(sourcePath, sourceText)
+  await writeJson(sourcePath, sourceTeam)
 
   const result = await propagateNextFormations({ groupRepoRoot: groupRoot, platformRepoRoot: platformRoot, season: SEASON, now: NOW })
 
@@ -67,8 +68,13 @@ test('copies current TeamDay byte-for-byte to the next day', async () => {
   assert.equal(result.sourceSerieADay, 7)
   assert.equal(result.targetSerieADay, 8)
   assert.equal(result.source, 'last-completed')
-  const target = await readFile(join(groupRoot, dayTeamDocumentPath(BASKET, SEASON, 8, OWNER)), 'utf8')
-  assert.equal(target, sourceText)
+  const target = await readJson<Team>(join(groupRoot, dayTeamDocumentPath(BASKET, SEASON, 8, OWNER)))
+  assert.equal(target.players[0].team.name, 'Milan')
+  assert.equal(target.players[0].role, Role.Forward)
+  assert.equal(target.players[0].price, sourceTeam.players[0].price)
+  assert.equal(target.players[0].status, sourceTeam.players[0].status)
+  assert.equal(target.players[0].position, sourceTeam.players[0].position)
+  assert.equal((await readJson<Team>(sourcePath)).players[0].team.name, 'Roma')
 })
 
 test('never overwrites an existing next formation', async () => {
@@ -124,12 +130,13 @@ test('live day formation is copied forward instead of the last completed formati
   await writeJson(join(groupRoot, dayTeamDocumentPath(BASKET, SEASON, 8, OWNER)), { ...sourceTeam, name: 'Live formation' })
 
   const result = await propagateNextFormations({ groupRepoRoot: groupRoot, platformRepoRoot: platformRoot, season: SEASON, now: NOW })
-  const day9 = JSON.parse(await readFile(join(groupRoot, dayTeamDocumentPath(BASKET, SEASON, 9, OWNER)), 'utf8')) as Team
+  const day9 = await readJson<Team>(join(groupRoot, dayTeamDocumentPath(BASKET, SEASON, 9, OWNER)))
 
   assert.equal(result.sourceSerieADay, 8)
   assert.equal(result.targetSerieADay, 9)
   assert.equal(result.source, 'live')
   assert.equal(day9.name, 'Live formation')
+  assert.equal(day9.players[0].team.name, 'Milan')
 })
 
 async function fixtureRoots(calendar: RealCalendar | null) {
@@ -137,8 +144,24 @@ async function fixtureRoots(calendar: RealCalendar | null) {
   const groupRoot = join(root, 'group')
   const platformRoot = join(root, 'platform')
   await writeJson(join(groupRoot, GROUP_DOCUMENT_PATH), group)
-  if (calendar) await writeJson(join(platformRoot, realCalendarDocumentPath(SEASON)), calendar)
+  if (calendar) {
+    await writeJson(join(platformRoot, realCalendarDocumentPath(SEASON)), calendar)
+    await writeJson(join(platformRoot, realPlayersDocumentPath(SEASON)), master())
+  }
   return { groupRoot, platformRoot }
+}
+
+function master(): RealPlayers {
+  return {
+    year: SEASON,
+    players: [{
+      name: 'Player',
+      team: { name: 'Milan', abbreviation: 'MIL' },
+      role: Role.Forward,
+      isActive: true,
+      visible: true,
+    }],
+  }
 }
 
 function completedCalendar(day: number): RealCalendar {
@@ -161,6 +184,10 @@ function realCalendar(days: Array<[number, string]>): RealCalendar {
       }],
     })),
   }
+}
+
+async function readJson<T>(path: string): Promise<T> {
+  return JSON.parse(await readFile(path, 'utf8')) as T
 }
 
 async function writeJson(path: string, value: unknown): Promise<void> {
