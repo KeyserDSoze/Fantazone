@@ -1,13 +1,18 @@
 import type { ExternalIdentity, ExternalIdentityProvider } from '@fantazone/domain'
+import * as Crypto from 'expo-crypto'
 import {
   GOOGLE_CLIENT_ID,
   GOOGLE_LOGIN_ENABLED,
   MICROSOFT_AUTHORITY_TENANT,
   MICROSOFT_CLIENT_ID,
+  MICROSOFT_NATIVE_REDIRECT_URI,
   MICROSOFT_REDIRECT_URI,
 } from '../config/identity'
-
-const MICROSOFT_SCOPE = 'openid profile email Files.ReadWrite.AppFolder'
+import {
+  buildMicrosoftAuthorizationUrl,
+  buildMicrosoftTokenRequestBody,
+  parseMicrosoftAuthorizationCallback,
+} from './microsoftOAuth'
 
 type MicrosoftPendingLogin = {
   state: string
@@ -73,6 +78,8 @@ export type MicrosoftAppSession = {
 
 const MICROSOFT_PENDING_KEY = 'fantazone.oauth.microsoft.pending.v1'
 const GOOGLE_SCRIPT_ID = 'fantazone-google-identity-services'
+const BASE64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+const BASE64_URL = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_'
 let googleScriptPromise: Promise<void> | null = null
 
 export class IdentityLoginError extends Error {
@@ -86,15 +93,29 @@ export async function beginExternalLogin(
   provider: ExternalIdentityProvider,
   expectedEmail?: string,
 ): Promise<ExternalIdentity | null> {
-  assertWebBrowser()
   if (provider === 'google') {
+    assertWebBrowser()
     if (!GOOGLE_LOGIN_ENABLED) {
       throw new IdentityLoginError('Login Google temporaneamente disabilitato in Fantazone.')
     }
     return loginWithGoogle(expectedEmail)
   }
-  await beginMicrosoftLogin(expectedEmail)
-  return null
+  const session = await beginMicrosoftAppLogin(expectedEmail)
+  return session?.identity ?? null
+}
+
+/**
+ * Starts the product-level Microsoft login on every supported runtime.
+ * Web keeps the full-page PKCE redirect so GitHub Pages can complete the SPA
+ * callback. Native opens the system auth session and returns directly through
+ * the configured `fantaplus://auth` deep link.
+ */
+export async function beginMicrosoftAppLogin(expectedEmail?: string): Promise<MicrosoftAppSession | null> {
+  if (isWebBrowser()) {
+    await beginMicrosoftWebLogin(expectedEmail)
+    return null
+  }
+  return loginWithMicrosoftNative(expectedEmail)
 }
 
 export async function completePendingExternalLogin(): Promise<ExternalIdentity | null> {
@@ -102,102 +123,124 @@ export async function completePendingExternalLogin(): Promise<ExternalIdentity |
   return session?.identity ?? null
 }
 
+/** Complete the full-page Microsoft callback used only by the web build. */
 export async function completePendingMicrosoftAppLogin(): Promise<MicrosoftAppSession | null> {
-  assertWebBrowser()
+  if (!isWebBrowser()) return null
   const pending = readMicrosoftPending()
   if (!pending) return null
 
   const params = new URLSearchParams(window.location.search)
-  const error = params.get('error')
-  const code = params.get('code')
-  if (!error && !code) return null
+  if (!params.get('error') && !params.get('code')) return null
 
   try {
-    if (error) {
-      throw new IdentityLoginError(params.get('error_description') || `Microsoft login: ${error}`)
-    }
-    if (params.get('state') !== pending.state) {
-      throw new IdentityLoginError('La risposta Microsoft non corrisponde alla sessione di login avviata.')
-    }
-
-    const token = await exchangeMicrosoftCode(code!, pending.verifier)
-    validateMicrosoftIdToken(token.id_token, pending.nonce)
-    const user = await fetchMicrosoftUserInfo(token.access_token!)
-    const claims = token.id_token ? decodeJwtPayload(token.id_token) : {}
-    const email = normalizeEmail(
-      user.email || user.preferred_username || stringClaim(claims.email) || stringClaim(claims.preferred_username),
-    )
-    const subject = user.sub || stringClaim(claims.sub)
-    if (!email || !subject) {
-      throw new IdentityLoginError('Microsoft non ha restituito un indirizzo email utilizzabile per Fantazone.')
-    }
-
-    return {
-      identity: {
-        provider: 'microsoft',
-        subject,
-        email,
-        displayName: user.name || stringClaim(claims.name) || undefined,
-      },
-      graphAccessToken: token.access_token!,
-    }
+    const code = parseCallback(window.location.href, pending.state)
+    const token = await exchangeMicrosoftCode(code, pending.verifier, MICROSOFT_REDIRECT_URI)
+    return createMicrosoftSession(token, pending.nonce)
   } finally {
     clearMicrosoftPending()
     stripMicrosoftCallbackFromUrl()
   }
 }
 
-async function beginMicrosoftLogin(expectedEmail?: string): Promise<void> {
-  const state = randomBase64Url(32)
-  const verifier = randomBase64Url(64)
-  const nonce = randomBase64Url(32)
-  const challenge = await sha256Base64Url(verifier)
-  const pending: MicrosoftPendingLogin = {
-    state,
-    verifier,
-    nonce,
-    expectedEmail: normalizeEmail(expectedEmail),
-  }
+async function beginMicrosoftWebLogin(expectedEmail?: string): Promise<void> {
+  const pending = await createMicrosoftTransaction(expectedEmail)
   window.sessionStorage.setItem(MICROSOFT_PENDING_KEY, JSON.stringify(pending))
-
-  const params = new URLSearchParams({
-    client_id: MICROSOFT_CLIENT_ID,
-    response_type: 'code',
-    redirect_uri: MICROSOFT_REDIRECT_URI,
-    response_mode: 'query',
-    scope: MICROSOFT_SCOPE,
-    state,
-    nonce,
-    code_challenge: challenge,
-    code_challenge_method: 'S256',
-  })
-  if (pending.expectedEmail) params.set('login_hint', pending.expectedEmail)
-
-  window.location.assign(
-    `https://login.microsoftonline.com/${encodeURIComponent(MICROSOFT_AUTHORITY_TENANT)}/oauth2/v2.0/authorize?${params.toString()}`,
-  )
+  window.location.assign(await authorizationUrl(pending, MICROSOFT_REDIRECT_URI))
 }
 
-async function exchangeMicrosoftCode(code: string, verifier: string): Promise<MicrosoftTokenResponse> {
-  const endpoint = `https://login.microsoftonline.com/${encodeURIComponent(MICROSOFT_AUTHORITY_TENANT)}/oauth2/v2.0/token`
-  const body = new URLSearchParams({
-    client_id: MICROSOFT_CLIENT_ID,
-    scope: MICROSOFT_SCOPE,
-    code,
-    redirect_uri: MICROSOFT_REDIRECT_URI,
-    grant_type: 'authorization_code',
-    code_verifier: verifier,
+async function loginWithMicrosoftNative(expectedEmail?: string): Promise<MicrosoftAppSession | null> {
+  const pending = await createMicrosoftTransaction(expectedEmail)
+  const redirectUri = MICROSOFT_NATIVE_REDIRECT_URI
+  const authUrl = await authorizationUrl(pending, redirectUri)
+  const WebBrowser = await import('expo-web-browser')
+  const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectUri)
+
+  if (result.type === 'cancel' || result.type === 'dismiss') return null
+  const callbackUrl = result.type === 'success' && 'url' in result && typeof result.url === 'string'
+    ? result.url
+    : ''
+  if (!callbackUrl) {
+    throw new IdentityLoginError('Microsoft non ha restituito il deep link di completamento del login.')
+  }
+
+  const code = parseCallback(callbackUrl, pending.state)
+  const token = await exchangeMicrosoftCode(code, pending.verifier, redirectUri)
+  return createMicrosoftSession(token, pending.nonce)
+}
+
+async function createMicrosoftTransaction(expectedEmail?: string): Promise<MicrosoftPendingLogin> {
+  return {
+    state: await randomBase64Url(32),
+    verifier: await randomBase64Url(64),
+    nonce: await randomBase64Url(32),
+    expectedEmail: normalizeEmail(expectedEmail) || undefined,
+  }
+}
+
+async function authorizationUrl(pending: MicrosoftPendingLogin, redirectUri: string): Promise<string> {
+  return buildMicrosoftAuthorizationUrl({
+    authorityTenant: MICROSOFT_AUTHORITY_TENANT,
+    clientId: MICROSOFT_CLIENT_ID,
+    redirectUri,
+    state: pending.state,
+    nonce: pending.nonce,
+    codeChallenge: await sha256Base64Url(pending.verifier),
+    loginHint: pending.expectedEmail,
   })
+}
+
+function parseCallback(callbackUrl: string, expectedState: string): string {
+  try {
+    return parseMicrosoftAuthorizationCallback(callbackUrl, expectedState)
+  } catch (error) {
+    throw new IdentityLoginError(error instanceof Error ? error.message : 'Risposta Microsoft non valida.')
+  }
+}
+
+async function exchangeMicrosoftCode(
+  code: string,
+  verifier: string,
+  redirectUri: string,
+): Promise<MicrosoftTokenResponse> {
+  const endpoint = `https://login.microsoftonline.com/${encodeURIComponent(MICROSOFT_AUTHORITY_TENANT)}/oauth2/v2.0/token`
   const response = await fetch(endpoint, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: body.toString(),
+    body: buildMicrosoftTokenRequestBody({
+      clientId: MICROSOFT_CLIENT_ID,
+      code,
+      redirectUri,
+      verifier,
+    }),
   })
   const token = await response.json() as MicrosoftTokenResponse
   if (!response.ok || !token.access_token || !token.id_token) {
     throw new IdentityLoginError(token.error_description || token.error || 'Microsoft non ha restituito i token di login attesi.')
   }
   return token
+}
+
+async function createMicrosoftSession(token: MicrosoftTokenResponse, nonce: string): Promise<MicrosoftAppSession> {
+  validateMicrosoftIdToken(token.id_token, nonce)
+  const user = await fetchMicrosoftUserInfo(token.access_token!)
+  const claims = token.id_token ? decodeJwtPayload(token.id_token) : {}
+  const email = normalizeEmail(
+    user.email || user.preferred_username || stringClaim(claims.email) || stringClaim(claims.preferred_username),
+  )
+  const subject = user.sub || stringClaim(claims.sub)
+  if (!email || !subject) {
+    throw new IdentityLoginError('Microsoft non ha restituito un indirizzo email utilizzabile per Fantazone.')
+  }
+
+  return {
+    identity: {
+      provider: 'microsoft',
+      subject,
+      email,
+      displayName: user.name || stringClaim(claims.name) || undefined,
+    },
+    graphAccessToken: token.access_token!,
+  }
 }
 
 async function fetchMicrosoftUserInfo(accessToken: string): Promise<MicrosoftUserInfo> {
@@ -317,28 +360,60 @@ function stripMicrosoftCallbackFromUrl(): void {
 function decodeJwtPayload(token: string): Record<string, unknown> {
   const part = token.split('.')[1]
   if (!part) throw new IdentityLoginError('ID token non valido.')
-  const normalized = part.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(part.length / 4) * 4, '=')
-  return JSON.parse(decodeURIComponent(Array.from(atob(normalized), char =>
-    `%${char.charCodeAt(0).toString(16).padStart(2, '0')}`).join(''))) as Record<string, unknown>
+  try {
+    return JSON.parse(decodeBase64UrlUtf8(part)) as Record<string, unknown>
+  } catch {
+    throw new IdentityLoginError('ID token Microsoft non decodificabile.')
+  }
+}
+
+function decodeBase64UrlUtf8(value: string): string {
+  const normalized = value.replace(/-/g, '+').replace(/_/g, '/').replace(/=+$/g, '')
+  const bytes: number[] = []
+  let buffer = 0
+  let bits = 0
+  for (const char of normalized) {
+    const index = BASE64.indexOf(char)
+    if (index < 0) throw new Error('base64 non valido')
+    buffer = (buffer << 6) | index
+    bits += 6
+    if (bits >= 8) {
+      bits -= 8
+      bytes.push((buffer >> bits) & 0xff)
+      buffer &= (1 << bits) - 1
+    }
+  }
+  return decodeURIComponent(bytes.map(byte => `%${byte.toString(16).padStart(2, '0')}`).join(''))
 }
 
 function stringClaim(value: unknown): string {
   return typeof value === 'string' ? value : ''
 }
 
-function randomBase64Url(size: number): string {
-  const bytes = new Uint8Array(size)
-  window.crypto.getRandomValues(bytes)
-  let binary = ''
-  bytes.forEach(value => { binary += String.fromCharCode(value) })
-  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '')
+async function randomBase64Url(size: number): Promise<string> {
+  return bytesToBase64Url(await Crypto.getRandomBytesAsync(size))
 }
 
 async function sha256Base64Url(value: string): Promise<string> {
-  const digest = await window.crypto.subtle.digest('SHA-256', new TextEncoder().encode(value))
-  let binary = ''
-  new Uint8Array(digest).forEach(byte => { binary += String.fromCharCode(byte) })
-  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '')
+  const bytes = Uint8Array.from(value, char => char.charCodeAt(0))
+  const digest = await Crypto.digest(Crypto.CryptoDigestAlgorithm.SHA256, bytes)
+  return bytesToBase64Url(new Uint8Array(digest))
+}
+
+function bytesToBase64Url(bytes: Uint8Array): string {
+  let output = ''
+  for (let index = 0; index < bytes.length; index += 3) {
+    const a = bytes[index]
+    const hasB = index + 1 < bytes.length
+    const hasC = index + 2 < bytes.length
+    const b = hasB ? bytes[index + 1] : 0
+    const c = hasC ? bytes[index + 2] : 0
+    output += BASE64_URL[a >> 2]
+    output += BASE64_URL[((a & 0x03) << 4) | (b >> 4)]
+    if (hasB) output += BASE64_URL[((b & 0x0f) << 2) | (c >> 6)]
+    if (hasC) output += BASE64_URL[c & 0x3f]
+  }
+  return output
 }
 
 function normalizeEmail(email: string | null | undefined): string {
@@ -351,6 +426,6 @@ function isWebBrowser(): boolean {
 
 function assertWebBrowser(): void {
   if (!isWebBrowser()) {
-    throw new IdentityLoginError('Questo adapter OAuth è configurato per fanta.plus. Le build native richiedono un redirect/deep-link dedicato.')
+    throw new IdentityLoginError('Questo provider è disponibile solo nella build web di fanta.plus.')
   }
 }
