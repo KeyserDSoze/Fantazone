@@ -10,7 +10,7 @@ permissions:
   contents: write
 
 env:
-  FANTAZONE_JOB: bootstrap-serie-a
+  FANTAZONE_JOB: ingest-serie-a
   FANTAZONE_DAY: ''
   FANTAZONE_SEASON: '15'
   FANTAZONE_SERIE_A_CALENDAR_BASE_URL: ${{ vars.FANTAZONE_SERIE_A_CALENDAR_BASE_URL }}
@@ -28,13 +28,13 @@ jobs:
         run: npm install
       - name: Typecheck jobs
         run: npm run typecheck --workspace=@fantazone/jobs
-      - name: Bootstrap canonical Serie A data
+      - name: Run one-shot Serie A producer
         run: npm run job --workspace=@fantazone/jobs -- "$FANTAZONE_JOB" "$FANTAZONE_DAY" "$FANTAZONE_SEASON"
       - name: Upload raw/debug outputs
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: fantazone-bootstrap-serie-a-${{ github.run_id }}
+          name: fantazone-${{ env.FANTAZONE_JOB }}-${{ github.run_id }}
           path: src/jobs/.artifacts/
           if-no-files-found: ignore
           retention-days: 7
@@ -48,5 +48,5 @@ jobs:
           git config user.name "fantazone-actions[bot]"
           git config user.email "fantazone-actions[bot]@users.noreply.github.com"
           git add -A -- data
-          git commit -m "data: bootstrap-serie-a"
+          git commit -m "data: $FANTAZONE_JOB"
           git push
