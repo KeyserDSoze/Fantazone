@@ -1,10 +1,17 @@
-import { GitHubClient, type GitHubRepo } from '@fantazone/github'
+import { GitHubApiError, GitHubClient, type GitHubRepo } from '@fantazone/github'
 import type { GroupConnection } from './groupSessionRuntime'
 import type { StoredGroup } from './userSettingsOneDrive'
 
 export interface StoredGroupReconnectClient {
   validateToken(): Promise<{ login: string }>
   discoverFantazoneRepositories(): Promise<GitHubRepo[]>
+}
+
+export class StoredGroupRepositoryAccessError extends Error {
+  constructor(readonly repository: string) {
+    super(`Il PAT non può aprire il repository ${repository}.`)
+    this.name = 'StoredGroupRepositoryAccessError'
+  }
 }
 
 /**
@@ -24,15 +31,18 @@ export async function reconnectStoredGroup(
   await client.validateToken()
   const repositories = await client.discoverFantazoneRepositories()
   const repository = findStoredGroupRepository(repositories, group.repository)
-  if (!repository) {
-    throw new Error(`Il PAT non può aprire il repository ${group.repository}.`)
-  }
+  if (!repository) throw new StoredGroupRepositoryAccessError(group.repository)
 
   return {
     token: normalizedToken,
     repository,
     groupName: group.name,
   }
+}
+
+export function shouldRecoverStoredGroupCredential(error: unknown): boolean {
+  return error instanceof StoredGroupRepositoryAccessError ||
+    (error instanceof GitHubApiError && error.status === 401)
 }
 
 export function findStoredGroupRepository(
