@@ -14,11 +14,11 @@
 
 - [~] Google web adapter implemented but product login intentionally disabled until configured.
 - [x] Microsoft web login after group selection through authorization-code + PKCE.
-- [~] PAT validation/repository discovery before login.
+- [x] shared group PAT preflight validates token, exact repository, read/write access and canonical Fantazone documents before persistence/use.
 - [x] readable Group initialization and `group.users` membership resolution.
 - [x] first-admin bootstrap for newly created/legacy-empty groups.
 - [x] email-bound Admin/SuperAdmin invitation flow.
-- [~] secure credential persistence and group switching; V1 web PAT still uses local storage.
+- [x] group credential persistence: shared PAT synchronized in private OneDrive settings and cached locally; invite v3 transfers the same group credential by design.
 - [x] GroupSession shares per-group repositories plus global football repositories.
 - [x] authenticated web session after provider email + selected-group membership resolution.
 - [x] create a `Fantazone.<group>` repository from zero and bootstrap current canonical/managed files.
@@ -55,25 +55,25 @@
 - [x] definitive fantasy-day reducer using official votes only, including missing TeamDay and home-advantage parity.
 - [x] full canonical Rank rebuild from calculated Calendar.
 - [x] deterministic Cup/NewCup progression including Finals, Europa League and Supercoppa; perfect-tie randomness intentionally replaced by stable seeded choice.
-- [~] Game/day: read composition, TeamDay write side and scoring core are migrated; actual screens/UI enrichment remain pending.
-- [~] Formations: validation + owner/SuperAdmin authorization + TeamDay write implemented; UI and chance/stat automatic formation remain pending.
+- [~] Game/day: read composition and scoring core are migrated; `TeamDay` is now an Action-owned immutable day snapshot, while actual screens/UI enrichment remain pending.
+- [~] Formations: owner/SuperAdmin authorization + formation validation + current Team write are migrated; GitHub Action selects/finalizes the correct day snapshot from the commit timestamp; UI and chance/stat automatic formation remain pending.
 - [~] Serie A ingestion: core calendar/master/vote/chance/image producers implemented; production initialization/source validation/scheduling remain pending.
 - [~] Statistics/chances/votes: deterministic reducers + producers implemented; production data bootstrap/validation remains pending.
 - [x] Market persistence/commands: append-only client commands + canonical group Action reducer with legacy voting/execution/expiry parity.
 - [x] Hall of Fame readable cross-season reducer/repository + group-owned rebuild Action; legacy TODO player-record fields remain intentionally null.
-- [~] Auction: readable V1 host reducer, outcomes, GitHub slow signaling, browser RTCPeerConnection/DataChannel adapter and reconnect coordinator implemented; native adapter, TURN and UI/finalization remain pending.
+- [~] Auction: readable V1 host reducer, outcomes, GitHub slow signaling, browser RTCPeerConnection/DataChannel/reconnect and structural native WebRTC bridge implemented; native package/prebuild integration, TURN and UI/finalization remain pending.
 
 ## Infrastructure backlog
 
-- [ ] Replace every legacy `buildApiUrl(...)` responsibility with local composition/GitHub/Actions/WebRTC; major Game, formation, live and recalculation endpoints are already removed conceptually.
+- [x] legacy `buildApiUrl(...)` responsibilities removed from runtime code; composition now uses local domain/GitHub/Actions/WebRTC boundaries.
 - [x] remove backend JWT/AppIdentity dependency from web login.
-- [~] replace `rystem.repository.client` with GitHub adapters.
-- [~] replace Azure/static URLs: player-image pipeline/helper moved to `https://fanta.plus`; remaining legacy static URLs still need inventory/removal.
+- [x] legacy `rystem.repository.client` runtime dependency replaced by GitHub adapters; the old name survives only in migration documentation/history.
+- [x] legacy Azure/static application URLs removed from current runtime inventory; player images use `https://fanta.plus`.
 - [x] SHA cache + optimistic concurrency for migrated mutable JSON.
 - [x] managed group-workflow upgrades use current GitHub blob SHA and advance runtime metadata only after success.
 - [ ] ETag conditional reads.
-- [ ] one-time schema-v1→v2 migration tooling if compact runtime repositories exist.
-- [ ] strict per-user write authorization beyond client UI if required.
+- [ ] one-time schema-v1→v2 migration tooling only if compact runtime repositories that need recovery are discovered.
+- [x] zero-backend authorization limitation documented: frontend/Actions enforce business rules, but a shared client-visible PAT cannot provide a cryptographic per-user write boundary.
 
 ## Background jobs
 
@@ -86,7 +86,7 @@
 - [x] legacy `LiveJob`: retired; local `GroupLiveComposer` replaces it.
 - [x] legacy `GroupsManagerJob`: retired; definitive scoring/ranking/progression use shared reducers and group-owned `recalculate-day` / `recalculate-all`.
 - [x] day/full-season recalculation: filesystem orchestration + tests + group workflow implemented.
-- [x] legacy `SetFormationJob` behavior: deterministic `set-next-formations` group job + parity tests; automatic schedule intentionally not enabled yet (#32).
+- [x] formation snapshot maintenance: current-Team pushes automatically trigger group runtime processing; commit timestamp selects the eligible day, snapshots remain frozen after cutoff and no day 39 is created.
 - [x] central Background jobs workflow contains only global/shared jobs; group mutations are excluded.
 - [x] Market group workflow/reducer: serialized command processing + daily 02:00 UTC expiry maintenance.
 - [x] HallOfFame group workflow/reducer: weekly Tuesday 03:00 UTC rebuild + manual dispatch.
@@ -98,7 +98,7 @@
 - [x] GitHub signaling + browser offer/answer + ordered DataChannel adapter + host/participant realtime wiring implemented with tests.
 - [x] timer/bid/idempotency/sequence-gap recovery, checkpoint resync and browser connection-state reconnect generation implemented.
 - [x] canonical roster assignment crosses an append-only outcome boundary and is revalidated by the serialized group Action.
-- [ ] native iOS/Android RTCPeerConnection adapter.
+- [~] native iOS/Android RTCPeerConnection bridge implemented/tested structurally; install/configure `react-native-webrtc` + Expo config plugin in a native dev build remains pending.
 - [ ] production TURN credential strategy for restrictive NAT/firewall networks.
 - [ ] Auction screens/UI and final end-to-end device validation.
 
