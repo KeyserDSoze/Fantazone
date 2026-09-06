@@ -3,6 +3,7 @@ import type { RepositoryContentClient } from './repositoryStore'
 import type { GroupRepositoryTarget } from './repositoryTarget'
 
 export const REPOSITORY_MANIFEST_PATH = 'manifest.json'
+export const REPOSITORY_REALTIME_PREFIX = 'realtime/'
 
 export type RepositoryRevisionManifest = {
   schemaVersion: number
@@ -14,8 +15,10 @@ export type RepositoryRevisionManifest = {
 }
 
 /**
- * Decorates one content client so application writes to the selected group repository
- * publish a two-phase manifest revision around the actual document write.
+ * Decorates one content client so canonical application writes to the selected group
+ * repository publish a two-phase manifest revision around the actual document write.
+ * Transient `realtime/` signaling documents deliberately bypass the manifest: an SDP
+ * rendezvous is not canonical group data and must not invalidate every cached screen.
  *
  * Phase 1 advances the revision and marks the repository as `updating`. Phase 2,
  * after the document write succeeds, advances it again and marks it stable. A watcher
@@ -80,7 +83,8 @@ export class RepositoryRevisionContentClient implements RepositoryContentClient 
   private shouldTrack(owner: string, repo: string, path: string): boolean {
     return owner.toLowerCase() === this.target.owner.toLowerCase() &&
       repo.toLowerCase() === this.target.repo.toLowerCase() &&
-      path !== REPOSITORY_MANIFEST_PATH
+      path !== REPOSITORY_MANIFEST_PATH &&
+      !path.startsWith(REPOSITORY_REALTIME_PREFIX)
   }
 
   private async transitionRevision(ref: string | undefined, updating: boolean): Promise<number | null> {
