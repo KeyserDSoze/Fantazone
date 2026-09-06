@@ -21,17 +21,27 @@ The OneDrive document is deliberately small and portable:
 }
 ```
 
-The GitHub credential is **not** synchronized in clear text through OneDrive. It remains device-local through the existing credential storage adapter; native builds use Expo SecureStore, while the current web build keeps the established browser storage behavior. A new device therefore knows which groups exist but asks for the GitHub credential once before opening a group.
+The GitHub credential is **not** synchronized in clear text through OneDrive. It remains device-local through the existing credential storage adapter; native builds use Expo SecureStore, while the current web build keeps browser-local storage behavior. A new device therefore knows which groups exist but asks for the GitHub credential once before opening a group.
+
+Repository credentials are namespaced by the authenticated application identity (`provider + subject`). Switching Microsoft accounts on the same device does not automatically reuse the previous account's PAT map. Legacy unscoped PAT storage is purged the first time a repository credential is saved under the new identity-scoped model.
 
 This is an intentional security correction to the initial idea of putting the PAT directly inside `settings.json`: the group catalog is cloud-synced, the secret is not.
 
-## Microsoft permission
+## Microsoft permission and session lifetime
 
-The PKCE login requests `Files.ReadWrite.AppFolder` in addition to OpenID profile/email scopes. The Graph adapter only accesses the app-specific OneDrive folder and stores `settings.json` there.
+The PKCE login requests `Files.ReadWrite.AppFolder` plus OpenID profile/email scopes and `offline_access`. The Graph adapter only accesses the app-specific OneDrive folder and stores `settings.json` there.
 
-Web keeps the existing SPA callback on `https://fanta.plus`. iOS and Android now use the same authorization-code + PKCE protocol through the system authentication browser and return to the Expo deep link `fantaplus://auth`. The native redirect can be overridden at build time with `EXPO_PUBLIC_MICROSOFT_NATIVE_REDIRECT_URI`, but the configured URI must match the Microsoft Entra app registration exactly.
+Web keeps the existing SPA callback on `https://fanta.plus`. iOS and Android use the same authorization-code + PKCE protocol through the system authentication browser and return to the Expo deep link `fantaplus://auth`. The native redirect can be overridden at build time with `EXPO_PUBLIC_MICROSOFT_NATIVE_REDIRECT_URI`, but the configured URI must match the Microsoft Entra app registration exactly.
 
-The native flow validates `state`, validates the ID-token audience/nonce/expiry, exchanges the code with the same redirect URI and PKCE verifier, and then reads the Microsoft OIDC user profile before OneDrive settings are opened.
+The initial flow validates `state`, ID-token audience/nonce/expiry and PKCE. Access tokens are refreshed before expiry. A rotated refresh token replaces the previous one when Microsoft returns it.
+
+Session persistence is deliberately platform-specific:
+
+- **iOS/Android:** only the Microsoft refresh token is persisted in Expo SecureStore. App startup silently exchanges it for a fresh access token, reads the Microsoft OIDC profile again, and only then loads OneDrive settings. Access tokens and copied profile claims are not persisted as the source of truth.
+- **Web/PWA:** refresh material stays in memory only. Reloading the page still requires a new Microsoft provider proof; no Microsoft identity session is trusted from persistent browser storage.
+- **Logout/account switch:** native logout deletes the stored refresh token. A new authorization request uses `prompt=select_account`, so the next login can explicitly choose another Microsoft account.
+
+If a running session cannot refresh, fanta.plus retries while the current access token is still valid. Once the token is actually expired, the group runtime is closed and the app returns to Microsoft login rather than continuing indefinitely with a stale human identity.
 
 ### Entra registration required for native builds
 
