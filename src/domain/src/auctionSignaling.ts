@@ -37,7 +37,7 @@ export type AuctionSessionDescriptionSignal = {
   createdAt: string
 }
 
-const DEFAULT_ROOM_TTL_MS = 30 * 60 * 1000
+const DEFAULT_ROOM_TTL_MS = 12 * 60 * 60 * 1000
 const MAX_SIGNALING_PEERS = 64
 
 export function createAuctionSignalingRoom(input: {
