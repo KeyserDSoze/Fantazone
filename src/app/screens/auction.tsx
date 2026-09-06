@@ -7,6 +7,7 @@ import {
   GroupHelper,
   IdentityRole,
   Role,
+  createAuctionSignalingRoom,
   formatSeasonFromYear,
   getCurrentSeasonYear,
   getPlayerKey,
@@ -23,10 +24,9 @@ import {
 } from '../services/auctionBrowserConnection'
 import { GroupAuctionRealtimeHostController } from '../services/auctionRealtimeSession'
 import { createAuctionPlatformNegotiatorFactory } from '../services/auctionRtcPlatform'
-import { GroupAuctionSetupService } from '../services/groupAuctionSetup'
 import type { GroupAuctionHostSession } from '../services/groupAuctionHostSession'
+import { GroupAuctionSetupService } from '../services/groupAuctionSetup'
 import type { GroupSessionRuntime } from '../services/groupSessionRuntime'
-import { createAuctionSignalingRoom } from '@fantazone/domain'
 
 type Props = {
   runtime: GroupSessionRuntime
@@ -69,6 +69,7 @@ export function AuctionScreen({ runtime, session, onBack }: Props) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [mode, setMode] = useState<ConnectionMode>('none')
+  const [realtimeReady, setRealtimeReady] = useState(false)
   const [connectionLabel, setConnectionLabel] = useState('Non connesso')
   const [auctionType, setAuctionType] = useState<AuctionType>(AuctionType.Normal)
   const [auctionKind, setAuctionKind] = useState<AuctionKind>(AuctionKind.Starting)
@@ -80,7 +81,6 @@ export function AuctionScreen({ runtime, session, onBack }: Props) {
   const hostConnection = useRef<BrowserAuctionHostConnectionCoordinator | null>(null)
   const participantConnection = useRef<BrowserAuctionParticipantConnectionCoordinator | null>(null)
   const realtimeHost = useRef<GroupAuctionRealtimeHostController | null>(null)
-  const hostSession = useRef<GroupAuctionHostSession | null>(null)
   const peerId = useRef(createEphemeralId('peer'))
   const setup = useMemo(() => new GroupAuctionSetupService(runtime), [runtime])
   const canHost = useMemo(() =>
@@ -90,6 +90,7 @@ export function AuctionScreen({ runtime, session, onBack }: Props) {
   useEffect(() => {
     void refreshActiveAuction()
     return () => closeRealtime()
+    // The runtime and selected league define the discovery scope; closeRealtime is intentionally cleanup-only.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [leagueId, runtime])
 
@@ -98,15 +99,16 @@ export function AuctionScreen({ runtime, session, onBack }: Props) {
   }, [view?.currentRole, checkpoint?.kind])
 
   async function refreshActiveAuction() {
-    if (!leagueId) return
+    if (!leagueId || mode !== 'none') return
     setLoading(true)
     setError(null)
     try {
       const active = await runtime.auctionDiscovery.getActiveAuction(leagueId, season, { refresh: true })
-      setCheckpoint(active?.checkpoint.value ?? null)
+      const nextCheckpoint = active?.checkpoint.value ?? null
+      setCheckpoint(nextCheckpoint)
       setPointerSha(active?.pointer.sha ?? null)
-      setView(active ? liveViewFromCheckpoint(active.checkpoint.value) : null)
-      await loadMyTeam(active?.checkpoint.value ?? null)
+      setView(nextCheckpoint ? liveViewFromCheckpoint(nextCheckpoint) : null)
+      await loadMyTeam(nextCheckpoint)
     } catch (caught) {
       setError(toMessage(caught))
     } finally {
@@ -121,7 +123,12 @@ export function AuctionScreen({ runtime, session, onBack }: Props) {
       setMyPlayers([])
       return
     }
-    const team = await runtime.teamRepository.getTeam(basketId, selectedSeason, session.identity.email, { refresh: true })
+    const team = await runtime.teamRepository.getTeam(
+      basketId,
+      selectedSeason,
+      session.identity.email,
+      { refresh: true },
+    )
     setMyPlayers(team?.players ?? [])
   }
 
@@ -139,14 +146,15 @@ export function AuctionScreen({ runtime, session, onBack }: Props) {
         type: auctionType,
         kind: auctionKind,
       })
-      hostSession.current = created.session
-      setCheckpoint(created.session.checkpoint)
-      setView(liveViewFromCheckpoint(created.session.checkpoint))
+      const nextCheckpoint = created.session.checkpoint
+      setCheckpoint(nextCheckpoint)
+      setView(liveViewFromCheckpoint(nextCheckpoint))
       const active = await runtime.auctionDiscovery.getActiveAuction(leagueId, season, { refresh: true })
       setPointerSha(active?.pointer.sha ?? null)
       await startHosting(created.session)
-      await loadMyTeam(created.session.checkpoint)
+      await loadMyTeam(nextCheckpoint)
     } catch (caught) {
+      closeRealtime()
       setError(toMessage(caught))
     } finally {
       setLoading(false)
@@ -158,13 +166,15 @@ export function AuctionScreen({ runtime, session, onBack }: Props) {
     closeRealtime()
     setLoading(true)
     setError(null)
+    setLastMessage(null)
     try {
       const resumed = await setup.resumeAuction(checkpoint)
-      hostSession.current = resumed.session
-      setCheckpoint(resumed.session.checkpoint)
-      setView(liveViewFromCheckpoint(resumed.session.checkpoint))
+      const nextCheckpoint = resumed.session.checkpoint
+      setCheckpoint(nextCheckpoint)
+      setView(liveViewFromCheckpoint(nextCheckpoint))
       await startHosting(resumed.session)
     } catch (caught) {
+      closeRealtime()
       setError(toMessage(caught))
     } finally {
       setLoading(false)
@@ -175,13 +185,16 @@ export function AuctionScreen({ runtime, session, onBack }: Props) {
     const auction = authoritative.checkpoint
     let room = await runtime.auctionSignalingRepository.getRoom(auction.id)
     if (!room || isAuctionSignalingRoomExpired(room.value)) {
-      const createdRoom = createAuctionSignalingRoom({
-        auctionId: auction.id,
-        sessionId: createEphemeralId('session'),
-        hostPeerId: createEphemeralId('host'),
-        hostEmail: session.identity.email,
-      })
-      room = { value: createdRoom, sha: '', fromCache: false }
+      room = {
+        value: createAuctionSignalingRoom({
+          auctionId: auction.id,
+          sessionId: createEphemeralId('session'),
+          hostPeerId: createEphemeralId('host'),
+          hostEmail: session.identity.email,
+        }),
+        sha: '',
+        fromCache: false,
+      }
     } else if (room.value.hostEmail.toLowerCase() !== session.identity.email.toLowerCase()) {
       throw new Error(`La stanza è già ospitata da ${room.value.hostEmail}.`)
     }
@@ -195,12 +208,14 @@ export function AuctionScreen({ runtime, session, onBack }: Props) {
       callbacks: {
         onOpen: () => setConnectionLabel('Host · peer connesso'),
         onClose: () => setConnectionLabel('Host · peer disconnesso'),
+        onConnectionState: (_peer, state) => setConnectionLabel(`Host · ${state}`),
         onError: value => setError(value.message),
       },
     })
     realtimeHost.current = realtime
     hostConnection.current = coordinator
     setMode('host')
+    setRealtimeReady(true)
     setConnectionLabel('Host · ricerca partecipanti')
     await coordinator.start()
   }
@@ -230,25 +245,35 @@ export function AuctionScreen({ runtime, session, onBack }: Props) {
           },
           onEvent: event => setView(current => applyAuctionEvent(current, event)),
           onCommandResult: result => setLastMessage(result.message ?? result.status),
-          onSequenceGap: gap => setLastMessage(`Risincronizzazione: atteso #${gap.expectedSequence}, ricevuto #${gap.receivedSequence}.`),
+          onSequenceGap: gap => setLastMessage(
+            `Risincronizzazione: atteso #${gap.expectedSequence}, ricevuto #${gap.receivedSequence}.`,
+          ),
         },
         callbacks: {
           onOpen: () => {
             setMode('participant')
+            setRealtimeReady(true)
             setConnectionLabel('Partecipante · connesso')
           },
-          onClose: () => setConnectionLabel('Partecipante · riconnessione…'),
-          onConnectionState: (_peer, state) => setConnectionLabel(`Partecipante · ${state}`),
+          onClose: () => {
+            setRealtimeReady(false)
+            setConnectionLabel('Partecipante · riconnessione…')
+          },
+          onConnectionState: (_peer, state) => {
+            if (state !== 'connected') setRealtimeReady(false)
+            setConnectionLabel(`Partecipante · ${state}`)
+          },
           onError: value => setError(value.message),
         },
       })
       participantConnection.current = coordinator
       setMode('participant')
+      setRealtimeReady(false)
       setConnectionLabel('Partecipante · connessione…')
       await coordinator.start()
       await loadMyTeam(checkpoint)
     } catch (caught) {
-      setMode('none')
+      closeRealtime()
       setError(toMessage(caught))
     } finally {
       setLoading(false)
@@ -264,21 +289,39 @@ export function AuctionScreen({ runtime, session, onBack }: Props) {
       setCheckpoint(result.checkpoint)
       setView(liveViewFromCheckpoint(result.checkpoint))
       setLastMessage(result.message ?? result.status)
-      if (command.type === 'FINISH' && result.status === 'accepted') {
-        const cleared = await runtime.auctionDiscovery.clearActiveAuction(
-          result.checkpoint.leagueKey.league,
-          result.checkpoint.leagueKey.year,
-          pointerSha ? { expectedPointerSha: pointerSha } : {},
-        )
-        setPointerSha(cleared.sha)
-      }
     } catch (caught) {
       setError(toMessage(caught))
     }
   }
 
+  async function archiveAuction() {
+    if (!checkpoint || checkpoint.status !== AuctionStatus.Finished || !canHost) return
+    setLoading(true)
+    setError(null)
+    try {
+      const cleared = await runtime.auctionDiscovery.clearActiveAuction(
+        checkpoint.leagueKey.league,
+        checkpoint.leagueKey.year,
+        pointerSha ? { expectedPointerSha: pointerSha } : {},
+      )
+      setPointerSha(cleared.sha)
+      closeRealtime()
+      setCheckpoint(null)
+      setView(null)
+      setLastMessage('Asta archiviata. Ora puoi crearne una nuova per questa lega.')
+    } catch (caught) {
+      setError(toMessage(caught))
+    } finally {
+      setLoading(false)
+    }
+  }
+
   function sendBid() {
-    if (!checkpoint) return
+    if (!checkpoint || !view?.playerName) return
+    if (mode === 'participant' && !realtimeReady) {
+      setError('La connessione realtime non è ancora pronta.')
+      return
+    }
     const amount = Number.parseInt(bidText, 10)
     if (!Number.isInteger(amount) || amount < 1) {
       setError('Inserisci un’offerta intera positiva.')
@@ -306,8 +349,8 @@ export function AuctionScreen({ runtime, session, onBack }: Props) {
     hostConnection.current = null
     participantConnection.current = null
     realtimeHost.current = null
-    hostSession.current = null
     setMode('none')
+    setRealtimeReady(false)
     setConnectionLabel('Non connesso')
   }
 
@@ -335,7 +378,7 @@ export function AuctionScreen({ runtime, session, onBack }: Props) {
             <Text color="$color10">{connectionLabel}</Text>
           </YStack>
           <XStack gap="$2">
-            <Button onPress={refreshActiveAuction} disabled={loading}>Aggiorna</Button>
+            <Button onPress={refreshActiveAuction} disabled={loading || mode !== 'none'}>Aggiorna</Button>
             <Button onPress={onBack}>← Gruppo</Button>
           </XStack>
         </XStack>
@@ -344,7 +387,12 @@ export function AuctionScreen({ runtime, session, onBack }: Props) {
           <Card borderWidth={1} borderColor="$borderColor" padding="$3">
             <XStack gap="$2" flexWrap="wrap">
               {leagues.map(league => (
-                <Button key={league.id} theme={league.id === leagueId ? 'accent' : undefined} onPress={() => setLeagueId(league.id)}>
+                <Button
+                  key={league.id}
+                  disabled={mode !== 'none'}
+                  theme={league.id === leagueId ? 'accent' : undefined}
+                  onPress={() => setLeagueId(league.id)}
+                >
                   {league.name}
                 </Button>
               ))}
@@ -365,18 +413,18 @@ export function AuctionScreen({ runtime, session, onBack }: Props) {
                 <>
                   <Text fontWeight="700">Tipo ordinamento</Text>
                   <XStack gap="$2" flexWrap="wrap">
-                    {[
+                    {([
                       [AuctionType.Normal, 'Normale'],
                       [AuctionType.RandomByLetter, 'Lettera casuale'],
                       [AuctionType.RandomList, 'Lista casuale'],
-                    ].map(([value, label]) => (
-                      <Button key={String(value)} theme={auctionType === value ? 'accent' : undefined} onPress={() => setAuctionType(value as AuctionType)}>
+                    ] as const).map(([value, label]) => (
+                      <Button key={value} theme={auctionType === value ? 'accent' : undefined} onPress={() => setAuctionType(value)}>
                         {label}
                       </Button>
                     ))}
                   </XStack>
                   <Text fontWeight="700">Tipo asta</Text>
-                  <XStack gap="$2">
+                  <XStack gap="$2" flexWrap="wrap">
                     <Button theme={auctionKind === AuctionKind.Starting ? 'accent' : undefined} onPress={() => setAuctionKind(AuctionKind.Starting)}>Iniziale</Button>
                     <Button theme={auctionKind === AuctionKind.Repairing ? 'accent' : undefined} onPress={() => setAuctionKind(AuctionKind.Repairing)}>Riparazione</Button>
                   </XStack>
@@ -401,27 +449,30 @@ export function AuctionScreen({ runtime, session, onBack }: Props) {
               </Card>
             ) : null}
 
-            {view?.playerName ? (
+            {view?.playerName && view.status !== AuctionStatus.Finished && mode !== 'none' ? (
               <Card borderWidth={1} borderColor="$green8" padding="$4">
                 <YStack gap="$3">
                   <H2 size="$6">Fai un’offerta</H2>
                   <XStack gap="$2" alignItems="center" flexWrap="wrap">
                     <Input width={140} keyboardType="number-pad" value={bidText} onChangeText={setBidText} />
-                    <Button theme="accent" onPress={sendBid}>Offri</Button>
+                    <Button theme="accent" disabled={mode === 'participant' && !realtimeReady} onPress={sendBid}>Offri</Button>
                   </XStack>
-                  {checkpoint.kind === AuctionKind.Repairing && substitutionCandidates.length ? (
+                  {checkpoint.kind === AuctionKind.Repairing ? (
                     <YStack gap="$2">
-                      <Text fontWeight="700">Giocatore da sostituire</Text>
-                      <XStack gap="$2" flexWrap="wrap">
-                        {substitutionCandidates.map(player => {
-                          const key = getPlayerKey(player.name)
-                          return (
-                            <Button key={key} size="$3" theme={substitutedPlayerKey === key ? 'accent' : undefined} onPress={() => setSubstitutedPlayerKey(key)}>
-                              {player.name}
-                            </Button>
-                          )
-                        })}
-                      </XStack>
+                      <Text fontWeight="700">Giocatore da sostituire (opzionale)</Text>
+                      {substitutionCandidates.length ? (
+                        <XStack gap="$2" flexWrap="wrap">
+                          <Button size="$3" theme={substitutedPlayerKey === null ? 'accent' : undefined} onPress={() => setSubstitutedPlayerKey(null)}>Nessuno</Button>
+                          {substitutionCandidates.map(player => {
+                            const key = getPlayerKey(player.name)
+                            return (
+                              <Button key={key} size="$3" theme={substitutedPlayerKey === key ? 'accent' : undefined} onPress={() => setSubstitutedPlayerKey(key)}>
+                                {player.name}
+                              </Button>
+                            )
+                          })}
+                        </XStack>
+                      ) : <Paragraph size="$2">Non hai giocatori attivi di questo ruolo da sostituire.</Paragraph>}
                     </YStack>
                   ) : null}
                 </YStack>
@@ -429,7 +480,12 @@ export function AuctionScreen({ runtime, session, onBack }: Props) {
             ) : null}
 
             {mode === 'host' && canHost ? (
-              <HostControls checkpoint={checkpoint} onCommand={hostCommand} />
+              <HostControls
+                checkpoint={checkpoint}
+                actor={session.identity.email}
+                onCommand={hostCommand}
+                onArchive={archiveAuction}
+              />
             ) : null}
           </>
         )}
@@ -451,40 +507,50 @@ function AuctionStateCard({ checkpoint, view }: { checkpoint: AuctionCheckpoint;
         <Text>Prezzo: {view.price}</Text>
         <Text>Offerta migliore: {view.ownerName ?? view.ownerEmail ?? '—'}</Text>
         <Text>Timer: {view.secondsPerAuction}s · Stato: {statusLabel(view.status)}</Text>
-        <Text fontSize="$2" color="$color9">Asta {checkpoint.kind === AuctionKind.Starting ? 'iniziale' : 'di riparazione'} · {checkpoint.type === AuctionType.Normal ? 'ordine normale' : checkpoint.type === AuctionType.RandomByLetter ? 'lettera casuale' : 'lista casuale'}</Text>
+        <Text fontSize="$2" color="$color9">
+          Asta {checkpoint.kind === AuctionKind.Starting ? 'iniziale' : 'di riparazione'} · {checkpoint.type === AuctionType.Normal ? 'ordine normale' : checkpoint.type === AuctionType.RandomByLetter ? 'lettera casuale' : 'lista casuale'}
+        </Text>
       </YStack>
     </Card>
   )
 }
 
-function HostControls({ checkpoint, onCommand }: {
+function HostControls({ checkpoint, actor, onCommand, onArchive }: {
   checkpoint: AuctionCheckpoint
+  actor: string
   onCommand: (command: AuctionCommand) => Promise<void>
+  onArchive: () => Promise<void>
 }) {
-  const actor = checkpoint.creator
   return (
     <Card borderWidth={1} borderColor="$yellow8" padding="$4">
       <YStack gap="$3">
         <H2 size="$6">Controlli host</H2>
+        {checkpoint.status !== AuctionStatus.Finished ? (
+          <XStack gap="$2" flexWrap="wrap">
+            {auctionRoles().map(role => (
+              <Button key={role} onPress={() => onCommand(makeCommand(checkpoint.id, actor, { type: 'SHOW_PLAYER', role }))}>
+                Prossimo {ROLE_LABELS[role]}
+              </Button>
+            ))}
+          </XStack>
+        ) : null}
         <XStack gap="$2" flexWrap="wrap">
-          {auctionRoles().map(role => (
-            <Button key={role} onPress={() => onCommand(makeCommand(checkpoint.id, actor, { type: 'SHOW_PLAYER', role }))}>
-              Prossimo {ROLE_LABELS[role]}
-            </Button>
-          ))}
-        </XStack>
-        <XStack gap="$2" flexWrap="wrap">
-          <Button onPress={() => onCommand(makeCommand(checkpoint.id, actor, { type: 'ASSIGN_CURRENT' }))}>Assegna</Button>
-          <Button onPress={() => onCommand(makeCommand(checkpoint.id, actor, { type: 'CLOSE_CURRENT' }))}>Chiudi giocatore</Button>
-          {checkpoint.status === AuctionStatus.Paused ? (
-            <Button onPress={() => onCommand(makeCommand(checkpoint.id, actor, { type: 'RESUME' }))}>Riprendi</Button>
+          {checkpoint.status !== AuctionStatus.Finished ? (
+            <>
+              <Button onPress={() => onCommand(makeCommand(checkpoint.id, actor, { type: 'ASSIGN_CURRENT' }))}>Assegna</Button>
+              <Button onPress={() => onCommand(makeCommand(checkpoint.id, actor, { type: 'CLOSE_CURRENT' }))}>Chiudi giocatore</Button>
+              {checkpoint.status === AuctionStatus.Paused ? (
+                <Button onPress={() => onCommand(makeCommand(checkpoint.id, actor, { type: 'RESUME' }))}>Riprendi</Button>
+              ) : (
+                <Button onPress={() => onCommand(makeCommand(checkpoint.id, actor, { type: 'PAUSE' }))}>Pausa</Button>
+              )}
+              <Button theme="red" onPress={() => onCommand(makeCommand(checkpoint.id, actor, { type: 'FINISH' }))}>Termina asta</Button>
+            </>
           ) : (
-            <Button onPress={() => onCommand(makeCommand(checkpoint.id, actor, { type: 'PAUSE' }))}>Pausa</Button>
-          )}
-          {checkpoint.status === AuctionStatus.Finished ? (
-            <Button onPress={() => onCommand(makeCommand(checkpoint.id, actor, { type: 'REOPEN' }))}>Riapri</Button>
-          ) : (
-            <Button theme="red" onPress={() => onCommand(makeCommand(checkpoint.id, actor, { type: 'FINISH' }))}>Termina asta</Button>
+            <>
+              <Button onPress={() => onCommand(makeCommand(checkpoint.id, actor, { type: 'REOPEN' }))}>Riapri</Button>
+              <Button theme="red" onPress={onArchive}>Archivia e libera la lega</Button>
+            </>
           )}
         </XStack>
       </YStack>
@@ -493,6 +559,7 @@ function HostControls({ checkpoint, onCommand }: {
 }
 
 function liveViewFromCheckpoint(checkpoint: AuctionCheckpoint): AuctionLiveView {
+  const ownerEmail = checkpoint.current?.owner ?? null
   return {
     status: checkpoint.status,
     sequence: checkpoint.sequence,
@@ -501,8 +568,8 @@ function liveViewFromCheckpoint(checkpoint: AuctionCheckpoint): AuctionLiveView 
     playerName: checkpoint.current?.player.name ?? null,
     playerTeam: checkpoint.current?.player.team.name ?? null,
     price: checkpoint.current?.price ?? 0,
-    ownerEmail: checkpoint.current?.owner ?? null,
-    ownerName: null,
+    ownerEmail,
+    ownerName: checkpoint.participants.find(item => item.owner.toLowerCase() === ownerEmail?.toLowerCase())?.teamName ?? null,
   }
 }
 
