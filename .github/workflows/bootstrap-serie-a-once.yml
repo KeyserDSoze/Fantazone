@@ -21,8 +21,8 @@ jobs:
         shell: bash
         run: |
           mkdir -p src/jobs/.artifacts
-          node <<'NODE'
-          const fs = require('node:fs')
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs'
           const url = 'https://www.fantacalcio.it/voti-fantacalcio-serie-a/2026-27/2'
           const response = await fetch(url, { headers: {
             'User-Agent': 'Mozilla/5.0 (compatible; Fantazone/1.0; +https://fanta.plus)',
