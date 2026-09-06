@@ -125,31 +125,31 @@ const swap = [
   { playerKey: getPlayerKey('Fwd tribune Alpha'), position: FantaSoccerRole.Forward },
 ]
 
-test('creates TeamDay from the season Team and derives the editable day from RealCalendar', async () => {
+test('saves the current season Team and leaves TeamDay creation to GitHub Actions', async () => {
   const { client, runtime } = await fixture()
   const result = await runtime.formationWriter.saveGameFormation({
     session: session('owner@example.com'), leagueId: 'league-a', season: 2026, gameId: 'game-1',
     owner: 'owner@example.com', positions: swap,
   })
-  assert.equal(result.source, 'season-fallback')
-  assert.equal(client.lastWriteSha, undefined)
-  const day = JSON.parse(client.files.get(key('KeyserDSoze', 'Fantazone.Amici', dayTeamDocumentPath('main', 2026, 4, 'owner@example.com'), 'main'))!.content) as Team
-  assert.equal(day.players.find(player => player.name === 'Fwd starter Alpha')?.position, FantaSoccerRole.Tribune)
-  assert.equal(day.players.find(player => player.name === 'Fwd starter Alpha')?.price, 10)
-  assert.equal(day.lastUpdate, NOW.toISOString())
+  assert.equal(result.source, 'season')
+  assert.equal(client.lastWriteSha, 'sha-season')
+  assert.equal(client.files.has(key('KeyserDSoze', 'Fantazone.Amici', dayTeamDocumentPath('main', 2026, 4, 'owner@example.com'), 'main')), false)
   const season = JSON.parse(client.files.get(key('KeyserDSoze', 'Fantazone.Amici', seasonTeamDocumentPath('main', 2026, 'owner@example.com'), 'main'))!.content) as Team
-  assert.equal(season.players.find(player => player.name === 'Fwd starter Alpha')?.position, FantaSoccerRole.Forward)
-  assert.equal(season.lastUpdate, null)
+  assert.equal(season.players.find(player => player.name === 'Fwd starter Alpha')?.position, FantaSoccerRole.Tribune)
+  assert.equal(season.players.find(player => player.name === 'Fwd starter Alpha')?.price, 10)
+  assert.equal(season.lastUpdate, NOW.toISOString())
 })
 
-test('updates an existing TeamDay with its freshly-read SHA', async () => {
-  const { client, runtime } = await fixture(true)
+test('never overwrites an existing TeamDay when the current formation changes', async () => {
+  const { client, runtime, team } = await fixture(true)
   const result = await runtime.formationWriter.saveGameFormation({
     session: session('coowner@example.com'), leagueId: 'league-a', season: 2026, gameId: 'game-1',
     owner: 'owner@example.com', positions: swap,
   })
-  assert.equal(result.source, 'day')
-  assert.equal(client.lastWriteSha, 'sha-day')
+  assert.equal(result.source, 'season')
+  assert.equal(client.lastWriteSha, 'sha-season')
+  const day = JSON.parse(client.files.get(key('KeyserDSoze', 'Fantazone.Amici', dayTeamDocumentPath('main', 2026, 4, 'owner@example.com'), 'main'))!.content) as Team
+  assert.deepEqual(day, team)
 })
 
 test('rejects a member that is neither owner nor additional owner', async () => {
@@ -163,7 +163,7 @@ test('rejects a member that is neither owner nor additional owner', async () => 
   )
 })
 
-test('rejects a locked day for a normal owner using shared RealCalendar timing', async () => {
+test('rejects a historical non-live day for a normal owner', async () => {
   const { runtime } = await fixture(true, 'next5')
   await assert.rejects(
     runtime.formationWriter.saveGameFormation({
@@ -174,16 +174,30 @@ test('rejects a locked day for a normal owner using shared RealCalendar timing',
   )
 })
 
-test('allows an explicit SuperAdmin override only when RealCalendar says the selected day is live', async () => {
-  const { runtime } = await fixture(true, 'live4')
+test('allows the current live day owner to change only the season Team for the next snapshot', async () => {
+  const { client, runtime, team } = await fixture(true, 'live4')
+  const saved = await runtime.formationWriter.saveGameFormation({
+    session: session('owner@example.com'), leagueId: 'league-a', season: 2026, gameId: 'game-1',
+    owner: 'owner@example.com', positions: swap,
+  })
+  assert.equal(saved.source, 'season')
+  assert.equal(saved.serieADay, 4)
+  const day = JSON.parse(client.files.get(key('KeyserDSoze', 'Fantazone.Amici', dayTeamDocumentPath('main', 2026, 4, 'owner@example.com'), 'main'))!.content) as Team
+  assert.deepEqual(day, team)
+})
+
+test('allows an explicit SuperAdmin ownership override on the current live day without touching TeamDay', async () => {
+  const { client, runtime, team } = await fixture(true, 'live4')
   const saved = await runtime.formationWriter.saveGameFormation({
     session: session('admin@example.com'), leagueId: 'league-a', season: 2026, gameId: 'game-1',
     owner: 'owner@example.com', asAdmin: true, positions: swap,
   })
   assert.equal(saved.serieADay, 4)
+  const day = JSON.parse(client.files.get(key('KeyserDSoze', 'Fantazone.Amici', dayTeamDocumentPath('main', 2026, 4, 'owner@example.com'), 'main'))!.content) as Team
+  assert.deepEqual(day, team)
 })
 
-test('does not let SuperAdmin override a locked non-live day', async () => {
+test('does not let SuperAdmin use an older non-live day to mutate the current Team', async () => {
   const { runtime } = await fixture(true, 'next5')
   await assert.rejects(
     runtime.formationWriter.saveGameFormation({

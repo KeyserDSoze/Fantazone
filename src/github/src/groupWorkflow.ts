@@ -1,4 +1,4 @@
-export const GROUP_REPOSITORY_RUNTIME_VERSION = 2
+export const GROUP_REPOSITORY_RUNTIME_VERSION = 3
 export const GROUP_RUNTIME_ENGINE_REF = `group-runtime-v${GROUP_REPOSITORY_RUNTIME_VERSION}`
 export const GROUP_GLOBAL_DATA_REF = 'main'
 export const GROUP_RECALCULATION_WORKFLOW_PATH = '.github/workflows/fantazone-group.yml'
@@ -11,9 +11,10 @@ export const GROUP_RECALCULATION_WORKFLOW_PATH = '.github/workflows/fantazone-gr
  * - engine: pinned to the immutable/never-moved group-runtime-vN compatibility ref;
  * - platform-data: follows the current global data ref so votes/calendar never freeze.
  *
- * Bump GROUP_REPOSITORY_RUNTIME_VERSION when the compatible engine contract changes.
- * Workflow-only orchestration patches can stay on the same engine ref: bootstrap
- * compares the managed workflow contents and installs the latest compatible patch.
+ * Runtime v3 also turns season-Team saves into immutable TeamDay snapshots. The
+ * push path listens both to the Team file and manifest.json: RepositoryRevision
+ * writes the manifest in two phases, so a run that sees `updating: true` defers and
+ * the final stable manifest push gives the cursor another chance to consolidate.
  */
 export const GROUP_RECALCULATION_WORKFLOW = [
   '# Managed by Fantazone. Local edits to this file are overwritten by runtime upgrades.',
@@ -21,6 +22,10 @@ export const GROUP_RECALCULATION_WORKFLOW = [
   'name: Fantazone group maintenance',
   '',
   'on:',
+  '  push:',
+  '    paths:',
+  "      - 'manifest.json'",
+  "      - 'data/groups/seasons/*/teams/*/*.json'",
   '  workflow_dispatch:',
   '    inputs:',
   '      job:',
@@ -48,9 +53,10 @@ export const GROUP_RECALCULATION_WORKFLOW = [
   '  cancel-in-progress: false',
   '',
   'env:',
-  '  FANTAZONE_JOB: ${{ inputs.job }}',
+  "  FANTAZONE_JOB: ${{ github.event_name == 'push' && 'snapshot-formations' || inputs.job }}",
   '  FANTAZONE_DAY: ${{ inputs.day }}',
   '  FANTAZONE_SEASON: ${{ inputs.season }}',
+  '  FANTAZONE_SOURCE_BEFORE: ${{ github.event.before }}',
   '',
   'jobs:',
   '  run:',
@@ -60,6 +66,15 @@ export const GROUP_RECALCULATION_WORKFLOW = [
   '        uses: actions/checkout@v6',
   '        with:',
   '          path: group',
+  '          fetch-depth: 0',
+  '',
+  '      - name: Sync group branch before automatic snapshotting',
+  "        if: github.event_name == 'push'",
+  '        working-directory: group',
+  '        shell: bash',
+  '        run: |',
+  '          git fetch origin "$GITHUB_REF_NAME"',
+  '          git checkout -B "$GITHUB_REF_NAME" "origin/$GITHUB_REF_NAME"',
   '',
   '      - name: Checkout compatible Fantazone engine',
   '        uses: actions/checkout@v6',
@@ -102,11 +117,30 @@ export const GROUP_RECALCULATION_WORKFLOW = [
   '            echo "No canonical group data changes"',
   '            exit 0',
   '          fi',
-  '          node -e "const fs=require(\'fs\');const p=\'manifest.json\';const m=JSON.parse(fs.readFileSync(p,\'utf8\'));m.revision=(Number.isInteger(m.revision)?m.revision:0)+1;m.updatedAt=new Date().toISOString();m.updating=false;fs.writeFileSync(p,JSON.stringify(m,null,2)+\'\\n\')"',
+  '',
   '          git config user.name "fantazone-actions[bot]"',
   '          git config user.email "fantazone-actions[bot]@users.noreply.github.com"',
-  '          git add -A -- data manifest.json',
-  '          git commit -m "data: $FANTAZONE_JOB"',
-  '          git push',
+  '',
+  '          for attempt in 1 2 3; do',
+  '            echo "Persisting Fantazone data (attempt $attempt/3)"',
+  '            git stash push -u -m fantazone-action -- data >/dev/null',
+  '            git fetch origin "$GITHUB_REF_NAME"',
+  '            git reset --hard "origin/$GITHUB_REF_NAME"',
+  '            git stash pop >/dev/null',
+  '',
+  '            node -e "const fs=require(\'fs\');const p=\'manifest.json\';const m=JSON.parse(fs.readFileSync(p,\'utf8\'));m.revision=(Number.isInteger(m.revision)?m.revision:0)+1;m.updatedAt=new Date().toISOString();m.updating=false;fs.writeFileSync(p,JSON.stringify(m,null,2)+\'\\n\')"',
+  '            git add -A -- data manifest.json',
+  '            git commit -m "data: $FANTAZONE_JOB"',
+  '            if git push origin "HEAD:$GITHUB_REF_NAME"; then',
+  '              exit 0',
+  '            fi',
+  '',
+  '            echo "Group branch moved while persisting; retrying from the new head"',
+  '            git reset --mixed HEAD^',
+  '            git restore manifest.json',
+  '          done',
+  '',
+  '          echo "Unable to persist Fantazone data after 3 attempts" >&2',
+  '          exit 1',
   '',
 ].join('\n')
