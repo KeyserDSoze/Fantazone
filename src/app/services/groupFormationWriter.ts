@@ -25,7 +25,7 @@ export type SaveGameFormationInput = {
 export type SavedFormation = {
   team: Team
   sha: string
-  source: 'day' | 'season-fallback'
+  source: 'season'
   serieADay: number
 }
 
@@ -38,7 +38,7 @@ export class FormationAuthorizationError extends Error {
 
 export class FormationLockedError extends Error {
   constructor() {
-    super('La formazione di questa giornata non è più modificabile.')
+    super('Questa giornata è storica e non può essere usata per modificare la squadra corrente.')
     this.name = 'FormationLockedError'
   }
 }
@@ -59,9 +59,11 @@ export class FormationValidationError extends Error {
 
 /**
  * Write-side replacement for Game/SaveTeam.
- * The caller sends only playerKey -> position changes. Every other Team field is
- * reloaded from GitHub before validation and cannot be overwritten by the UI.
- * Serie A timing is resolved from the shared RealCalendar, never trusted from the client.
+ *
+ * The client only ever mutates the season Team. Immutable TeamDay snapshots are
+ * produced by the group GitHub Action from the resulting Git commit, using the
+ * commit timestamp as the authoritative Serie A cutoff clock. This means a client
+ * can never rewrite an already frozen historical TeamDay directly.
  */
 export class GroupFormationWriter {
   constructor(
@@ -102,40 +104,33 @@ export class GroupFormationWriter {
     if (!wrapper.canEdit) {
       const realCalendar = await this.realCalendars.getCalendar(input.season, { refresh: true })
       const liveSerieADay = realCalendar ? RealCalendarHelper.getLiveSerieADay(realCalendar, operationNow) : 0
-      const isCurrentLiveDay = adminOverride && liveSerieADay === wrapper.serieADay
+      const isCurrentLiveDay = liveSerieADay === wrapper.serieADay
       if (!isCurrentLiveDay) throw new FormationLockedError()
     }
 
-    const daySnapshot = await this.teams.getTeamDaySnapshot(
+    const seasonSnapshot = await this.teams.getTeamSnapshot(
       annual.basketId,
       input.season,
-      wrapper.serieADay,
       canonicalOwner,
       { refresh: true },
     )
-    const seasonSnapshot = daySnapshot
-      ? null
-      : await this.teams.getTeamSnapshot(annual.basketId, input.season, canonicalOwner, { refresh: true })
-    const source = daySnapshot ? 'day' as const : 'season-fallback' as const
-    const current = daySnapshot?.value ?? seasonSnapshot?.value
-    if (!current) throw new FormationTeamNotFoundError()
+    if (!seasonSnapshot) throw new FormationTeamNotFoundError()
 
-    const positioned = applyFormationPositions(current, input.positions)
+    const positioned = applyFormationPositions(seasonSnapshot.value, input.positions)
     const validation = validateFormation(positioned)
     if (!validation.valid) throw new FormationValidationError(validation.errors)
 
     const updated: Team = { ...positioned, lastUpdate: operationNow.toISOString() }
-    const sha = await this.teams.writeTeamDay(
+    const sha = await this.teams.writeTeam(
       annual.basketId,
       input.season,
-      wrapper.serieADay,
       canonicalOwner,
       updated,
-      `feat: save formation ${canonicalOwner} day ${wrapper.serieADay}`,
-      daySnapshot ? { expectedSha: daySnapshot.sha } : { createOnly: true },
+      `feat: save current formation ${canonicalOwner}`,
+      { expectedSha: seasonSnapshot.sha },
     )
 
-    return { team: updated, sha, source, serieADay: wrapper.serieADay }
+    return { team: updated, sha, source: 'season', serieADay: wrapper.serieADay }
   }
 }
 
