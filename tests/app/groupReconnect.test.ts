@@ -1,9 +1,11 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import type { GitHubRepo } from '../../src/github/src/index'
+import { GitHubApiError, type GitHubRepo } from '../../src/github/src/index'
 import {
   findStoredGroupRepository,
   reconnectStoredGroup,
+  shouldRecoverStoredGroupCredential,
+  StoredGroupRepositoryAccessError,
   type StoredGroupReconnectClient,
 } from '../../src/app/services/groupReconnect'
 
@@ -66,8 +68,18 @@ test('does not fall back to another Fantazone repository visible to the PAT', as
 
   await assert.rejects(
     reconnectStoredGroup('github_pat_test', storedGroup, client),
-    new RegExp(`Il PAT non può aprire il repository ${storedGroup.repository.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`),
+    error => error instanceof StoredGroupRepositoryAccessError && error.repository === storedGroup.repository,
   )
+})
+
+test('marks expired or repository-inaccessible local credentials for reconnect', () => {
+  assert.equal(shouldRecoverStoredGroupCredential(new GitHubApiError(401, 'expired')), true)
+  assert.equal(shouldRecoverStoredGroupCredential(new StoredGroupRepositoryAccessError(storedGroup.repository)), true)
+})
+
+test('does not discard a local credential for transient or permission-generic failures', () => {
+  assert.equal(shouldRecoverStoredGroupCredential(new GitHubApiError(403, 'rate limited')), false)
+  assert.equal(shouldRecoverStoredGroupCredential(new Error('network unavailable')), false)
 })
 
 test('rejects an empty PAT before contacting GitHub', async () => {
