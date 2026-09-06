@@ -14,6 +14,7 @@ import {
   GitHubGroupRepository,
   GitHubJsonStore,
   GitHubLiveGroupRepository,
+  GitHubMarketRepository,
   GitHubRankRepository,
   GitHubRealCalendarRepository,
   GitHubSerieAVoteRepository,
@@ -29,6 +30,7 @@ import {
 import { GroupFormationWriter } from './groupFormationWriter'
 import { GroupGameComposer } from './groupGameComposer'
 import { GroupLiveComposer } from './groupLiveComposer'
+import { GroupMarketService } from './groupMarketService'
 
 export type GroupConnection = {
   token: string
@@ -70,6 +72,7 @@ export class GroupSessionRuntime {
   readonly calendarRepository: GitHubCalendarRepository
   readonly rankRepository: GitHubRankRepository
   readonly teamRepository: GitHubTeamRepository
+  readonly marketRepository: GitHubMarketRepository
   /** Legacy persisted cache adapter kept temporarily for migration compatibility. Prefer liveComposer. */
   readonly liveGroupRepository: GitHubLiveGroupRepository
   readonly realCalendarRepository: GitHubRealCalendarRepository
@@ -78,6 +81,7 @@ export class GroupSessionRuntime {
   readonly gameComposer: GroupGameComposer
   readonly liveComposer: GroupLiveComposer
   readonly formationWriter: GroupFormationWriter
+  readonly marketService: GroupMarketService
 
   private currentGroup: Group | null = null
   private observedRevision: number | null = null
@@ -100,6 +104,7 @@ export class GroupSessionRuntime {
     this.calendarRepository = new GitHubCalendarRepository(this.store, this.target)
     this.rankRepository = new GitHubRankRepository(this.store, this.target)
     this.teamRepository = new GitHubTeamRepository(this.store, this.target, this.rankRepository)
+    this.marketRepository = new GitHubMarketRepository(this.store, this.target)
     this.liveGroupRepository = new GitHubLiveGroupRepository(this.store, this.target)
     this.realCalendarRepository = new GitHubRealCalendarRepository(this.store, this.platformTarget)
     this.liveVoteRepository = new GitHubSerieAVoteRepository(this.store, this.platformTarget, 'live')
@@ -126,6 +131,12 @@ export class GroupSessionRuntime {
       this.gameComposer,
       this.teamRepository,
       this.realCalendarRepository,
+      options.now,
+    )
+    this.marketService = new GroupMarketService(
+      () => this.group,
+      this.marketRepository,
+      this.teamRepository,
       options.now,
     )
   }

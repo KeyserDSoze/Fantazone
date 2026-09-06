@@ -1,6 +1,7 @@
 import { propagateNextFormations } from './formationPropagation'
 import { snapshotSavedFormations } from './formationSnapshot'
 import { recalculateGroupAll, recalculateGroupDay } from './groupRecalculation'
+import { processGroupMarket } from './marketProcessing'
 import { ingestFinalVotes } from './officialVoteIngestion'
 import { ingestLiveVotes } from './liveVoteIngestion'
 import { ingestMasterData } from './masterDataIngestion'
@@ -143,6 +144,15 @@ const migrated: Partial<Record<JobName, (context: JobContext) => Promise<void>>>
       `Formazioni ${result.season}: giorno ${result.sourceSerieADay} -> ${result.targetSerieADay}; ` +
       `${result.copiedOwners.length} copiate, ${result.existingOwners.length} già presenti, ` +
       `${result.missingSourceOwners.length} senza sorgente.`,
+    )
+  },
+  'process-market': async context => {
+    const roots = groupJobRoots()
+    const result = await processGroupMarket({ groupRepoRoot: roots.groupRepoRoot, season: context.season })
+    console.log(
+      `Mercato ${result.season}: ${result.processedCommands} comandi; ` +
+      `${result.appliedCommands} applicati, ${result.rejectedCommands} rifiutati, ` +
+      `${result.expiredMarkets} scaduti, ${result.changedTeams} squadre aggiornate.`,
     )
   },
   'recalculate-day': async context => {

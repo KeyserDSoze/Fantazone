@@ -1,4 +1,4 @@
-export const GROUP_REPOSITORY_RUNTIME_VERSION = 3
+export const GROUP_REPOSITORY_RUNTIME_VERSION = 4
 export const GROUP_RUNTIME_ENGINE_REF = `group-runtime-v${GROUP_REPOSITORY_RUNTIME_VERSION}`
 export const GROUP_GLOBAL_DATA_REF = 'main'
 export const GROUP_RECALCULATION_WORKFLOW_PATH = '.github/workflows/fantazone-group.yml'
@@ -6,15 +6,9 @@ export const GROUP_RECALCULATION_WORKFLOW_PATH = '.github/workflows/fantazone-gr
 /**
  * Managed Fantazone group workflow installed into every Fantazone.<group> repository.
  *
- * Group-owned jobs execute with that repository's GITHUB_TOKEN. Code and global
- * football data are deliberately checked out separately:
- * - engine: pinned to the immutable/never-moved group-runtime-vN compatibility ref;
- * - platform-data: follows the current global data ref so votes/calendar never freeze.
- *
- * Runtime v3 also turns season-Team saves into immutable TeamDay snapshots. The
- * push path listens both to the Team file and manifest.json: RepositoryRevision
- * writes the manifest in two phases, so a run that sees `updating: true` defers and
- * the final stable manifest push gives the cursor another chance to consolidate.
+ * Runtime v4 owns both formation snapshot consolidation and canonical market command
+ * processing. Client writes remain optimistic/append-only; group mutations execute
+ * under one repository-scoped Actions concurrency lock using the group's GITHUB_TOKEN.
  */
 export const GROUP_RECALCULATION_WORKFLOW = [
   '# Managed by Fantazone. Local edits to this file are overwritten by runtime upgrades.',
@@ -26,6 +20,9 @@ export const GROUP_RECALCULATION_WORKFLOW = [
   '    paths:',
   "      - 'manifest.json'",
   "      - 'data/groups/seasons/*/teams/*/*.json'",
+  "      - 'data/groups/seasons/*/markets/*/commands/*.json'",
+  '  schedule:',
+  "    - cron: '0 2 * * *'",
   '  workflow_dispatch:',
   '    inputs:',
   '      job:',
@@ -36,6 +33,7 @@ export const GROUP_RECALCULATION_WORKFLOW = [
   '          - recalculate-day',
   '          - recalculate-all',
   '          - set-next-formations',
+  '          - process-market',
   '      day:',
   '        description: Optional Serie A day (required by recalculate-day)',
   '        required: false',
@@ -53,7 +51,7 @@ export const GROUP_RECALCULATION_WORKFLOW = [
   '  cancel-in-progress: false',
   '',
   'env:',
-  "  FANTAZONE_JOB: ${{ github.event_name == 'push' && 'snapshot-formations' || inputs.job }}",
+  "  FANTAZONE_JOB: ${{ github.event_name == 'push' && 'sync-group' || github.event_name == 'schedule' && 'process-market' || inputs.job }}",
   '  FANTAZONE_DAY: ${{ inputs.day }}',
   '  FANTAZONE_SEASON: ${{ inputs.season }}',
   '  FANTAZONE_SOURCE_BEFORE: ${{ github.event.before }}',
@@ -68,7 +66,7 @@ export const GROUP_RECALCULATION_WORKFLOW = [
   '          path: group',
   '          fetch-depth: 0',
   '',
-  '      - name: Sync group branch before automatic snapshotting',
+  '      - name: Sync group branch before automatic maintenance',
   "        if: github.event_name == 'push'",
   '        working-directory: group',
   '        shell: bash',
@@ -102,12 +100,19 @@ export const GROUP_RECALCULATION_WORKFLOW = [
   '        working-directory: engine',
   '        run: npm install',
   '',
-  '      - name: Run selected group job',
+  '      - name: Run group maintenance',
   '        working-directory: engine',
   '        env:',
   '          FANTAZONE_GROUP_REPO_ROOT: ${{ github.workspace }}/group',
   '          FANTAZONE_PLATFORM_REPO_ROOT: ${{ github.workspace }}/platform-data',
-  '        run: npm run job --workspace=@fantazone/jobs -- "$FANTAZONE_JOB" "$FANTAZONE_DAY" "$FANTAZONE_SEASON"',
+  '        shell: bash',
+  '        run: |',
+  '          if [ "$GITHUB_EVENT_NAME" = "push" ]; then',
+  '            npm run job --workspace=@fantazone/jobs -- snapshot-formations',
+  '            npm run job --workspace=@fantazone/jobs -- process-market',
+  '          else',
+  '            npm run job --workspace=@fantazone/jobs -- "$FANTAZONE_JOB" "$FANTAZONE_DAY" "$FANTAZONE_SEASON"',
+  '          fi',
   '',
   '      - name: Commit canonical group data changes',
   '        working-directory: group',
