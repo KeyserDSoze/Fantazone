@@ -111,17 +111,18 @@ export default function App() {
     if (!runtime || !microsoftSession) return
     let active = true
     let syncing = false
+    const activeRuntime = runtime
     const identity = microsoftSession.identity
 
     async function synchronizeOpenGroup() {
       if (syncing) return
       syncing = true
       try {
-        const result = await runtime.syncRepositoryRevision()
+        const result = await activeRuntime.syncRepositoryRevision()
         if (!active) return
         if (result.changed) {
           try {
-            await authorizeIdentity(runtime, identity, false)
+            await authorizeIdentity(activeRuntime, identity, false)
           } catch (caught) {
             if (!active) return
             setRuntime(null)
