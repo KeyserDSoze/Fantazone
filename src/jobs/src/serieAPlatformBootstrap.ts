@@ -11,6 +11,8 @@ export type SerieAPlatformBootstrapOptions = {
   fetchCalendarJson?: JsonFetcher
   fetchPlayersText?: TextFetcher
   now?: Date
+  /** Test/bootstrap fixture override. Production callers omit it and keep the 400-player safety threshold. */
+  minimumPlayerCount?: number
 }
 
 /**
@@ -38,6 +40,7 @@ export async function bootstrapSerieAPlatformData(options: SerieAPlatformBootstr
     sourceUrl: options.playersSourceUrl,
     fetchText: options.fetchPlayersText,
     now,
+    minimumPlayerCount: options.minimumPlayerCount,
   })
 
   const stats = master.reconciliation.playerCountChanged

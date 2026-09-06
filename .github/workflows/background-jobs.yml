@@ -3,6 +3,7 @@ name: Background jobs
 on:
   schedule:
     - cron: '*/5 * * * *'
+    - cron: '17 4 * * *'
   workflow_dispatch:
     inputs:
       job:
@@ -35,7 +36,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  FANTAZONE_JOB: ${{ github.event_name == 'schedule' && 'ingest-live-votes' || inputs.job }}
+  FANTAZONE_JOB: ${{ github.event_name == 'schedule' && github.event.schedule == '17 4 * * *' && 'ingest-master-data' || github.event_name == 'schedule' && 'ingest-live-votes' || inputs.job }}
   FANTAZONE_DAY: ${{ inputs.day }}
   FANTAZONE_SEASON: ${{ inputs.season }}
   FANTAZONE_SERIE_A_CALENDAR_BASE_URL: ${{ vars.FANTAZONE_SERIE_A_CALENDAR_BASE_URL }}
@@ -58,7 +59,7 @@ jobs:
         id: live_guard
         shell: bash
         run: |
-          if [ "$GITHUB_EVENT_NAME" != "schedule" ]; then
+          if [ "$GITHUB_EVENT_NAME" != "schedule" ] || [ "$FANTAZONE_JOB" != "ingest-live-votes" ]; then
             echo "run=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi

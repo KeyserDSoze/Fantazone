@@ -21,11 +21,10 @@ const teams = Array.from({ length: TEAM_COUNT }, (_, index) => ({
   abbreviation: `t${String(index + 1).padStart(2, '0')}`,
 }))
 
-const playersHtml = `
-<table>
-<tr class="player-row"><span>Mario Rossi</span><td class="player-team">${teams[0].abbreviation}</td><span class="role" data-value="a"></span></tr>
-<tr class="player-row"><span>Luca Bianchi</span><td class="player-team">${teams[1].abbreviation}</td><span class="role" data-value="p"></span></tr>
-</table>`
+const roles = ['p', 'd', 'c', 'a'] as const
+const playersHtml = `<table>${teams.map((team, index) =>
+  `<tr class="player-row"><span>Player ${String.fromCharCode(65 + index)}</span><td class="player-team">${team.abbreviation}</td><span class="role" data-value="${roles[index % roles.length]}"></span></tr>`,
+).join('')}</table>`
 
 test('bootstraps calendar, master data and initial stats in dependency order', async () => {
   const repoRoot = await mkdtemp(join(tmpdir(), 'fantazone-platform-bootstrap-'))
@@ -34,6 +33,7 @@ test('bootstraps calendar, master data and initial stats in dependency order', a
   const result = await bootstrapSerieAPlatformData({
     repoRoot,
     now: NOW,
+    minimumPlayerCount: TEAM_COUNT,
     fetchCalendarJson: async url => {
       const day = Number(new URL(url).searchParams.get('day'))
       events.push(`calendar:${day}`)
@@ -48,7 +48,7 @@ test('bootstraps calendar, master data and initial stats in dependency order', a
   assert.equal(result.calendar.calendar.year, SEASON)
   assert.equal(result.calendar.calendar.days.length, 38)
   assert.equal(result.master.teams.teams.length, TEAM_COUNT)
-  assert.equal(result.master.players.players.length, 2)
+  assert.equal(result.master.players.players.length, TEAM_COUNT)
   assert.ok(result.stats)
   assert.equal(events.length, 39)
   assert.deepEqual(events.slice(0, 38), Array.from({ length: 38 }, (_, index) => `calendar:${index + 1}`))
@@ -60,8 +60,8 @@ test('bootstraps calendar, master data and initial stats in dependency order', a
   const stats = JSON.parse(await readFile(join(repoRoot, statPlayersDocumentPath(SEASON)), 'utf8'))
   assert.equal(calendar.days.length, 38)
   assert.equal(persistedTeams.teams.length, TEAM_COUNT)
-  assert.equal(players.players.length, 2)
-  assert.equal(stats.players.length, 2)
+  assert.equal(players.players.length, TEAM_COUNT)
+  assert.equal(stats.players.length, TEAM_COUNT)
 })
 
 test('does not rebuild stats when a repeated bootstrap keeps the same player count', async () => {
@@ -69,6 +69,7 @@ test('does not rebuild stats when a repeated bootstrap keeps the same player cou
   const options = {
     repoRoot,
     now: NOW,
+    minimumPlayerCount: TEAM_COUNT,
     fetchCalendarJson: async (url: string) => calendarResponse(Number(new URL(url).searchParams.get('day'))),
     fetchPlayersText: async () => playersHtml,
   }

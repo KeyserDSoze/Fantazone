@@ -16,6 +16,8 @@ import {
 } from '../../src/github/src/index'
 import {
   DEFAULT_FANTACALCIO_PLAYERS_URL,
+  DEFAULT_MINIMUM_ACTIVE_RETENTION_RATIO,
+  DEFAULT_MINIMUM_SERIE_A_PLAYERS,
   deriveRealTeamsFromCalendar,
   ingestMasterData,
   parseFantacalcioPlayers,
@@ -46,6 +48,11 @@ const playersHtml = `
 <tr class="player-row"><span>Luca Bianchi</span><td class="player-team">mil</td><span class="role" data-value="p"></span></tr>
 <tr class="player-row out-of-game"><span>Inactive Source</span><td class="player-team">rom</td><span class="role" data-value="d"></span></tr>
 </table>`
+
+test('production guard defaults require a realistic Serie A roster and retain most active players', () => {
+  assert.equal(DEFAULT_MINIMUM_SERIE_A_PLAYERS, 400)
+  assert.equal(DEFAULT_MINIMUM_ACTIVE_RETENTION_RATIO, 0.85)
+})
 
 test('derives canonical teams from RealCalendar instead of official-vote bootstrap', () => {
   const teams = deriveRealTeamsFromCalendar(calendar)
@@ -87,7 +94,7 @@ test('master-data ingestion writes teams/players and preserves missing historica
       name: 'Historical Player',
       team: { name: 'Roma', abbreviation: 'rom' },
       role: Role.Defensor,
-      isActive: true,
+      isActive: false,
       visible: false,
     }],
   }
@@ -98,6 +105,7 @@ test('master-data ingestion writes teams/players and preserves missing historica
     repoRoot,
     now: NOW,
     minimumTeamCount: 2,
+    minimumPlayerCount: 2,
     fetchText: async url => {
       requestedUrl = url
       return playersHtml
@@ -120,16 +128,56 @@ test('master-data ingestion writes teams/players and preserves missing historica
 test('master-data ingestion fails closed when calendar or current-player source is incomplete', async () => {
   const emptyRoot = await mkdtemp(join(tmpdir(), 'fantazone-master-empty-'))
   await assert.rejects(
-    ingestMasterData({ repoRoot: emptyRoot, now: NOW, minimumTeamCount: 2, fetchText: async () => playersHtml }),
+    ingestMasterData({ repoRoot: emptyRoot, now: NOW, minimumTeamCount: 2, minimumPlayerCount: 2, fetchText: async () => playersHtml }),
     /Esegui prima ingest-serie-a/,
   )
 
   const repoRoot = await mkdtemp(join(tmpdir(), 'fantazone-master-source-empty-'))
   await writeJson(join(repoRoot, realCalendarDocumentPath(SEASON)), calendar)
   await assert.rejects(
-    ingestMasterData({ repoRoot, now: NOW, minimumTeamCount: 2, fetchText: async () => '<html></html>' }),
-    /non ha restituito giocatori validi/,
+    ingestMasterData({ repoRoot, now: NOW, minimumTeamCount: 2, minimumPlayerCount: 2, fetchText: async () => '<html></html>' }),
+    /solo 0 giocatori validi/,
   )
+})
+
+test('rejects a partially parsed source when any canonical Serie A team is missing', async () => {
+  const repoRoot = await mkdtemp(join(tmpdir(), 'fantazone-master-coverage-'))
+  await writeJson(join(repoRoot, realCalendarDocumentPath(SEASON)), calendar)
+  const onlyRoma = '<tr class="player-row"><span>Mario Rossi</span><td class="player-team">rom</td><span class="role" data-value="a"></span></tr>'
+
+  await assert.rejects(
+    ingestMasterData({ repoRoot, now: NOW, minimumTeamCount: 2, minimumPlayerCount: 1, fetchText: async () => onlyRoma }),
+    /non copre tutte le squadre.*Milan/i,
+  )
+  await assert.rejects(readFile(join(repoRoot, realPlayersDocumentPath(SEASON)), 'utf8'), /ENOENT/)
+})
+
+test('rejects an implausible active-player collapse and preserves the existing master', async () => {
+  const repoRoot = await mkdtemp(join(tmpdir(), 'fantazone-master-retention-'))
+  await writeJson(join(repoRoot, realCalendarDocumentPath(SEASON)), calendar)
+  const existing: RealPlayers = {
+    year: SEASON,
+    players: [
+      activePlayer('Mario Rossi', 'Roma', 'rom'),
+      activePlayer('Luca Bianchi', 'Milan', 'mil', Role.GoalKeeper),
+      activePlayer('Third Player', 'Roma', 'rom'),
+    ],
+  }
+  const playersPath = join(repoRoot, realPlayersDocumentPath(SEASON))
+  await writeJson(playersPath, existing)
+
+  await assert.rejects(
+    ingestMasterData({
+      repoRoot,
+      now: NOW,
+      minimumTeamCount: 2,
+      minimumPlayerCount: 2,
+      minimumActiveRetentionRatio: 0.85,
+      fetchText: async () => playersHtml,
+    }),
+    /soglia di sicurezza.*3.*85%/i,
+  )
+  assert.deepEqual(JSON.parse(await readFile(playersPath, 'utf8')), existing)
 })
 
 test('unknown player team fails instead of silently persisting a broken relation', () => {
@@ -142,6 +190,16 @@ test('unknown player team fails instead of silently persisting a broken relation
     /non esiste nel RealCalendar/,
   )
 })
+
+function activePlayer(name: string, teamName: string, abbreviation: string, role = Role.Forward) {
+  return {
+    name,
+    team: { name: teamName, abbreviation },
+    role,
+    isActive: true,
+    visible: true,
+  }
+}
 
 async function writeJson(path: string, value: unknown): Promise<void> {
   await mkdir(dirname(path), { recursive: true })

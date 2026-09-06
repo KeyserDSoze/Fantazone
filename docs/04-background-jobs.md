@@ -5,7 +5,7 @@ The current Fantasoccer background-job project contains the following jobs. None
 | Legacy job | Legacy intent | Fantazone target |
 |---|---|---|
 | `SerieAJob` | refresh Serie A/calendar/live source data | **global:** `ingest-serie-a` -> readable RealCalendar JSON; production validation/scheduling still pending |
-| `AllPlayersAndAllTeamsJob` | refresh player/team master data and duplicate real-team changes into group rosters | **global:** `ingest-master-data` -> readable RealTeams/RealPlayers + reconciliation; runtime v8 current Teams resolve the global master by `playerKey`, so the old per-group propagation side effect is retired |
+| `AllPlayersAndAllTeamsJob` | refresh player/team master data and duplicate real-team changes into group rosters | **global:** `ingest-master-data` -> readable RealTeams/RealPlayers + reconciliation, scheduled daily at 04:17 UTC; runtime v8 current Teams resolve the global master by `playerKey`, so the old per-group propagation side effect is retired |
 | `LiveVotesJob` | ingest live fantasy votes | **global:** `ingest-live-votes` -> SignedUri/protobuf adapter -> readable live vote JSON; scheduled every 5 minutes with RealCalendar guard |
 | `LiveJob` | rebuild per-group live match/rank snapshot | **retired in #30:** `GroupLiveComposer` derives `LiveGroup` locally; no Action/cache loop |
 | `FinalVotesJob` | ingest final votes | **global:** `ingest-final-votes` -> official vote JSON + completeness check + stats rebuild |
@@ -70,6 +70,18 @@ Builds readable RealTeams/RealPlayers, preserves active/inactive/transfer reconc
 
 A real-world transfer is persisted only here. Mutable season Team documents store `playerKey` references and resolve name/team/role/activity/visibility from this master at read time, so no fan-out update to every group repository is needed.
 
+The production provider path has already completed successfully through the real `bootstrap-serie-a` Action on 2026-09-06. The standalone producer now runs once per day at `04:17 UTC` under the same serialized platform-maintenance lock used by the live producer.
+
+Before it can modify canonical master data it fails closed unless all of these structural conditions hold:
+
+- the RealCalendar contains at least 20 unique Serie A teams;
+- the Fantacalcio source yields at least 400 valid active players;
+- every canonical calendar team is represented by at least one parsed player;
+- when a previous master exists, the new source retains at least 85% of its active-player count;
+- player keys remain unique and every provider team abbreviation resolves to a canonical RealCalendar team.
+
+These guards are intentionally conservative. A provider markup regression must fail the Action instead of marking hundreds of healthy players inactive. No group repository is touched by this job.
+
 ### `rebuild-player-stats`
 
 Reads canonical RealPlayers + official vote documents and writes `data/serie-a/stats/<season-id>.json` with legacy statistics semantics.
@@ -92,7 +104,7 @@ Writes:
 data/serie-a/votes/live/<season-id>/<serie-a-day>.json
 ```
 
-The SignedUri/protobuf protocol and legacy event mapping are preserved. Empty or unchanged provider output does not rewrite the snapshot. The production workflow is scheduled every five minutes; a lightweight RealCalendar guard exits before dependency installation/provider access when no match is live.
+The SignedUri/protobuf protocol and legacy event mapping are preserved. Empty or unchanged provider output does not rewrite the snapshot. The production workflow is scheduled every five minutes; a lightweight RealCalendar guard exits before dependency installation/provider access when no match is live. Other scheduled jobs bypass that live-only guard.
 
 ### `ingest-player-odds`
 
@@ -171,4 +183,4 @@ Before enabling a producer/rebuild job:
 5. use platform Actions only for globally shared data;
 6. use group Actions only for group-owned persistence;
 7. advance the group runtime only when existing group repositories must receive a managed artifact change;
-8. validate manually through `workflow_dispatch` before any new production schedule is enabled.
+8. validate the real provider path before enabling a new production schedule.
