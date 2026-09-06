@@ -107,10 +107,10 @@ export class GitHubAuctionSignalingRepository {
     return snapshot
   }
 
-  /** Optimistic retry keeps concurrent participants from losing each other's registration. */
+  /** Optimistic retry keeps concurrent participants and reconnect generations lossless. */
   async upsertPeer(
     room: AuctionSignalingRoom,
-    input: { peerId: string; email: string; at?: Date },
+    input: { peerId: string; email: string; at?: Date; restart?: boolean },
   ): Promise<RepositoryJsonSnapshot<AuctionSignalingPeerIndex>> {
     await this.assertCurrentRoom(room)
     const location = this.location(auctionSignalingPeerIndexDocumentPath(room.auctionId, room.sessionId))
@@ -126,7 +126,7 @@ export class GitHubAuctionSignalingRepository {
         return await this.store.writeJson(
           location,
           next,
-          `auction: signaling peer ${input.peerId}`,
+          `auction: signaling peer ${input.peerId}${input.restart ? ' reconnect' : ''}`,
           current ? { expectedSha: current.sha } : { createOnly: true },
         )
       } catch (error) {

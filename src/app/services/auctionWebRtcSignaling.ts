@@ -22,6 +22,7 @@ export type AuctionRtcNegotiatorFactory = (peer: AuctionSignalingPeer) => Auctio
 
 export type AuctionHostSignalingPollResult = {
   discoveredPeers: string[]
+  restartedPeers: string[]
   answeredPeers: string[]
 }
 
@@ -48,10 +49,18 @@ export class AuctionWebRtcHostSignalingController {
   async poll(): Promise<AuctionHostSignalingPollResult> {
     const index = await this.repository.getPeerIndex(this.room)
     const discoveredPeers: string[] = []
+    const restartedPeers: string[] = []
     const answeredPeers: string[] = []
 
     for (const peer of index?.value.peers ?? []) {
       let state = this.peers.get(peer.peerId)
+      if (state && state.peer.generation !== peer.generation) {
+        state.negotiator.close?.()
+        this.peers.delete(peer.peerId)
+        state = undefined
+        restartedPeers.push(peer.peerId)
+      }
+
       if (!state) {
         const negotiator = this.createNegotiator(peer)
         const offer = await negotiator.createOffer()
@@ -59,25 +68,26 @@ export class AuctionWebRtcHostSignalingController {
         await this.repository.publishDescription(this.room, createAuctionSessionDescriptionSignal({
           room: this.room,
           peerId: peer.peerId,
+          generation: peer.generation,
           kind: 'offer',
           sdp: offer.sdp,
         }))
         state = { peer: { ...peer }, negotiator, answerApplied: false }
         this.peers.set(peer.peerId, state)
-        discoveredPeers.push(peer.peerId)
+        if (!restartedPeers.includes(peer.peerId)) discoveredPeers.push(peer.peerId)
       } else {
         state.peer = { ...peer }
       }
 
       if (state.answerApplied) continue
       const answer = await this.repository.getDescription(this.room, peer.peerId, 'answer')
-      if (!answer) continue
+      if (!answer || answer.value.generation !== state.peer.generation) continue
       await state.negotiator.acceptAnswer(answer.value.description)
       state.answerApplied = true
       answeredPeers.push(peer.peerId)
     }
 
-    return { discoveredPeers, answeredPeers }
+    return { discoveredPeers, restartedPeers, answeredPeers }
   }
 
   closePeer(peerId: string): void {
@@ -100,40 +110,69 @@ export type AuctionParticipantSignalingPollResult = {
 export class AuctionWebRtcParticipantSignalingController {
   private acceptedOfferFingerprint: string | null = null
   private lastHeartbeatAt = Number.NEGATIVE_INFINITY
+  private currentGeneration = 0
 
   constructor(
     private readonly repository: GitHubAuctionSignalingRepository,
     readonly room: AuctionSignalingRoom,
     readonly peer: { peerId: string; email: string },
-    private readonly negotiator: AuctionRtcNegotiator,
+    private negotiator: AuctionRtcNegotiator,
     private readonly now: () => Date = () => new Date(),
   ) {}
 
+  get generation(): number {
+    return this.currentGeneration
+  }
+
   async join(): Promise<void> {
     const at = this.now()
-    await this.repository.upsertPeer(this.room, {
+    const written = await this.repository.upsertPeer(this.room, {
       peerId: this.peer.peerId,
       email: this.peer.email,
       at,
     })
+    this.currentGeneration = findGeneration(written.value.peers, this.peer.peerId)
     this.lastHeartbeatAt = at.getTime()
+  }
+
+  /**
+   * Replace a failed RTCPeerConnection and bump the peer generation atomically in
+   * GitHub. The host sees that generation change and publishes a fresh offer.
+   */
+  async restart(negotiator: AuctionRtcNegotiator): Promise<number> {
+    this.negotiator.close?.()
+    this.negotiator = negotiator
+    this.acceptedOfferFingerprint = null
+    const at = this.now()
+    const written = await this.repository.upsertPeer(this.room, {
+      peerId: this.peer.peerId,
+      email: this.peer.email,
+      at,
+      restart: true,
+    })
+    this.currentGeneration = findGeneration(written.value.peers, this.peer.peerId)
+    this.lastHeartbeatAt = at.getTime()
+    return this.currentGeneration
   }
 
   async poll(): Promise<AuctionParticipantSignalingPollResult> {
     const now = this.now()
     if (now.getTime() - this.lastHeartbeatAt >= PEER_HEARTBEAT_INTERVAL_MS) {
-      await this.repository.upsertPeer(this.room, {
+      const written = await this.repository.upsertPeer(this.room, {
         peerId: this.peer.peerId,
         email: this.peer.email,
         at: now,
       })
+      this.currentGeneration = findGeneration(written.value.peers, this.peer.peerId)
       this.lastHeartbeatAt = now.getTime()
     }
 
     const offer = await this.repository.getDescription(this.room, this.peer.peerId, 'offer')
-    if (!offer) return { offerAccepted: false, answerPublished: false }
+    if (!offer || offer.value.generation !== this.currentGeneration) {
+      return { offerAccepted: false, answerPublished: false }
+    }
 
-    const fingerprint = `${offer.value.createdAt}\n${offer.value.description.sdp}`
+    const fingerprint = `${offer.value.generation}\n${offer.value.createdAt}\n${offer.value.description.sdp}`
     if (this.acceptedOfferFingerprint === fingerprint) {
       return { offerAccepted: false, answerPublished: false }
     }
@@ -143,6 +182,7 @@ export class AuctionWebRtcParticipantSignalingController {
     await this.repository.publishDescription(this.room, createAuctionSessionDescriptionSignal({
       room: this.room,
       peerId: this.peer.peerId,
+      generation: this.currentGeneration,
       kind: 'answer',
       sdp: answer.sdp,
       now,
@@ -154,4 +194,10 @@ export class AuctionWebRtcParticipantSignalingController {
   close(): void {
     this.negotiator.close?.()
   }
+}
+
+function findGeneration(peers: readonly AuctionSignalingPeer[], peerId: string): number {
+  const peer = peers.find(item => item.peerId === peerId)
+  if (!peer) throw new Error(`Signaling peer '${peerId}' disappeared after update`)
+  return peer.generation
 }

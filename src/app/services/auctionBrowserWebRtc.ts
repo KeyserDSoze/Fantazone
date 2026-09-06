@@ -41,6 +41,7 @@ export interface BrowserRtcDataChannelLike {
 
 export interface BrowserRtcPeerConnectionLike {
   readonly iceGatheringState: string
+  readonly connectionState?: string
   readonly localDescription: BrowserRtcSessionDescriptionInit | null
   createDataChannel(label: string, options?: { ordered?: boolean }): BrowserRtcDataChannelLike
   createOffer(): Promise<BrowserRtcSessionDescriptionInit>
@@ -49,6 +50,7 @@ export interface BrowserRtcPeerConnectionLike {
   setRemoteDescription(description: BrowserRtcSessionDescriptionInit): Promise<void>
   close(): void
   onicegatheringstatechange?: (() => void) | null
+  onconnectionstatechange?: (() => void) | null
   ondatachannel?: ((event: BrowserRtcDataChannelEvent) => void) | null
   addEventListener?(type: 'icegatheringstatechange', listener: () => void): void
   removeEventListener?(type: 'icegatheringstatechange', listener: () => void): void
@@ -65,6 +67,7 @@ export type BrowserAuctionRtcCallbacks = {
   onOpen?: (peer: BrowserAuctionRealtimePeer) => void
   onClose?: (peer: BrowserAuctionRealtimePeer) => void
   onText?: (peer: BrowserAuctionRealtimePeer, text: string) => void
+  onConnectionState?: (state: string) => void
   onError?: (error: Error) => void
 }
 
@@ -105,6 +108,12 @@ export class BrowserAuctionRtcNegotiator implements AuctionRtcNegotiator {
     const factory = options.peerConnectionFactory ?? defaultBrowserPeerConnectionFactory
     this.connection = factory({ iceServers: options.iceServers ?? DEFAULT_AUCTION_ICE_SERVERS })
 
+    const previousConnectionStateHandler = this.connection.onconnectionstatechange ?? null
+    this.connection.onconnectionstatechange = () => {
+      previousConnectionStateHandler?.()
+      this.callbacks.onConnectionState?.(this.connection.connectionState ?? 'unknown')
+    }
+
     if (options.role === 'host') {
       this.attachDataChannel(this.connection.createDataChannel(this.channelLabel, { ordered: true }), peerId, email)
     } else {
@@ -120,6 +129,10 @@ export class BrowserAuctionRtcNegotiator implements AuctionRtcNegotiator {
 
   get realtimePeer(): BrowserAuctionRealtimePeer | null {
     return this.peer
+  }
+
+  get connectionState(): string {
+    return this.connection.connectionState ?? 'unknown'
   }
 
   async createOffer(): Promise<AuctionSessionDescription> {

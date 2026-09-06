@@ -13,6 +13,8 @@ export type AuctionSignalingPeer = {
   email: string
   joinedAt: string
   lastSeenAt: string
+  /** Increments whenever the participant requests a fresh RTC connection. */
+  generation: number
 }
 
 export type AuctionSignalingPeerIndex = {
@@ -32,6 +34,7 @@ export type AuctionSessionDescriptionSignal = {
   auctionId: string
   sessionId: string
   peerId: string
+  generation: number
   kind: 'offer' | 'answer'
   description: AuctionSessionDescription
   createdAt: string
@@ -74,7 +77,7 @@ export function createEmptyAuctionPeerIndex(room: AuctionSignalingRoom): Auction
 
 export function upsertAuctionSignalingPeer(
   index: AuctionSignalingPeerIndex,
-  input: { peerId: string; email: string; at?: Date },
+  input: { peerId: string; email: string; at?: Date; restart?: boolean },
 ): AuctionSignalingPeerIndex {
   validateAuctionSignalingPeerIndex(index)
   const peerId = required(input.peerId, 'Peer id')
@@ -86,9 +89,10 @@ export function upsertAuctionSignalingPeer(
   if (existing) {
     if (normalizeEmail(existing.email) !== email) throw new Error('Peer id is already registered by another identity')
     existing.lastSeenAt = at
+    if (input.restart) existing.generation += 1
   } else {
     if (peers.length >= MAX_SIGNALING_PEERS) throw new Error('Auction signaling room is full')
-    peers.push({ peerId, email, joinedAt: at, lastSeenAt: at })
+    peers.push({ peerId, email, joinedAt: at, lastSeenAt: at, generation: 1 })
   }
   peers.sort((a, b) => a.joinedAt.localeCompare(b.joinedAt) || a.peerId.localeCompare(b.peerId))
   return { ...index, peers }
@@ -97,6 +101,7 @@ export function upsertAuctionSignalingPeer(
 export function createAuctionSessionDescriptionSignal(input: {
   room: AuctionSignalingRoom
   peerId: string
+  generation: number
   kind: 'offer' | 'answer'
   sdp: string
   now?: Date
@@ -104,11 +109,15 @@ export function createAuctionSessionDescriptionSignal(input: {
   validateAuctionSignalingRoom(input.room)
   const peerId = required(input.peerId, 'Peer id')
   const sdp = required(input.sdp, 'SDP')
+  if (!Number.isInteger(input.generation) || input.generation < 1) {
+    throw new Error('Signaling generation must be a positive integer')
+  }
   return {
     version: 1,
     auctionId: input.room.auctionId,
     sessionId: input.room.sessionId,
     peerId,
+    generation: input.generation,
     kind: input.kind,
     description: { type: input.kind, sdp },
     createdAt: (input.now ?? new Date()).toISOString(),
@@ -144,6 +153,7 @@ export function validateAuctionSignalingPeerIndex(index: AuctionSignalingPeerInd
     if (ids.has(peer.peerId)) throw new Error(`Duplicate signaling peer '${peer.peerId}'`)
     ids.add(peer.peerId)
     if (!normalizeEmail(peer.email).includes('@')) throw new Error('Peer email is not valid')
+    if (!Number.isInteger(peer.generation) || peer.generation < 1) throw new Error('Peer generation must be a positive integer')
     validateDate(peer.joinedAt, 'peer joinedAt')
     validateDate(peer.lastSeenAt, 'peer lastSeenAt')
   }
@@ -154,6 +164,7 @@ export function validateAuctionSessionDescriptionSignal(signal: AuctionSessionDe
   required(signal.auctionId, 'Auction id')
   required(signal.sessionId, 'Session id')
   required(signal.peerId, 'Peer id')
+  if (!Number.isInteger(signal.generation) || signal.generation < 1) throw new Error('Invalid signaling generation')
   if (signal.kind !== 'offer' && signal.kind !== 'answer') throw new Error('Invalid signaling description kind')
   if (signal.description?.type !== signal.kind) throw new Error('SDP type does not match signaling kind')
   required(signal.description.sdp, 'SDP')

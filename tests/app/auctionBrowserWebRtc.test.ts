@@ -43,9 +43,11 @@ class FakeDataChannel implements BrowserRtcDataChannelLike {
 
 class FakePeerConnection implements BrowserRtcPeerConnectionLike {
   iceGatheringState = 'new'
+  connectionState = 'new'
   localDescription: BrowserRtcSessionDescriptionInit | null = null
   remoteDescription: BrowserRtcSessionDescriptionInit | null = null
   onicegatheringstatechange: (() => void) | null = null
+  onconnectionstatechange: (() => void) | null = null
   ondatachannel: ((event: { channel: BrowserRtcDataChannelLike }) => void) | null = null
   readonly listeners = new Set<() => void>()
   readonly channels: Array<{ label: string; ordered: boolean | undefined; channel: FakeDataChannel }> = []
@@ -89,12 +91,18 @@ class FakePeerConnection implements BrowserRtcPeerConnectionLike {
     for (const listener of [...this.listeners]) listener()
   }
 
+  setConnectionState(state: string): void {
+    this.connectionState = state
+    this.onconnectionstatechange?.()
+  }
+
   emitDataChannel(channel: BrowserRtcDataChannelLike): void {
     this.ondatachannel?.({ channel })
   }
 
   close(): void {
     this.closed = true
+    this.connectionState = 'closed'
   }
 }
 
@@ -170,6 +178,25 @@ test('host applies participant answer as remote description', async () => {
 
   await negotiator.acceptAnswer({ type: 'answer', sdp: 'participant-answer' })
   assert.deepEqual(connection.remoteDescription, { type: 'answer', sdp: 'participant-answer' })
+})
+
+test('forwards browser RTCPeerConnection state changes to the coordinator boundary', () => {
+  const connection = new FakePeerConnection()
+  const states: string[] = []
+  const negotiator = new BrowserAuctionRtcNegotiator({
+    role: 'participant',
+    peerId: 'alice-device',
+    email: 'alice@example.com',
+    peerConnectionFactory: () => connection,
+    callbacks: { onConnectionState: state => states.push(state) },
+  })
+
+  connection.setConnectionState('connected')
+  connection.setConnectionState('disconnected')
+  connection.setConnectionState('failed')
+
+  assert.deepEqual(states, ['connected', 'disconnected', 'failed'])
+  assert.equal(negotiator.connectionState, 'failed')
 })
 
 test('rejects incomplete ICE gathering instead of publishing partial SDP', async () => {
