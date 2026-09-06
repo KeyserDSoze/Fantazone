@@ -1,3 +1,4 @@
+export * from './auction'
 export * from './calendar'
 export * from './chance'
 export * from './contracts'

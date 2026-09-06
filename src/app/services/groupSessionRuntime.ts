@@ -9,6 +9,7 @@ import {
 } from '@fantazone/domain'
 import {
   decodeRepositoryRevisionManifest,
+  GitHubAuctionRepository,
   GitHubCalendarRepository,
   GitHubClient,
   GitHubGroupRepository,
@@ -75,6 +76,7 @@ export class GroupSessionRuntime {
   readonly teamRepository: GitHubTeamRepository
   readonly marketRepository: GitHubMarketRepository
   readonly hallOfFameRepository: GitHubHallOfFameRepository
+  readonly auctionRepository: GitHubAuctionRepository
   /** Legacy persisted cache adapter kept temporarily for migration compatibility. Prefer liveComposer. */
   readonly liveGroupRepository: GitHubLiveGroupRepository
   readonly realCalendarRepository: GitHubRealCalendarRepository
@@ -108,6 +110,7 @@ export class GroupSessionRuntime {
     this.teamRepository = new GitHubTeamRepository(this.store, this.target, this.rankRepository)
     this.marketRepository = new GitHubMarketRepository(this.store, this.target)
     this.hallOfFameRepository = new GitHubHallOfFameRepository(this.store, this.target)
+    this.auctionRepository = new GitHubAuctionRepository(this.store, this.target)
     this.liveGroupRepository = new GitHubLiveGroupRepository(this.store, this.target)
     this.realCalendarRepository = new GitHubRealCalendarRepository(this.store, this.platformTarget)
     this.liveVoteRepository = new GitHubSerieAVoteRepository(this.store, this.platformTarget, 'live')
