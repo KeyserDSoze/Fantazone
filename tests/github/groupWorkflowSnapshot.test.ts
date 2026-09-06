@@ -6,15 +6,17 @@ import {
   GROUP_RUNTIME_ENGINE_REF,
 } from '../../src/github/src/index'
 
-test('group runtime v5 snapshots formations, serializes market commands and rebuilds Hall of Fame', () => {
-  assert.equal(GROUP_REPOSITORY_RUNTIME_VERSION, 5)
-  assert.equal(GROUP_RUNTIME_ENGINE_REF, 'group-runtime-v5')
+test('group runtime v6 serializes formation, market, auction and Hall of Fame maintenance', () => {
+  assert.equal(GROUP_REPOSITORY_RUNTIME_VERSION, 6)
+  assert.equal(GROUP_RUNTIME_ENGINE_REF, 'group-runtime-v6')
   assert.match(GROUP_RECALCULATION_WORKFLOW, /push:/)
   assert.match(GROUP_RECALCULATION_WORKFLOW, /manifest\.json/)
   assert.match(GROUP_RECALCULATION_WORKFLOW, /data\/groups\/seasons\/\*\/teams\/\*\/\*\.json/)
   assert.match(GROUP_RECALCULATION_WORKFLOW, /data\/groups\/seasons\/\*\/markets\/\*\/commands\/\*\.json/)
+  assert.match(GROUP_RECALCULATION_WORKFLOW, /data\/groups\/seasons\/\*\/auctions\/\*\/outcomes\/\*\.json/)
   assert.match(GROUP_RECALCULATION_WORKFLOW, /snapshot-formations/)
   assert.match(GROUP_RECALCULATION_WORKFLOW, /process-market/)
+  assert.match(GROUP_RECALCULATION_WORKFLOW, /process-auction-outcomes/)
   assert.match(GROUP_RECALCULATION_WORKFLOW, /rebuild-hall-of-fame/)
   assert.match(GROUP_RECALCULATION_WORKFLOW, /cron: '0 2 \* \* \*'/)
   assert.match(GROUP_RECALCULATION_WORKFLOW, /cron: '0 3 \* \* 2'/)
