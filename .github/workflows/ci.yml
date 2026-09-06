@@ -35,5 +35,7 @@ jobs:
         run: npm run typecheck
       - name: Run tests
         run: npm test
+      - name: Validate Expo Android prebuild
+        run: npm run prebuild:android:check --workspace=fantazone-app
       - name: Build static web application
         run: npm run export:web --workspace=fantazone-app
