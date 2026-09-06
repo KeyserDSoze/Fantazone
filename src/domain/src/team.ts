@@ -35,10 +35,7 @@ export interface Player extends RealPlayer {
   position: FantaSoccerRole
 }
 
-/**
- * The only player data persisted in a mutable season Team.
- * All Serie A identity/master fields are resolved through `playerKey`.
- */
+/** The only player data persisted in a mutable season Team. */
 export interface SeasonTeamPlayerReference {
   playerKey: string
   price: number
@@ -218,9 +215,7 @@ export class TeamHelper {
     if (!settings || !rank || (settings.moneyForGoal === 0 && settings.moneyForSufferedGoal === 0)) return 0
     for (const roundTeams of Object.values(rank.rounds)) {
       const ranked = roundTeams.find(item => item.owner === team.owner)
-      if (ranked) {
-        return ranked.goal * settings.moneyForGoal + ranked.sufferedGoal * settings.moneyForSufferedGoal
-      }
+      if (ranked) return ranked.goal * settings.moneyForGoal + ranked.sufferedGoal * settings.moneyForSufferedGoal
     }
     return 0
   }
@@ -231,7 +226,6 @@ export class TeamHelper {
     const moneyNoReturn = TeamHelper.getMoneyFromSoldWithNoReturnedPrice(team)
     const moneyHalfReturn = TeamHelper.getMoneyFromSoldWithOneHalfReturnedPrice(team)
     const cost = TeamHelper.getCost(team)
-
     return {
       ...team,
       totalPlayers: team.players.length,
@@ -269,18 +263,16 @@ export function encodeSeasonTeamDocument(team: Team): SeasonTeamDocument {
  * Hydrate either a normalized v3 season Team or a legacy full Team document.
  * Legacy support lets existing group repositories migrate lazily on their next write.
  */
-export function hydrateSeasonTeamDocument(value: unknown, master: RealPlayers): Team {
+export function hydrateSeasonTeamDocument(value: unknown, master?: RealPlayers | null): Team {
   if (!value || typeof value !== 'object') throw new Error('Invalid season Team document')
   const document = value as Partial<SeasonTeamDocument> & Partial<Team>
   if (!Array.isArray(document.players)) throw new Error('Invalid season Team players')
-
   const base = decodeTeamBase(document)
+
   if (document.version !== 3) {
-    return {
-      ...base,
-      players: document.players.map((player, index) => cloneLegacyPlayer(player, index)),
-    }
+    return { ...base, players: document.players.map((player, index) => cloneLegacyPlayer(player, index)) }
   }
+  if (!master) throw new Error('Serie A player master is required to hydrate a normalized season Team')
 
   const masterByKey = new Map(master.players.map(player => [requirePlayerKey(player.name), player] as const))
   return {
@@ -288,9 +280,7 @@ export function hydrateSeasonTeamDocument(value: unknown, master: RealPlayers): 
     players: document.players.map((raw, index) => {
       const reference = decodeSeasonTeamPlayerReference(raw, index)
       const realPlayer = masterByKey.get(reference.playerKey)
-      if (!realPlayer) {
-        throw new Error(`Season Team player '${reference.playerKey}' is missing from Serie A master ${master.year}`)
-      }
+      if (!realPlayer) throw new Error(`Season Team player '${reference.playerKey}' is missing from Serie A master ${master.year}`)
       return {
         ...cloneRealPlayer(realPlayer),
         price: reference.price,
@@ -312,9 +302,7 @@ function decodeTeamBase(document: Partial<SeasonTeamDocument> & Partial<Team>): 
     !document.additionalOwners.every(value => typeof value === 'string') ||
     typeof document.moneyFromRank !== 'number' ||
     (document.lastUpdate !== null && typeof document.lastUpdate !== 'string')
-  ) {
-    throw new Error('Invalid season Team document')
-  }
+  ) throw new Error('Invalid season Team document')
   return {
     name: document.name,
     owner: document.owner,
@@ -334,9 +322,7 @@ function decodeSeasonTeamPlayerReference(value: unknown, index: number): SeasonT
     typeof reference.revenue !== 'number' ||
     typeof reference.status !== 'number' ||
     typeof reference.position !== 'number'
-  ) {
-    throw new Error(`Invalid season Team player reference at index ${index}`)
-  }
+  ) throw new Error(`Invalid season Team player reference at index ${index}`)
   return {
     playerKey,
     price: reference.price,
@@ -359,13 +345,8 @@ function cloneLegacyPlayer(value: unknown, index: number): Player {
     typeof player.revenue !== 'number' ||
     typeof player.status !== 'number' ||
     typeof player.position !== 'number'
-  ) {
-    throw new Error(`Invalid legacy Team player at index ${index}`)
-  }
-  return {
-    ...(player as Player),
-    team: { ...(player.team as Player['team']) },
-  }
+  ) throw new Error(`Invalid legacy Team player at index ${index}`)
+  return { ...(player as Player), team: { ...(player.team as Player['team']) } }
 }
 
 function cloneRealPlayer(player: RealPlayer): RealPlayer {
