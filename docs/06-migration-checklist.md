@@ -61,6 +61,7 @@
 - [~] Statistics/chances/votes: deterministic reducers + producers implemented; production data bootstrap/validation remains pending.
 - [x] Market persistence/commands: append-only client commands + canonical group Action reducer with legacy voting/execution/expiry parity.
 - [x] Hall of Fame readable cross-season reducer/repository + group-owned rebuild Action; legacy TODO player-record fields remain intentionally null.
+- [~] Auction: readable V1 host checkpoint/command/event reducer plus append-only assignment outcomes and canonical group-Action revalidation; WebRTC/signaling/UI/finalization remain pending.
 
 ## Infrastructure backlog
 
@@ -89,12 +90,14 @@
 - [x] central Background jobs workflow contains only global/shared jobs; group mutations are excluded.
 - [x] Market group workflow/reducer: serialized command processing + daily 02:00 UTC expiry maintenance.
 - [x] HallOfFame group workflow/reducer: weekly Tuesday 03:00 UTC rebuild + manual dispatch.
+- [x] Auction assignment outcome processing: realtime host emits one append-only assignment request; group runtime v6 revalidates and commits Team + outcome result atomically.
 
 ## Auction
 
-- [ ] readable schema-v2 auction domain/state.
+- [~] readable checkpoint/command/event/outcome domain with legacy host business-rule parity.
 - [ ] UI + WebRTC host/participants + GitHub signaling.
-- [ ] timer/bid/idempotency/reconnection/STUN/TURN.
+- [~] timer/bid/idempotency/sequence-gap recovery core implemented; RTCPeerConnection reconnection and STUN/TURN remain pending.
+- [x] canonical roster assignment crosses an append-only outcome boundary and is revalidated by the serialized group Action.
 
 ## Definition of done
 
