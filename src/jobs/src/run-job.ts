@@ -1,3 +1,4 @@
+import { processAuctionOutcomes } from './auctionOutcomeProcessing'
 import { propagateNextFormations } from './formationPropagation'
 import { snapshotSavedFormations } from './formationSnapshot'
 import { recalculateGroupAll, recalculateGroupDay } from './groupRecalculation'
@@ -25,6 +26,7 @@ type JobName =
   | 'set-next-formations'
   | 'rebuild-hall-of-fame'
   | 'process-market'
+  | 'process-auction-outcomes'
   | 'recalculate-day'
   | 'recalculate-all'
 
@@ -161,6 +163,19 @@ const migrated: Partial<Record<JobName, (context: JobContext) => Promise<void>>>
       `Mercato ${result.season}: ${result.processedCommands} comandi; ` +
       `${result.appliedCommands} applicati, ${result.rejectedCommands} rifiutati, ` +
       `${result.expiredMarkets} scaduti, ${result.changedTeams} squadre aggiornate.`,
+    )
+  },
+  'process-auction-outcomes': async context => {
+    const roots = groupJobRoots()
+    const result = await processAuctionOutcomes({ ...roots, season: context.season })
+    if (result.deferred) {
+      console.log(`Asta ${result.season}: manifest in aggiornamento, outcome rinviati al prossimo push stabile.`)
+      return
+    }
+    console.log(
+      `Asta ${result.season}: ${result.processedOutcomes} outcome; ` +
+      `${result.appliedOutcomes} applicati, ${result.rejectedOutcomes} rifiutati, ` +
+      `${result.changedTeams} squadre aggiornate.`,
     )
   },
   'recalculate-day': async context => {
