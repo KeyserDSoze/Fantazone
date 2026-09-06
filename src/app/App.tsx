@@ -10,6 +10,7 @@ import { GroupPickerScreen } from './screens/group-picker'
 import { LoginScreen } from './screens/login'
 import { PlatformOverviewScreen } from './screens/platform-overview'
 import {
+  credentialOwnerKey,
   loadRepositoryToken,
   saveGroupConnection,
 } from './services/groupCredentialStorage'
@@ -17,6 +18,9 @@ import { GroupSessionRuntime } from './services/groupSessionRuntime'
 import {
   beginMicrosoftAppLogin,
   completePendingMicrosoftAppLogin,
+  ensureMicrosoftAppSession,
+  logoutMicrosoftAppSession,
+  restoreMicrosoftAppSession,
   type MicrosoftAppSession,
 } from './services/webIdentityAuth'
 import {
@@ -31,6 +35,8 @@ import {
 
 type ThemeName = 'light' | 'dark'
 type ViewName = 'groups' | 'architecture'
+const SESSION_REFRESH_LEAD_MS = 2 * 60 * 1000
+const SESSION_REFRESH_RETRY_MS = 30 * 1000
 
 export default function App() {
   const [theme, setTheme] = useState<ThemeName>('dark')
@@ -46,9 +52,9 @@ export default function App() {
 
   useEffect(() => {
     let active = true
-    async function restoreMicrosoftCallback() {
+    async function restoreMicrosoftSession() {
       try {
-        const completed = await completePendingMicrosoftAppLogin()
+        const completed = await completePendingMicrosoftAppLogin() ?? await restoreMicrosoftAppSession()
         if (!active || !completed) return
         const remoteSettings = await loadUserSettings(completed.graphAccessToken)
         if (!active) return
@@ -60,9 +66,41 @@ export default function App() {
         if (active) setLoading(false)
       }
     }
-    void restoreMicrosoftCallback()
+    void restoreMicrosoftSession()
     return () => { active = false }
   }, [])
+
+  useEffect(() => {
+    if (!microsoftSession) return
+    let active = true
+    let timer: ReturnType<typeof setTimeout> | undefined
+    const session = microsoftSession
+
+    async function refreshSession() {
+      try {
+        const refreshed = await ensureMicrosoftAppSession(session)
+        if (!active) return
+        setMicrosoftSession(current =>
+          current?.identity.subject === session.identity.subject ? refreshed : current)
+      } catch (caught) {
+        if (!active) return
+        if (Date.now() >= session.expiresAt) {
+          clearMicrosoftUi()
+          setError('La sessione Microsoft è scaduta e non è stato possibile rinnovarla. Accedi di nuovo.')
+          return
+        }
+        setError(`Rinnovo sessione Microsoft non riuscito: ${toMessage(caught)}`)
+        timer = setTimeout(() => { void refreshSession() }, SESSION_REFRESH_RETRY_MS)
+      }
+    }
+
+    const delay = Math.max(1000, session.expiresAt - Date.now() - SESSION_REFRESH_LEAD_MS)
+    timer = setTimeout(() => { void refreshSession() }, delay)
+    return () => {
+      active = false
+      if (timer) clearTimeout(timer)
+    }
+  }, [microsoftSession?.expiresAt, microsoftSession?.refreshToken])
 
   async function loginWithMicrosoft() {
     setLoginLoading(true)
@@ -85,15 +123,16 @@ export default function App() {
     setLoading(true)
     setError(null)
     try {
+      const session = await freshMicrosoftSession()
       const opened = await openGroupConnection(connection)
-      await saveGroupConnection(connection)
+      await saveGroupConnection(connection, credentialOwnerKey(session.identity))
       const next = upsertStoredGroup(settings ?? emptyUserSettings(), createStoredGroup({
         name: connection.groupName,
         repository: connection.repository.full_name,
       }))
-      await saveUserSettings(microsoftSession.graphAccessToken, next)
+      await saveUserSettings(session.graphAccessToken, next)
       setSettings(next)
-      await authorizeIdentity(opened, microsoftSession.identity)
+      await authorizeIdentity(opened, session.identity)
       setRuntime(opened)
       setAddingGroup(false)
       setView('groups')
@@ -109,10 +148,12 @@ export default function App() {
     setLoading(true)
     setError(null)
     try {
-      const token = await loadRepositoryToken(group.repository)
+      const session = await freshMicrosoftSession()
+      const ownerKey = credentialOwnerKey(session.identity)
+      const token = await loadRepositoryToken(group.repository, ownerKey)
       if (!token) {
         setAddingGroup(true)
-        throw new Error(`Questo dispositivo non ha ancora il PAT per ${group.name}. Inseriscilo una volta per collegare il repository.`)
+        throw new Error(`Questo account non ha ancora il PAT locale per ${group.name}. Inseriscilo una volta per collegare il repository su questo dispositivo.`)
       }
       const client = new GitHubClient(token)
       await client.validateToken()
@@ -121,14 +162,21 @@ export default function App() {
       if (!repository) throw new Error(`Il PAT non può aprire ${group.repository}.`)
       const connection: ConnectedGroup = { token, repository, groupName: group.name }
       const opened = await openGroupConnection(connection)
-      await saveGroupConnection(connection)
-      await authorizeIdentity(opened, microsoftSession.identity)
+      await saveGroupConnection(connection, ownerKey)
+      await authorizeIdentity(opened, session.identity)
       setRuntime(opened)
     } catch (caught) {
       setError(toMessage(caught))
     } finally {
       setLoading(false)
     }
+  }
+
+  async function freshMicrosoftSession(): Promise<MicrosoftAppSession> {
+    if (!microsoftSession) throw new Error('Sessione Microsoft non disponibile.')
+    const refreshed = await ensureMicrosoftAppSession(microsoftSession)
+    if (refreshed !== microsoftSession) setMicrosoftSession(refreshed)
+    return refreshed
   }
 
   async function authorizeIdentity(opened: GroupSessionRuntime, identity: ExternalIdentity) {
@@ -150,12 +198,22 @@ export default function App() {
     setError(null)
   }
 
-  function logoutMicrosoft() {
-    closeGroup()
+  function clearMicrosoftUi() {
+    setRuntime(null)
+    setAuthenticatedSession(null)
     setMicrosoftSession(null)
     setSettings(null)
     setAddingGroup(false)
     setView('groups')
+  }
+
+  async function logoutMicrosoft() {
+    setError(null)
+    try {
+      await logoutMicrosoftAppSession()
+    } finally {
+      clearMicrosoftUi()
+    }
   }
 
   return (

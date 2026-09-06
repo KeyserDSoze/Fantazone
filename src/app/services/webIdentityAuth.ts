@@ -10,9 +10,14 @@ import {
 } from '../config/identity'
 import {
   buildMicrosoftAuthorizationUrl,
+  buildMicrosoftRefreshTokenRequestBody,
   buildMicrosoftTokenRequestBody,
   parseMicrosoftAuthorizationCallback,
 } from './microsoftOAuth'
+import {
+  microsoftAccessTokenExpiresAt,
+  microsoftAccessTokenNeedsRefresh,
+} from './microsoftSessionPolicy'
 
 type MicrosoftPendingLogin = {
   state: string
@@ -23,7 +28,9 @@ type MicrosoftPendingLogin = {
 
 type MicrosoftTokenResponse = {
   access_token?: string
+  refresh_token?: string
   id_token?: string
+  expires_in?: number
   error?: string
   error_description?: string
 }
@@ -74,9 +81,12 @@ declare global {
 export type MicrosoftAppSession = {
   identity: ExternalIdentity
   graphAccessToken: string
+  refreshToken?: string
+  expiresAt: number
 }
 
 const MICROSOFT_PENDING_KEY = 'fantazone.oauth.microsoft.pending.v1'
+const MICROSOFT_NATIVE_REFRESH_TOKEN_KEY = 'fantazone.oauth.microsoft.refresh.v1'
 const GOOGLE_SCRIPT_ID = 'fantazone-google-identity-services'
 const BASE64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
 const BASE64_URL = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_'
@@ -106,16 +116,18 @@ export async function beginExternalLogin(
 
 /**
  * Starts the product-level Microsoft login on every supported runtime.
- * Web keeps the full-page PKCE redirect so GitHub Pages can complete the SPA
- * callback. Native opens the system auth session and returns directly through
- * the configured `fantaplus://auth` deep link.
+ * Web keeps the full-page PKCE redirect and never persists the provider session.
+ * Native returns through `fantaplus://auth` and stores only the rotating refresh
+ * token in the platform secure store.
  */
 export async function beginMicrosoftAppLogin(expectedEmail?: string): Promise<MicrosoftAppSession | null> {
   if (isWebBrowser()) {
     await beginMicrosoftWebLogin(expectedEmail)
     return null
   }
-  return loginWithMicrosoftNative(expectedEmail)
+  const session = await loginWithMicrosoftNative(expectedEmail)
+  if (session) await persistNativeMicrosoftRefreshToken(session.refreshToken)
+  return session
 }
 
 export async function completePendingExternalLogin(): Promise<ExternalIdentity | null> {
@@ -135,11 +147,38 @@ export async function completePendingMicrosoftAppLogin(): Promise<MicrosoftAppSe
   try {
     const code = parseCallback(window.location.href, pending.state)
     const token = await exchangeMicrosoftCode(code, pending.verifier, MICROSOFT_REDIRECT_URI)
-    return createMicrosoftSession(token, pending.nonce)
+    return createMicrosoftSession(token, { nonce: pending.nonce })
   } finally {
     clearMicrosoftPending()
     stripMicrosoftCallbackFromUrl()
   }
+}
+
+/**
+ * Native-only silent restore. The refresh token is never persisted on web, so a
+ * browser reload still requires a fresh provider proof exactly as before.
+ */
+export async function restoreMicrosoftAppSession(): Promise<MicrosoftAppSession | null> {
+  if (isWebBrowser()) return null
+  const refreshToken = await readNativeMicrosoftRefreshToken()
+  if (!refreshToken) return null
+  return refreshMicrosoftAppSession(refreshToken)
+}
+
+/** Refresh an access token only when it is close to expiry. */
+export async function ensureMicrosoftAppSession(session: MicrosoftAppSession): Promise<MicrosoftAppSession> {
+  if (!microsoftAccessTokenNeedsRefresh(session.expiresAt)) return session
+  if (!session.refreshToken) {
+    throw new IdentityLoginError('La sessione Microsoft è scaduta. Accedi di nuovo per continuare.')
+  }
+  return refreshMicrosoftAppSession(session.refreshToken)
+}
+
+/** Local app logout. Native refresh material is deleted; web has none to delete. */
+export async function logoutMicrosoftAppSession(): Promise<void> {
+  if (isWebBrowser()) return
+  const SecureStore = await import('expo-secure-store')
+  await SecureStore.deleteItemAsync(MICROSOFT_NATIVE_REFRESH_TOKEN_KEY)
 }
 
 async function beginMicrosoftWebLogin(expectedEmail?: string): Promise<void> {
@@ -165,7 +204,28 @@ async function loginWithMicrosoftNative(expectedEmail?: string): Promise<Microso
 
   const code = parseCallback(callbackUrl, pending.state)
   const token = await exchangeMicrosoftCode(code, pending.verifier, redirectUri)
-  return createMicrosoftSession(token, pending.nonce)
+  return createMicrosoftSession(token, { nonce: pending.nonce })
+}
+
+async function refreshMicrosoftAppSession(refreshToken: string): Promise<MicrosoftAppSession> {
+  const endpoint = microsoftTokenEndpoint()
+  const response = await fetch(endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: buildMicrosoftRefreshTokenRequestBody({
+      clientId: MICROSOFT_CLIENT_ID,
+      refreshToken,
+    }),
+  })
+  const token = await response.json() as MicrosoftTokenResponse
+  if (!response.ok || !token.access_token) {
+    throw new IdentityLoginError(
+      token.error_description || token.error || 'Impossibile rinnovare la sessione Microsoft.',
+    )
+  }
+  const session = await createMicrosoftSession(token, { fallbackRefreshToken: refreshToken })
+  await persistNativeMicrosoftRefreshToken(session.refreshToken)
+  return session
 }
 
 async function createMicrosoftTransaction(expectedEmail?: string): Promise<MicrosoftPendingLogin> {
@@ -202,8 +262,7 @@ async function exchangeMicrosoftCode(
   verifier: string,
   redirectUri: string,
 ): Promise<MicrosoftTokenResponse> {
-  const endpoint = `https://login.microsoftonline.com/${encodeURIComponent(MICROSOFT_AUTHORITY_TENANT)}/oauth2/v2.0/token`
-  const response = await fetch(endpoint, {
+  const response = await fetch(microsoftTokenEndpoint(), {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: buildMicrosoftTokenRequestBody({
@@ -220,9 +279,20 @@ async function exchangeMicrosoftCode(
   return token
 }
 
-async function createMicrosoftSession(token: MicrosoftTokenResponse, nonce: string): Promise<MicrosoftAppSession> {
-  validateMicrosoftIdToken(token.id_token, nonce)
-  const user = await fetchMicrosoftUserInfo(token.access_token!)
+async function createMicrosoftSession(
+  token: MicrosoftTokenResponse,
+  options: { nonce?: string; fallbackRefreshToken?: string },
+): Promise<MicrosoftAppSession> {
+  if (!token.access_token) throw new IdentityLoginError('Microsoft non ha restituito un access token.')
+
+  if (options.nonce) {
+    if (!token.id_token) throw new IdentityLoginError('Microsoft non ha restituito un ID token.')
+    validateMicrosoftIdToken(token.id_token, options.nonce)
+  } else if (token.id_token) {
+    validateMicrosoftIdToken(token.id_token)
+  }
+
+  const user = await fetchMicrosoftUserInfo(token.access_token)
   const claims = token.id_token ? decodeJwtPayload(token.id_token) : {}
   const email = normalizeEmail(
     user.email || user.preferred_username || stringClaim(claims.email) || stringClaim(claims.preferred_username),
@@ -239,7 +309,9 @@ async function createMicrosoftSession(token: MicrosoftTokenResponse, nonce: stri
       email,
       displayName: user.name || stringClaim(claims.name) || undefined,
     },
-    graphAccessToken: token.access_token!,
+    graphAccessToken: token.access_token,
+    refreshToken: token.refresh_token || options.fallbackRefreshToken,
+    expiresAt: microsoftAccessTokenExpiresAt(token.expires_in),
   }
 }
 
@@ -251,16 +323,30 @@ async function fetchMicrosoftUserInfo(accessToken: string): Promise<MicrosoftUse
   return response.json() as Promise<MicrosoftUserInfo>
 }
 
-function validateMicrosoftIdToken(idToken: string | undefined, nonce: string): void {
-  if (!idToken) throw new IdentityLoginError('Microsoft non ha restituito un ID token.')
+function validateMicrosoftIdToken(idToken: string, nonce?: string): void {
   const claims = decodeJwtPayload(idToken)
   const audience = claims.aud
   const correctAudience = audience === MICROSOFT_CLIENT_ID ||
     (Array.isArray(audience) && audience.includes(MICROSOFT_CLIENT_ID))
   if (!correctAudience) throw new IdentityLoginError('ID token Microsoft destinato a un client diverso.')
-  if (claims.nonce !== nonce) throw new IdentityLoginError('Nonce Microsoft non valido.')
+  if (nonce && claims.nonce !== nonce) throw new IdentityLoginError('Nonce Microsoft non valido.')
   const exp = typeof claims.exp === 'number' ? claims.exp : 0
   if (!exp || exp * 1000 <= Date.now()) throw new IdentityLoginError('ID token Microsoft scaduto.')
+}
+
+function microsoftTokenEndpoint(): string {
+  return `https://login.microsoftonline.com/${encodeURIComponent(MICROSOFT_AUTHORITY_TENANT)}/oauth2/v2.0/token`
+}
+
+async function persistNativeMicrosoftRefreshToken(refreshToken: string | undefined): Promise<void> {
+  if (isWebBrowser() || !refreshToken) return
+  const SecureStore = await import('expo-secure-store')
+  await SecureStore.setItemAsync(MICROSOFT_NATIVE_REFRESH_TOKEN_KEY, refreshToken)
+}
+
+async function readNativeMicrosoftRefreshToken(): Promise<string | null> {
+  const SecureStore = await import('expo-secure-store')
+  return SecureStore.getItemAsync(MICROSOFT_NATIVE_REFRESH_TOKEN_KEY)
 }
 
 async function loginWithGoogle(expectedEmail?: string): Promise<ExternalIdentity> {
