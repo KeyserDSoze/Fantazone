@@ -61,7 +61,7 @@
 - [~] Statistics/chances/votes: deterministic reducers + producers implemented; production data bootstrap/validation remains pending.
 - [x] Market persistence/commands: append-only client commands + canonical group Action reducer with legacy voting/execution/expiry parity.
 - [x] Hall of Fame readable cross-season reducer/repository + group-owned rebuild Action; legacy TODO player-record fields remain intentionally null.
-- [~] Auction: readable V1 host checkpoint/command/event reducer, append-only assignment outcomes, GitHub slow signaling and transport-agnostic realtime controllers implemented; browser/native RTCPeerConnection adapters and UI remain pending.
+- [~] Auction: readable V1 host reducer, outcomes, GitHub slow signaling, browser RTCPeerConnection/DataChannel adapter and reconnect coordinator implemented; native adapter, TURN and UI/finalization remain pending.
 
 ## Infrastructure backlog
 
@@ -94,10 +94,13 @@
 
 ## Auction
 
-- [~] readable checkpoint/command/event/outcome/signaling domain with legacy host business-rule parity.
-- [~] GitHub signaling repository + host/participant offer-answer orchestration + DataChannel message controllers implemented; RTCPeerConnection adapters and UI remain pending.
-- [~] timer/bid/idempotency/sequence-gap recovery and checkpoint resync implemented; connection-state reconnection and STUN/TURN remain pending.
+- [x] readable checkpoint/command/event/outcome/signaling domain with legacy host business-rule parity.
+- [x] GitHub signaling + browser offer/answer + ordered DataChannel adapter + host/participant realtime wiring implemented with tests.
+- [x] timer/bid/idempotency/sequence-gap recovery, checkpoint resync and browser connection-state reconnect generation implemented.
 - [x] canonical roster assignment crosses an append-only outcome boundary and is revalidated by the serialized group Action.
+- [ ] native iOS/Android RTCPeerConnection adapter.
+- [ ] production TURN credential strategy for restrictive NAT/firewall networks.
+- [ ] Auction screens/UI and final end-to-end device validation.
 
 ## Definition of done
 
