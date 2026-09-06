@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { decodeUserSettings, emptyUserSettings, upsertStoredGroup } from '../../src/app/services/userSettingsOneDrive'
+import {
+  decodeUserSettings,
+  emptyUserSettings,
+  removeStoredGroup,
+  upsertStoredGroup,
+} from '../../src/app/services/userSettingsOneDrive'
 
 test('OneDrive user settings decode only valid version-1 groups', () => {
   const settings = decodeUserSettings({
@@ -24,4 +29,30 @@ test('upsert keeps one entry per repository', () => {
   )
   assert.equal(updated.groups.length, 1)
   assert.equal(updated.groups[0].id, 'new')
+})
+
+test('removeStoredGroup removes only the requested group without mutating the input', () => {
+  const original = {
+    version: 1 as const,
+    groups: [
+      { id: 'amici', name: 'Amici', repository: 'owner/Fantazone.Amici' },
+      { id: 'ufficio', name: 'Ufficio', repository: 'owner/Fantazone.Ufficio' },
+    ],
+  }
+
+  const updated = removeStoredGroup(original, ' amici ')
+
+  assert.deepEqual(updated.groups, [
+    { id: 'ufficio', name: 'Ufficio', repository: 'owner/Fantazone.Ufficio' },
+  ])
+  assert.equal(original.groups.length, 2)
+})
+
+test('removeStoredGroup is a no-op for an empty group id', () => {
+  const settings = {
+    version: 1 as const,
+    groups: [{ id: 'amici', name: 'Amici', repository: 'owner/Fantazone.Amici' }],
+  }
+
+  assert.deepEqual(removeStoredGroup(settings, '   '), settings)
 })
