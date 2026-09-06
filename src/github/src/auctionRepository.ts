@@ -22,13 +22,6 @@ export function auctionAssignmentOutcomeDocumentPath(season: number, auctionId: 
   return `data/groups/seasons/${season}/auctions/${encodeURIComponent(auctionId.trim())}/outcomes/${sequence}.json`
 }
 
-/** Slow rendezvous only; once WebRTC is connected peers stop polling these documents. */
-export function auctionSignalDocumentPath(auctionId: string, peerId: string, kind: 'offer' | 'answer'): string {
-  validateSegment(auctionId, 'Auction id')
-  validateSegment(peerId, 'Peer id')
-  return `realtime/auctions/${encodeURIComponent(auctionId.trim())}/signaling/${encodeURIComponent(peerId.trim())}/${kind}.json`
-}
-
 export class GitHubAuctionRepository {
   constructor(
     private readonly store: GitHubJsonStore,
