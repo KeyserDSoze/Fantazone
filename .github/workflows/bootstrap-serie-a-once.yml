@@ -80,6 +80,6 @@ jobs:
         run: |
           git config user.name "fantazone-actions[bot]"
           git config user.email "fantazone-actions[bot]@users.noreply.github.com"
-          git add src/jobs/src/officialVoteIngestion.ts tests/jobs/finalVoteIngestion.test.ts data/serie-a/votes/official/15/2.json
+          git add -A -- src/jobs/src/officialVoteIngestion.ts tests/jobs/finalVoteIngestion.test.ts data/serie-a/votes/official/15
           git commit -m "fix: adapt official votes parser to current Fantacalcio markup"
           git push
