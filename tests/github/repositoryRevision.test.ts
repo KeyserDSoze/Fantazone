@@ -13,6 +13,7 @@ class FakeContentClient implements RepositoryContentClient {
   readonly files = new Map<string, StoredFile>()
   readonly writes: string[] = []
   conflictManifestOnce = false
+  failDocumentWrite = false
 
   async tryGetContent(owner: string, repo: string, path: string, ref?: string): Promise<StoredFile | null> {
     return this.files.get(key(owner, repo, path, ref)) ?? null
@@ -29,6 +30,9 @@ class FakeContentClient implements RepositoryContentClient {
         content: JSON.stringify({ schemaVersion: 2, revision: 2, updatedAt: '2026-09-06T10:00:00.000Z' }),
       })
       throw new GitHubApiError(409, 'synthetic manifest race')
+    }
+    if (path === documentPath && this.failDocumentWrite) {
+      throw new GitHubApiError(409, 'synthetic document race')
     }
 
     if (existing && sha !== existing.sha) throw new GitHubApiError(409, 'stale sha')
@@ -49,7 +53,7 @@ function seedManifest(client: FakeContentClient, revision = 1) {
   })
 }
 
-test('advances manifest revision before writing a group document', async () => {
+test('publishes a two-phase manifest revision around a group document write', async () => {
   const client = new FakeContentClient()
   seedManifest(client)
   client.files.set(key(target.owner, target.repo, documentPath, target.ref), { sha: 'group-1', content: '{}' })
@@ -62,13 +66,14 @@ test('advances manifest revision before writing a group document', async () => {
   await revisionClient.putContent(target.owner, target.repo, documentPath, '{"name":"Amici"}', 'test', 'group-1', target.ref)
 
   const manifest = JSON.parse(client.files.get(key(target.owner, target.repo, REPOSITORY_MANIFEST_PATH, target.ref))!.content)
-  assert.equal(manifest.revision, 2)
+  assert.equal(manifest.revision, 3)
   assert.equal(manifest.updatedAt, '2026-09-06T12:00:00.000Z')
-  assert.equal(revisionClient.lastRevision, 2)
-  assert.deepEqual(client.writes, [REPOSITORY_MANIFEST_PATH, documentPath])
+  assert.equal(manifest.updating, false)
+  assert.equal(revisionClient.lastRevision, 3)
+  assert.deepEqual(client.writes, [REPOSITORY_MANIFEST_PATH, documentPath, REPOSITORY_MANIFEST_PATH])
 })
 
-test('retries a concurrent manifest update and preserves a monotonic revision', async () => {
+test('retries a concurrent manifest update and preserves a monotonic stable revision', async () => {
   const client = new FakeContentClient()
   seedManifest(client)
   client.conflictManifestOnce = true
@@ -77,9 +82,27 @@ test('retries a concurrent manifest update and preserves a monotonic revision', 
   await revisionClient.putContent(target.owner, target.repo, documentPath, '{}', 'test', undefined, target.ref)
 
   const manifest = JSON.parse(client.files.get(key(target.owner, target.repo, REPOSITORY_MANIFEST_PATH, target.ref))!.content)
+  assert.equal(manifest.revision, 4)
+  assert.equal(manifest.updating, false)
+  assert.equal(revisionClient.lastRevision, 4)
+  assert.deepEqual(client.writes, [REPOSITORY_MANIFEST_PATH, documentPath, REPOSITORY_MANIFEST_PATH])
+})
+
+test('best-effort closes the updating phase when the document write conflicts', async () => {
+  const client = new FakeContentClient()
+  seedManifest(client)
+  client.failDocumentWrite = true
+  const revisionClient = new RepositoryRevisionContentClient(client, target)
+
+  await assert.rejects(
+    revisionClient.putContent(target.owner, target.repo, documentPath, '{}', 'test', undefined, target.ref),
+    error => error instanceof GitHubApiError && error.status === 409,
+  )
+
+  const manifest = JSON.parse(client.files.get(key(target.owner, target.repo, REPOSITORY_MANIFEST_PATH, target.ref))!.content)
   assert.equal(manifest.revision, 3)
-  assert.equal(revisionClient.lastRevision, 3)
-  assert.deepEqual(client.writes, [REPOSITORY_MANIFEST_PATH, documentPath])
+  assert.equal(manifest.updating, false)
+  assert.deepEqual(client.writes, [REPOSITORY_MANIFEST_PATH, REPOSITORY_MANIFEST_PATH])
 })
 
 test('keeps legacy/test clients working when manifest.json is absent', async () => {
