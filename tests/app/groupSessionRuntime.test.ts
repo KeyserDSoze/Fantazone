@@ -43,11 +43,12 @@ function group(role: number = IdentityRole.Participant, name = 'Amici'): Group {
   }
 }
 
-function manifest(revision: number) {
+function manifest(revision: number, updating = false) {
   return JSON.stringify({
     schemaVersion: 2,
     revision,
     updatedAt: `2026-09-06T10:00:0${revision}.000Z`,
+    updating,
   })
 }
 
@@ -93,6 +94,31 @@ test('uses manifest revision as the group cache invalidation clock', async () =>
 
   assert.deepEqual(updated, { changed: true, previousRevision: 1, revision: 2 })
   assert.equal(runtime.group.name, 'Amici aggiornati')
+})
+
+test('treats an in-flight manifest revision as stale on every poll until it becomes stable', async () => {
+  const client = new FakeContentClient()
+  const groupKey = `KeyserDSoze/Fantazone.Amici/${GROUP_DOCUMENT_PATH}@main`
+  const manifestKey = `KeyserDSoze/Fantazone.Amici/${REPOSITORY_MANIFEST_PATH}@main`
+  client.files.set(groupKey, { sha: 'group-1', content: JSON.stringify(group()) })
+  client.files.set(manifestKey, { sha: 'manifest-1', content: manifest(1) })
+  const runtime = await GroupSessionRuntime.open(connection, client)
+  await runtime.syncRepositoryRevision()
+
+  client.files.set(groupKey, { sha: 'group-2', content: JSON.stringify(group(IdentityRole.Participant, 'Durante update')) })
+  client.files.set(manifestKey, { sha: 'manifest-2', content: manifest(2, true) })
+  const firstInFlight = await runtime.syncRepositoryRevision()
+  const secondInFlight = await runtime.syncRepositoryRevision()
+
+  assert.deepEqual(firstInFlight, { changed: true, previousRevision: 1, revision: 2 })
+  assert.deepEqual(secondInFlight, { changed: true, previousRevision: 2, revision: 2 })
+  assert.equal(runtime.group.name, 'Durante update')
+
+  client.files.set(groupKey, { sha: 'group-3', content: JSON.stringify(group(IdentityRole.Participant, 'Update completato')) })
+  client.files.set(manifestKey, { sha: 'manifest-3', content: manifest(3, false) })
+  const stable = await runtime.syncRepositoryRevision()
+  assert.deepEqual(stable, { changed: true, previousRevision: 2, revision: 3 })
+  assert.equal(runtime.group.name, 'Update completato')
 })
 
 test('re-reads selected group.users membership when resolving external identity', async () => {
