@@ -40,7 +40,7 @@ class FakeContentClient implements RepositoryContentClient {
   }
 }
 
-test('keeps bids in memory, emits one durable assignment outcome and resumes dedupe state', async () => {
+test('keeps bids in memory, persists assignment outcome idempotently and resumes dedupe state', async () => {
   const client = new FakeContentClient()
   const repository = new GitHubAuctionRepository(
     new GitHubJsonStore(client),
@@ -96,10 +96,14 @@ test('keeps bids in memory, emits one durable assignment outcome and resumes ded
   })
   assert.equal(client.writes, 2, 'assignment dispatch itself remains transport-only')
 
-  await repository.submitAssignmentOutcome(assigned.assignmentOutcome!)
-  assert.equal(client.writes, 3, 'one append-only outcome is the durable roster request')
-  await session.persistCheckpoint()
-  assert.equal(client.writes, 4)
+  const durable = await session.persistDurableResult(assigned)
+  assert.equal(client.writes, 4, 'checkpoint is committed before one append-only assignment outcome')
+  assert.equal(durable.checkpoint?.value.sequence, 3)
+  assert.deepEqual(durable.assignmentOutcome?.value, assigned.assignmentOutcome)
+
+  const retried = await session.persistDurableResult(assigned)
+  assert.equal(client.writes, 5, 'retry checkpoints again but does not duplicate the create-only outcome')
+  assert.deepEqual(retried.assignmentOutcome?.value, assigned.assignmentOutcome)
 
   const fresh = await repository.getCheckpoint(SEASON, 'auction-1', { refresh: true })
   assert.ok(fresh)
