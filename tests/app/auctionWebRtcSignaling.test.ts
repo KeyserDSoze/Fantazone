@@ -23,6 +23,7 @@ class FakeSignalingRepository {
   peerIndex: AuctionSignalingPeerIndex = createEmptyAuctionPeerIndex(this.room)
   readonly descriptions = new Map<string, AuctionSessionDescriptionSignal>()
   roomPublished = 0
+  peerWrites = 0
 
   async publishRoom() {
     this.roomPublished += 1
@@ -34,6 +35,7 @@ class FakeSignalingRepository {
   }
 
   async upsertPeer(_room: unknown, input: { peerId: string; email: string; at?: Date }) {
+    this.peerWrites += 1
     this.peerIndex = upsertAuctionSignalingPeer(this.peerIndex, input)
     return snapshot(this.peerIndex, 'peers')
   }
@@ -116,7 +118,7 @@ test('host discovers each peer once, publishes one offer and applies one answer'
   assert.equal(negotiators.get('alice-device')?.acceptedAnswers, 1)
 })
 
-test('participant heartbeats, accepts a host offer once and publishes one answer', async () => {
+test('participant throttles heartbeat writes, accepts one offer and publishes one answer', async () => {
   const repository = new FakeSignalingRepository()
   const negotiator = new FakeNegotiator()
   let now = new Date('2026-09-06T18:00:01Z')
@@ -130,8 +132,10 @@ test('participant heartbeats, accepts a host offer once and publishes one answer
 
   await participant.join()
   assert.equal(repository.peerIndex.peers[0]?.lastSeenAt, '2026-09-06T18:00:01.000Z')
+  assert.equal(repository.peerWrites, 1)
   const empty = await participant.poll()
   assert.deepEqual(empty, { offerAccepted: false, answerPublished: false })
+  assert.equal(repository.peerWrites, 1, 'polling does not create one Git commit per read')
 
   repository.descriptions.set('alice-device:offer', createAuctionSessionDescriptionSignal({
     room: repository.room,
@@ -145,11 +149,16 @@ test('participant heartbeats, accepts a host offer once and publishes one answer
   assert.deepEqual(answered, { offerAccepted: true, answerPublished: true })
   assert.equal(negotiator.acceptedOffers, 1)
   assert.equal(repository.descriptions.get('alice-device:answer')?.description.sdp, 'answer-1')
-  assert.equal(repository.peerIndex.peers[0]?.lastSeenAt, '2026-09-06T18:00:03.000Z')
+  assert.equal(repository.peerWrites, 1)
 
   const duplicate = await participant.poll()
   assert.deepEqual(duplicate, { offerAccepted: false, answerPublished: false })
   assert.equal(negotiator.acceptedOffers, 1)
+
+  now = new Date('2026-09-06T18:00:32Z')
+  await participant.poll()
+  assert.equal(repository.peerWrites, 2)
+  assert.equal(repository.peerIndex.peers[0]?.lastSeenAt, '2026-09-06T18:00:32.000Z')
 })
 
 function snapshot<T>(value: T, sha: string) {
