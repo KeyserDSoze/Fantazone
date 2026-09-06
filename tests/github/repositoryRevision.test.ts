@@ -105,6 +105,20 @@ test('best-effort closes the updating phase when the document write conflicts', 
   assert.deepEqual(client.writes, [REPOSITORY_MANIFEST_PATH, REPOSITORY_MANIFEST_PATH])
 })
 
+test('keeps realtime signaling writes out of manifest revisions', async () => {
+  const client = new FakeContentClient()
+  seedManifest(client, 7)
+  const revisionClient = new RepositoryRevisionContentClient(client, target)
+  const realtimePath = 'realtime/auctions/auction-1/room.json'
+
+  await revisionClient.putContent(target.owner, target.repo, realtimePath, '{}', 'signal', undefined, target.ref)
+
+  const manifest = JSON.parse(client.files.get(key(target.owner, target.repo, REPOSITORY_MANIFEST_PATH, target.ref))!.content)
+  assert.equal(manifest.revision, 7)
+  assert.equal(revisionClient.lastRevision, null)
+  assert.deepEqual(client.writes, [realtimePath])
+})
+
 test('keeps legacy/test clients working when manifest.json is absent', async () => {
   const client = new FakeContentClient()
   const revisionClient = new RepositoryRevisionContentClient(client, target)
