@@ -2,6 +2,7 @@ import { processAuctionOutcomes } from './auctionOutcomeProcessing'
 import { propagateNextFormations } from './formationPropagation'
 import { snapshotSavedFormations } from './formationSnapshot'
 import { recalculateGroupAll, recalculateGroupDay } from './groupRecalculation'
+import { syncGroupPlayerTransfers } from './groupPlayerTransferSync'
 import { rebuildGroupHallOfFame } from './hallOfFameRebuild'
 import { processGroupMarket } from './marketProcessing'
 import { ingestFinalVotes } from './officialVoteIngestion'
@@ -24,6 +25,7 @@ type JobName =
   | 'ingest-player-images'
   | 'snapshot-formations'
   | 'set-next-formations'
+  | 'sync-player-transfers'
   | 'rebuild-hall-of-fame'
   | 'process-market'
   | 'process-auction-outcomes'
@@ -147,6 +149,19 @@ const migrated: Partial<Record<JobName, (context: JobContext) => Promise<void>>>
       `Formazioni ${result.season}: giorno ${result.sourceSerieADay} -> ${result.targetSerieADay}; ` +
       `${result.copiedOwners.length} copiate, ${result.existingOwners.length} già presenti, ` +
       `${result.missingSourceOwners.length} senza sorgente.`,
+    )
+  },
+  'sync-player-transfers': async context => {
+    const roots = groupJobRoots()
+    const result = await syncGroupPlayerTransfers({ ...roots, season: context.season })
+    if (result.deferred) {
+      console.log(`Trasferimenti ${result.season}: manifest in aggiornamento, sincronizzazione rinviata.`)
+      return
+    }
+    console.log(
+      `Trasferimenti ${result.season}: ${result.inspectedTeams} squadre controllate, ` +
+      `${result.changedTeams} aggiornate, ${result.changedPlayers} giocatori trasferiti, ` +
+      `${result.missingTeams} Team mancanti.`,
     )
   },
   'rebuild-hall-of-fame': async () => {
