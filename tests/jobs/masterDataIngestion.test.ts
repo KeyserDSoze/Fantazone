@@ -65,6 +65,19 @@ test('parses current Fantacalcio quotation rows and skips out-of-game players', 
   assert.equal(players.every(player => player.isActive && player.visible), true)
 })
 
+test('reconciles observed Fantacalcio provider aliases to canonical calendar teams', () => {
+  const teams = {
+    year: SEASON,
+    teams: [{ name: 'Monza', abbreviation: 'monz' }],
+  }
+  const players = parseFantacalcioPlayers(
+    '<tr class="player-row"><span>Monza Player</span><td class="player-team">MON</td><span class="role" data-value="d"></span></tr>',
+    teams,
+  )
+  assert.equal(players.length, 1)
+  assert.deepEqual(players[0]?.team, { name: 'Monza', abbreviation: 'monz' })
+})
+
 test('master-data ingestion writes teams/players and preserves missing historical players as inactive', async () => {
   const repoRoot = await mkdtemp(join(tmpdir(), 'fantazone-master-data-'))
   await writeJson(join(repoRoot, realCalendarDocumentPath(SEASON)), calendar)
