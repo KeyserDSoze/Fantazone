@@ -6,6 +6,8 @@ import {
 } from '@fantazone/domain'
 import { GitHubAuctionSignalingRepository } from '@fantazone/github'
 
+const PEER_HEARTBEAT_INTERVAL_MS = 30_000
+
 export interface AuctionRtcNegotiator {
   /** Returns a complete non-trickle SDP offer after ICE gathering is finished. */
   createOffer(): Promise<AuctionSessionDescription>
@@ -97,6 +99,7 @@ export type AuctionParticipantSignalingPollResult = {
 /** Participant-side rendezvous for one device/peer id. */
 export class AuctionWebRtcParticipantSignalingController {
   private acceptedOfferFingerprint: string | null = null
+  private lastHeartbeatAt = Number.NEGATIVE_INFINITY
 
   constructor(
     private readonly repository: GitHubAuctionSignalingRepository,
@@ -107,15 +110,26 @@ export class AuctionWebRtcParticipantSignalingController {
   ) {}
 
   async join(): Promise<void> {
+    const at = this.now()
     await this.repository.upsertPeer(this.room, {
       peerId: this.peer.peerId,
       email: this.peer.email,
-      at: this.now(),
+      at,
     })
+    this.lastHeartbeatAt = at.getTime()
   }
 
   async poll(): Promise<AuctionParticipantSignalingPollResult> {
-    await this.join()
+    const now = this.now()
+    if (now.getTime() - this.lastHeartbeatAt >= PEER_HEARTBEAT_INTERVAL_MS) {
+      await this.repository.upsertPeer(this.room, {
+        peerId: this.peer.peerId,
+        email: this.peer.email,
+        at: now,
+      })
+      this.lastHeartbeatAt = now.getTime()
+    }
+
     const offer = await this.repository.getDescription(this.room, this.peer.peerId, 'offer')
     if (!offer) return { offerAccepted: false, answerPublished: false }
 
@@ -131,7 +145,7 @@ export class AuctionWebRtcParticipantSignalingController {
       peerId: this.peer.peerId,
       kind: 'answer',
       sdp: answer.sdp,
-      now: this.now(),
+      now,
     }))
     this.acceptedOfferFingerprint = fingerprint
     return { offerAccepted: true, answerPublished: true }
