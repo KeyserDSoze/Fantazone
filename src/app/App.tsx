@@ -8,6 +8,7 @@ import config from './tamagui.config'
 import { GroupConnectScreen, type ConnectedGroup } from './screens/group-connect'
 import { GroupDashboardScreen } from './screens/group-dashboard'
 import { GroupPickerScreen } from './screens/group-picker'
+import { GroupReconnectScreen } from './screens/group-reconnect'
 import { LoginScreen } from './screens/login'
 import { PlatformOverviewScreen } from './screens/platform-overview'
 import {
@@ -51,6 +52,7 @@ export default function App() {
   const [authenticatedSession, setAuthenticatedSession] = useState<AuthenticatedGroupSession | null>(null)
   const [view, setView] = useState<ViewName>('groups')
   const [addingGroup, setAddingGroup] = useState(false)
+  const [reconnectingGroup, setReconnectingGroup] = useState<StoredGroup | null>(null)
   const [loading, setLoading] = useState(true)
   const [loginLoading, setLoginLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -185,6 +187,7 @@ export default function App() {
       await authorizeIdentity(opened, session.identity)
       setRuntime(opened)
       setAddingGroup(false)
+      setReconnectingGroup(null)
       setView('groups')
     } catch (caught) {
       setError(toMessage(caught))
@@ -202,8 +205,8 @@ export default function App() {
       const ownerKey = credentialOwnerKey(session.identity)
       const token = await loadRepositoryToken(group.repository, ownerKey)
       if (!token) {
-        setAddingGroup(true)
-        throw new Error(`Questo account non ha ancora il PAT locale per ${group.name}. Inseriscilo una volta per collegare il repository su questo dispositivo.`)
+        setReconnectingGroup(group)
+        return
       }
       const client = new GitHubClient(token)
       await client.validateToken()
@@ -215,11 +218,29 @@ export default function App() {
       await saveGroupConnection(connection, ownerKey)
       await authorizeIdentity(opened, session.identity)
       setRuntime(opened)
+      setReconnectingGroup(null)
     } catch (caught) {
       setError(toMessage(caught))
     } finally {
       setLoading(false)
     }
+  }
+
+  async function reconnectAndOpen(connection: ConnectedGroup) {
+    if (!microsoftSession || !reconnectingGroup) throw new Error('Gruppo da ricollegare non disponibile.')
+    if (connection.repository.full_name.toLowerCase() !== reconnectingGroup.repository.toLowerCase()) {
+      throw new Error(`Il PAT deve aprire esattamente ${reconnectingGroup.repository}.`)
+    }
+
+    const session = await freshMicrosoftSession()
+    const opened = await openGroupConnection(connection)
+    await saveGroupConnection(connection, credentialOwnerKey(session.identity))
+    await authorizeIdentity(opened, session.identity)
+    setRuntime(opened)
+    setReconnectingGroup(null)
+    setAddingGroup(false)
+    setError(null)
+    setView('groups')
   }
 
   async function removeRememberedGroup(group: StoredGroup) {
@@ -273,6 +294,7 @@ export default function App() {
     setMicrosoftSession(null)
     setSettings(null)
     setAddingGroup(false)
+    setReconnectingGroup(null)
     setView('groups')
   }
 
@@ -319,6 +341,12 @@ export default function App() {
               onLogout={closeGroup}
               onDisconnect={closeGroup}
               onExploreArchitecture={() => setView('architecture')}
+            />
+          ) : reconnectingGroup ? (
+            <GroupReconnectScreen
+              group={reconnectingGroup}
+              onConnected={reconnectAndOpen}
+              onCancel={() => { setReconnectingGroup(null); setError(null) }}
             />
           ) : settings && (settings.groups.length === 0 || addingGroup) ? (
             <YStack flex={1}>
