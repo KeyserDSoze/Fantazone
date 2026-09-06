@@ -16,9 +16,13 @@
     "test:github": "tsx --test tests/github/*.test.ts",
     "test:domain": "tsx --test tests/domain/*.test.ts",
     "test:app": "tsx --test tests/app/*.test.ts",
-    "test:jobs": "tsx --test tests/jobs/*.test.ts"
+    "test:jobs": "tsx --test tests/jobs/*.test.ts",
+    "test:integration:github": "tsx --test tests/integration/githubReal.test.ts",
+    "test:e2e": "playwright test"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
+    "http-server": "^14.1.1",
     "tsx": "^4.20.5"
   }
 }
