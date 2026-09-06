@@ -5,6 +5,7 @@ import { createInviteFragment } from '@fantazone/github'
 import { GroupHelper, IdentityRole, type AuthenticatedGroupSession } from '@fantazone/domain'
 import { publicWebUrl } from '../config/publicOrigin'
 import type { GroupSessionRuntime } from '../services/groupSessionRuntime'
+import { AuctionScreen } from './auction'
 
 type Props = {
   runtime: GroupSessionRuntime
@@ -14,7 +15,10 @@ type Props = {
   onExploreArchitecture: () => void
 }
 
+type DashboardView = 'overview' | 'auction'
+
 export function GroupDashboardScreen({ runtime, session, onLogout, onDisconnect, onExploreArchitecture }: Props) {
+  const [view, setView] = useState<DashboardView>('overview')
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteUsername, setInviteUsername] = useState('')
   const [shareStatus, setShareStatus] = useState<string | null>(null)
@@ -24,6 +28,10 @@ export function GroupDashboardScreen({ runtime, session, onLogout, onDisconnect,
   const canInvite = useMemo(() =>
     GroupHelper.hasRole(session.member, IdentityRole.Admin) ||
     GroupHelper.hasRole(session.member, IdentityRole.SuperAdmin), [session.member])
+
+  if (view === 'auction') {
+    return <AuctionScreen runtime={runtime} session={session} onBack={() => setView('overview')} />
+  }
 
   async function inviteAndShare() {
     const email = inviteEmail.trim().toLowerCase()
@@ -74,6 +82,16 @@ export function GroupDashboardScreen({ runtime, session, onLogout, onDisconnect,
             {session.member.username} · {session.identity.email} · provider {session.identity.provider}
           </Paragraph>
         </YStack>
+
+        <Card borderWidth={1} borderColor="$green8" padding="$4">
+          <YStack gap="$3">
+            <H2 size="$6">Asta realtime</H2>
+            <Paragraph>
+              Apri l’asta della lega: gli Admin possono creare o riprendere la sessione, i partecipanti entrano automaticamente nell’asta attiva e le offerte viaggiano su WebRTC.
+            </Paragraph>
+            <Button theme="accent" alignSelf="flex-start" onPress={() => setView('auction')}>Apri asta</Button>
+          </YStack>
+        </Card>
 
         <XStack gap="$3" flexWrap="wrap">
           <Card borderWidth={1} borderColor="$borderColor" padding="$4" flexGrow={1} flexBasis={360}>

@@ -50,7 +50,7 @@ export function generatePlayerStatistics(input: {
   const settings = input.settings ?? DefaultLeagueSetting
   validateDay(untilSerieADay)
 
-  const players = realPlayers.players.map(createStatPlayer)
+  const players = realPlayers.players.map(createEmptyStatPlayer)
   for (let serieADay = untilSerieADay; serieADay > 0; serieADay -= 1) {
     const votes = officialVotesByDay.get(serieADay)
     if (votes && (votes.year !== realPlayers.year || votes.serieADay !== serieADay)) {
@@ -93,7 +93,8 @@ export const StatPlayerHelper = {
   },
 }
 
-function createStatPlayer(realPlayer: RealPlayer): StatPlayer {
+/** Builds an auction-safe StatPlayer before the first statistics snapshot exists. */
+export function createEmptyStatPlayer(realPlayer: RealPlayer): StatPlayer {
   return {
     ...cloneRealPlayer(realPlayer),
     summatory: 0,

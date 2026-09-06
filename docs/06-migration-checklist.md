@@ -36,6 +36,7 @@
 - [ ] Players/statistics/Teams.
 - [ ] Market/trades/cards/group admin/settings.
 - [ ] Hall of Fame/logs/patch notes/push UX.
+- [~] Auction realtime UI implemented for active-auction discovery, Admin host controls, participant bidding, repair substitutions and reconnect status; real multi-device validation/polish remains pending.
 
 ## Service/domain migrations
 
@@ -58,10 +59,10 @@
 - [~] Game/day: read composition and scoring core are migrated; `TeamDay` is now an Action-owned immutable day snapshot, while actual screens/UI enrichment remain pending.
 - [~] Formations: owner/SuperAdmin authorization + formation validation + current Team write are migrated; GitHub Action selects/finalizes the correct day snapshot from the commit timestamp; UI and chance/stat automatic formation remain pending.
 - [~] Serie A ingestion: core calendar/master/vote/chance/image producers implemented; production initialization/source validation/scheduling remain pending.
-- [~] Statistics/chances/votes: deterministic reducers + producers implemented; production data bootstrap/validation remains pending.
+- [~] Statistics/chances/votes: deterministic reducers + producers implemented; production data bootstrap/validation remain pending.
 - [x] Market persistence/commands: append-only client commands + canonical group Action reducer with legacy voting/execution/expiry parity.
 - [x] Hall of Fame readable cross-season reducer/repository + group-owned rebuild Action; legacy TODO player-record fields remain intentionally null.
-- [~] Auction: readable V1 host reducer, outcomes, GitHub slow signaling, browser RTCPeerConnection/DataChannel/reconnect and native WebRTC bridge/runtime dependency implemented; native build validation, TURN and UI/finalization remain pending.
+- [~] Auction: readable V1 host reducer, outcomes, active-session discovery, GitHub slow signaling, browser RTCPeerConnection/DataChannel/reconnect, native WebRTC bridge/runtime dependency and first realtime UI implemented; native build validation, TURN and end-to-end device validation remain pending.
 
 ## Infrastructure backlog
 
@@ -98,9 +99,10 @@
 - [x] GitHub signaling + browser offer/answer + ordered DataChannel adapter + host/participant realtime wiring implemented with tests.
 - [x] timer/bid/idempotency/sequence-gap recovery, checkpoint resync and browser connection-state reconnect generation implemented.
 - [x] canonical roster assignment crosses an append-only outcome boundary and is revalidated by the serialized group Action.
+- [x] active-auction pointer/discovery lets clients resolve one canonical league/season session without technical auction IDs or GitHub directory listing.
+- [~] browser/Tamagui Auction V1 UI supports creation/resume, legacy queue modes, host controls, participant bids, repair substitutions, explicit finish/reopen/archive and realtime reconnect status; real multi-device validation and UX enrichment remain pending.
 - [~] native iOS/Android RTCPeerConnection bridge + `react-native-webrtc@124.0.8` runtime import implemented; Expo dev-client/prebuild/device validation remains pending. Expo-57 config-plugin support is not yet declared upstream, so no unsupported config plugin is committed.
 - [ ] production TURN credential strategy for restrictive NAT/firewall networks.
-- [ ] Auction screens/UI and final end-to-end device validation.
 
 ## Definition of done
 
