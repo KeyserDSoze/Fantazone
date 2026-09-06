@@ -6,16 +6,19 @@ import {
   GROUP_RUNTIME_ENGINE_REF,
 } from '../../src/github/src/index'
 
-test('group runtime v4 snapshots formations and serializes market commands automatically', () => {
-  assert.equal(GROUP_REPOSITORY_RUNTIME_VERSION, 4)
-  assert.equal(GROUP_RUNTIME_ENGINE_REF, 'group-runtime-v4')
+test('group runtime v5 snapshots formations, serializes market commands and rebuilds Hall of Fame', () => {
+  assert.equal(GROUP_REPOSITORY_RUNTIME_VERSION, 5)
+  assert.equal(GROUP_RUNTIME_ENGINE_REF, 'group-runtime-v5')
   assert.match(GROUP_RECALCULATION_WORKFLOW, /push:/)
   assert.match(GROUP_RECALCULATION_WORKFLOW, /manifest\.json/)
   assert.match(GROUP_RECALCULATION_WORKFLOW, /data\/groups\/seasons\/\*\/teams\/\*\/\*\.json/)
   assert.match(GROUP_RECALCULATION_WORKFLOW, /data\/groups\/seasons\/\*\/markets\/\*\/commands\/\*\.json/)
   assert.match(GROUP_RECALCULATION_WORKFLOW, /snapshot-formations/)
   assert.match(GROUP_RECALCULATION_WORKFLOW, /process-market/)
+  assert.match(GROUP_RECALCULATION_WORKFLOW, /rebuild-hall-of-fame/)
   assert.match(GROUP_RECALCULATION_WORKFLOW, /cron: '0 2 \* \* \*'/)
+  assert.match(GROUP_RECALCULATION_WORKFLOW, /cron: '0 3 \* \* 2'/)
+  assert.match(GROUP_RECALCULATION_WORKFLOW, /github\.event\.schedule == '0 3 \* \* 2'/)
   assert.match(GROUP_RECALCULATION_WORKFLOW, /FANTAZONE_SOURCE_BEFORE: \$\{\{ github\.event\.before \}\}/)
   assert.match(GROUP_RECALCULATION_WORKFLOW, /fetch-depth: 0/)
   assert.match(GROUP_RECALCULATION_WORKFLOW, /git checkout -B "\$GITHUB_REF_NAME" "origin\/\$GITHUB_REF_NAME"/)
