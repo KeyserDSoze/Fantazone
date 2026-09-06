@@ -30,6 +30,7 @@ import {
   type RepositoryContentClient,
   type RepositoryJsonPersistentCache,
 } from '@fantazone/github'
+import { GroupAuctionDiscoveryService } from './groupAuctionDiscovery'
 import { GroupFormationWriter } from './groupFormationWriter'
 import { GroupGameComposer } from './groupGameComposer'
 import { GroupLiveComposer } from './groupLiveComposer'
@@ -79,6 +80,7 @@ export class GroupSessionRuntime {
   readonly hallOfFameRepository: GitHubHallOfFameRepository
   readonly auctionRepository: GitHubAuctionRepository
   readonly auctionSignalingRepository: GitHubAuctionSignalingRepository
+  readonly auctionDiscovery: GroupAuctionDiscoveryService
   /** Legacy persisted cache adapter kept temporarily for migration compatibility. Prefer liveComposer. */
   readonly liveGroupRepository: GitHubLiveGroupRepository
   readonly realCalendarRepository: GitHubRealCalendarRepository
@@ -114,6 +116,7 @@ export class GroupSessionRuntime {
     this.hallOfFameRepository = new GitHubHallOfFameRepository(this.store, this.target)
     this.auctionRepository = new GitHubAuctionRepository(this.store, this.target)
     this.auctionSignalingRepository = new GitHubAuctionSignalingRepository(this.store, this.target, options.now)
+    this.auctionDiscovery = new GroupAuctionDiscoveryService(this.auctionRepository, options.now)
     this.liveGroupRepository = new GitHubLiveGroupRepository(this.store, this.target)
     this.realCalendarRepository = new GitHubRealCalendarRepository(this.store, this.platformTarget)
     this.liveVoteRepository = new GitHubSerieAVoteRepository(this.store, this.platformTarget, 'live')
@@ -172,12 +175,6 @@ export class GroupSessionRuntime {
     return group
   }
 
-  /**
-   * Fetches only manifest.json to decide whether cached group documents are stale.
-   * A changed stable revision invalidates the group repository cache. A manifest
-   * marked `updating` is always treated as changed: this makes polling safe even if
-   * it lands between the two phases of an application write or a writer crashes.
-   */
   async syncRepositoryRevision(): Promise<GroupRepositorySyncResult> {
     const manifestLocation = { ...this.target, path: REPOSITORY_MANIFEST_PATH }
     const cachedManifest = await this.store.readCachedJson<unknown>(manifestLocation)
