@@ -26,18 +26,24 @@ export type ConnectedGroup = GroupConnection
 type Props = {
   onConnected: (group: ConnectedGroup) => void
   onExploreDemo: () => void
+  defaultCreatorEmail?: string
 }
 
-export function GroupConnectScreen({ onConnected, onExploreDemo }: Props) {
+export function GroupConnectScreen({ onConnected, onExploreDemo, defaultCreatorEmail }: Props) {
   const [pat, setPat] = useState('')
   const [groupName, setGroupName] = useState('')
   const [expectedEmail, setExpectedEmail] = useState('')
-  const [creatorEmail, setCreatorEmail] = useState('')
+  const [creatorEmail, setCreatorEmail] = useState(defaultCreatorEmail?.trim().toLowerCase() ?? '')
   const [repositories, setRepositories] = useState<GitHubRepo[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const canSubmit = useMemo(() => pat.trim().length > 0 && !loading, [pat, loading])
+
+  useEffect(() => {
+    const normalized = defaultCreatorEmail?.trim().toLowerCase()
+    if (normalized) setCreatorEmail(current => current || normalized)
+  }, [defaultCreatorEmail])
 
   useEffect(() => {
     if (Platform.OS !== 'web' || typeof window === 'undefined') return
@@ -74,7 +80,7 @@ export function GroupConnectScreen({ onConnected, onExploreDemo }: Props) {
     } catch {
       setError('Il link di invito non è valido.')
     }
-  }, [])
+  }, [onConnected])
 
   async function discover() {
     if (!canSubmit) return
@@ -159,22 +165,22 @@ export function GroupConnectScreen({ onConnected, onExploreDemo }: Props) {
         <Card borderWidth={1} borderColor="$borderColor" padding="$5" width="100%" maxWidth={560}>
           <YStack gap="$4">
             <YStack gap="$2">
-              <H2>Collega un gruppo Fantazone</H2>
+              <H2>Collega o crea un gruppo</H2>
               <Paragraph color="$color10">
-                Prima apriamo il repository del gruppo. Solo dopo Google/Microsoft verifica l’identità dell’utente contro le email censite in config/group.json.
+                Il tuo account Microsoft è già autenticato. Qui colleghi il repository GitHub del gruppo oppure ne crei uno nuovo.
               </Paragraph>
             </YStack>
 
             {expectedEmail ? (
               <Card borderWidth={1} borderColor="$green8" padding="$3">
                 <Text fontWeight="700">Invito per {expectedEmail}</Text>
-                <Paragraph size="$2">Dopo l’apertura del gruppo dovrai autenticarti con questa email.</Paragraph>
+                <Paragraph size="$2">L’account Microsoft dovrà corrispondere a questa email.</Paragraph>
               </Card>
             ) : null}
 
             <Card borderWidth={1} borderColor="$yellow8" padding="$3">
               <Paragraph size="$2">
-                Usa un PAT fine-grained dedicato ai repository Fantazone necessari. Il PAT apre GitHub, ma non sostituisce la verifica dell’email nel gruppo.
+                Usa un PAT fine-grained dedicato ai repository Fantazone necessari. Il catalogo gruppi viene sincronizzato in OneDrive; la credenziale GitHub resta sul dispositivo.
               </Paragraph>
             </Card>
 
@@ -191,9 +197,9 @@ export function GroupConnectScreen({ onConnected, onExploreDemo }: Props) {
 
             <Card borderWidth={1} borderColor="$borderColor" padding="$3">
               <YStack gap="$2">
-                <Text fontWeight="700">Se stai creando un gruppo nuovo</Text>
+                <Text fontWeight="700">Primo amministratore</Text>
                 <Paragraph size="$2" color="$color9">
-                  Indica l’email del primo amministratore. Verrà salvata subito in group.users e dovrà essere provata con Google/Microsoft al primo accesso.
+                  Per un gruppo nuovo usiamo di default l’email Microsoft con cui hai appena effettuato l’accesso.
                 </Paragraph>
                 <Input value={creatorEmail} onChangeText={setCreatorEmail} autoCapitalize="none" autoCorrect={false} placeholder="admin@esempio.it" />
               </YStack>
