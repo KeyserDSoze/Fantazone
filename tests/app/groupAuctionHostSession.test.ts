@@ -40,7 +40,7 @@ class FakeContentClient implements RepositoryContentClient {
   }
 }
 
-test('keeps bids in memory until an explicit checkpoint and resumes dedupe state', async () => {
+test('keeps bids in memory, emits one durable assignment outcome and resumes dedupe state', async () => {
   const client = new FakeContentClient()
   const repository = new GitHubAuctionRepository(
     new GitHubJsonStore(client),
@@ -62,11 +62,13 @@ test('keeps bids in memory until an explicit checkpoint and resumes dedupe state
 
   const shown = session.dispatch(command('show', HOST, { type: 'SHOW_PLAYER', role: Role.Forward }), new Date('2026-09-06T16:00:01Z'))
   assert.equal(isAuctionDurableBoundary(shown), true)
+  assert.equal(shown.assignmentOutcome, null)
   assert.equal(client.writes, 1, 'dispatch never commits implicitly')
 
   const bidCommand = command('bid', ALICE, { type: 'PLACE_BID', amount: 20 })
   const bid = session.dispatch(bidCommand, new Date('2026-09-06T16:00:02Z'))
   assert.equal(isAuctionDurableBoundary(bid), false)
+  assert.equal(bid.assignmentOutcome, null)
   assert.equal(session.checkpoint.sequence, 2)
   assert.equal(client.writes, 1, 'bid remains realtime-only until a periodic/durable checkpoint')
 
@@ -77,8 +79,27 @@ test('keeps bids in memory until an explicit checkpoint and resumes dedupe state
   const assigned = session.dispatch(command('assign', HOST, { type: 'ASSIGN_CURRENT' }), new Date('2026-09-06T16:00:03Z'))
   assert.equal(isAuctionDurableBoundary(assigned), true)
   assert.equal(session.currentTeams.get(ALICE)?.team.players[0]?.name, 'Star Forward')
+  assert.deepEqual(assigned.assignmentOutcome, {
+    version: 1,
+    auctionId: 'auction-1',
+    sequence: 3,
+    leagueId: 'league',
+    season: SEASON,
+    kind: AuctionKind.Starting,
+    actor: HOST,
+    owner: ALICE,
+    playerKey: 'starforward',
+    price: 20,
+    substitutedPlayerKey: null,
+    assignedAt: '2026-09-06T16:00:03.000Z',
+    status: 'pending',
+  })
+  assert.equal(client.writes, 2, 'assignment dispatch itself remains transport-only')
+
+  await repository.submitAssignmentOutcome(assigned.assignmentOutcome!)
+  assert.equal(client.writes, 3, 'one append-only outcome is the durable roster request')
   await session.persistCheckpoint()
-  assert.equal(client.writes, 3)
+  assert.equal(client.writes, 4)
 
   const fresh = await repository.getCheckpoint(SEASON, 'auction-1', { refresh: true })
   assert.ok(fresh)
@@ -93,6 +114,7 @@ test('keeps bids in memory until an explicit checkpoint and resumes dedupe state
   const duplicate = resumed.dispatch(bidCommand, new Date('2026-09-06T16:01:00Z'))
   assert.equal(duplicate.status, 'duplicate')
   assert.equal(duplicate.checkpoint.sequence, 3)
+  assert.equal(duplicate.assignmentOutcome, null)
 })
 
 function command(commandId: string, actor: string, value: Record<string, unknown> & { type: AuctionCommand['type'] }): AuctionCommand {
