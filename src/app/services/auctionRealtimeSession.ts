@@ -9,6 +9,19 @@ import {
   type GroupAuctionDispatchResult,
 } from './groupAuctionHostSession'
 
+const AUCTION_COMMAND_TYPES = new Set<AuctionCommand['type']>([
+  'SET_ROLE',
+  'SET_TIMER',
+  'SHOW_PLAYER',
+  'PLACE_BID',
+  'ASSIGN_CURRENT',
+  'CLOSE_CURRENT',
+  'PAUSE',
+  'RESUME',
+  'FINISH',
+  'REOPEN',
+])
+
 export type AuctionRealtimeCommandResultMessage = {
   version: 1
   type: 'command-result'
@@ -242,10 +255,14 @@ function validateAuctionRealtimeMessage(value: unknown): asserts value is Auctio
     case 'command': {
       const command = message.command as Partial<AuctionCommand> | undefined
       if (!command || typeof command !== 'object') throw new Error('Auction realtime command is missing')
+      if (command.version !== 1) throw new Error('Unsupported auction command version')
       required(String(command.commandId ?? ''), 'Command id')
       required(String(command.auctionId ?? ''), 'Auction id')
       required(String(command.actor ?? ''), 'Command actor')
-      if (typeof command.type !== 'string') throw new Error('Command type is required')
+      if (typeof command.clientTime !== 'number' || !Number.isFinite(command.clientTime)) throw new Error('Invalid command clientTime')
+      if (typeof command.type !== 'string' || !AUCTION_COMMAND_TYPES.has(command.type as AuctionCommand['type'])) {
+        throw new Error('Unsupported auction command type')
+      }
       return
     }
     case 'command-result':
@@ -259,6 +276,7 @@ function validateAuctionRealtimeMessage(value: unknown): asserts value is Auctio
     case 'event': {
       const event = message.event as Partial<AuctionEvent> | undefined
       if (!event || typeof event !== 'object') throw new Error('Auction event is missing')
+      if (event.version !== 1) throw new Error('Unsupported auction event version')
       required(String(event.auctionId ?? ''), 'Auction id')
       if (!Number.isInteger(event.sequence) || Number(event.sequence) < 1) throw new Error('Invalid auction event sequence')
       return
@@ -269,6 +287,7 @@ function validateAuctionRealtimeMessage(value: unknown): asserts value is Auctio
     case 'checkpoint': {
       const checkpoint = message.checkpoint as Partial<AuctionCheckpoint> | undefined
       if (!checkpoint || typeof checkpoint !== 'object') throw new Error('Auction checkpoint is missing')
+      if (checkpoint.version !== 1) throw new Error('Unsupported auction checkpoint version')
       required(String(checkpoint.id ?? ''), 'Auction id')
       if (!Number.isInteger(checkpoint.sequence) || Number(checkpoint.sequence) < 0) throw new Error('Invalid checkpoint sequence')
       return
