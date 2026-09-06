@@ -14,6 +14,7 @@ import {
   GROUP_RECALCULATION_WORKFLOW_PATH,
   GROUP_REPOSITORY_RUNTIME_VERSION,
 } from './groupWorkflow'
+import { RepositoryRevisionContentClient } from './repositoryRevision'
 import {
   GitHubJsonStore,
   type RepositoryContentClient,
@@ -111,7 +112,8 @@ export class GitHubGroupRepository {
   }
 
   async getBasket(basketId: string): Promise<Basket | null> {
-    return (await this.getGroup())?.baskets.find(basket => basket.id === basketId) ?? null
+    const group = await this.getGroup()
+    return group?.baskets.find(basket => basket.id === basketId) ?? null
   }
 
   async findUserByEmail(email: string, options: RepositoryJsonReadOptions = {}): Promise<UserOfAGroup | null> {
@@ -396,7 +398,12 @@ async function ensureInitialAdminIfGroupIsEmpty(
   if (!isGroupDocument(value) || value.users.length > 0) return
 
   const updated: Group = { ...value, users: [initialAdmin] }
-  await client.putContent(
+  const revisionClient = new RepositoryRevisionContentClient(client, {
+    owner: repository.owner.login,
+    repo: repository.name,
+    ref: repository.default_branch,
+  })
+  await revisionClient.putContent(
     repository.owner.login,
     repository.name,
     GROUP_DOCUMENT_PATH,
