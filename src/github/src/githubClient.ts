@@ -57,6 +57,11 @@ export class GitHubClient {
     return this.request('/user')
   }
 
+  async getRepository(owner: string, repo: string): Promise<GitHubRepo> {
+    this.requireToken()
+    return this.request<GitHubRepo>(`/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`)
+  }
+
   async discoverFantazoneRepositories(): Promise<GitHubRepo[]> {
     this.requireToken()
     const found: GitHubRepo[] = []
