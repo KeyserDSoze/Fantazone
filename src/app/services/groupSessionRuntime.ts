@@ -20,6 +20,7 @@ import {
   GitHubMarketRepository,
   GitHubRankRepository,
   GitHubRealCalendarRepository,
+  GitHubRealPlayersRepository,
   GitHubSerieAVoteRepository,
   GitHubTeamRepository,
   REPOSITORY_MANIFEST_PATH,
@@ -75,6 +76,7 @@ export class GroupSessionRuntime {
   readonly groupRepository: GitHubGroupRepository
   readonly calendarRepository: GitHubCalendarRepository
   readonly rankRepository: GitHubRankRepository
+  readonly realPlayersRepository: GitHubRealPlayersRepository
   readonly teamRepository: GitHubTeamRepository
   readonly marketRepository: GitHubMarketRepository
   readonly hallOfFameRepository: GitHubHallOfFameRepository
@@ -111,7 +113,8 @@ export class GroupSessionRuntime {
     this.groupRepository = new GitHubGroupRepository(this.store, this.target)
     this.calendarRepository = new GitHubCalendarRepository(this.store, this.target)
     this.rankRepository = new GitHubRankRepository(this.store, this.target)
-    this.teamRepository = new GitHubTeamRepository(this.store, this.target, this.rankRepository)
+    this.realPlayersRepository = new GitHubRealPlayersRepository(this.store, this.platformTarget)
+    this.teamRepository = new GitHubTeamRepository(this.store, this.target, this.rankRepository, this.realPlayersRepository)
     this.marketRepository = new GitHubMarketRepository(this.store, this.target)
     this.hallOfFameRepository = new GitHubHallOfFameRepository(this.store, this.target)
     this.auctionRepository = new GitHubAuctionRepository(this.store, this.target)
@@ -178,9 +181,7 @@ export class GroupSessionRuntime {
   async syncRepositoryRevision(): Promise<GroupRepositorySyncResult> {
     const manifestLocation = { ...this.target, path: REPOSITORY_MANIFEST_PATH }
     const cachedManifest = await this.store.readCachedJson<unknown>(manifestLocation)
-    const cachedRevision = cachedManifest
-      ? decodeRepositoryRevisionManifest(cachedManifest.value).revision
-      : null
+    const cachedRevision = cachedManifest ? decodeRepositoryRevisionManifest(cachedManifest.value).revision : null
     const previousRevision = this.revisionClient.lastRevision ?? this.observedRevision ?? cachedRevision
 
     const freshSnapshot = await this.store.readJson<unknown>(manifestLocation, { refresh: true })
