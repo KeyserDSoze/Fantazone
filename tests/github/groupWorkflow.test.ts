@@ -85,6 +85,7 @@ test('fresh group bootstrap installs runtime with pinned engine and current glob
   assert.match(workflow!, /git status --porcelain -- data/)
   assert.match(workflow!, /manifest\.json/)
   assert.match(workflow!, /m\.revision=\(Number\.isInteger\(m\.revision\)\?m\.revision:0\)\+1/)
+  assert.match(workflow!, /m\.updating=false/)
   assert.match(workflow!, /git add -A -- data manifest\.json/)
   assert.equal(metadata.kind, 'fantazone-group')
   assert.equal(metadata.groupRuntimeVersion, GROUP_REPOSITORY_RUNTIME_VERSION)
