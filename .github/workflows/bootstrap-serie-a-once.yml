@@ -1,0 +1,52 @@
+name: Bootstrap Serie A once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/bootstrap-serie-a-once.yml
+
+permissions:
+  contents: write
+
+env:
+  FANTAZONE_JOB: bootstrap-serie-a
+  FANTAZONE_DAY: ''
+  FANTAZONE_SEASON: '15'
+  FANTAZONE_SERIE_A_CALENDAR_BASE_URL: ${{ vars.FANTAZONE_SERIE_A_CALENDAR_BASE_URL }}
+  FANTAZONE_PLAYERS_SOURCE_URL: ${{ vars.FANTAZONE_PLAYERS_SOURCE_URL }}
+
+jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - name: Install workspace dependencies
+        run: npm install
+      - name: Typecheck jobs
+        run: npm run typecheck --workspace=@fantazone/jobs
+      - name: Bootstrap canonical Serie A data
+        run: npm run job --workspace=@fantazone/jobs -- "$FANTAZONE_JOB" "$FANTAZONE_DAY" "$FANTAZONE_SEASON"
+      - name: Upload raw/debug outputs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fantazone-bootstrap-serie-a-${{ github.run_id }}
+          path: src/jobs/.artifacts/
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Commit canonical Serie A data
+        shell: bash
+        run: |
+          if [ -z "$(git status --porcelain -- data)" ]; then
+            echo "No canonical Serie A changes"
+            exit 0
+          fi
+          git config user.name "fantazone-actions[bot]"
+          git config user.email "fantazone-actions[bot]@users.noreply.github.com"
+          git add -A -- data
+          git commit -m "data: bootstrap-serie-a"
+          git push
