@@ -1,12 +1,16 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Button, Card, H1, H2, Paragraph, ScrollView, Spinner, Text, XStack, YStack } from 'tamagui'
 import {
+  Behaviour,
   GameResultHelper,
   LiveGroupHelper,
   RankHelper,
   RealCalendarHelper,
+  VoteHelper,
   formatSeasonFromYear,
   type LiveGroup,
+  type Vote,
+  type VotedRealPlayer,
 } from '@fantazone/domain'
 import type { GroupNavigationSelection } from '../services/groupNavigation'
 import type { GroupSessionRuntime } from '../services/groupSessionRuntime'
@@ -21,6 +25,7 @@ type Props = {
 
 export function GroupLiveScreen({ runtime, selection, onOpenGame }: Props) {
   const [liveGroup, setLiveGroup] = useState<LiveGroup | null>(null)
+  const [events, setEvents] = useState<VotedRealPlayer[]>([])
   const [isDuringSerieADay, setIsDuringSerieADay] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -38,8 +43,15 @@ export function GroupLiveScreen({ runtime, selection, onOpenGame }: Props) {
         runtime.liveComposer.getLiveGroup(selection.year, { refresh: true }),
         runtime.realCalendarRepository.getCalendar(selection.year, { refresh: true }),
       ])
+      const context = realCalendar ? RealCalendarHelper.context(realCalendar, new Date()) : null
+      const liveDay = context?.liveDay?.serieADay ?? null
+      const cachedLiveVotes = liveDay != null
+        ? await runtime.liveVoteRepository.getVotes(selection.year, liveDay)
+        : null
+
       setLiveGroup(group)
-      setIsDuringSerieADay(realCalendar ? RealCalendarHelper.context(realCalendar, new Date()).isDuringSerieADay : false)
+      setEvents(sortLiveEvents((cachedLiveVotes?.players ?? []).filter(player => player.vote && VoteHelper.hasDoneSomething(player.vote))))
+      setIsDuringSerieADay(context?.isDuringSerieADay ?? false)
       setLastUpdated(new Date())
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Impossibile aggiornare il live.')
@@ -51,6 +63,7 @@ export function GroupLiveScreen({ runtime, selection, onOpenGame }: Props) {
 
   useEffect(() => {
     setLiveGroup(null)
+    setEvents([])
     setLastUpdated(null)
     void loadLive()
   }, [runtime, selection.year])
@@ -88,6 +101,25 @@ export function GroupLiveScreen({ runtime, selection, onOpenGame }: Props) {
         {!error && loading && !liveGroup ? <Spinner size="large" /> : null}
         {!error && !loading && !liveGroup ? <Card borderWidth={1} borderColor="$borderColor" padding="$4"><Paragraph color="$color10">Il live non è disponibile per questa stagione.</Paragraph></Card> : null}
         {!error && liveGroup && !league ? <Card borderWidth={1} borderColor="$borderColor" padding="$4"><Paragraph color="$color10">La lega selezionata non ha dati live per questa giornata.</Paragraph></Card> : null}
+
+        {events.length > 0 ? (
+          <Card borderWidth={1} borderColor="$red8" padding="$4">
+            <YStack gap="$3">
+              <H2 size="$6">Eventi Serie A</H2>
+              <XStack gap="$2" flexWrap="wrap">
+                {events.map((player, index) => (
+                  <Card key={`${player.name}-${index}`} backgroundColor="$color2" padding="$3" flexGrow={1} flexBasis={240}>
+                    <YStack gap="$1">
+                      <Text fontWeight="900">{player.name}</Text>
+                      <Text color="$color9" fontSize="$2">{player.team.name}</Text>
+                      <Text color="$color11">{player.vote ? liveEventLabel(player.vote) : ''}</Text>
+                    </YStack>
+                  </Card>
+                ))}
+              </XStack>
+            </YStack>
+          </Card>
+        ) : null}
 
         {league ? (
           <>
@@ -148,4 +180,31 @@ export function GroupLiveScreen({ runtime, selection, onOpenGame }: Props) {
       </YStack>
     </ScrollView>
   )
+}
+
+function sortLiveEvents(players: VotedRealPlayer[]): VotedRealPlayer[] {
+  return [...players].sort((a, b) => eventWeight(b.vote) - eventWeight(a.vote) || a.name.localeCompare(b.name))
+}
+
+function eventWeight(vote: Vote | null): number {
+  if (!vote) return 0
+  return vote.goal * 100 + vote.penalty * 90 + vote.assist * 70 + vote.stoppedPenalty * 65 +
+    (vote.status === Behaviour.RedCard ? 50 : 0) + vote.wrongedPenalty * 45 + vote.ownGoal * 40 +
+    vote.sufferedGoal * 20 + (vote.status === Behaviour.YellowCard ? 10 : 0) + (vote.manOfTheMatch ? 5 : 0)
+}
+
+function liveEventLabel(vote: Vote): string {
+  const events: string[] = []
+  if (vote.goal) events.push(`${vote.goal} gol`)
+  if (vote.penalty) events.push(`${vote.penalty} rigore segnato`)
+  if (vote.assist) events.push(`${vote.assist} assist`)
+  if (vote.stoppedPenalty) events.push(`${vote.stoppedPenalty} rigore parato`)
+  if (vote.wrongedPenalty) events.push(`${vote.wrongedPenalty} rigore sbagliato`)
+  if (vote.ownGoal) events.push(`${vote.ownGoal} autogol`)
+  if (vote.sufferedGoal) events.push(`${vote.sufferedGoal} gol subito`)
+  if (vote.status === Behaviour.RedCard) events.push('rosso')
+  else if (vote.status === Behaviour.YellowCard) events.push('giallo')
+  if (vote.manOfTheMatch) events.push('MVP')
+  if (vote.injured) events.push('infortunio')
+  return events.join(' · ')
 }
