@@ -13,6 +13,7 @@ import { AuctionScreen } from './auction-screen'
 import { GroupCalendarScreen } from './group-calendar-screen'
 import { GroupFormationScreen } from './group-formation-screen'
 import { GroupHomeScreen } from './group-home-screen'
+import { GroupLiveScreen } from './group-live-screen'
 import { GroupProductShell } from './group-product-shell'
 import { GroupRankingScreen } from './group-ranking-screen'
 import { GroupSettingsScreen } from './group-settings-screen'
@@ -68,6 +69,8 @@ export function GroupDashboardScreen({
         <GroupCalendarScreen runtime={runtime} selection={selection} />
       ) : route === 'ranking' ? (
         <GroupRankingScreen runtime={runtime} selection={selection} />
+      ) : route === 'live' ? (
+        <GroupLiveScreen runtime={runtime} selection={selection} />
       ) : route === 'formation' ? (
         <GroupFormationScreen runtime={runtime} session={session} selection={selection} />
       ) : route === 'settings' ? (

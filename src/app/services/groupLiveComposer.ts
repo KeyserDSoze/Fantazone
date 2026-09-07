@@ -27,6 +27,11 @@ import type {
   GitHubTeamRepository,
 } from '@fantazone/github'
 
+export type GroupLiveReadOptions = {
+  /** Bypass the durable/in-memory JSON cache for data that changes during live play. */
+  refresh?: boolean
+}
+
 /**
  * Local replacement for legacy LiveJob + persisted LiveGroup cache.
  * It reads canonical documents and composes the old LiveGroup read model without writes.
@@ -43,9 +48,10 @@ export class GroupLiveComposer {
     private readonly now: () => Date = () => new Date(),
   ) {}
 
-  async getLiveGroup(season: number): Promise<LiveGroup | null> {
+  async getLiveGroup(season: number, options: GroupLiveReadOptions = {}): Promise<LiveGroup | null> {
     assertSeason(season)
-    const realCalendar = await this.realCalendars.getCalendar(season)
+    const readOptions = options.refresh === true ? { refresh: true } : {}
+    const realCalendar = await this.realCalendars.getCalendar(season, readOptions)
     if (!realCalendar) return null
 
     const context = RealCalendarHelper.context(realCalendar, this.now())
@@ -54,15 +60,17 @@ export class GroupLiveComposer {
 
     const serieADay = targetDay.serieADay
     const [officialVotes, liveVotes] = await Promise.all([
-      this.officialVotes.getVotes(season, serieADay),
-      context.liveSerieADay === serieADay ? this.liveVotes.getVotes(season, serieADay) : Promise.resolve(null),
+      this.officialVotes.getVotes(season, serieADay, readOptions),
+      context.liveSerieADay === serieADay
+        ? this.liveVotes.getVotes(season, serieADay, readOptions)
+        : Promise.resolve(null),
     ])
 
     const group = this.getGroup()
     const leagues: LiveLeague[] = []
     for (const league of group.leagues) {
       if (!league.years.some(year => year.year === season)) continue
-      const calendar = await this.calendars.getCalendar(league.id, season)
+      const calendar = await this.calendars.getCalendar(league.id, season, readOptions)
       if (!calendar) continue
 
       const annual = GroupHelper.getAnnualLeague(group, league.id, season)
@@ -81,10 +89,11 @@ export class GroupLiveComposer {
           leagueType,
           officialVotes,
           liveVotes,
+          refresh: options.refresh === true,
         })
       }
 
-      const canonicalRank = await this.ranks.getRank(league.id, season)
+      const canonicalRank = await this.ranks.getRank(league.id, season, readOptions)
       const rank = canonicalRank
         ? (!Object.prototype.hasOwnProperty.call(rounds, 'Finals') && canApplyLiveRoundsToRank(canonicalRank, rounds)
             ? applyLiveRoundsToRank(canonicalRank, rounds, settings)
@@ -110,8 +119,10 @@ export class GroupLiveComposer {
     leagueType: ReturnType<typeof GroupHelper.getAnnualType>
     officialVotes: VotedRealPlayers | null
     liveVotes: VotedRealPlayers | null
+    refresh: boolean
   }): Promise<CalendarDay> {
     const games: CalendarGame[] = []
+    const readOptions = input.refresh ? { refresh: true } : {}
     for (const sourceGame of input.day.games) {
       const game = cloneGame(sourceGame)
       if (game.result?.isCancelled === true) {
@@ -131,8 +142,8 @@ export class GroupLiveComposer {
       }
 
       const [homeTeam, awayTeam] = await Promise.all([
-        this.teams.getTeamDay(homeBasket, input.season, input.day.serieADay, game.homeOwner),
-        this.teams.getTeamDay(awayBasket, input.season, input.day.serieADay, game.awayOwner),
+        this.teams.getTeamDay(homeBasket, input.season, input.day.serieADay, game.homeOwner, readOptions),
+        this.teams.getTeamDay(awayBasket, input.season, input.day.serieADay, game.awayOwner, readOptions),
       ])
       const home = homeTeam?.players
         ? addHomeAdvantage(this.calculatePoint(homeTeam, input, input.settings), input.settings.pointInHome)
