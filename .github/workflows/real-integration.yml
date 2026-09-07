@@ -1,6 +1,8 @@
 name: Real integration
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
   schedule:
     - cron: '37 4 * * 1'
