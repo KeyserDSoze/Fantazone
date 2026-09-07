@@ -40,5 +40,5 @@ jobs:
         if: steps.integration_secret.outputs.available == 'true'
         env:
           FANTAZONE_TEST_PAT: ${{ secrets.FANTAZONE_TEST_PAT }}
-          FANTAZONE_TEST_REPOSITORY: ${{ vars.FANTAZONE_TEST_REPOSITORY || 'KeyserDSoze/Fantazone.IntegrationTests' }}
+          FANTAZONE_TEST_REPOSITORY: ${{ vars.FANTAZONE_TEST_REPOSITORY || 'KeyserDSoze/Fantazone.Test' }}
         run: npm run test:integration:github

@@ -30,15 +30,25 @@ The first smoke test verifies that the real generated application reaches the Mi
 
 ## 3. Real GitHub integration
 
-`.github/workflows/real-integration.yml` exercises the actual GitHub Contents API with a dedicated test repository. It is deliberately separate from pull-request CI because it uses a secret and performs real writes.
-
-Create a dedicated private repository:
+`.github/workflows/real-integration.yml` exercises the actual GitHub API with the dedicated disposable repository:
 
 ```text
-KeyserDSoze/Fantazone.IntegrationTests
+KeyserDSoze/Fantazone.Test
 ```
 
-Then create a fine-grained PAT scoped only to that repository with the minimum required permission:
+The repository can remain on `main` permanently. We intentionally do not use throw-away branches or force-reset history.
+
+At the beginning of every real integration suite, the test creates a normal commit named `test: reset repository ...` whose complete tree contains only:
+
+```text
+.fantazone-test.json
+```
+
+That cleanup commit removes every file produced by the previous suite from the current `main` tree while preserving all previous commits and generated files in Git history. This gives every suite a clean canonical repository without losing the audit/debug trail of earlier runs.
+
+The repository must never contain real group or user data. It may be public because all test data is synthetic, but the test PAT must still be scoped as narrowly as possible.
+
+Create a fine-grained PAT scoped only to `KeyserDSoze/Fantazone.Test` with the minimum required permission:
 
 ```text
 Repository permissions -> Contents -> Read and write
@@ -53,33 +63,31 @@ FANTAZONE_TEST_PAT
 Optionally set the Actions repository variable:
 
 ```text
-FANTAZONE_TEST_REPOSITORY=KeyserDSoze/Fantazone.IntegrationTests
+FANTAZONE_TEST_REPOSITORY=KeyserDSoze/Fantazone.Test
 ```
 
 The default already targets that repository name.
 
-The real integration test uses one stable canary document:
-
-```text
-integration/github-json-store-canary.json
-```
-
-It verifies:
+The current real integration suite verifies:
 
 1. PAT authentication;
 2. exact repository visibility and push permission;
-3. real JSON write through `GitHubJsonStore`;
-4. fresh GitHub read and returned blob SHA;
-5. successful update with the expected SHA;
-6. rejection of a stale concurrent writer through GitHub's real 409/422 conflict behavior;
-7. final canonical content after the conflict.
+3. a real cleanup commit on `main` that restores the baseline tree;
+4. real JSON write through `GitHubJsonStore`;
+5. fresh GitHub read and returned blob SHA;
+6. successful update with the expected SHA;
+7. rejection of a stale concurrent writer through GitHub's real 409/422 conflict behavior;
+8. final canonical content after the conflict.
 
 The workflow can be dispatched manually and also runs weekly. If `FANTAZONE_TEST_PAT` is not configured, it exits without installing dependencies or making network writes.
+
+The same repository is the target for the next integration scenarios: real group initialization, canonical group writes, managed workflow installation/dispatch and GitHub Action mutations. Each scenario starts from the same reset convention rather than creating another repository.
 
 ## Rules
 
 - Never use a production group PAT for integration tests.
 - Never expose integration secrets to pull-request jobs.
 - Keep the integration repository disposable and free of real user/group data.
+- Reuse `main` and preserve history; reset current contents with ordinary cleanup commits.
 - A feature migration still requires deterministic representative tests even when an end-to-end test exists.
 - Real-provider tests and real-GitHub tests complement fixtures; they do not replace them.
