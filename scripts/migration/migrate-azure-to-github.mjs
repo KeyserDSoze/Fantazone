@@ -3,16 +3,16 @@ import { mkdir, writeFile } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { scanAzureStorage } from './azure-source.mjs'
-import { loadAzureScanCache, saveAzureScanCache } from './scan-cache.mjs'
-import { buildMigrationPlan } from './migration-plan.mjs'
+import { azureSourceFingerprint, loadAzureScanCache, saveAzureScanCache } from './scan-cache.mjs'
 import { GitHubApi, writeFilesAtomically } from './github-writer.mjs'
+import { markStagingGitResult, stageMigrationRecords } from './staging.mjs'
 
 const REPO_ROOT = resolve(fileURLToPath(new URL('../..', import.meta.url)))
 
 function parseArgs(argv) {
   const result = {
     platformRepository: 'KeyserDSoze/Fantazone', branch: 'main', apply: false,
-    overwrite: false, preserveExisting: false, refreshCache: false, noCache: false,
+    overwrite: false, preserveExisting: false, refreshCache: false, noCache: false, resetWork: false,
   }
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i]
@@ -23,8 +23,10 @@ function parseArgs(argv) {
     else if (arg === '--group-id') result.groupId = next()
     else if (arg === '--report') result.reportPath = next()
     else if (arg === '--cache') result.cachePath = next()
+    else if (arg === '--work-dir') result.workDir = next()
     else if (arg === '--refresh-cache') result.refreshCache = true
     else if (arg === '--no-cache') result.noCache = true
+    else if (arg === '--reset-work') result.resetWork = true
     else if (arg === '--apply') result.apply = true
     else if (arg === '--overwrite') result.overwrite = true
     else if (arg === '--preserve-existing') result.preserveExisting = true
@@ -42,8 +44,10 @@ function usage() {
 `Options:\n  --platform-repository owner/repo   Shared Serie A repository (default KeyserDSoze/Fantazone)\n` +
 `  --branch branch                   Target branch (default main)\n  --group-id id                     Explicit legacy group id when auto-selection is ambiguous\n` +
 `  --report path                     JSON report path\n  --cache path                      Azure scan cache path\n` +
+`  --work-dir path                   Local resumable staging directory\n` +
 `  --refresh-cache                   Ignore existing cache and scan Azure again\n` +
 `  --no-cache                        Do not read or write the local Azure scan cache\n` +
+`  --reset-work                      Delete and rebuild local staging/checkpoint state\n` +
 `  --apply                           Perform GitHub writes (default is dry-run)\n` +
 `  --overwrite                       Replace canonical paths that already exist\n  --preserve-existing               Keep existing canonical paths and skip collisions\n` +
 `  -h, --help                        Show this help\n`
@@ -57,6 +61,11 @@ function reportPath(value) {
 }
 function scanCachePath(value) {
   return value ? resolve(value) : resolve(REPO_ROOT, 'migration-output', 'cache', 'azure-scan-v1.json')
+}
+function workPath(value, groupRepository) {
+  if (value) return resolve(value)
+  const safe = String(groupRepository).replace(/[^a-z0-9._-]+/gi, '_')
+  return resolve(REPO_ROOT, 'migration-output', 'work', safe)
 }
 
 function formatBytes(bytes) {
@@ -77,7 +86,7 @@ function formatElapsed(ms) {
 
 function logAzureProgress(event) {
   if (event.type === 'container-start') {
-    console.log(`[Azure] Container #${event.containerNumber}: ${event.container} — ${event.download ? 'canonical, reading content' : 'inventory only'}`)
+    console.log(`[Azure] Container #${event.containerNumber}: ${event.container} - ${event.download ? 'canonical, reading content' : 'inventory only'}`)
     return
   }
   if (event.type === 'container-progress') {
@@ -87,11 +96,33 @@ function logAzureProgress(event) {
   }
   if (event.type === 'container-complete') {
     const downloaded = event.download ? `, downloaded=${event.downloadedCount} (${formatBytes(event.downloadedBytes)})` : ''
-    console.log(`[Azure] ${event.container}: complete — blobs=${event.blobCount}${downloaded}, elapsed=${formatElapsed(event.elapsedMs)}`)
+    console.log(`[Azure] ${event.container}: complete - blobs=${event.blobCount}${downloaded}, elapsed=${formatElapsed(event.elapsedMs)}`)
     return
   }
   if (event.type === 'scan-complete') {
-    console.log(`[Azure] Scan complete — containers=${event.containerCount}, blobs=${event.blobCount}, canonical records downloaded=${event.downloadedCount}`)
+    console.log(`[Azure] Scan complete - containers=${event.containerCount}, blobs=${event.blobCount}, canonical records downloaded=${event.downloadedCount}`)
+  }
+}
+
+function logStagingProgress(event) {
+  if (event.type === 'workspace') {
+    console.log(`[Stage] Work directory: ${event.workDir}`)
+    console.log(`[Stage] Checkpoint found: completed=${event.completed}, skipped=${event.skipped}, total source records=${event.total}`)
+    return
+  }
+  if (event.type === 'progress') {
+    console.log(`[Stage] processed=${event.processed}/${event.total}, converted-now=${event.convertedThisRun}, resumed=${event.resumed}, group-files=${event.groupFiles}, platform-files=${event.platformFiles}, current=${event.recordId}`)
+    return
+  }
+  if (event.type === 'failed') {
+    console.log(`[Stage] Stopped at ${event.recordId}. Earlier staged files and checkpoint are preserved; rerun after the mapper is fixed.`)
+    return
+  }
+  if (event.type === 'complete') {
+    console.log(`[Stage] Ready - group-files=${event.groupFiles}, platform-files=${event.platformFiles}, converted-now=${event.convertedThisRun}, resumed=${event.resumed}`)
+    console.log(`[Stage] Group tree: ${event.groupTree}`)
+    console.log(`[Stage] Platform tree: ${event.platformTree}`)
+    console.log(`[Stage] State: ${event.statePath}`)
   }
 }
 
@@ -124,7 +155,7 @@ async function obtainAzureScan(connectionString, args) {
     if (saved.saved) {
       cacheInfo.createdAt = saved.createdAt
       console.log(`[Cache] Azure scan saved to ${cachePath}`)
-      console.log('[Cache] If mapping fails, fix/update the mapper and rerun: the next run will reuse this scan without reading Azure again.')
+      console.log('[Cache] If mapping fails, rerun after updating the mapper: the next run will reuse this scan.')
     } else {
       console.log(`[Cache] Scan was not cached: ${saved.reason}`)
     }
@@ -145,7 +176,14 @@ async function main() {
   const platformPat = requireEnv('FANTAZONE_PLATFORM_PAT')
 
   const { scan, cacheInfo } = await obtainAzureScan(connectionString, args)
-  const plan = buildMigrationPlan(scan.records, args)
+  const workDir = workPath(args.workDir, args.groupRepository)
+  const plan = await stageMigrationRecords(scan.records, {
+    ...args,
+    workDir,
+    sourceFingerprint: azureSourceFingerprint(connectionString),
+    onProgress: logStagingProgress,
+  })
+
   console.log(`Selected legacy group: ${plan.group.id} (${plan.group.name})`)
   console.log(`Planned files: group=${plan.groupFiles.length}, platform=${plan.platformFiles.length}, skipped=${plan.skipped.length}`)
 
@@ -158,10 +196,13 @@ async function main() {
     message: 'feat: import legacy Serie A data from Azure Blob Storage', mode, apply: args.apply,
   })
 
+  if (args.apply) await markStagingGitResult(workDir, { group: groupResult, platform: platformResult })
+
   const output = {
     generatedAt: new Date().toISOString(), mode: args.apply ? 'apply' : 'dry-run', collisionMode: mode,
     source: {
       cache: cacheInfo,
+      staging: plan.staging,
       containers: scan.inventory.map(container => ({ name: container.name, downloaded: container.downloaded, blobCount: container.blobs.length, blobs: container.blobs })),
     },
     selectedGroup: { id: plan.group.id, name: plan.group.name },
@@ -173,7 +214,7 @@ async function main() {
   await mkdir(dirname(target), { recursive: true })
   await writeFile(target, `${JSON.stringify(output, null, 2)}\n`, 'utf8')
   console.log(`${args.apply ? 'Migration' : 'Dry-run'} completed. Report: ${target}`)
-  if (!args.apply) console.log('No GitHub content was modified. Re-run with --apply after reviewing the report.')
+  if (!args.apply) console.log('No GitHub content was modified. Re-run with --apply after reviewing the staged trees and report.')
 }
 
 main().catch(error => { console.error(`Migration failed: ${error.message}`); process.exitCode = 1 })
