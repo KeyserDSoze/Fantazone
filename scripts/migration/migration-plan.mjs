@@ -23,6 +23,7 @@ function repoBaseName(repo) { return repo.includes('/') ? repo.slice(repo.lastIn
 function groupHintFromRepository(repo) { return repoBaseName(repo).replace(/^fantazone[._-]?/i, '') }
 function slug(value) { return norm(value).replace(/[^a-z0-9]/g, '') }
 function asArray(value) { return Array.isArray(value) ? value : [] }
+function hasLegacyTeam(player) { return Boolean(player?.t && typeof player.t === 'object' && !Array.isArray(player.t)) }
 
 function keyObject(record, label) {
   if (!record.key || typeof record.key !== 'object' || Array.isArray(record.key)) throw new Error(`${label} requires a structured Rystem key (${record.container}/${record.blobName})`)
@@ -68,12 +69,68 @@ function buildMasterPlayersByYear(records) {
     const players = new Map()
     for (const player of asArray(record.value?.p)) {
       const key = getLegacyPlayerKey(player?.n)
-      if (!key) continue
+      if (!key || !hasLegacyTeam(player)) continue
       if (!players.has(key)) players.set(key, player)
     }
     byYear.set(year, players)
   }
   return byYear
+}
+
+function buildOfficialPlayersByYearDay(records) {
+  const byYearDay = new Map()
+  for (const record of records) {
+    if (record.container.toLowerCase() !== 'official') continue
+    const key = keyObject(record, 'Serie A official votes')
+    const dayKey = `${Number(key.y)}/${Number(key.d)}`
+    const players = new Map()
+    for (const player of asArray(record.value?.p)) {
+      const playerKey = getLegacyPlayerKey(player?.n)
+      if (!playerKey || !hasLegacyTeam(player)) continue
+      if (!players.has(playerKey)) players.set(playerKey, player)
+    }
+    byYearDay.set(dayKey, players)
+  }
+  return byYearDay
+}
+
+function editDistanceAtMostOne(left, right) {
+  if (left === right) return true
+  if (!left || !right || Math.abs(left.length - right.length) > 1) return false
+
+  let i = 0, j = 0, edits = 0
+  while (i < left.length && j < right.length) {
+    if (left[i] === right[j]) { i += 1; j += 1; continue }
+    edits += 1
+    if (edits > 1) return false
+    if (left.length > right.length) i += 1
+    else if (right.length > left.length) j += 1
+    else { i += 1; j += 1 }
+  }
+  if (i < left.length || j < right.length) edits += 1
+  return edits <= 1
+}
+
+function roleCompatible(rawPlayer, candidate) {
+  const voteRole = rawPlayer?.v?.r
+  const candidateRole = candidate?.r
+  if (!Number.isInteger(voteRole) || voteRole < 0 || !Number.isInteger(candidateRole) || candidateRole < 0) return true
+  return voteRole === candidateRole
+}
+
+function findUniqueNearMetadata(rawPlayer, sources) {
+  const wanted = getLegacyPlayerKey(rawPlayer?.n)
+  if (!wanted) return null
+  const candidates = new Map()
+  for (const source of sources) {
+    if (!source) continue
+    for (const [candidateKey, candidate] of source) {
+      if (!hasLegacyTeam(candidate) || !roleCompatible(rawPlayer, candidate)) continue
+      if (!editDistanceAtMostOne(wanted, candidateKey)) continue
+      if (!candidates.has(candidateKey)) candidates.set(candidateKey, candidate)
+    }
+  }
+  return candidates.size === 1 ? [...candidates.values()][0] : null
 }
 
 /** Build stable context once, then individual records can be planned/staged independently. */
@@ -83,28 +140,35 @@ export function createMigrationContext(records, options) {
     group,
     selectedGroupId: group.id,
     masterPlayersByYear: buildMasterPlayersByYear(records),
+    officialPlayersByYearDay: buildOfficialPlayersByYearDay(records),
   }
 }
 
-function enrichLegacyVotesFromMaster(raw, year, context) {
+function enrichLegacyVotesMetadata(raw, year, serieADay, context) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw
   const masters = context.masterPlayersByYear.get(Number(year))
-  if (!masters || !raw || typeof raw !== 'object' || Array.isArray(raw)) return raw
+  const officialSameDay = context.officialPlayersByYearDay.get(`${Number(year)}/${Number(serieADay)}`)
 
   return {
     ...raw,
     p: asArray(raw.p).map(player => {
-      if (!player || typeof player !== 'object' || Array.isArray(player) || player.t != null) return player
-      const master = masters.get(getLegacyPlayerKey(player.n))
-      if (!master?.t) return player
-      // Historical live providers sometimes persisted only name + vote and left RealPlayer.Team null.
-      // In that case use the same-season RealPlayers master for immutable player metadata while
-      // preserving the historical vote payload itself.
+      if (!player || typeof player !== 'object' || Array.isArray(player) || hasLegacyTeam(player)) return player
+      const playerKey = getLegacyPlayerKey(player.n)
+      const master = masters?.get(playerKey)
+      const official = officialSameDay?.get(playerKey)
+      const fallback = master ?? official ?? findUniqueNearMetadata(player, [officialSameDay, masters])
+      if (!fallback || !hasLegacyTeam(fallback)) {
+        throw new Error(`Cannot recover legacy RealTeam for vote player '${String(player.n ?? '')}' in season ${year}, day ${serieADay}`)
+      }
+      // Historical vote providers sometimes persisted name + vote but omitted RealPlayer metadata.
+      // Prefer same-season master data; otherwise use the exact same-day official snapshot. A
+      // one-edit name recovery is accepted only when it yields one unique role-compatible player.
       return {
         ...player,
-        t: master.t,
-        r: master.r ?? player.r,
-        a: master.a ?? player.a,
-        vh: player.vh ?? master.vh,
+        t: fallback.t,
+        r: fallback.r ?? player.r,
+        a: fallback.a ?? player.a,
+        vh: player.vh ?? fallback.vh,
       }
     }),
   }
@@ -157,7 +221,7 @@ export function planMigrationRecord(record, context) {
     }
     if (c === 'official' || c === 'live') {
       const k = keyObject(record, 'Serie A votes')
-      const enriched = enrichLegacyVotesFromMaster(record.value, k.y, context)
+      const enriched = enrichLegacyVotesMetadata(record.value, k.y, k.d, context)
       return plannedFile('platform', `data/serie-a/votes/${c}/${k.y}/${k.d}.json`, prettyJson(mapLegacyVotes(enriched, k.y, k.d)), `${c}/${record.blobName}`)
     }
     if (c === 'statplayerswrapper') {
