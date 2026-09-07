@@ -1,4 +1,9 @@
-import { GitHubApiError, type GitHubContentWriteResult } from './githubClient'
+import {
+  GitHubApiError,
+  type GitHubConditionalContentReadResult,
+  type GitHubContentReadResult,
+  type GitHubContentWriteResult,
+} from './githubClient'
 
 export type RepositoryJsonLocation = {
   owner: string
@@ -29,6 +34,8 @@ export type RepositoryJsonWriteOptions = {
 export type RepositoryJsonCacheEntry = {
   value: unknown
   sha: string
+  /** Optional HTTP validator used to avoid downloading unchanged GitHub content. */
+  etag?: string
 }
 
 /**
@@ -46,7 +53,15 @@ export interface RepositoryJsonPersistentCache {
 }
 
 export interface RepositoryContentClient {
-  tryGetContent(owner: string, repo: string, path: string, ref?: string): Promise<{ sha: string; content: string } | null>
+  tryGetContent(owner: string, repo: string, path: string, ref?: string): Promise<GitHubContentReadResult | null>
+  /** Optional conditional read. Clients without HTTP validator support may omit it. */
+  tryGetContentConditional?(
+    owner: string,
+    repo: string,
+    path: string,
+    ref: string | undefined,
+    etag: string,
+  ): Promise<GitHubConditionalContentReadResult | null>
   putContent(
     owner: string,
     repo: string,
@@ -86,6 +101,7 @@ export class RepositoryWriteConflictError extends Error {
 type CacheEntry = {
   value: unknown
   sha: string
+  etag?: string
 }
 
 /**
@@ -114,19 +130,38 @@ export class GitHubJsonStore {
 
     const persisted = await this.safePersistentGet(key)
     if (!persisted) return null
-    const entry: CacheEntry = { value: cloneJson(persisted.value), sha: persisted.sha }
+    const entry: CacheEntry = { value: cloneJson(persisted.value), sha: persisted.sha, etag: persisted.etag }
     this.cache.set(key, entry)
     return snapshotFromCache<T>(entry)
   }
 
   async tryReadJson<T>(location: RepositoryJsonLocation, options: RepositoryJsonReadOptions = {}): Promise<RepositoryJsonSnapshot<T> | null> {
     const key = cacheKey(location)
-    if (!options.refresh) {
-      const cached = await this.readCachedJson<T>(location)
-      if (cached) return cached
+    const cachedEntry = await this.cachedEntry(key)
+    if (!options.refresh && cachedEntry) return snapshotFromCache<T>(cachedEntry)
+
+    let content: GitHubContentReadResult | null
+    if (options.refresh && cachedEntry?.etag && this.client.tryGetContentConditional) {
+      const conditional = await this.client.tryGetContentConditional(
+        location.owner,
+        location.repo,
+        location.path,
+        location.ref,
+        cachedEntry.etag,
+      )
+      if (conditional?.status === 'not-modified') {
+        const reused: CacheEntry = {
+          ...cachedEntry,
+          etag: conditional.etag ?? cachedEntry.etag,
+        }
+        await this.remember(key, reused)
+        return snapshotFromCache<T>(reused)
+      }
+      content = conditional?.status === 'found' ? conditional.value : null
+    } else {
+      content = await this.client.tryGetContent(location.owner, location.repo, location.path, location.ref)
     }
 
-    const content = await this.client.tryGetContent(location.owner, location.repo, location.path, location.ref)
     if (!content) {
       await this.forget(key)
       return null
@@ -139,7 +174,7 @@ export class GitHubJsonStore {
       throw new RepositoryJsonParseError(location, error)
     }
 
-    const entry: CacheEntry = { value: cloneJson(value), sha: content.sha }
+    const entry: CacheEntry = { value: cloneJson(value), sha: content.sha, etag: content.etag }
     await this.remember(key, entry)
     return { value: cloneJson(value), sha: content.sha, fromCache: false }
   }
@@ -170,6 +205,7 @@ export class GitHubJsonStore {
         expectedSha,
         writeLocation.ref,
       )
+      // A write changes the representation, therefore any previously cached ETag is stale.
       const entry: CacheEntry = { value: cloneJson(value), sha: result.sha }
       await this.remember(key, entry)
       return { value: cloneJson(value), sha: result.sha, fromCache: false }
@@ -208,12 +244,22 @@ export class GitHubJsonStore {
     await this.safePersistentDeleteByPrefix(prefix, [...preserveKeys])
   }
 
+  private async cachedEntry(key: string): Promise<CacheEntry | null> {
+    const memory = this.cache.get(key)
+    if (memory) return memory
+    const persisted = await this.safePersistentGet(key)
+    if (!persisted) return null
+    const entry: CacheEntry = { value: cloneJson(persisted.value), sha: persisted.sha, etag: persisted.etag }
+    this.cache.set(key, entry)
+    return entry
+  }
+
   private async remember(key: string, entry: CacheEntry): Promise<void> {
-    const cloned: CacheEntry = { value: cloneJson(entry.value), sha: entry.sha }
+    const cloned: CacheEntry = { value: cloneJson(entry.value), sha: entry.sha, etag: entry.etag }
     this.cache.set(key, cloned)
     if (!this.persistentCache) return
     try {
-      await this.persistentCache.set(key, { value: cloneJson(cloned.value), sha: cloned.sha })
+      await this.persistentCache.set(key, { value: cloneJson(cloned.value), sha: cloned.sha, etag: cloned.etag })
     } catch {
       // Durable caching is an optimization. GitHub remains the source of truth.
     }
@@ -234,7 +280,7 @@ export class GitHubJsonStore {
     try {
       const entry = await this.persistentCache.get(key)
       if (!entry || typeof entry.sha !== 'string') return null
-      return { value: cloneJson(entry.value), sha: entry.sha }
+      return { value: cloneJson(entry.value), sha: entry.sha, etag: entry.etag }
     } catch {
       return null
     }

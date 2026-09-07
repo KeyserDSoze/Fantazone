@@ -15,6 +15,17 @@ export type GitHubContentWriteResult = {
   sha: string
 }
 
+export type GitHubContentReadResult = {
+  sha: string
+  content: string
+  /** Strong/weak HTTP validator returned by GitHub, including quotes when present. */
+  etag?: string
+}
+
+export type GitHubConditionalContentReadResult =
+  | { status: 'found'; value: GitHubContentReadResult }
+  | { status: 'not-modified'; etag?: string }
+
 export type GitHubWorkflowRun = {
   id: number
   name: string
@@ -55,7 +66,7 @@ export class GitHubClient {
     }
   }
 
-  private async request<T>(path: string, init: RequestInit = {}): Promise<T> {
+  private async rawRequest(path: string, init: RequestInit = {}): Promise<Response> {
     const headers: Record<string, string> = {
       Accept: 'application/vnd.github+json',
       'X-GitHub-Api-Version': '2022-11-28',
@@ -65,10 +76,14 @@ export class GitHubClient {
     if (this.token) headers.Authorization = `Bearer ${this.token}`
     if (init.headers) Object.assign(headers, init.headers as Record<string, string>)
 
-    const response = await fetch(`${API}${path}`, {
+    return fetch(`${API}${path}`, {
       ...init,
       headers,
     })
+  }
+
+  private async request<T>(path: string, init: RequestInit = {}): Promise<T> {
+    const response = await this.rawRequest(path, init)
     if (!response.ok) {
       throw new GitHubApiError(response.status, await response.text())
     }
@@ -152,17 +167,56 @@ export class GitHubClient {
    * Reads repository content. Authentication is optional so public Fantazone data can
    * be consumed without forcing the application to own a GitHub credential.
    */
-  async getContent(owner: string, repo: string, path: string, ref?: string): Promise<{ sha: string; content: string }> {
-    const suffix = ref ? `?ref=${encodeURIComponent(ref)}` : ''
-    const result = await this.request<{ sha: string; content: string; encoding: string }>(`/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${path}${suffix}`)
-    if (result.encoding !== 'base64') throw new Error(`Unsupported content encoding ${result.encoding}`)
-    const content = decodeBase64Utf8(result.content.replace(/\n/g, ''))
-    return { sha: result.sha, content }
+  async getContent(owner: string, repo: string, path: string, ref?: string): Promise<GitHubContentReadResult> {
+    const result = await this.getContentConditional(owner, repo, path, ref)
+    if (result.status !== 'found') throw new Error(`Unexpected not-modified response for unconditional content read: ${path}`)
+    return result.value
   }
 
-  async tryGetContent(owner: string, repo: string, path: string, ref?: string): Promise<{ sha: string; content: string } | null> {
+  /**
+   * Conditional repository-content read. GitHub replies with 304 when the supplied
+   * ETag still represents the current document, allowing callers to reuse local JSON.
+   */
+  async getContentConditional(
+    owner: string,
+    repo: string,
+    path: string,
+    ref?: string,
+    etag?: string,
+  ): Promise<GitHubConditionalContentReadResult> {
+    const suffix = ref ? `?ref=${encodeURIComponent(ref)}` : ''
+    const response = await this.rawRequest(
+      `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${path}${suffix}`,
+      etag ? { headers: { 'If-None-Match': etag } } : {},
+    )
+    const responseEtag = response.headers.get('ETag') ?? undefined
+    if (response.status === 304) return { status: 'not-modified', etag: responseEtag ?? etag }
+    if (!response.ok) throw new GitHubApiError(response.status, await response.text())
+
+    const result = await response.json() as { sha: string; content: string; encoding: string }
+    if (result.encoding !== 'base64') throw new Error(`Unsupported content encoding ${result.encoding}`)
+    const content = decodeBase64Utf8(result.content.replace(/\n/g, ''))
+    return { status: 'found', value: { sha: result.sha, content, etag: responseEtag } }
+  }
+
+  async tryGetContent(owner: string, repo: string, path: string, ref?: string): Promise<GitHubContentReadResult | null> {
     try {
       return await this.getContent(owner, repo, path, ref)
+    } catch (error) {
+      if (error instanceof GitHubApiError && error.status === 404) return null
+      throw error
+    }
+  }
+
+  async tryGetContentConditional(
+    owner: string,
+    repo: string,
+    path: string,
+    ref: string | undefined,
+    etag: string,
+  ): Promise<GitHubConditionalContentReadResult | null> {
+    try {
+      return await this.getContentConditional(owner, repo, path, ref, etag)
     } catch (error) {
       if (error instanceof GitHubApiError && error.status === 404) return null
       throw error

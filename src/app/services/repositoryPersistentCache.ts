@@ -118,7 +118,10 @@ function decodeEntry(raw: string): RepositoryJsonCacheEntry | null {
 
 function isCacheEntry(value: unknown): value is RepositoryJsonCacheEntry {
   if (!value || typeof value !== 'object') return false
-  return typeof (value as { sha?: unknown }).sha === 'string' && 'value' in value
+  const candidate = value as { sha?: unknown; etag?: unknown }
+  return typeof candidate.sha === 'string' &&
+    (candidate.etag === undefined || typeof candidate.etag === 'string') &&
+    'value' in value
 }
 
 function openDatabase(): Promise<any> {

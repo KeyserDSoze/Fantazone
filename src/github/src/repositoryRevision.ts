@@ -1,4 +1,9 @@
-import { GitHubApiError, type GitHubContentWriteResult } from './githubClient'
+import {
+  GitHubApiError,
+  type GitHubConditionalContentReadResult,
+  type GitHubContentReadResult,
+  type GitHubContentWriteResult,
+} from './githubClient'
 import type { RepositoryContentClient } from './repositoryStore'
 import type { GroupRepositoryTarget } from './repositoryTarget'
 
@@ -40,8 +45,22 @@ export class RepositoryRevisionContentClient implements RepositoryContentClient 
     return this._lastRevision
   }
 
-  async tryGetContent(owner: string, repo: string, path: string, ref?: string): Promise<{ sha: string; content: string } | null> {
+  async tryGetContent(owner: string, repo: string, path: string, ref?: string): Promise<GitHubContentReadResult | null> {
     return this.client.tryGetContent(owner, repo, path, ref)
+  }
+
+  async tryGetContentConditional(
+    owner: string,
+    repo: string,
+    path: string,
+    ref: string | undefined,
+    etag: string,
+  ): Promise<GitHubConditionalContentReadResult | null> {
+    if (this.client.tryGetContentConditional) {
+      return this.client.tryGetContentConditional(owner, repo, path, ref, etag)
+    }
+    const content = await this.client.tryGetContent(owner, repo, path, ref)
+    return content ? { status: 'found', value: content } : null
   }
 
   async putContent(
