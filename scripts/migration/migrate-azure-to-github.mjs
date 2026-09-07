@@ -43,6 +43,42 @@ function reportPath(value) {
   return resolve('migration-output', `azure-migration-${stamp}.json`)
 }
 
+function formatBytes(bytes) {
+  if (!Number.isFinite(bytes) || bytes <= 0) return '0 B'
+  const units = ['B', 'KiB', 'MiB', 'GiB']
+  let value = bytes
+  let unit = 0
+  while (value >= 1024 && unit < units.length - 1) { value /= 1024; unit += 1 }
+  return `${value < 10 && unit > 0 ? value.toFixed(1) : Math.round(value)} ${units[unit]}`
+}
+
+function formatElapsed(ms) {
+  if (!Number.isFinite(ms) || ms < 1000) return `${Math.max(0, Math.round(ms ?? 0))} ms`
+  const seconds = Math.round(ms / 1000)
+  if (seconds < 60) return `${seconds}s`
+  return `${Math.floor(seconds / 60)}m ${seconds % 60}s`
+}
+
+function logAzureProgress(event) {
+  if (event.type === 'container-start') {
+    console.log(`[Azure] Container #${event.containerNumber}: ${event.container} — ${event.download ? 'canonical, reading content' : 'inventory only'}`)
+    return
+  }
+  if (event.type === 'container-progress') {
+    const downloaded = event.download ? `, downloaded=${event.downloadedCount} (${formatBytes(event.downloadedBytes)})` : ''
+    console.log(`[Azure] ${event.container}: enumerated=${event.blobCount}${downloaded}, elapsed=${formatElapsed(event.elapsedMs)}, current=${event.currentBlob}`)
+    return
+  }
+  if (event.type === 'container-complete') {
+    const downloaded = event.download ? `, downloaded=${event.downloadedCount} (${formatBytes(event.downloadedBytes)})` : ''
+    console.log(`[Azure] ${event.container}: complete — blobs=${event.blobCount}${downloaded}, elapsed=${formatElapsed(event.elapsedMs)}`)
+    return
+  }
+  if (event.type === 'scan-complete') {
+    console.log(`[Azure] Scan complete — containers=${event.containerCount}, blobs=${event.blobCount}, canonical records downloaded=${event.downloadedCount}`)
+  }
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2))
   if (args.help) { console.log(usage()); return }
@@ -55,7 +91,7 @@ async function main() {
   const platformPat = requireEnv('FANTAZONE_PLATFORM_PAT')
 
   console.log('Scanning Azure Blob Storage metadata and canonical containers...')
-  const scan = await scanAzureStorage(connectionString)
+  const scan = await scanAzureStorage(connectionString, { onProgress: logAzureProgress })
   const plan = buildMigrationPlan(scan.records, args)
   console.log(`Selected legacy group: ${plan.group.id} (${plan.group.name})`)
   console.log(`Planned files: group=${plan.groupFiles.length}, platform=${plan.platformFiles.length}, skipped=${plan.skipped.length}`)
