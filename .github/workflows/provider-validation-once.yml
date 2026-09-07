@@ -1,96 +1,42 @@
-name: Validate player providers once
-run-name: Fantazone · validate player odds + images
+name: Diagnose player images provider once
+run-name: Fantazone · diagnose player images provider
 
 on:
   push:
     branches: [main]
 
-permissions:
-  contents: write
-
-concurrency:
-  group: fantazone-platform-background-jobs
-  cancel-in-progress: false
-
 jobs:
-  validate:
-    if: "${{ github.event.head_commit.message == 'ops: validate player odds and images' }}"
+  diagnose:
+    if: "${{ github.event.head_commit.message == 'ops: diagnose player images' }}"
     runs-on: ubuntu-latest
-    timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 22
-      - name: Install workspace dependencies
-        run: npm install
-      - name: Typecheck jobs
-        run: npm run typecheck --workspace=@fantazone/jobs
-      - name: Run both real provider ingestions
-        id: providers
+      - name: Probe Lega Serie A season catalog
         shell: bash
         run: |
-          set +e
-          ODDS_OUTPUT="$(npm run job --workspace=@fantazone/jobs -- ingest-player-odds 2>&1)"
-          ODDS_STATUS=$?
-          printf '%s\n' "$ODDS_OUTPUT"
+          set -euo pipefail
+          BASE='https://api-sdp.legaseriea.it/v1/serie-a/football'
+          COMP='serie-a%3A%3AFootball_Competition%3A%3Aec93b94f74294dc98ab5bcfd67fc0d88'
 
-          IMAGES_OUTPUT="$(npm run job --workspace=@fantazone/jobs -- ingest-player-images 2>&1)"
-          IMAGES_STATUS=$?
-          printf '%s\n' "$IMAGES_OUTPUT"
-          set -e
-
-          ODDS_OK=true
-          if [ "$ODDS_STATUS" -ne 0 ] || printf '%s\n' "$ODDS_OUTPUT" | grep -q 'skip='; then
-            ODDS_OK=false
-          fi
-          ODDS_OBSERVATIONS="$(printf '%s\n' "$ODDS_OUTPUT" | sed -n 's/.*: \([0-9][0-9]*\) osservazioni.*/\1/p' | awk '{ total += $1 } END { print total + 0 }')"
-          if [ "$ODDS_OBSERVATIONS" -le 0 ]; then
-            ODDS_OK=false
-          fi
-
-          IMAGES_OK=true
-          if [ "$IMAGES_STATUS" -ne 0 ] || printf '%s\n' "$IMAGES_OUTPUT" | grep -q 'skip='; then
-            IMAGES_OK=false
-          fi
-          IMAGE_MATCHES="$(printf '%s\n' "$IMAGES_OUTPUT" | sed -n 's/.*: \([0-9][0-9]*\) nuove, \([0-9][0-9]*\) esistenti,.*/\1 \2/p' | tail -1 | awk '{ print $1 + $2 }')"
-          IMAGE_MATCHES="${IMAGE_MATCHES:-0}"
-          if [ "$IMAGE_MATCHES" -le 0 ]; then
-            IMAGES_OK=false
-          fi
-
-          echo "odds_ok=$ODDS_OK" >> "$GITHUB_OUTPUT"
-          echo "images_ok=$IMAGES_OK" >> "$GITHUB_OUTPUT"
-          echo "odds_observations=$ODDS_OBSERVATIONS" >> "$GITHUB_OUTPUT"
-          echo "image_matches=$IMAGE_MATCHES" >> "$GITHUB_OUTPUT"
-
-          {
-            echo '## Provider validation'
+          probe() {
+            LABEL="$1"
+            LOCALE="$2"
+            REFERER="$3"
+            URL="$BASE/competitions/$COMP/seasons?locale=$LOCALE"
+            echo "===== $LABEL ====="
+            ARGS=(-sS -L -A 'Mozilla/5.0 (compatible; Fantazone/1.0; +https://fanta.plus)' -H 'Accept: application/json,text/plain,*/*' -H 'Accept-Language: it-IT,it;q=0.9,en-US;q=0.8,en;q=0.7' -D headers.txt -o body.txt -w '%{http_code}')
+            if [ "$REFERER" = 'yes' ]; then
+              ARGS+=(-H 'Referer: https://www.legaseriea.it/' -H 'Origin: https://www.legaseriea.it')
+            fi
+            STATUS="$(curl "${ARGS[@]}" "$URL" || true)"
+            echo "HTTP $STATUS"
+            grep -iE '^(content-type|server|via|x-|cf-)' headers.txt || true
+            echo 'Body preview:'
+            head -c 800 body.txt || true
             echo
-            echo "- Player odds valid: **$ODDS_OK** — observations: **$ODDS_OBSERVATIONS**"
-            echo "- Player images valid: **$IMAGES_OK** — written/existing matches: **$IMAGE_MATCHES**"
-          } >> "$GITHUB_STEP_SUMMARY"
-      - name: Commit canonical outputs
-        shell: bash
-        run: |
-          if [ -z "$(git status --porcelain -- data src/app/public/images/players)" ]; then
-            echo "No canonical data/static image changes"
-            exit 0
-          fi
-          git config user.name "fantazone-actions[bot]"
-          git config user.email "fantazone-actions[bot]@users.noreply.github.com"
-          git add -A -- data src/app/public/images/players
-          git commit -m "data: validate player providers"
-          git pull --rebase origin "$GITHUB_REF_NAME"
-          git push origin HEAD:"$GITHUB_REF_NAME"
-      - name: Enforce real-provider validation
-        shell: bash
-        run: |
-          if [ "${{ steps.providers.outputs.odds_ok }}" != "true" ]; then
-            echo "Player odds provider validation failed."
-            exit 1
-          fi
-          if [ "${{ steps.providers.outputs.images_ok }}" != "true" ]; then
-            echo "Player images provider validation failed."
-            exit 1
-          fi
+            echo
+          }
+
+          probe 'it-IT current headers' 'it-IT' 'no'
+          probe 'en-GB current headers' 'en-GB' 'no'
+          probe 'it-IT browser referer' 'it-IT' 'yes'
+          probe 'en-GB browser referer' 'en-GB' 'yes'
