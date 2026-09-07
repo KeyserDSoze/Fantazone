@@ -19,6 +19,15 @@ import { GitHubChanceRepository, GitHubStatPlayersRepository } from '@fantazone/
 import { resolveFormationTarget, type FormationTarget } from '../services/groupFormationTarget'
 import type { GroupNavigationSelection } from '../services/groupNavigation'
 import type { GroupSessionRuntime } from '../services/groupSessionRuntime'
+import { isNetworkFailure } from '../services/networkStatus'
+import { countPendingMutations, enqueueFormationMutation } from '../services/offlineOutbox'
+import {
+  beginOperation,
+  endOperation,
+  markConnectivity,
+  setPendingWrites,
+  updateOperation,
+} from '../services/operationStatus'
 
 type Props = {
   runtime: GroupSessionRuntime
@@ -57,6 +66,7 @@ export function GroupFormationScreen({ runtime, session, selection }: Props) {
     setError(null)
     setStatus(null)
     setAutomaticBackup(null)
+    beginOperation('Caricamento formazione', 'Controllo calendario, partita e squadra corrente…')
     try {
       const [calendar, realCalendar] = await Promise.all([
         runtime.calendarRepository.getCalendar(selection.leagueId, selection.year, { refresh: true }),
@@ -64,6 +74,7 @@ export function GroupFormationScreen({ runtime, session, selection }: Props) {
       ])
       if (!calendar) throw new Error('Il calendario della lega non è ancora disponibile.')
 
+      updateOperation('Individuazione della partita e della formazione modificabile…')
       const resolved = resolveFormationTarget({
         group: runtime.group,
         leagueId: selection.leagueId,
@@ -93,6 +104,7 @@ export function GroupFormationScreen({ runtime, session, selection }: Props) {
       setAutomaticBackup(null)
       setError(toMessage(caught))
     } finally {
+      endOperation()
       setLoading(false)
     }
   }
@@ -113,6 +125,7 @@ export function GroupFormationScreen({ runtime, session, selection }: Props) {
     setAutomaticLoading(true)
     setError(null)
     setStatus(null)
+    beginOperation('Formazione automatica', 'Caricamento di probabilità, statistiche e calendario Serie A…')
     try {
       const [chances, stats, realCalendar] = await Promise.all([
         chanceRepository.get(selection.year, wrapper.serieADay, { refresh: true }),
@@ -122,6 +135,7 @@ export function GroupFormationScreen({ runtime, session, selection }: Props) {
       if (!chances) {
         throw new Error(`Probabilità Serie A ${selection.year}/${wrapper.serieADay} non disponibili. Esegui prima il producer delle probabilità.`)
       }
+      updateOperation('Calcolo della proposta migliore con i dati disponibili…')
       const realDay = realCalendar?.days.find(day => day.serieADay === wrapper.serieADay) ?? null
       const result = calculateAutomaticFormation({ team, chances, stats, realDay })
       const preview = applyFormationPositions(team, result.updates)
@@ -136,6 +150,7 @@ export function GroupFormationScreen({ runtime, session, selection }: Props) {
     } catch (caught) {
       setError(toMessage(caught))
     } finally {
+      endOperation()
       setAutomaticLoading(false)
     }
   }
@@ -161,6 +176,7 @@ export function GroupFormationScreen({ runtime, session, selection }: Props) {
     setSaving(true)
     setError(null)
     setStatus(null)
+    beginOperation('Salvataggio formazione', 'Verifica della formazione e sincronizzazione con il gruppo…')
     try {
       const saved = await runtime.formationWriter.saveGameFormation({
         session,
@@ -173,10 +189,32 @@ export function GroupFormationScreen({ runtime, session, selection }: Props) {
       setTeam(saved.team)
       setPositions(positionStateFromTeam(saved.team))
       setAutomaticBackup(null)
-      setStatus('Formazione salvata sulla squadra corrente. La GitHub Action determinerà la TeamDay corretta dal timestamp del commit, senza riscrivere le giornate già congelate.')
+      markConnectivity('online')
+      setStatus('Formazione sincronizzata con il gruppo. La GitHub Action determinerà la TeamDay corretta dal timestamp del commit, senza riscrivere le giornate già congelate.')
     } catch (caught) {
-      setError(toMessage(caught))
+      if (isNetworkFailure(caught)) {
+        updateOperation('Connessione assente: salvataggio della modifica sul dispositivo…')
+        await enqueueFormationMutation(runtime.connection.repository.full_name, {
+          identityEmail: session.identity.email,
+          leagueId: selection.leagueId,
+          season: selection.year,
+          gameId: target.gameId,
+          owner: target.owner,
+          positions: updates,
+        })
+        const localTeam: Team = { ...preview, lastUpdate: new Date().toISOString() }
+        setTeam(localTeam)
+        setPositions(positionStateFromTeam(localTeam))
+        setAutomaticBackup(null)
+        const pending = await countPendingMutations(runtime.connection.repository.full_name)
+        setPendingWrites(pending)
+        markConnectivity('offline')
+        setStatus('Formazione salvata sul dispositivo. Verrà rivalidata e sincronizzata automaticamente appena torna la connessione; per il cutoff farà fede il momento del commit GitHub.')
+      } else {
+        setError(toMessage(caught))
+      }
     } finally {
+      endOperation()
       setSaving(false)
     }
   }
