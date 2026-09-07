@@ -1,52 +1,81 @@
-name: Diagnose player catalog pagination once
-run-name: Fantazone · diagnose player catalog pagination
+name: Validate player images once
+run-name: Fantazone · validate player images
 
 on:
   push:
     branches: [main]
 
+permissions:
+  contents: write
+
+concurrency:
+  group: fantazone-platform-background-jobs
+  cancel-in-progress: false
+
+env:
+  FANTAZONE_PLAYER_IMAGES_API_BASE_URL: ${{ vars.FANTAZONE_PLAYER_IMAGES_API_BASE_URL }}
+  FANTAZONE_PLAYER_IMAGES_MEDIA_BASE_URL: ${{ vars.FANTAZONE_PLAYER_IMAGES_MEDIA_BASE_URL }}
+
 jobs:
-  diagnose:
-    if: "${{ github.event.head_commit.message == 'ops: diagnose player catalog pagination' }}"
+  validate:
+    if: "${{ github.event.head_commit.message == 'ops: harden player images ingestion' }}"
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
+      - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
         with:
           node-version: 22
-      - name: Probe every player catalog page
+      - name: Install workspace dependencies
+        run: npm install
+      - name: Typecheck jobs
+        run: npm run typecheck --workspace=@fantazone/jobs
+      - name: Run real player image ingestion
+        id: images
         shell: bash
         run: |
-          node <<'NODE'
-          const base = 'https://api-sdp.legaseriea.it/v1/serie-a/football/'
-          const headers = {
-            'User-Agent': 'Mozilla/5.0 (compatible; Fantazone/1.0; +https://fanta.plus)',
-            'Accept-Language': 'it-IT,it;q=0.9,en-US;q=0.8,en;q=0.7',
-            'Cache-Control': 'no-cache',
-          }
-          const seasons = [
-            ['current', 'serie-a::Football_Season::ed7fdc2a3e7b408b942ec177b7b956b5', 14],
-            ['previous', 'serie-a::Football_Season::5f0e080fc3a44073984b75b3a8e06a8a', 27],
-          ]
-          for (const [label, id, pages] of seasons) {
-            console.log(`===== ${label}: ${pages} pages =====`)
-            for (let page = 1; page <= pages; page++) {
-              const url = new URL(`seasons/${encodeURIComponent(id)}/stats/players?category=General&page=${page}&locale=it-IT`, base).toString()
-              const started = Date.now()
-              try {
-                const response = await fetch(url, { headers })
-                const text = await response.text()
-                let players = -1
-                let last = null
-                try {
-                  const parsed = JSON.parse(text)
-                  players = Array.isArray(parsed?.players) ? parsed.players.length : -1
-                  last = parsed?.pagination?.isLastPage ?? null
-                } catch {}
-                console.log(`${label} page=${page} status=${response.status} players=${players} last=${last} ms=${Date.now()-started} retry-after=${response.headers.get('retry-after') ?? ''}`)
-                if (!response.ok) console.log('body', text.slice(0, 500))
-              } catch (error) {
-                console.log(`${label} page=${page} FETCH_ERROR`, error, error?.cause)
-              }
-            }
-          }
-          NODE
+          set +e
+          OUTPUT="$(npm run job --workspace=@fantazone/jobs -- ingest-player-images 2>&1)"
+          STATUS=$?
+          set -e
+          printf '%s\n' "$OUTPUT"
+
+          OK=true
+          if [ "$STATUS" -ne 0 ] || printf '%s\n' "$OUTPUT" | grep -q 'skip='; then
+            OK=false
+          fi
+          MATCHES="$(printf '%s\n' "$OUTPUT" | sed -n 's/.*: \([0-9][0-9]*\) nuove, \([0-9][0-9]*\) esistenti,.*/\1 \2/p' | tail -1 | awk '{ print $1 + $2 }')"
+          MATCHES="${MATCHES:-0}"
+          if [ "$MATCHES" -le 0 ]; then OK=false; fi
+          echo "ok=$OK" >> "$GITHUB_OUTPUT"
+          echo "matches=$MATCHES" >> "$GITHUB_OUTPUT"
+          {
+            echo '## Player images validation'
+            echo
+            echo "- Valid: **$OK**"
+            echo "- Written/existing matches: **$MATCHES**"
+            echo
+            echo '```text'
+            printf '%s\n' "$OUTPUT"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Commit canonical player images
+        shell: bash
+        run: |
+          if [ -z "$(git status --porcelain -- src/app/public/images/players)" ]; then
+            echo "No player image changes"
+            exit 0
+          fi
+          git config user.name "fantazone-actions[bot]"
+          git config user.email "fantazone-actions[bot]@users.noreply.github.com"
+          git add -A -- src/app/public/images/players
+          git commit -m "data: ingest player images"
+          git pull --rebase origin "$GITHUB_REF_NAME"
+          git push origin HEAD:"$GITHUB_REF_NAME"
+      - name: Enforce real-provider validation
+        shell: bash
+        run: |
+          if [ "${{ steps.images.outputs.ok }}" != "true" ]; then
+            echo "Player images provider validation failed."
+            exit 1
+          fi

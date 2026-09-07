@@ -18,6 +18,8 @@ export const PLAYER_IMAGES_PUBLIC_ROOT = 'src/app/public/images/players'
 
 const REPO_ROOT = fileURLToPath(new URL('../../../', import.meta.url))
 const MAX_CATALOG_PAGES = 100
+const DEFAULT_RETRY_ATTEMPTS = 3
+const DEFAULT_RETRY_DELAY_MS = 750
 
 export type JsonFetcher = (url: string) => Promise<unknown>
 export type BinaryFetcher = (url: string) => Promise<Uint8Array>
@@ -30,6 +32,8 @@ export type PlayerImagesIngestionOptions = {
   fetchJson?: JsonFetcher
   fetchBinary?: BinaryFetcher
   delayMs?: number
+  retryAttempts?: number
+  retryDelayMs?: number
   now?: Date
 }
 
@@ -42,6 +46,7 @@ export type PlayerImagesIngestionResult = {
   skipped: boolean
   reason?: 'players-missing' | 'season-catalog-unavailable' | 'current-season-missing'
   outputDirectory: string
+  previousCatalogUnavailable: boolean
 }
 
 /** Global replacement for legacy PlayerImagesJob, writing directly into Expo public static files. */
@@ -58,11 +63,15 @@ export async function ingestPlayerImages(options: PlayerImagesIngestionOptions =
   const mediaBaseUrl = ensureTrailingSlash(options.mediaBaseUrl?.trim() || process.env.FANTAZONE_PLAYER_IMAGES_MEDIA_BASE_URL?.trim() || DEFAULT_PLAYER_IMAGES_MEDIA_BASE_URL)
   const fetchJson = options.fetchJson ?? defaultFetchJson
   const fetchBinary = options.fetchBinary ?? defaultFetchBinary
+  const retryAttempts = normalizeRetryAttempts(options.retryAttempts)
+  const retryDelayMs = Math.max(0, options.retryDelayMs ?? DEFAULT_RETRY_DELAY_MS)
 
   let seasons
   try {
-    seasons = decodeSdpSeasons(await fetchJson(
-      new URL(`competitions/${encodeURIComponent(LEGA_SERIE_A_COMPETITION_ID)}/seasons?locale=it-IT`, apiBaseUrl).toString(),
+    seasons = decodeSdpSeasons(await withRetry(
+      () => fetchJson(new URL(`competitions/${encodeURIComponent(LEGA_SERIE_A_COMPETITION_ID)}/seasons?locale=it-IT`, apiBaseUrl).toString()),
+      retryAttempts,
+      retryDelayMs,
     ))
   } catch {
     return emptyResult(season, outputDirectory, 'season-catalog-unavailable')
@@ -73,11 +82,20 @@ export async function ingestPlayerImages(options: PlayerImagesIngestionOptions =
 
   let catalog: SdpPlayer[]
   try {
-    catalog = await fetchCatalog(current.seasonId, apiBaseUrl, fetchJson)
-    const previous = seasons.find(item => item.seasonName === fullSeasonLabel(season - 1))
-    if (previous) catalog.push(...await fetchCatalog(previous.seasonId, apiBaseUrl, fetchJson))
+    catalog = await fetchCatalog(current.seasonId, apiBaseUrl, fetchJson, retryAttempts, retryDelayMs)
   } catch {
     return emptyResult(season, outputDirectory, 'season-catalog-unavailable')
+  }
+
+  let previousCatalogUnavailable = false
+  const previous = seasons.find(item => item.seasonName === fullSeasonLabel(season - 1))
+  if (previous) {
+    try {
+      catalog.push(...await fetchCatalog(previous.seasonId, apiBaseUrl, fetchJson, retryAttempts, retryDelayMs))
+    } catch {
+      // Previous season is only an image fallback. Never discard the usable current catalog.
+      previousCatalogUnavailable = true
+    }
   }
 
   let written = 0
@@ -104,7 +122,11 @@ export async function ingestPlayerImages(options: PlayerImagesIngestionOptions =
     }
 
     try {
-      const bytes = await fetchBinary(new URL(imagePath, mediaBaseUrl).toString())
+      const bytes = await withRetry(
+        () => fetchBinary(new URL(imagePath, mediaBaseUrl).toString()),
+        retryAttempts,
+        retryDelayMs,
+      )
       if (!isWebp(bytes)) throw new Error(`Provider image for ${player.name} is not WebP`)
       await mkdir(dirname(outputPath), { recursive: true })
       await writeFile(outputPath, bytes)
@@ -116,7 +138,16 @@ export async function ingestPlayerImages(options: PlayerImagesIngestionOptions =
     if (delayMs > 0) await sleep(delayMs)
   }
 
-  return { season, written, existing, unmatched, failed, skipped: false, outputDirectory }
+  return {
+    season,
+    written,
+    existing,
+    unmatched,
+    failed,
+    skipped: false,
+    outputDirectory,
+    previousCatalogUnavailable,
+  }
 }
 
 export function playerImagePublicPath(playerName: string): string {
@@ -129,18 +160,40 @@ export function isWebp(bytes: Uint8Array): boolean {
   return ascii(bytes, 0, 4) === 'RIFF' && ascii(bytes, 8, 12) === 'WEBP'
 }
 
-async function fetchCatalog(seasonId: string, apiBaseUrl: string, fetchJson: JsonFetcher): Promise<SdpPlayer[]> {
+async function fetchCatalog(
+  seasonId: string,
+  apiBaseUrl: string,
+  fetchJson: JsonFetcher,
+  retryAttempts: number,
+  retryDelayMs: number,
+): Promise<SdpPlayer[]> {
   const players: SdpPlayer[] = []
   for (let page = 1; page <= MAX_CATALOG_PAGES; page += 1) {
     const url = new URL(
       `seasons/${encodeURIComponent(seasonId)}/stats/players?category=General&page=${page}&locale=it-IT`,
       apiBaseUrl,
     ).toString()
-    const response = decodeSdpPlayersPage(await fetchJson(url))
+    const response = decodeSdpPlayersPage(await withRetry(() => fetchJson(url), retryAttempts, retryDelayMs))
+    if (page === 1 && response.players.length === 0 && !response.pagination) {
+      throw new Error(`Lega Serie A player catalog returned an unusable first page for season ${seasonId}`)
+    }
     players.push(...response.players)
     if (!response.pagination || response.pagination.isLastPage || page >= response.pagination.totalPages) break
   }
   return players
+}
+
+async function withRetry<T>(operation: () => Promise<T>, attempts: number, delayMs: number): Promise<T> {
+  let lastError: unknown
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      return await operation()
+    } catch (error) {
+      lastError = error
+      if (attempt < attempts && delayMs > 0) await sleep(delayMs * attempt)
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error(String(lastError ?? 'Provider request failed'))
 }
 
 async function readPlayers(path: string, season: number): Promise<RealPlayers | null> {
@@ -157,7 +210,17 @@ function emptyResult(
   outputDirectory: string,
   reason: NonNullable<PlayerImagesIngestionResult['reason']>,
 ): PlayerImagesIngestionResult {
-  return { season, written: 0, existing: 0, unmatched: 0, failed: 0, skipped: true, reason, outputDirectory }
+  return {
+    season,
+    written: 0,
+    existing: 0,
+    unmatched: 0,
+    failed: 0,
+    skipped: true,
+    reason,
+    outputDirectory,
+    previousCatalogUnavailable: false,
+  }
 }
 
 async function defaultFetchJson(url: string): Promise<unknown> {
@@ -175,9 +238,18 @@ async function defaultFetchBinary(url: string): Promise<Uint8Array> {
 function providerHeaders(): Record<string, string> {
   return {
     'User-Agent': 'Mozilla/5.0 (compatible; Fantazone/1.0; +https://fanta.plus)',
+    'Accept': 'application/json,image/webp,image/*,*/*;q=0.8',
     'Accept-Language': 'it-IT,it;q=0.9,en-US;q=0.8,en;q=0.7',
     'Cache-Control': 'no-cache',
   }
+}
+
+function normalizeRetryAttempts(value: number | undefined): number {
+  const normalized = value ?? DEFAULT_RETRY_ATTEMPTS
+  if (!Number.isInteger(normalized) || normalized < 1 || normalized > 10) {
+    throw new Error('Player image retry attempts must be an integer between 1 and 10')
+  }
+  return normalized
 }
 
 function ensureTrailingSlash(value: string): string {
