@@ -8,6 +8,9 @@ param(
     [string]$Branch = "main",
     [string]$GroupId,
     [string]$ReportPath,
+    [string]$CachePath,
+    [switch]$RefreshCache,
+    [switch]$NoCache,
     [switch]$Apply,
     [switch]$Overwrite,
     [switch]$PreserveExisting
@@ -18,6 +21,9 @@ $ErrorActionPreference = "Stop"
 
 if ($Overwrite -and $PreserveExisting) {
     throw "-Overwrite and -PreserveExisting are mutually exclusive."
+}
+if ($RefreshCache -and $NoCache) {
+    throw "-RefreshCache and -NoCache are mutually exclusive."
 }
 
 function Read-SecretPlainText([string]$Prompt) {
@@ -44,6 +50,9 @@ try {
     $arguments = @($script, "--group-repository", $GroupRepository, "--platform-repository", $PlatformRepository, "--branch", $Branch)
     if ($GroupId) { $arguments += @("--group-id", $GroupId) }
     if ($ReportPath) { $arguments += @("--report", $ReportPath) }
+    if ($CachePath) { $arguments += @("--cache", $CachePath) }
+    if ($RefreshCache) { $arguments += "--refresh-cache" }
+    if ($NoCache) { $arguments += "--no-cache" }
     if ($Apply) { $arguments += "--apply" }
     if ($Overwrite) { $arguments += "--overwrite" }
     if ($PreserveExisting) { $arguments += "--preserve-existing" }
