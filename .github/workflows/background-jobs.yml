@@ -77,7 +77,7 @@ jobs:
           node-version: 22
       - name: Install workspace dependencies
         if: steps.live_guard.outputs.run == 'true'
-        run: npm install
+        run: npm ci
       - name: Typecheck jobs
         if: steps.live_guard.outputs.run == 'true'
         run: npm run typecheck --workspace=@fantazone/jobs
