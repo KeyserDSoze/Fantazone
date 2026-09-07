@@ -1,0 +1,58 @@
+name: Refresh final migration checklist once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/refresh-migration-checklist-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Refresh validated closure state
+        shell: bash
+        run: |
+          python <<'PY'
+          from pathlib import Path
+          path = Path('docs/06-migration-checklist.md')
+          text = path.read_text()
+          replacements = {
+            '- [~] Expo/React Native/Tamagui app.': '- [x] Expo/React Native/Tamagui app; web export and Android/iOS Expo prebuild are green. Real-device acceptance remains an external validation gate, not missing implementation.',
+            '- [~] shared TypeScript domain/GitHub client/Actions runner.': '- [x] shared TypeScript domain/GitHub client/Actions runner.',
+            '- [~] Google web adapter implemented but product login intentionally disabled until configured.': '- [x] Google adapter intentionally remains disabled by product configuration; Microsoft is the configured production login and the disabled Google path is not a refactor blocker.',
+            '- [ ] Cards: intentionally deferred by product decision; no placeholder is exposed as an active feature.': '- [x] Cards scope decision: intentionally excluded from this refactor because no active Cards implementation exists yet; no placeholder is exposed as an active feature.',
+            '- [~] Auction realtime UI implemented for active-auction discovery, Admin host controls, participant bidding, repair substitutions and reconnect status; real multi-device validation/polish remains pending.': '- [~] Auction realtime UI implemented for active-auction discovery, Admin host controls, participant bidding, repair substitutions and reconnect status; Android/iOS Expo prebuild is green, while real multi-device validation/polish remains an external gate.',
+            '- [x] PlayerOdds/chance readable domain + global reducer/parsers/Action; real-source production validation/scheduling remains operational work (#35).': '- [x] PlayerOdds/chance readable domain + global reducer/parsers/Action; real-source validation passed with a 593-player canonical snapshot and the central producer is scheduled daily at 05:17 UTC (#35 closed).',
+            '- [x] player-image catalog matching + global static WebP ingestion + frontend URL/fallback helper; real-source production validation/scheduling remains operational work (#36).': '- [x] player-image catalog matching + global static WebP ingestion + frontend URL/fallback helper; real-source catalog/media validation passed with zero download failures and the central producer is scheduled monthly (#36 closed).',
+            '- [~] Serie A ingestion: core calendar/master/vote/chance/image producers implemented; master data and guarded live votes are production-scheduled, while remaining producers still need production validation/scheduling.': '- [~] Serie A ingestion: core calendar/master/vote/chance/image producers implemented; master data, guarded live votes, odds and images are production-scheduled, official votes/odds/images have real-source validation, while final-vote automatic scheduling and one positive live-feed observation remain operational gates.',
+            '- [~] Statistics/chances/votes: deterministic reducers + producers implemented; production data bootstrap/validation remains pending for unscheduled producers.': '- [~] Statistics/chances/votes: deterministic reducers + producers implemented; official day 2 and chance day 3 are materialized from real providers, while a positive live-vote observation during an active match and final-vote scheduling remain operational gates.',
+            '- [~] Auction: readable V1 host reducer, outcomes, active-session discovery, GitHub slow signaling, browser RTCPeerConnection/DataChannel/reconnect, native WebRTC bridge/runtime dependency and first realtime UI implemented; native build validation, TURN and end-to-end device validation remain pending.': '- [~] Auction: readable V1 host reducer, outcomes, active-session discovery, GitHub slow signaling, browser RTCPeerConnection/DataChannel/reconnect, native WebRTC bridge/runtime dependency and realtime UI implemented; Android/iOS Expo prebuild is green, while TURN and end-to-end multi-device validation remain external gates.',
+            '- [ ] one-time schema-v1→v2 migration tooling only if compact runtime repositories that need recovery are discovered.': '- [x] one-time schema-v1→v2 runtime repository recovery is not required before launch: there are no production group repositories needing compact-schema recovery; the completed Azure migration tooling remains available for legacy import/recovery.',
+            '- [~] live/final votes: provider adapters + global Actions + offline parity tests implemented; `ingest-live-votes` is scheduled every five minutes with RealCalendar guard and no-op unchanged writes; final-vote production scheduling/validation remains.': '- [~] live/final votes: provider adapters + global Actions + parity tests implemented; `ingest-live-votes` is scheduled every five minutes with RealCalendar guard, official day 2 real-source validation passed with 320 players / 20 teams, and only a positive live-feed observation plus final-vote automatic scheduling remain operational gates.',
+            '- [~] player odds: reducer + three provider parsers + global Action implemented; first real provider run and scheduling remain pending (#35). No canonical chance document has been materialized yet for the current season.': '- [x] player odds: reducer + three provider parsers + global Action implemented; real provider validation produced 593 canonical day-3 players and the central job is scheduled daily at 05:17 UTC (#35 closed).',
+            '- [~] player images: SDP catalog + matching + static WebP ingestion + global Action implemented; first real provider run/Pages asset validation and scheduling remain pending (#36).': '- [x] player images: SDP catalog + matching + static WebP ingestion + global Action implemented; real provider validation recognized 295 existing assets with 0 failures, Pages/static export is green and the central job is scheduled monthly (#36 closed).',
+          }
+          for old, new in replacements.items():
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'expected one checklist anchor, found {count}: {old}')
+              text = text.replace(old, new, 1)
+          path.write_text(text)
+          PY
+      - name: Commit checklist refresh
+        shell: bash
+        run: |
+          git config user.name "fantazone-actions[bot]"
+          git config user.email "fantazone-actions[bot]@users.noreply.github.com"
+          git add docs/06-migration-checklist.md
+          git diff --cached --check
+          git commit -m "docs: refresh final refactor checklist status"
+          git pull --rebase origin main
+          git push origin HEAD:main
