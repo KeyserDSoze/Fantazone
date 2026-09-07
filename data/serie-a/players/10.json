@@ -1,0 +1,6005 @@
+{
+  "year": 10,
+  "players": [
+    {
+      "name": "Musso",
+      "team": {
+        "name": "ata",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Rossi-F",
+      "team": {
+        "name": "ata",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Sportiello",
+      "team": {
+        "name": "ata",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Bardi",
+      "team": {
+        "name": "bol",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Skorupski",
+      "team": {
+        "name": "bol",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Aresti",
+      "team": {
+        "name": "cag",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Cragno",
+      "team": {
+        "name": "cag",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Radunovic",
+      "team": {
+        "name": "cag",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Furlan",
+      "team": {
+        "name": "emp",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Vicario",
+      "team": {
+        "name": "emp",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Dragowski",
+      "team": {
+        "name": "fio",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Rosati",
+      "team": {
+        "name": "fio",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Terracciano",
+      "team": {
+        "name": "fio",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Marchetti",
+      "team": {
+        "name": "gen",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Cordaz",
+      "team": {
+        "name": "int",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Handanovic",
+      "team": {
+        "name": "int",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Radu-I",
+      "team": {
+        "name": "int",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Perin",
+      "team": {
+        "name": "juv",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Pinsoglio",
+      "team": {
+        "name": "juv",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Szczesny",
+      "team": {
+        "name": "juv",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Reina",
+      "team": {
+        "name": "laz",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Strakosha",
+      "team": {
+        "name": "laz",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Maignan",
+      "team": {
+        "name": "mil",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Tatarusanu",
+      "team": {
+        "name": "mil",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Meret",
+      "team": {
+        "name": "nap",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Ospina",
+      "team": {
+        "name": "nap",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Boer",
+      "team": {
+        "name": "rom",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Fuzato",
+      "team": {
+        "name": "rom",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Rui-Patricio",
+      "team": {
+        "name": "rom",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Belec",
+      "team": {
+        "name": "sal",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Audero",
+      "team": {
+        "name": "sam",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Falcone",
+      "team": {
+        "name": "sam",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Ravaglia",
+      "team": {
+        "name": "sam",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Consigli",
+      "team": {
+        "name": "sas",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Pegolo",
+      "team": {
+        "name": "sas",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Provedel",
+      "team": {
+        "name": "spe",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Zoet",
+      "team": {
+        "name": "spe",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Berisha",
+      "team": {
+        "name": "tor",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Gemello",
+      "team": {
+        "name": "tor",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Milinkovic-Savic-V",
+      "team": {
+        "name": "tor",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Padelli",
+      "team": {
+        "name": "udi",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Silvestri",
+      "team": {
+        "name": "udi",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Lezzerini",
+      "team": {
+        "name": "ven",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Maenpaa",
+      "team": {
+        "name": "ven",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Berardi-A",
+      "team": {
+        "name": "ver",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Montipo",
+      "team": {
+        "name": "ver",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Pandur",
+      "team": {
+        "name": "ver",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Adamonis",
+      "team": {
+        "name": "laz",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Sirigu",
+      "team": {
+        "name": "gen",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Fiorillo",
+      "team": {
+        "name": "sal",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Semper",
+      "team": {
+        "name": "gen",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Marfella",
+      "team": {
+        "name": "nap",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Satalino",
+      "team": {
+        "name": "sas",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Bertinato",
+      "team": {
+        "name": "ven",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Zovko",
+      "team": {
+        "name": "spe",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Molla",
+      "team": {
+        "name": "bol",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Ujkani",
+      "team": {
+        "name": "emp",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Russo",
+      "team": {
+        "name": "sal",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Piana",
+      "team": {
+        "name": "udi",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Neri",
+      "team": {
+        "name": "ven",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Santurro",
+      "team": {
+        "name": "udi",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Romero-S",
+      "team": {
+        "name": "ven",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Mirante",
+      "team": {
+        "name": "mil",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Sepe",
+      "team": {
+        "name": "sal",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Gasparini",
+      "team": {
+        "name": "udi",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Djimsiti",
+      "team": {
+        "name": "ata",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Gosens",
+      "team": {
+        "name": "int",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Hateboer",
+      "team": {
+        "name": "ata",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Maehle",
+      "team": {
+        "name": "ata",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Palomino",
+      "team": {
+        "name": "ata",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Reca",
+      "team": {
+        "name": "spe",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Ruggeri",
+      "team": {
+        "name": "sal",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Sutalo",
+      "team": {
+        "name": "ver",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Toloi",
+      "team": {
+        "name": "ata",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Binks",
+      "team": {
+        "name": "bol",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Bonifazi",
+      "team": {
+        "name": "bol",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "De-Silvestri",
+      "team": {
+        "name": "bol",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Dijks",
+      "team": {
+        "name": "bol",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Hickey",
+      "team": {
+        "name": "bol",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Mbaye",
+      "team": {
+        "name": "bol",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Soumaoro",
+      "team": {
+        "name": "bol",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Altare",
+      "team": {
+        "name": "cag",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Carboni",
+      "team": {
+        "name": "cag",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Ceppitelli",
+      "team": {
+        "name": "cag",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Dalbert",
+      "team": {
+        "name": "cag",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Lykogiannis",
+      "team": {
+        "name": "cag",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Walukiewicz",
+      "team": {
+        "name": "cag",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Zappa",
+      "team": {
+        "name": "cag",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Fiamozzi",
+      "team": {
+        "name": "emp",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Nikolaou",
+      "team": {
+        "name": "spe",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Parisi",
+      "team": {
+        "name": "emp",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Romagnoli-S",
+      "team": {
+        "name": "emp",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Stojanovic",
+      "team": {
+        "name": "emp",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Biraghi",
+      "team": {
+        "name": "fio",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Igor",
+      "team": {
+        "name": "fio",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Martinez-Quarta",
+      "team": {
+        "name": "fio",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Milenkovic",
+      "team": {
+        "name": "fio",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Terzic",
+      "team": {
+        "name": "fio",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Venuti",
+      "team": {
+        "name": "fio",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Bani",
+      "team": {
+        "name": "gen",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Criscito",
+      "team": {
+        "name": "gen",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Czyborra",
+      "team": {
+        "name": "gen",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Ghiglione",
+      "team": {
+        "name": "gen",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Masiello",
+      "team": {
+        "name": "gen",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Radovanovic",
+      "team": {
+        "name": "sal",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Vanheusden",
+      "team": {
+        "name": "gen",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Bastoni",
+      "team": {
+        "name": "int",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Dambrosio",
+      "team": {
+        "name": "int",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Darmian",
+      "team": {
+        "name": "int",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "De-Vrij",
+      "team": {
+        "name": "int",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Dimarco",
+      "team": {
+        "name": "int",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Kolarov",
+      "team": {
+        "name": "int",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Ranocchia",
+      "team": {
+        "name": "int",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Skriniar",
+      "team": {
+        "name": "int",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Alex-Sandro",
+      "team": {
+        "name": "juv",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Bonucci",
+      "team": {
+        "name": "juv",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Cuadrado",
+      "team": {
+        "name": "juv",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Danilo",
+      "team": {
+        "name": "juv",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "De-Ligt",
+      "team": {
+        "name": "juv",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Demiral",
+      "team": {
+        "name": "ata",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "De-Sciglio",
+      "team": {
+        "name": "juv",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Dragusin",
+      "team": {
+        "name": "sal",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Frabotta",
+      "team": {
+        "name": "ver",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Pellegrini-Lu",
+      "team": {
+        "name": "juv",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Rugani",
+      "team": {
+        "name": "juv",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Acerbi",
+      "team": {
+        "name": "laz",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Fares",
+      "team": {
+        "name": "tor",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Hysaj",
+      "team": {
+        "name": "laz",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Kamenovic",
+      "team": {
+        "name": "laz",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Lazzari",
+      "team": {
+        "name": "laz",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Luiz-Felipe",
+      "team": {
+        "name": "laz",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Marusic",
+      "team": {
+        "name": "laz",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Patric",
+      "team": {
+        "name": "laz",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Radu",
+      "team": {
+        "name": "laz",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Ballo-Toure",
+      "team": {
+        "name": "mil",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Calabria",
+      "team": {
+        "name": "mil",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Caldara",
+      "team": {
+        "name": "ven",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Conti",
+      "team": {
+        "name": "sam",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Gabbia",
+      "team": {
+        "name": "mil",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Hernandez-T",
+      "team": {
+        "name": "mil",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Kalulu",
+      "team": {
+        "name": "mil",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Kjaer",
+      "team": {
+        "name": "mil",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Romagnoli",
+      "team": {
+        "name": "mil",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Tomori",
+      "team": {
+        "name": "mil",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Di-Lorenzo",
+      "team": {
+        "name": "nap",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Ghoulam",
+      "team": {
+        "name": "nap",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Koulibaly",
+      "team": {
+        "name": "nap",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Luperto",
+      "team": {
+        "name": "emp",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Malcuit",
+      "team": {
+        "name": "nap",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Mario-Rui",
+      "team": {
+        "name": "nap",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Rrahmani",
+      "team": {
+        "name": "nap",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Calafiori",
+      "team": {
+        "name": "gen",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Florenzi",
+      "team": {
+        "name": "mil",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Ibanez",
+      "team": {
+        "name": "rom",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Karsdorp",
+      "team": {
+        "name": "rom",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Kumbulla",
+      "team": {
+        "name": "rom",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Mancini",
+      "team": {
+        "name": "rom",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Smalling",
+      "team": {
+        "name": "rom",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Spinazzola",
+      "team": {
+        "name": "rom",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Gyomber",
+      "team": {
+        "name": "sal",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Jaroszynski",
+      "team": {
+        "name": "sal",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Strandberg",
+      "team": {
+        "name": "sal",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Veseli",
+      "team": {
+        "name": "sal",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Zortea",
+      "team": {
+        "name": "sal",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Augello",
+      "team": {
+        "name": "sam",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Bereszynski",
+      "team": {
+        "name": "sam",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Colley",
+      "team": {
+        "name": "sam",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Depaoli",
+      "team": {
+        "name": "ver",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Ferrari-A",
+      "team": {
+        "name": "sam",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Murru",
+      "team": {
+        "name": "sam",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Tonelli",
+      "team": {
+        "name": "emp",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Yoshida",
+      "team": {
+        "name": "sam",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Ayhan",
+      "team": {
+        "name": "sas",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Chiriches",
+      "team": {
+        "name": "sas",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Ferrari-G",
+      "team": {
+        "name": "sas",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Goldaniga",
+      "team": {
+        "name": "cag",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Kyriakopoulos",
+      "team": {
+        "name": "sas",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Marchizza",
+      "team": {
+        "name": "emp",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Muldur",
+      "team": {
+        "name": "sas",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Peluso",
+      "team": {
+        "name": "sas",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Rogerio",
+      "team": {
+        "name": "sas",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Romagna",
+      "team": {
+        "name": "sas",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Toljan",
+      "team": {
+        "name": "sas",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Amian",
+      "team": {
+        "name": "spe",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Bastoni-S",
+      "team": {
+        "name": "spe",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Erlic",
+      "team": {
+        "name": "spe",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Ferrer",
+      "team": {
+        "name": "spe",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Hristov",
+      "team": {
+        "name": "spe",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Ismajli",
+      "team": {
+        "name": "emp",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Sala",
+      "team": {
+        "name": "spe",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Aina",
+      "team": {
+        "name": "tor",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Ansaldi",
+      "team": {
+        "name": "tor",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Bremer",
+      "team": {
+        "name": "tor",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Buongiorno",
+      "team": {
+        "name": "tor",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Djidji",
+      "team": {
+        "name": "tor",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Izzo",
+      "team": {
+        "name": "tor",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Rodriguez-R",
+      "team": {
+        "name": "tor",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Singo",
+      "team": {
+        "name": "tor",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Vojvoda",
+      "team": {
+        "name": "tor",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Ballarini",
+      "team": {
+        "name": "udi",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Molina-N",
+      "team": {
+        "name": "udi",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Nuytinck",
+      "team": {
+        "name": "udi",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Rodrigo-Becao",
+      "team": {
+        "name": "udi",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Stryger-Larsen",
+      "team": {
+        "name": "udi",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Udogie",
+      "team": {
+        "name": "udi",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Zeegelaar",
+      "team": {
+        "name": "udi",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Ceccaroni",
+      "team": {
+        "name": "ven",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Ebuehi",
+      "team": {
+        "name": "ven",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Mazzocchi",
+      "team": {
+        "name": "sal",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Modolo",
+      "team": {
+        "name": "ven",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Molinaro",
+      "team": {
+        "name": "ven",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Svoboda",
+      "team": {
+        "name": "ven",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Casale",
+      "team": {
+        "name": "ver",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Ceccherini",
+      "team": {
+        "name": "ver",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Dawidowicz",
+      "team": {
+        "name": "ver",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Faraoni",
+      "team": {
+        "name": "ver",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Gunter",
+      "team": {
+        "name": "ver",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Lovato",
+      "team": {
+        "name": "cag",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Magnani",
+      "team": {
+        "name": "sam",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Pezzella-Giu",
+      "team": {
+        "name": "ata",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Kechrida",
+      "team": {
+        "name": "sal",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Chiellini",
+      "team": {
+        "name": "juv",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Vina",
+      "team": {
+        "name": "rom",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Dumfries",
+      "team": {
+        "name": "int",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Vasquez",
+      "team": {
+        "name": "gen",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Juan-Jesus",
+      "team": {
+        "name": "nap",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Cambiaso",
+      "team": {
+        "name": "gen",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Nastasic",
+      "team": {
+        "name": "fio",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Scalvini",
+      "team": {
+        "name": "ata",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Zanoli",
+      "team": {
+        "name": "nap",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Zappacosta",
+      "team": {
+        "name": "ata",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Theate",
+      "team": {
+        "name": "bol",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Perez-N",
+      "team": {
+        "name": "udi",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Odriozola",
+      "team": {
+        "name": "fio",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Soppy",
+      "team": {
+        "name": "udi",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Delli-Carri",
+      "team": {
+        "name": "sal",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Zima",
+      "team": {
+        "name": "tor",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Bellanova",
+      "team": {
+        "name": "cag",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Maksimovic",
+      "team": {
+        "name": "gen",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Gagliolo",
+      "team": {
+        "name": "sal",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Kiwior",
+      "team": {
+        "name": "spe",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Ranieri-L",
+      "team": {
+        "name": "sal",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Ampadu",
+      "team": {
+        "name": "ven",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Haps",
+      "team": {
+        "name": "ven",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Obert",
+      "team": {
+        "name": "cag",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Viti",
+      "team": {
+        "name": "emp",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "De-Winter",
+      "team": {
+        "name": "juv",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Ruan",
+      "team": {
+        "name": "sas",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Hefti",
+      "team": {
+        "name": "gen",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Ostigard",
+      "team": {
+        "name": "gen",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Maitland-Niles",
+      "team": {
+        "name": "rom",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Tuanzebe",
+      "team": {
+        "name": "nap",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Benkovic",
+      "team": {
+        "name": "udi",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Coppola-D",
+      "team": {
+        "name": "ver",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Ullmann",
+      "team": {
+        "name": "ven",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Mari",
+      "team": {
+        "name": "udi",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Retsos",
+      "team": {
+        "name": "ver",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Fazio",
+      "team": {
+        "name": "sal",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Kasius",
+      "team": {
+        "name": "bol",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Cacace",
+      "team": {
+        "name": "emp",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Mateju",
+      "team": {
+        "name": "ven",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Bertola",
+      "team": {
+        "name": "spe",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "De-Roon",
+      "team": {
+        "name": "ata",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Freuler",
+      "team": {
+        "name": "ata",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Kovalenko",
+      "team": {
+        "name": "spe",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Malinovskyi",
+      "team": {
+        "name": "ata",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Miranchuk",
+      "team": {
+        "name": "ata",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Pasalic",
+      "team": {
+        "name": "ata",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Pessina",
+      "team": {
+        "name": "ata",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Dominguez",
+      "team": {
+        "name": "bol",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Medel",
+      "team": {
+        "name": "bol",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Orsolini",
+      "team": {
+        "name": "bol",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Schouten",
+      "team": {
+        "name": "bol",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Soriano",
+      "team": {
+        "name": "bol",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Svanberg",
+      "team": {
+        "name": "bol",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Vignato",
+      "team": {
+        "name": "bol",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Deiola",
+      "team": {
+        "name": "cag",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Marin",
+      "team": {
+        "name": "cag",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Nandez",
+      "team": {
+        "name": "cag",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Pereiro",
+      "team": {
+        "name": "cag",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Rog",
+      "team": {
+        "name": "cag",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Strootman",
+      "team": {
+        "name": "cag",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Bandinelli",
+      "team": {
+        "name": "emp",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Bajrami",
+      "team": {
+        "name": "emp",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Haas",
+      "team": {
+        "name": "emp",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Ricci-S",
+      "team": {
+        "name": "tor",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Stulac",
+      "team": {
+        "name": "emp",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Zurkowski",
+      "team": {
+        "name": "emp",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Amrabat",
+      "team": {
+        "name": "fio",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Benassi",
+      "team": {
+        "name": "emp",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Bonaventura",
+      "team": {
+        "name": "fio",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Callejon",
+      "team": {
+        "name": "fio",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Castrovilli",
+      "team": {
+        "name": "fio",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Duncan",
+      "team": {
+        "name": "fio",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Maleh",
+      "team": {
+        "name": "fio",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Saponara",
+      "team": {
+        "name": "fio",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Sottil",
+      "team": {
+        "name": "fio",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Agudelo",
+      "team": {
+        "name": "spe",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Badelj",
+      "team": {
+        "name": "gen",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Melegoni",
+      "team": {
+        "name": "gen",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Rovella",
+      "team": {
+        "name": "gen",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Sturaro",
+      "team": {
+        "name": "gen",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Barella",
+      "team": {
+        "name": "int",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Brozovic",
+      "team": {
+        "name": "int",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Calhanoglu",
+      "team": {
+        "name": "int",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Gagliardini",
+      "team": {
+        "name": "int",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Perisic",
+      "team": {
+        "name": "int",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Sensi",
+      "team": {
+        "name": "sam",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Vecino",
+      "team": {
+        "name": "int",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Vidal",
+      "team": {
+        "name": "int",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Arthur",
+      "team": {
+        "name": "juv",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Bernardeschi",
+      "team": {
+        "name": "juv",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Chiesa",
+      "team": {
+        "name": "juv",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Mckennie",
+      "team": {
+        "name": "juv",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Rabiot",
+      "team": {
+        "name": "juv",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Akpa-Akpro",
+      "team": {
+        "name": "laz",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Cataldi",
+      "team": {
+        "name": "laz",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Felipe-Anderson",
+      "team": {
+        "name": "laz",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Lucas-Leiva",
+      "team": {
+        "name": "laz",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Luis-Alberto",
+      "team": {
+        "name": "laz",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Milinkovic-Savic",
+      "team": {
+        "name": "laz",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Bennacer",
+      "team": {
+        "name": "mil",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Castillejo",
+      "team": {
+        "name": "mil",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Diaz-B",
+      "team": {
+        "name": "mil",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Kessie",
+      "team": {
+        "name": "mil",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Krunic",
+      "team": {
+        "name": "mil",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Maldini",
+      "team": {
+        "name": "mil",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Pobega",
+      "team": {
+        "name": "tor",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Saelemaekers",
+      "team": {
+        "name": "mil",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Tonali",
+      "team": {
+        "name": "mil",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Demme",
+      "team": {
+        "name": "nap",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Elmas",
+      "team": {
+        "name": "nap",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Lobotka",
+      "team": {
+        "name": "nap",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Ruiz",
+      "team": {
+        "name": "nap",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Zielinski",
+      "team": {
+        "name": "nap",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Ciervo",
+      "team": {
+        "name": "sas",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Darboe",
+      "team": {
+        "name": "rom",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Cristante",
+      "team": {
+        "name": "rom",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Diawara",
+      "team": {
+        "name": "rom",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Mkhitaryan",
+      "team": {
+        "name": "rom",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Pellegrini-Lo",
+      "team": {
+        "name": "rom",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Veretout",
+      "team": {
+        "name": "rom",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Zalewski",
+      "team": {
+        "name": "rom",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Zaniolo",
+      "team": {
+        "name": "rom",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Capezzi",
+      "team": {
+        "name": "sal",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Di-Tacchio",
+      "team": {
+        "name": "sal",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Obi",
+      "team": {
+        "name": "sal",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Schiavone",
+      "team": {
+        "name": "sal",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Askildsen",
+      "team": {
+        "name": "sam",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Candreva",
+      "team": {
+        "name": "sam",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Damsgaard",
+      "team": {
+        "name": "sam",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Ekdal",
+      "team": {
+        "name": "sam",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Thorsby",
+      "team": {
+        "name": "sam",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Verre",
+      "team": {
+        "name": "emp",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Vieira",
+      "team": {
+        "name": "sam",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Bourabia",
+      "team": {
+        "name": "spe",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Djuricic",
+      "team": {
+        "name": "sas",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Frattesi",
+      "team": {
+        "name": "sas",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Locatelli",
+      "team": {
+        "name": "juv",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Lopez-M",
+      "team": {
+        "name": "sas",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Magnanelli",
+      "team": {
+        "name": "sas",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Obiang",
+      "team": {
+        "name": "sas",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Traore-Hj",
+      "team": {
+        "name": "sas",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Leo-Sena",
+      "team": {
+        "name": "spe",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Maggiore",
+      "team": {
+        "name": "spe",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Baselli",
+      "team": {
+        "name": "cag",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Linetty",
+      "team": {
+        "name": "tor",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Lukic",
+      "team": {
+        "name": "tor",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Mandragora",
+      "team": {
+        "name": "tor",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Rincon",
+      "team": {
+        "name": "sam",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Verdi",
+      "team": {
+        "name": "sal",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Arslan",
+      "team": {
+        "name": "udi",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Coulibaly-M",
+      "team": {
+        "name": "sal",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Jajalo",
+      "team": {
+        "name": "udi",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Makengo",
+      "team": {
+        "name": "udi",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Palumbo",
+      "team": {
+        "name": "juv",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Pereyra",
+      "team": {
+        "name": "udi",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Walace",
+      "team": {
+        "name": "udi",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Aramu",
+      "team": {
+        "name": "ven",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Crnigoj",
+      "team": {
+        "name": "ven",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Fiordilino",
+      "team": {
+        "name": "ven",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Pecile",
+      "team": {
+        "name": "ven",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Peretz",
+      "team": {
+        "name": "ven",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Tessmann",
+      "team": {
+        "name": "ven",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Barak",
+      "team": {
+        "name": "ver",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Bessa",
+      "team": {
+        "name": "ver",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Hongla",
+      "team": {
+        "name": "ver",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Lazovic",
+      "team": {
+        "name": "ver",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Miguel-Veloso",
+      "team": {
+        "name": "ver",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Tameze",
+      "team": {
+        "name": "ver",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Zaccagni",
+      "team": {
+        "name": "laz",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Sigurdsson-A",
+      "team": {
+        "name": "ven",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Coulibaly-L",
+      "team": {
+        "name": "sal",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Samardzic",
+      "team": {
+        "name": "udi",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Busio",
+      "team": {
+        "name": "ven",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Vacca",
+      "team": {
+        "name": "ven",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Hernani",
+      "team": {
+        "name": "gen",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Romero-L",
+      "team": {
+        "name": "laz",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Matheus-Henrique",
+      "team": {
+        "name": "sas",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Henderson-L",
+      "team": {
+        "name": "emp",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Ilic",
+      "team": {
+        "name": "ver",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Bianco",
+      "team": {
+        "name": "fio",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Yepes",
+      "team": {
+        "name": "sam",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Kastanos",
+      "team": {
+        "name": "sal",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Sher",
+      "team": {
+        "name": "spe",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Grassi",
+      "team": {
+        "name": "cag",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Bove",
+      "team": {
+        "name": "rom",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Basic",
+      "team": {
+        "name": "laz",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Torreira",
+      "team": {
+        "name": "fio",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Kingsley",
+      "team": {
+        "name": "bol",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Bakayoko",
+      "team": {
+        "name": "mil",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Kiyine",
+      "team": {
+        "name": "ven",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Koopmeiners",
+      "team": {
+        "name": "ata",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Harroui",
+      "team": {
+        "name": "sas",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Zambo-Anguissa",
+      "team": {
+        "name": "nap",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Praet",
+      "team": {
+        "name": "tor",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Messias",
+      "team": {
+        "name": "mil",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Portanova",
+      "team": {
+        "name": "gen",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Galdames",
+      "team": {
+        "name": "gen",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Asllani",
+      "team": {
+        "name": "emp",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Nguiamba",
+      "team": {
+        "name": "spe",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Viola",
+      "team": {
+        "name": "bol",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Volpato",
+      "team": {
+        "name": "rom",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Ikone",
+      "team": {
+        "name": "fio",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Cuisance",
+      "team": {
+        "name": "ven",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Oliveira",
+      "team": {
+        "name": "rom",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Aebischer",
+      "team": {
+        "name": "bol",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Sabiri",
+      "team": {
+        "name": "sam",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Amiri",
+      "team": {
+        "name": "gen",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Praszelik",
+      "team": {
+        "name": "ver",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Frendrup",
+      "team": {
+        "name": "gen",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Ederson-Ds",
+      "team": {
+        "name": "sal",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Bohinen",
+      "team": {
+        "name": "sal",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Gudmundsson-A",
+      "team": {
+        "name": "gen",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Rojas",
+      "team": {
+        "name": "bol",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Zakaria",
+      "team": {
+        "name": "juv",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Perotti",
+      "team": {
+        "name": "sal",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Miretti",
+      "team": {
+        "name": "juv",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Colley-E",
+      "team": {
+        "name": "spe",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Ilicic",
+      "team": {
+        "name": "ata",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Muriel",
+      "team": {
+        "name": "ata",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Piccoli",
+      "team": {
+        "name": "gen",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Zapata-D",
+      "team": {
+        "name": "ata",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Barrow",
+      "team": {
+        "name": "bol",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Sansone",
+      "team": {
+        "name": "bol",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Santander",
+      "team": {
+        "name": "bol",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Joao-Pedro",
+      "team": {
+        "name": "cag",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Pavoletti",
+      "team": {
+        "name": "cag",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Simeone",
+      "team": {
+        "name": "ver",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "La-Mantia",
+      "team": {
+        "name": "emp",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Gonzalez-N",
+      "team": {
+        "name": "fio",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Kokorin",
+      "team": {
+        "name": "fio",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Munteanu",
+      "team": {
+        "name": "fio",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Vlahovic",
+      "team": {
+        "name": "juv",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Buksa",
+      "team": {
+        "name": "gen",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Destro",
+      "team": {
+        "name": "gen",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Kallon",
+      "team": {
+        "name": "gen",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Shomurodov",
+      "team": {
+        "name": "rom",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Martinez-L",
+      "team": {
+        "name": "int",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Pinamonti",
+      "team": {
+        "name": "emp",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Salcedo-E",
+      "team": {
+        "name": "spe",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Sanchez",
+      "team": {
+        "name": "int",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Dybala",
+      "team": {
+        "name": "juv",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Morata",
+      "team": {
+        "name": "juv",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Pjaca",
+      "team": {
+        "name": "tor",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Caicedo",
+      "team": {
+        "name": "int",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Correa",
+      "team": {
+        "name": "int",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Immobile",
+      "team": {
+        "name": "laz",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Moro",
+      "team": {
+        "name": "laz",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Giroud",
+      "team": {
+        "name": "mil",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Ibrahimovic",
+      "team": {
+        "name": "mil",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Rafael-Leao",
+      "team": {
+        "name": "mil",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Rebic",
+      "team": {
+        "name": "mil",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Insigne",
+      "team": {
+        "name": "nap",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Lozano",
+      "team": {
+        "name": "nap",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Mertens",
+      "team": {
+        "name": "nap",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Osimhen",
+      "team": {
+        "name": "nap",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Ounas",
+      "team": {
+        "name": "nap",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Petagna",
+      "team": {
+        "name": "nap",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Politano",
+      "team": {
+        "name": "nap",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Carles-Perez",
+      "team": {
+        "name": "rom",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Dzeko",
+      "team": {
+        "name": "int",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "El-Shaarawy",
+      "team": {
+        "name": "rom",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Djuric",
+      "team": {
+        "name": "sal",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Caprari",
+      "team": {
+        "name": "ver",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Bonazzoli",
+      "team": {
+        "name": "sal",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Gabbiadini",
+      "team": {
+        "name": "sam",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Quagliarella",
+      "team": {
+        "name": "sam",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Berardi",
+      "team": {
+        "name": "sas",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Boga",
+      "team": {
+        "name": "ata",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Caputo",
+      "team": {
+        "name": "sam",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Defrel",
+      "team": {
+        "name": "sas",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Oddei",
+      "team": {
+        "name": "sas",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Raspadori",
+      "team": {
+        "name": "sas",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Scamacca",
+      "team": {
+        "name": "sas",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Gyasi",
+      "team": {
+        "name": "spe",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Nzola",
+      "team": {
+        "name": "spe",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Verde",
+      "team": {
+        "name": "spe",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Sanabria",
+      "team": {
+        "name": "tor",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Belotti",
+      "team": {
+        "name": "tor",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Edera",
+      "team": {
+        "name": "tor",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Warming",
+      "team": {
+        "name": "tor",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Zaza",
+      "team": {
+        "name": "tor",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Deulofeu",
+      "team": {
+        "name": "udi",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Nestorovski",
+      "team": {
+        "name": "udi",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Pussetto",
+      "team": {
+        "name": "udi",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Johnsen",
+      "team": {
+        "name": "ven",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Cancellieri",
+      "team": {
+        "name": "ver",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Lasagna",
+      "team": {
+        "name": "ver",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Arnautovic",
+      "team": {
+        "name": "bol",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Kaio-Jorge",
+      "team": {
+        "name": "juv",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Ekuban",
+      "team": {
+        "name": "gen",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Okereke",
+      "team": {
+        "name": "ven",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Cutrone",
+      "team": {
+        "name": "emp",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Abraham",
+      "team": {
+        "name": "rom",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Pedro",
+      "team": {
+        "name": "laz",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Henry",
+      "team": {
+        "name": "ven",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Pellegri",
+      "team": {
+        "name": "tor",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Antiste",
+      "team": {
+        "name": "spe",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Success",
+      "team": {
+        "name": "udi",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Ceter",
+      "team": {
+        "name": "cag",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Kean",
+      "team": {
+        "name": "juv",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Vergani",
+      "team": {
+        "name": "sal",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Di-Francesco-F",
+      "team": {
+        "name": "emp",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Strelec",
+      "team": {
+        "name": "spe",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Manaj",
+      "team": {
+        "name": "spe",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Keita-B",
+      "team": {
+        "name": "cag",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Brekalo",
+      "team": {
+        "name": "tor",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Beto",
+      "team": {
+        "name": "udi",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Ribery",
+      "team": {
+        "name": "sal",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Podgoreanu",
+      "team": {
+        "name": "spe",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Afena-Gyan",
+      "team": {
+        "name": "rom",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Piatek",
+      "team": {
+        "name": "fio",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Yeboah",
+      "team": {
+        "name": "gen",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Falcinelli",
+      "team": {
+        "name": "bol",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Nani",
+      "team": {
+        "name": "ven",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Gagliano",
+      "team": {
+        "name": "cag",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Ceide",
+      "team": {
+        "name": "sas",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Lazetic",
+      "team": {
+        "name": "mil",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Cabral",
+      "team": {
+        "name": "fio",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Ake-M",
+      "team": {
+        "name": "juv",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Supryaga",
+      "team": {
+        "name": "sam",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Nsame",
+      "team": {
+        "name": "ven",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Mousset",
+      "team": {
+        "name": "sal",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Mikael",
+      "team": {
+        "name": "sal",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Mihaila",
+      "team": {
+        "name": "ata",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Seck",
+      "team": {
+        "name": "tor",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Jovane",
+      "team": {
+        "name": "laz",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Giovinco",
+      "team": {
+        "name": "sam",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Cisse-M",
+      "team": {
+        "name": "ata",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Anderson-A",
+      "team": {
+        "name": "laz",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Kalinic",
+      "team": {
+        "name": "ver",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Bocalon",
+      "team": {
+        "name": "ven",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Ruegg",
+      "team": {
+        "name": "ver",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Pulgar",
+      "team": {
+        "name": "fio",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Andrenacci",
+      "team": {
+        "name": "gen",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Bogdan",
+      "team": {
+        "name": "sal",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Ladinetti",
+      "team": {
+        "name": "cag",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Bentancur",
+      "team": {
+        "name": "juv",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Kulusevski",
+      "team": {
+        "name": "juv",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Ramsey",
+      "team": {
+        "name": "juv",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Dezi",
+      "team": {
+        "name": "ven",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Kone-B",
+      "team": {
+        "name": "tor",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Muriqi",
+      "team": {
+        "name": "laz",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Pandev",
+      "team": {
+        "name": "gen",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Simy",
+      "team": {
+        "name": "sal",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Caceres",
+      "team": {
+        "name": "cag",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Ihattaren",
+      "team": {
+        "name": "sam",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Gondo",
+      "team": {
+        "name": "sal",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Plizzari",
+      "team": {
+        "name": "mil",
+        "abbreviation": ""
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Cangiano",
+      "team": {
+        "name": "bol",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Ragusa",
+      "team": {
+        "name": "ver",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Skov-Olsen",
+      "team": {
+        "name": "bol",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Oliva",
+      "team": {
+        "name": "cag",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Bianchi-F",
+      "team": {
+        "name": "gen",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Heymans",
+      "team": {
+        "name": "ven",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Chabot",
+      "team": {
+        "name": "sam",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Van-Hooijdonk",
+      "team": {
+        "name": "bol",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Vavro",
+      "team": {
+        "name": "laz",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Aya",
+      "team": {
+        "name": "sal",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Torregrossa",
+      "team": {
+        "name": "sam",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Reynolds",
+      "team": {
+        "name": "rom",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Damiani",
+      "team": {
+        "name": "emp",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Behrami",
+      "team": {
+        "name": "gen",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Toure-A",
+      "team": {
+        "name": "gen",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Mancuso",
+      "team": {
+        "name": "emp",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Cassata",
+      "team": {
+        "name": "gen",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Biraschi",
+      "team": {
+        "name": "gen",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Serpe",
+      "team": {
+        "name": "gen",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Satriano",
+      "team": {
+        "name": "int",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Schnegg",
+      "team": {
+        "name": "ven",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Cetin",
+      "team": {
+        "name": "ver",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Sabelli",
+      "team": {
+        "name": "gen",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Bjarkason",
+      "team": {
+        "name": "ven",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Forte",
+      "team": {
+        "name": "ven",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "De-Maio",
+      "team": {
+        "name": "udi",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Villar",
+      "team": {
+        "name": "rom",
+        "abbreviation": ""
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Mayoral",
+      "team": {
+        "name": "rom",
+        "abbreviation": ""
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Godin",
+      "team": {
+        "name": "cag",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Farago",
+      "team": {
+        "name": "cag",
+        "abbreviation": ""
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    }
+  ]
+}

@@ -1,0 +1,5553 @@
+{
+  "year": 0,
+  "days": [
+    {
+      "year": 14,
+      "serieADay": 1,
+      "games": [
+        {
+          "home": {
+            "name": "Atalanta",
+            "abbreviation": "ata"
+          },
+          "away": {
+            "name": "Sassuolo",
+            "abbreviation": "sas"
+          },
+          "date": "2026-08-23T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Bologna",
+            "abbreviation": "bol"
+          },
+          "away": {
+            "name": "Lazio",
+            "abbreviation": "laz"
+          },
+          "date": "2026-08-23T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Frosinone",
+            "abbreviation": "fro"
+          },
+          "away": {
+            "name": "Juventus",
+            "abbreviation": "juv"
+          },
+          "date": "2026-08-23T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Genoa",
+            "abbreviation": "gen"
+          },
+          "away": {
+            "name": "Napoli",
+            "abbreviation": "nap"
+          },
+          "date": "2026-08-23T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Inter",
+            "abbreviation": "int"
+          },
+          "away": {
+            "name": "Monza",
+            "abbreviation": "monz"
+          },
+          "date": "2026-08-23T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Parma",
+            "abbreviation": "par"
+          },
+          "away": {
+            "name": "Cagliari",
+            "abbreviation": "cag"
+          },
+          "date": "2026-08-23T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Roma",
+            "abbreviation": "rom"
+          },
+          "away": {
+            "name": "Fiorentina",
+            "abbreviation": "fio"
+          },
+          "date": "2026-08-23T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Torino",
+            "abbreviation": "tor"
+          },
+          "away": {
+            "name": "Milan",
+            "abbreviation": "mil"
+          },
+          "date": "2026-08-23T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Udinese",
+            "abbreviation": "udi"
+          },
+          "away": {
+            "name": "Como",
+            "abbreviation": "com"
+          },
+          "date": "2026-08-23T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Venezia",
+            "abbreviation": "ven"
+          },
+          "away": {
+            "name": "Lecce",
+            "abbreviation": "lec"
+          },
+          "date": "2026-08-23T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 14,
+      "serieADay": 2,
+      "games": [
+        {
+          "home": {
+            "name": "Atalanta",
+            "abbreviation": "ata"
+          },
+          "away": {
+            "name": "Bologna",
+            "abbreviation": "bol"
+          },
+          "date": "2026-08-30T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Cagliari",
+            "abbreviation": "cag"
+          },
+          "away": {
+            "name": "Inter",
+            "abbreviation": "int"
+          },
+          "date": "2026-08-30T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Fiorentina",
+            "abbreviation": "fio"
+          },
+          "away": {
+            "name": "Frosinone",
+            "abbreviation": "fro"
+          },
+          "date": "2026-08-30T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Juventus",
+            "abbreviation": "juv"
+          },
+          "away": {
+            "name": "Parma",
+            "abbreviation": "par"
+          },
+          "date": "2026-08-30T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Lazio",
+            "abbreviation": "laz"
+          },
+          "away": {
+            "name": "Genoa",
+            "abbreviation": "gen"
+          },
+          "date": "2026-08-30T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Lecce",
+            "abbreviation": "lec"
+          },
+          "away": {
+            "name": "Roma",
+            "abbreviation": "rom"
+          },
+          "date": "2026-08-30T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Milan",
+            "abbreviation": "mil"
+          },
+          "away": {
+            "name": "Venezia",
+            "abbreviation": "ven"
+          },
+          "date": "2026-08-30T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Monza",
+            "abbreviation": "monz"
+          },
+          "away": {
+            "name": "Udinese",
+            "abbreviation": "udi"
+          },
+          "date": "2026-08-30T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Napoli",
+            "abbreviation": "nap"
+          },
+          "away": {
+            "name": "Como",
+            "abbreviation": "com"
+          },
+          "date": "2026-08-30T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Sassuolo",
+            "abbreviation": "sas"
+          },
+          "away": {
+            "name": "Torino",
+            "abbreviation": "tor"
+          },
+          "date": "2026-08-30T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 14,
+      "serieADay": 3,
+      "games": [
+        {
+          "home": {
+            "name": "Bologna",
+            "abbreviation": "bol"
+          },
+          "away": {
+            "name": "Sassuolo",
+            "abbreviation": "sas"
+          },
+          "date": "2026-09-06T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Cagliari",
+            "abbreviation": "cag"
+          },
+          "away": {
+            "name": "Lecce",
+            "abbreviation": "lec"
+          },
+          "date": "2026-09-06T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Fiorentina",
+            "abbreviation": "fio"
+          },
+          "away": {
+            "name": "Torino",
+            "abbreviation": "tor"
+          },
+          "date": "2026-09-06T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Frosinone",
+            "abbreviation": "fro"
+          },
+          "away": {
+            "name": "Venezia",
+            "abbreviation": "ven"
+          },
+          "date": "2026-09-06T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Genoa",
+            "abbreviation": "gen"
+          },
+          "away": {
+            "name": "Como",
+            "abbreviation": "com"
+          },
+          "date": "2026-09-06T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Inter",
+            "abbreviation": "int"
+          },
+          "away": {
+            "name": "Napoli",
+            "abbreviation": "nap"
+          },
+          "date": "2026-09-06T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Juventus",
+            "abbreviation": "juv"
+          },
+          "away": {
+            "name": "Milan",
+            "abbreviation": "mil"
+          },
+          "date": "2026-09-06T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Parma",
+            "abbreviation": "par"
+          },
+          "away": {
+            "name": "Monza",
+            "abbreviation": "monz"
+          },
+          "date": "2026-09-06T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Roma",
+            "abbreviation": "rom"
+          },
+          "away": {
+            "name": "Atalanta",
+            "abbreviation": "ata"
+          },
+          "date": "2026-09-06T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Udinese",
+            "abbreviation": "udi"
+          },
+          "away": {
+            "name": "Lazio",
+            "abbreviation": "laz"
+          },
+          "date": "2026-09-06T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 14,
+      "serieADay": 4,
+      "games": [
+        {
+          "home": {
+            "name": "Atalanta",
+            "abbreviation": "ata"
+          },
+          "away": {
+            "name": "Cagliari",
+            "abbreviation": "cag"
+          },
+          "date": "2026-09-13T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Como",
+            "abbreviation": "com"
+          },
+          "away": {
+            "name": "Parma",
+            "abbreviation": "par"
+          },
+          "date": "2026-09-13T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Genoa",
+            "abbreviation": "gen"
+          },
+          "away": {
+            "name": "Frosinone",
+            "abbreviation": "fro"
+          },
+          "date": "2026-09-13T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Inter",
+            "abbreviation": "int"
+          },
+          "away": {
+            "name": "Udinese",
+            "abbreviation": "udi"
+          },
+          "date": "2026-09-13T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Lazio",
+            "abbreviation": "laz"
+          },
+          "away": {
+            "name": "Milan",
+            "abbreviation": "mil"
+          },
+          "date": "2026-09-13T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Lecce",
+            "abbreviation": "lec"
+          },
+          "away": {
+            "name": "Monza",
+            "abbreviation": "monz"
+          },
+          "date": "2026-09-13T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Napoli",
+            "abbreviation": "nap"
+          },
+          "away": {
+            "name": "Bologna",
+            "abbreviation": "bol"
+          },
+          "date": "2026-09-13T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Sassuolo",
+            "abbreviation": "sas"
+          },
+          "away": {
+            "name": "Juventus",
+            "abbreviation": "juv"
+          },
+          "date": "2026-09-13T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Torino",
+            "abbreviation": "tor"
+          },
+          "away": {
+            "name": "Roma",
+            "abbreviation": "rom"
+          },
+          "date": "2026-09-13T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Venezia",
+            "abbreviation": "ven"
+          },
+          "away": {
+            "name": "Fiorentina",
+            "abbreviation": "fio"
+          },
+          "date": "2026-09-13T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 14,
+      "serieADay": 5,
+      "games": [
+        {
+          "home": {
+            "name": "Bologna",
+            "abbreviation": "bol"
+          },
+          "away": {
+            "name": "Torino",
+            "abbreviation": "tor"
+          },
+          "date": "2026-09-20T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Fiorentina",
+            "abbreviation": "fio"
+          },
+          "away": {
+            "name": "Napoli",
+            "abbreviation": "nap"
+          },
+          "date": "2026-09-20T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Frosinone",
+            "abbreviation": "fro"
+          },
+          "away": {
+            "name": "Como",
+            "abbreviation": "com"
+          },
+          "date": "2026-09-20T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Juventus",
+            "abbreviation": "juv"
+          },
+          "away": {
+            "name": "Atalanta",
+            "abbreviation": "ata"
+          },
+          "date": "2026-09-20T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Milan",
+            "abbreviation": "mil"
+          },
+          "away": {
+            "name": "Lecce",
+            "abbreviation": "lec"
+          },
+          "date": "2026-09-20T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Monza",
+            "abbreviation": "monz"
+          },
+          "away": {
+            "name": "Sassuolo",
+            "abbreviation": "sas"
+          },
+          "date": "2026-09-20T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Parma",
+            "abbreviation": "par"
+          },
+          "away": {
+            "name": "Genoa",
+            "abbreviation": "gen"
+          },
+          "date": "2026-09-20T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Roma",
+            "abbreviation": "rom"
+          },
+          "away": {
+            "name": "Inter",
+            "abbreviation": "int"
+          },
+          "date": "2026-09-20T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Udinese",
+            "abbreviation": "udi"
+          },
+          "away": {
+            "name": "Cagliari",
+            "abbreviation": "cag"
+          },
+          "date": "2026-09-20T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Venezia",
+            "abbreviation": "ven"
+          },
+          "away": {
+            "name": "Lazio",
+            "abbreviation": "laz"
+          },
+          "date": "2026-09-20T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 14,
+      "serieADay": 6,
+      "games": [
+        {
+          "home": {
+            "name": "Atalanta",
+            "abbreviation": "ata"
+          },
+          "away": {
+            "name": "Venezia",
+            "abbreviation": "ven"
+          },
+          "date": "2026-10-11T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Cagliari",
+            "abbreviation": "cag"
+          },
+          "away": {
+            "name": "Juventus",
+            "abbreviation": "juv"
+          },
+          "date": "2026-10-11T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Como",
+            "abbreviation": "com"
+          },
+          "away": {
+            "name": "Roma",
+            "abbreviation": "rom"
+          },
+          "date": "2026-10-11T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Genoa",
+            "abbreviation": "gen"
+          },
+          "away": {
+            "name": "Fiorentina",
+            "abbreviation": "fio"
+          },
+          "date": "2026-10-11T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Inter",
+            "abbreviation": "int"
+          },
+          "away": {
+            "name": "Parma",
+            "abbreviation": "par"
+          },
+          "date": "2026-10-11T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Lazio",
+            "abbreviation": "laz"
+          },
+          "away": {
+            "name": "Monza",
+            "abbreviation": "monz"
+          },
+          "date": "2026-10-11T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Lecce",
+            "abbreviation": "lec"
+          },
+          "away": {
+            "name": "Bologna",
+            "abbreviation": "bol"
+          },
+          "date": "2026-10-11T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Napoli",
+            "abbreviation": "nap"
+          },
+          "away": {
+            "name": "Frosinone",
+            "abbreviation": "fro"
+          },
+          "date": "2026-10-11T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Sassuolo",
+            "abbreviation": "sas"
+          },
+          "away": {
+            "name": "Milan",
+            "abbreviation": "mil"
+          },
+          "date": "2026-10-11T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Torino",
+            "abbreviation": "tor"
+          },
+          "away": {
+            "name": "Udinese",
+            "abbreviation": "udi"
+          },
+          "date": "2026-10-11T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 14,
+      "serieADay": 7,
+      "games": [
+        {
+          "home": {
+            "name": "Bologna",
+            "abbreviation": "bol"
+          },
+          "away": {
+            "name": "Inter",
+            "abbreviation": "int"
+          },
+          "date": "2026-10-18T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Fiorentina",
+            "abbreviation": "fio"
+          },
+          "away": {
+            "name": "Como",
+            "abbreviation": "com"
+          },
+          "date": "2026-10-18T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Frosinone",
+            "abbreviation": "fro"
+          },
+          "away": {
+            "name": "Sassuolo",
+            "abbreviation": "sas"
+          },
+          "date": "2026-10-18T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Juventus",
+            "abbreviation": "juv"
+          },
+          "away": {
+            "name": "Lazio",
+            "abbreviation": "laz"
+          },
+          "date": "2026-10-18T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Milan",
+            "abbreviation": "mil"
+          },
+          "away": {
+            "name": "Atalanta",
+            "abbreviation": "ata"
+          },
+          "date": "2026-10-18T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Monza",
+            "abbreviation": "monz"
+          },
+          "away": {
+            "name": "Cagliari",
+            "abbreviation": "cag"
+          },
+          "date": "2026-10-18T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Parma",
+            "abbreviation": "par"
+          },
+          "away": {
+            "name": "Torino",
+            "abbreviation": "tor"
+          },
+          "date": "2026-10-18T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Roma",
+            "abbreviation": "rom"
+          },
+          "away": {
+            "name": "Genoa",
+            "abbreviation": "gen"
+          },
+          "date": "2026-10-18T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Udinese",
+            "abbreviation": "udi"
+          },
+          "away": {
+            "name": "Lecce",
+            "abbreviation": "lec"
+          },
+          "date": "2026-10-18T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Venezia",
+            "abbreviation": "ven"
+          },
+          "away": {
+            "name": "Napoli",
+            "abbreviation": "nap"
+          },
+          "date": "2026-10-18T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 14,
+      "serieADay": 8,
+      "games": [
+        {
+          "home": {
+            "name": "Atalanta",
+            "abbreviation": "ata"
+          },
+          "away": {
+            "name": "Frosinone",
+            "abbreviation": "fro"
+          },
+          "date": "2026-10-25T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Cagliari",
+            "abbreviation": "cag"
+          },
+          "away": {
+            "name": "Bologna",
+            "abbreviation": "bol"
+          },
+          "date": "2026-10-25T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Como",
+            "abbreviation": "com"
+          },
+          "away": {
+            "name": "Sassuolo",
+            "abbreviation": "sas"
+          },
+          "date": "2026-10-25T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Genoa",
+            "abbreviation": "gen"
+          },
+          "away": {
+            "name": "Venezia",
+            "abbreviation": "ven"
+          },
+          "date": "2026-10-25T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Inter",
+            "abbreviation": "int"
+          },
+          "away": {
+            "name": "Fiorentina",
+            "abbreviation": "fio"
+          },
+          "date": "2026-10-25T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Lazio",
+            "abbreviation": "laz"
+          },
+          "away": {
+            "name": "Parma",
+            "abbreviation": "par"
+          },
+          "date": "2026-10-25T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Lecce",
+            "abbreviation": "lec"
+          },
+          "away": {
+            "name": "Juventus",
+            "abbreviation": "juv"
+          },
+          "date": "2026-10-25T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Napoli",
+            "abbreviation": "nap"
+          },
+          "away": {
+            "name": "Roma",
+            "abbreviation": "rom"
+          },
+          "date": "2026-10-25T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Torino",
+            "abbreviation": "tor"
+          },
+          "away": {
+            "name": "Monza",
+            "abbreviation": "monz"
+          },
+          "date": "2026-10-25T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Udinese",
+            "abbreviation": "udi"
+          },
+          "away": {
+            "name": "Milan",
+            "abbreviation": "mil"
+          },
+          "date": "2026-10-25T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 14,
+      "serieADay": 9,
+      "games": [
+        {
+          "home": {
+            "name": "Fiorentina",
+            "abbreviation": "fio"
+          },
+          "away": {
+            "name": "Atalanta",
+            "abbreviation": "ata"
+          },
+          "date": "2026-10-28T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Frosinone",
+            "abbreviation": "fro"
+          },
+          "away": {
+            "name": "Lecce",
+            "abbreviation": "lec"
+          },
+          "date": "2026-10-28T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Genoa",
+            "abbreviation": "gen"
+          },
+          "away": {
+            "name": "Juventus",
+            "abbreviation": "juv"
+          },
+          "date": "2026-10-28T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Milan",
+            "abbreviation": "mil"
+          },
+          "away": {
+            "name": "Bologna",
+            "abbreviation": "bol"
+          },
+          "date": "2026-10-28T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Monza",
+            "abbreviation": "monz"
+          },
+          "away": {
+            "name": "Napoli",
+            "abbreviation": "nap"
+          },
+          "date": "2026-10-28T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Parma",
+            "abbreviation": "par"
+          },
+          "away": {
+            "name": "Udinese",
+            "abbreviation": "udi"
+          },
+          "date": "2026-10-28T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Roma",
+            "abbreviation": "rom"
+          },
+          "away": {
+            "name": "Cagliari",
+            "abbreviation": "cag"
+          },
+          "date": "2026-10-28T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Sassuolo",
+            "abbreviation": "sas"
+          },
+          "away": {
+            "name": "Lazio",
+            "abbreviation": "laz"
+          },
+          "date": "2026-10-28T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Torino",
+            "abbreviation": "tor"
+          },
+          "away": {
+            "name": "Como",
+            "abbreviation": "com"
+          },
+          "date": "2026-10-28T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Venezia",
+            "abbreviation": "ven"
+          },
+          "away": {
+            "name": "Inter",
+            "abbreviation": "int"
+          },
+          "date": "2026-10-28T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 14,
+      "serieADay": 10,
+      "games": [
+        {
+          "home": {
+            "name": "Atalanta",
+            "abbreviation": "ata"
+          },
+          "away": {
+            "name": "Parma",
+            "abbreviation": "par"
+          },
+          "date": "2026-11-01T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Bologna",
+            "abbreviation": "bol"
+          },
+          "away": {
+            "name": "Monza",
+            "abbreviation": "monz"
+          },
+          "date": "2026-11-01T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Como",
+            "abbreviation": "com"
+          },
+          "away": {
+            "name": "Venezia",
+            "abbreviation": "ven"
+          },
+          "date": "2026-11-01T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Frosinone",
+            "abbreviation": "fro"
+          },
+          "away": {
+            "name": "Torino",
+            "abbreviation": "tor"
+          },
+          "date": "2026-11-01T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Juventus",
+            "abbreviation": "juv"
+          },
+          "away": {
+            "name": "Napoli",
+            "abbreviation": "nap"
+          },
+          "date": "2026-11-01T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Lazio",
+            "abbreviation": "laz"
+          },
+          "away": {
+            "name": "Cagliari",
+            "abbreviation": "cag"
+          },
+          "date": "2026-11-01T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Lecce",
+            "abbreviation": "lec"
+          },
+          "away": {
+            "name": "Genoa",
+            "abbreviation": "gen"
+          },
+          "date": "2026-11-01T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Milan",
+            "abbreviation": "mil"
+          },
+          "away": {
+            "name": "Inter",
+            "abbreviation": "int"
+          },
+          "date": "2026-11-01T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Sassuolo",
+            "abbreviation": "sas"
+          },
+          "away": {
+            "name": "Fiorentina",
+            "abbreviation": "fio"
+          },
+          "date": "2026-11-01T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Udinese",
+            "abbreviation": "udi"
+          },
+          "away": {
+            "name": "Roma",
+            "abbreviation": "rom"
+          },
+          "date": "2026-11-01T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 14,
+      "serieADay": 11,
+      "games": [
+        {
+          "home": {
+            "name": "Cagliari",
+            "abbreviation": "cag"
+          },
+          "away": {
+            "name": "Frosinone",
+            "abbreviation": "fro"
+          },
+          "date": "2026-11-08T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Fiorentina",
+            "abbreviation": "fio"
+          },
+          "away": {
+            "name": "Juventus",
+            "abbreviation": "juv"
+          },
+          "date": "2026-11-08T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Genoa",
+            "abbreviation": "gen"
+          },
+          "away": {
+            "name": "Milan",
+            "abbreviation": "mil"
+          },
+          "date": "2026-11-08T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Inter",
+            "abbreviation": "int"
+          },
+          "away": {
+            "name": "Como",
+            "abbreviation": "com"
+          },
+          "date": "2026-11-08T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Monza",
+            "abbreviation": "monz"
+          },
+          "away": {
+            "name": "Atalanta",
+            "abbreviation": "ata"
+          },
+          "date": "2026-11-08T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Napoli",
+            "abbreviation": "nap"
+          },
+          "away": {
+            "name": "Lazio",
+            "abbreviation": "laz"
+          },
+          "date": "2026-11-08T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Parma",
+            "abbreviation": "par"
+          },
+          "away": {
+            "name": "Bologna",
+            "abbreviation": "bol"
+          },
+          "date": "2026-11-08T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Roma",
+            "abbreviation": "rom"
+          },
+          "away": {
+            "name": "Sassuolo",
+            "abbreviation": "sas"
+          },
+          "date": "2026-11-08T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Torino",
+            "abbreviation": "tor"
+          },
+          "away": {
+            "name": "Lecce",
+            "abbreviation": "lec"
+          },
+          "date": "2026-11-08T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Venezia",
+            "abbreviation": "ven"
+          },
+          "away": {
+            "name": "Udinese",
+            "abbreviation": "udi"
+          },
+          "date": "2026-11-08T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 14,
+      "serieADay": 12,
+      "games": [
+        {
+          "home": {
+            "name": "Atalanta",
+            "abbreviation": "ata"
+          },
+          "away": {
+            "name": "Inter",
+            "abbreviation": "int"
+          },
+          "date": "2026-11-22T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Bologna",
+            "abbreviation": "bol"
+          },
+          "away": {
+            "name": "Udinese",
+            "abbreviation": "udi"
+          },
+          "date": "2026-11-22T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Como",
+            "abbreviation": "com"
+          },
+          "away": {
+            "name": "Cagliari",
+            "abbreviation": "cag"
+          },
+          "date": "2026-11-22T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Juventus",
+            "abbreviation": "juv"
+          },
+          "away": {
+            "name": "Venezia",
+            "abbreviation": "ven"
+          },
+          "date": "2026-11-22T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Lazio",
+            "abbreviation": "laz"
+          },
+          "away": {
+            "name": "Lecce",
+            "abbreviation": "lec"
+          },
+          "date": "2026-11-22T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Milan",
+            "abbreviation": "mil"
+          },
+          "away": {
+            "name": "Frosinone",
+            "abbreviation": "fro"
+          },
+          "date": "2026-11-22T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Monza",
+            "abbreviation": "monz"
+          },
+          "away": {
+            "name": "Fiorentina",
+            "abbreviation": "fio"
+          },
+          "date": "2026-11-22T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Napoli",
+            "abbreviation": "nap"
+          },
+          "away": {
+            "name": "Torino",
+            "abbreviation": "tor"
+          },
+          "date": "2026-11-22T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Parma",
+            "abbreviation": "par"
+          },
+          "away": {
+            "name": "Roma",
+            "abbreviation": "rom"
+          },
+          "date": "2026-11-22T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Sassuolo",
+            "abbreviation": "sas"
+          },
+          "away": {
+            "name": "Genoa",
+            "abbreviation": "gen"
+          },
+          "date": "2026-11-22T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 14,
+      "serieADay": 13,
+      "games": [
+        {
+          "home": {
+            "name": "Cagliari",
+            "abbreviation": "cag"
+          },
+          "away": {
+            "name": "Milan",
+            "abbreviation": "mil"
+          },
+          "date": "2026-11-29T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Como",
+            "abbreviation": "com"
+          },
+          "away": {
+            "name": "Juventus",
+            "abbreviation": "juv"
+          },
+          "date": "2026-11-29T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Frosinone",
+            "abbreviation": "fro"
+          },
+          "away": {
+            "name": "Parma",
+            "abbreviation": "par"
+          },
+          "date": "2026-11-29T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Inter",
+            "abbreviation": "int"
+          },
+          "away": {
+            "name": "Genoa",
+            "abbreviation": "gen"
+          },
+          "date": "2026-11-29T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Lecce",
+            "abbreviation": "lec"
+          },
+          "away": {
+            "name": "Atalanta",
+            "abbreviation": "ata"
+          },
+          "date": "2026-11-29T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Roma",
+            "abbreviation": "rom"
+          },
+          "away": {
+            "name": "Monza",
+            "abbreviation": "monz"
+          },
+          "date": "2026-11-29T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Sassuolo",
+            "abbreviation": "sas"
+          },
+          "away": {
+            "name": "Napoli",
+            "abbreviation": "nap"
+          },
+          "date": "2026-11-29T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Torino",
+            "abbreviation": "tor"
+          },
+          "away": {
+            "name": "Lazio",
+            "abbreviation": "laz"
+          },
+          "date": "2026-11-29T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Udinese",
+            "abbreviation": "udi"
+          },
+          "away": {
+            "name": "Fiorentina",
+            "abbreviation": "fio"
+          },
+          "date": "2026-11-29T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Venezia",
+            "abbreviation": "ven"
+          },
+          "away": {
+            "name": "Bologna",
+            "abbreviation": "bol"
+          },
+          "date": "2026-11-29T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 14,
+      "serieADay": 14,
+      "games": [
+        {
+          "home": {
+            "name": "Bologna",
+            "abbreviation": "bol"
+          },
+          "away": {
+            "name": "Roma",
+            "abbreviation": "rom"
+          },
+          "date": "2026-12-06T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Fiorentina",
+            "abbreviation": "fio"
+          },
+          "away": {
+            "name": "Cagliari",
+            "abbreviation": "cag"
+          },
+          "date": "2026-12-06T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Frosinone",
+            "abbreviation": "fro"
+          },
+          "away": {
+            "name": "Inter",
+            "abbreviation": "int"
+          },
+          "date": "2026-12-06T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Genoa",
+            "abbreviation": "gen"
+          },
+          "away": {
+            "name": "Torino",
+            "abbreviation": "tor"
+          },
+          "date": "2026-12-06T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Juventus",
+            "abbreviation": "juv"
+          },
+          "away": {
+            "name": "Udinese",
+            "abbreviation": "udi"
+          },
+          "date": "2026-12-06T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Lazio",
+            "abbreviation": "laz"
+          },
+          "away": {
+            "name": "Atalanta",
+            "abbreviation": "ata"
+          },
+          "date": "2026-12-06T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Milan",
+            "abbreviation": "mil"
+          },
+          "away": {
+            "name": "Parma",
+            "abbreviation": "par"
+          },
+          "date": "2026-12-06T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Monza",
+            "abbreviation": "monz"
+          },
+          "away": {
+            "name": "Como",
+            "abbreviation": "com"
+          },
+          "date": "2026-12-06T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Napoli",
+            "abbreviation": "nap"
+          },
+          "away": {
+            "name": "Lecce",
+            "abbreviation": "lec"
+          },
+          "date": "2026-12-06T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Venezia",
+            "abbreviation": "ven"
+          },
+          "away": {
+            "name": "Sassuolo",
+            "abbreviation": "sas"
+          },
+          "date": "2026-12-06T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 14,
+      "serieADay": 15,
+      "games": [
+        {
+          "home": {
+            "name": "Atalanta",
+            "abbreviation": "ata"
+          },
+          "away": {
+            "name": "Genoa",
+            "abbreviation": "gen"
+          },
+          "date": "2026-12-13T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Cagliari",
+            "abbreviation": "cag"
+          },
+          "away": {
+            "name": "Venezia",
+            "abbreviation": "ven"
+          },
+          "date": "2026-12-13T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Como",
+            "abbreviation": "com"
+          },
+          "away": {
+            "name": "Bologna",
+            "abbreviation": "bol"
+          },
+          "date": "2026-12-13T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Inter",
+            "abbreviation": "int"
+          },
+          "away": {
+            "name": "Torino",
+            "abbreviation": "tor"
+          },
+          "date": "2026-12-13T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Juventus",
+            "abbreviation": "juv"
+          },
+          "away": {
+            "name": "Monza",
+            "abbreviation": "monz"
+          },
+          "date": "2026-12-13T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Lazio",
+            "abbreviation": "laz"
+          },
+          "away": {
+            "name": "Roma",
+            "abbreviation": "rom"
+          },
+          "date": "2026-12-13T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Lecce",
+            "abbreviation": "lec"
+          },
+          "away": {
+            "name": "Sassuolo",
+            "abbreviation": "sas"
+          },
+          "date": "2026-12-13T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Napoli",
+            "abbreviation": "nap"
+          },
+          "away": {
+            "name": "Milan",
+            "abbreviation": "mil"
+          },
+          "date": "2026-12-13T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Parma",
+            "abbreviation": "par"
+          },
+          "away": {
+            "name": "Fiorentina",
+            "abbreviation": "fio"
+          },
+          "date": "2026-12-13T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Udinese",
+            "abbreviation": "udi"
+          },
+          "away": {
+            "name": "Frosinone",
+            "abbreviation": "fro"
+          },
+          "date": "2026-12-13T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 14,
+      "serieADay": 16,
+      "games": [
+        {
+          "home": {
+            "name": "Atalanta",
+            "abbreviation": "ata"
+          },
+          "away": {
+            "name": "Napoli",
+            "abbreviation": "nap"
+          },
+          "date": "2026-12-20T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Fiorentina",
+            "abbreviation": "fio"
+          },
+          "away": {
+            "name": "Bologna",
+            "abbreviation": "bol"
+          },
+          "date": "2026-12-20T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Frosinone",
+            "abbreviation": "fro"
+          },
+          "away": {
+            "name": "Lazio",
+            "abbreviation": "laz"
+          },
+          "date": "2026-12-20T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Genoa",
+            "abbreviation": "gen"
+          },
+          "away": {
+            "name": "Udinese",
+            "abbreviation": "udi"
+          },
+          "date": "2026-12-20T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Lecce",
+            "abbreviation": "lec"
+          },
+          "away": {
+            "name": "Inter",
+            "abbreviation": "int"
+          },
+          "date": "2026-12-20T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Milan",
+            "abbreviation": "mil"
+          },
+          "away": {
+            "name": "Como",
+            "abbreviation": "com"
+          },
+          "date": "2026-12-20T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Roma",
+            "abbreviation": "rom"
+          },
+          "away": {
+            "name": "Juventus",
+            "abbreviation": "juv"
+          },
+          "date": "2026-12-20T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Sassuolo",
+            "abbreviation": "sas"
+          },
+          "away": {
+            "name": "Parma",
+            "abbreviation": "par"
+          },
+          "date": "2026-12-20T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Torino",
+            "abbreviation": "tor"
+          },
+          "away": {
+            "name": "Cagliari",
+            "abbreviation": "cag"
+          },
+          "date": "2026-12-20T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Venezia",
+            "abbreviation": "ven"
+          },
+          "away": {
+            "name": "Monza",
+            "abbreviation": "monz"
+          },
+          "date": "2026-12-20T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 14,
+      "serieADay": 17,
+      "games": [
+        {
+          "home": {
+            "name": "Bologna",
+            "abbreviation": "bol"
+          },
+          "away": {
+            "name": "Juventus",
+            "abbreviation": "juv"
+          },
+          "date": "2027-01-03T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Cagliari",
+            "abbreviation": "cag"
+          },
+          "away": {
+            "name": "Genoa",
+            "abbreviation": "gen"
+          },
+          "date": "2027-01-03T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Como",
+            "abbreviation": "com"
+          },
+          "away": {
+            "name": "Lecce",
+            "abbreviation": "lec"
+          },
+          "date": "2027-01-03T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Fiorentina",
+            "abbreviation": "fio"
+          },
+          "away": {
+            "name": "Lazio",
+            "abbreviation": "laz"
+          },
+          "date": "2027-01-03T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Inter",
+            "abbreviation": "int"
+          },
+          "away": {
+            "name": "Sassuolo",
+            "abbreviation": "sas"
+          },
+          "date": "2027-01-03T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Monza",
+            "abbreviation": "monz"
+          },
+          "away": {
+            "name": "Milan",
+            "abbreviation": "mil"
+          },
+          "date": "2027-01-03T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Parma",
+            "abbreviation": "par"
+          },
+          "away": {
+            "name": "Napoli",
+            "abbreviation": "nap"
+          },
+          "date": "2027-01-03T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Roma",
+            "abbreviation": "rom"
+          },
+          "away": {
+            "name": "Frosinone",
+            "abbreviation": "fro"
+          },
+          "date": "2027-01-03T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Torino",
+            "abbreviation": "tor"
+          },
+          "away": {
+            "name": "Venezia",
+            "abbreviation": "ven"
+          },
+          "date": "2027-01-03T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Udinese",
+            "abbreviation": "udi"
+          },
+          "away": {
+            "name": "Atalanta",
+            "abbreviation": "ata"
+          },
+          "date": "2027-01-03T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 14,
+      "serieADay": 18,
+      "games": [
+        {
+          "home": {
+            "name": "Atalanta",
+            "abbreviation": "ata"
+          },
+          "away": {
+            "name": "Como",
+            "abbreviation": "com"
+          },
+          "date": "2027-01-06T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Frosinone",
+            "abbreviation": "fro"
+          },
+          "away": {
+            "name": "Bologna",
+            "abbreviation": "bol"
+          },
+          "date": "2027-01-06T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Genoa",
+            "abbreviation": "gen"
+          },
+          "away": {
+            "name": "Monza",
+            "abbreviation": "monz"
+          },
+          "date": "2027-01-06T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Juventus",
+            "abbreviation": "juv"
+          },
+          "away": {
+            "name": "Torino",
+            "abbreviation": "tor"
+          },
+          "date": "2027-01-06T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Lazio",
+            "abbreviation": "laz"
+          },
+          "away": {
+            "name": "Inter",
+            "abbreviation": "int"
+          },
+          "date": "2027-01-06T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Lecce",
+            "abbreviation": "lec"
+          },
+          "away": {
+            "name": "Parma",
+            "abbreviation": "par"
+          },
+          "date": "2027-01-06T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Milan",
+            "abbreviation": "mil"
+          },
+          "away": {
+            "name": "Fiorentina",
+            "abbreviation": "fio"
+          },
+          "date": "2027-01-06T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Napoli",
+            "abbreviation": "nap"
+          },
+          "away": {
+            "name": "Cagliari",
+            "abbreviation": "cag"
+          },
+          "date": "2027-01-06T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Sassuolo",
+            "abbreviation": "sas"
+          },
+          "away": {
+            "name": "Udinese",
+            "abbreviation": "udi"
+          },
+          "date": "2027-01-06T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Venezia",
+            "abbreviation": "ven"
+          },
+          "away": {
+            "name": "Roma",
+            "abbreviation": "rom"
+          },
+          "date": "2027-01-06T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 14,
+      "serieADay": 19,
+      "games": [
+        {
+          "home": {
+            "name": "Bologna",
+            "abbreviation": "bol"
+          },
+          "away": {
+            "name": "Genoa",
+            "abbreviation": "gen"
+          },
+          "date": "2027-01-10T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Cagliari",
+            "abbreviation": "cag"
+          },
+          "away": {
+            "name": "Sassuolo",
+            "abbreviation": "sas"
+          },
+          "date": "2027-01-10T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Como",
+            "abbreviation": "com"
+          },
+          "away": {
+            "name": "Lazio",
+            "abbreviation": "laz"
+          },
+          "date": "2027-01-10T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Fiorentina",
+            "abbreviation": "fio"
+          },
+          "away": {
+            "name": "Lecce",
+            "abbreviation": "lec"
+          },
+          "date": "2027-01-10T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Inter",
+            "abbreviation": "int"
+          },
+          "away": {
+            "name": "Juventus",
+            "abbreviation": "juv"
+          },
+          "date": "2027-01-10T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Monza",
+            "abbreviation": "monz"
+          },
+          "away": {
+            "name": "Frosinone",
+            "abbreviation": "fro"
+          },
+          "date": "2027-01-10T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Parma",
+            "abbreviation": "par"
+          },
+          "away": {
+            "name": "Venezia",
+            "abbreviation": "ven"
+          },
+          "date": "2027-01-10T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Roma",
+            "abbreviation": "rom"
+          },
+          "away": {
+            "name": "Milan",
+            "abbreviation": "mil"
+          },
+          "date": "2027-01-10T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Torino",
+            "abbreviation": "tor"
+          },
+          "away": {
+            "name": "Atalanta",
+            "abbreviation": "ata"
+          },
+          "date": "2027-01-10T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Udinese",
+            "abbreviation": "udi"
+          },
+          "away": {
+            "name": "Napoli",
+            "abbreviation": "nap"
+          },
+          "date": "2027-01-10T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 14,
+      "serieADay": 20,
+      "games": [
+        {
+          "home": {
+            "name": "Atalanta",
+            "abbreviation": "ata"
+          },
+          "away": {
+            "name": "Roma",
+            "abbreviation": "rom"
+          },
+          "date": "2027-01-17T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Cagliari",
+            "abbreviation": "cag"
+          },
+          "away": {
+            "name": "Como",
+            "abbreviation": "com"
+          },
+          "date": "2027-01-17T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Juventus",
+            "abbreviation": "juv"
+          },
+          "away": {
+            "name": "Genoa",
+            "abbreviation": "gen"
+          },
+          "date": "2027-01-17T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Lazio",
+            "abbreviation": "laz"
+          },
+          "away": {
+            "name": "Bologna",
+            "abbreviation": "bol"
+          },
+          "date": "2027-01-17T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Lecce",
+            "abbreviation": "lec"
+          },
+          "away": {
+            "name": "Udinese",
+            "abbreviation": "udi"
+          },
+          "date": "2027-01-17T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Milan",
+            "abbreviation": "mil"
+          },
+          "away": {
+            "name": "Torino",
+            "abbreviation": "tor"
+          },
+          "date": "2027-01-17T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Napoli",
+            "abbreviation": "nap"
+          },
+          "away": {
+            "name": "Fiorentina",
+            "abbreviation": "fio"
+          },
+          "date": "2027-01-17T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Parma",
+            "abbreviation": "par"
+          },
+          "away": {
+            "name": "Inter",
+            "abbreviation": "int"
+          },
+          "date": "2027-01-17T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Sassuolo",
+            "abbreviation": "sas"
+          },
+          "away": {
+            "name": "Monza",
+            "abbreviation": "monz"
+          },
+          "date": "2027-01-17T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Venezia",
+            "abbreviation": "ven"
+          },
+          "away": {
+            "name": "Frosinone",
+            "abbreviation": "fro"
+          },
+          "date": "2027-01-17T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 14,
+      "serieADay": 21,
+      "games": [
+        {
+          "home": {
+            "name": "Bologna",
+            "abbreviation": "bol"
+          },
+          "away": {
+            "name": "Atalanta",
+            "abbreviation": "ata"
+          },
+          "date": "2027-01-24T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Como",
+            "abbreviation": "com"
+          },
+          "away": {
+            "name": "Napoli",
+            "abbreviation": "nap"
+          },
+          "date": "2027-01-24T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Fiorentina",
+            "abbreviation": "fio"
+          },
+          "away": {
+            "name": "Sassuolo",
+            "abbreviation": "sas"
+          },
+          "date": "2027-01-24T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Frosinone",
+            "abbreviation": "fro"
+          },
+          "away": {
+            "name": "Milan",
+            "abbreviation": "mil"
+          },
+          "date": "2027-01-24T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Genoa",
+            "abbreviation": "gen"
+          },
+          "away": {
+            "name": "Parma",
+            "abbreviation": "par"
+          },
+          "date": "2027-01-24T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Inter",
+            "abbreviation": "int"
+          },
+          "away": {
+            "name": "Venezia",
+            "abbreviation": "ven"
+          },
+          "date": "2027-01-24T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Juventus",
+            "abbreviation": "juv"
+          },
+          "away": {
+            "name": "Cagliari",
+            "abbreviation": "cag"
+          },
+          "date": "2027-01-24T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Lecce",
+            "abbreviation": "lec"
+          },
+          "away": {
+            "name": "Torino",
+            "abbreviation": "tor"
+          },
+          "date": "2027-01-24T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Monza",
+            "abbreviation": "monz"
+          },
+          "away": {
+            "name": "Lazio",
+            "abbreviation": "laz"
+          },
+          "date": "2027-01-24T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Roma",
+            "abbreviation": "rom"
+          },
+          "away": {
+            "name": "Udinese",
+            "abbreviation": "udi"
+          },
+          "date": "2027-01-24T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 14,
+      "serieADay": 22,
+      "games": [
+        {
+          "home": {
+            "name": "Atalanta",
+            "abbreviation": "ata"
+          },
+          "away": {
+            "name": "Fiorentina",
+            "abbreviation": "fio"
+          },
+          "date": "2027-01-31T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Cagliari",
+            "abbreviation": "cag"
+          },
+          "away": {
+            "name": "Parma",
+            "abbreviation": "par"
+          },
+          "date": "2027-01-31T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Genoa",
+            "abbreviation": "gen"
+          },
+          "away": {
+            "name": "Lecce",
+            "abbreviation": "lec"
+          },
+          "date": "2027-01-31T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Lazio",
+            "abbreviation": "laz"
+          },
+          "away": {
+            "name": "Venezia",
+            "abbreviation": "ven"
+          },
+          "date": "2027-01-31T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Milan",
+            "abbreviation": "mil"
+          },
+          "away": {
+            "name": "Juventus",
+            "abbreviation": "juv"
+          },
+          "date": "2027-01-31T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Monza",
+            "abbreviation": "monz"
+          },
+          "away": {
+            "name": "Roma",
+            "abbreviation": "rom"
+          },
+          "date": "2027-01-31T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Napoli",
+            "abbreviation": "nap"
+          },
+          "away": {
+            "name": "Inter",
+            "abbreviation": "int"
+          },
+          "date": "2027-01-31T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Sassuolo",
+            "abbreviation": "sas"
+          },
+          "away": {
+            "name": "Como",
+            "abbreviation": "com"
+          },
+          "date": "2027-01-31T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Torino",
+            "abbreviation": "tor"
+          },
+          "away": {
+            "name": "Frosinone",
+            "abbreviation": "fro"
+          },
+          "date": "2027-01-31T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Udinese",
+            "abbreviation": "udi"
+          },
+          "away": {
+            "name": "Bologna",
+            "abbreviation": "bol"
+          },
+          "date": "2027-01-31T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 14,
+      "serieADay": 23,
+      "games": [
+        {
+          "home": {
+            "name": "Atalanta",
+            "abbreviation": "ata"
+          },
+          "away": {
+            "name": "Lazio",
+            "abbreviation": "laz"
+          },
+          "date": "2027-02-07T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Bologna",
+            "abbreviation": "bol"
+          },
+          "away": {
+            "name": "Milan",
+            "abbreviation": "mil"
+          },
+          "date": "2027-02-07T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Como",
+            "abbreviation": "com"
+          },
+          "away": {
+            "name": "Monza",
+            "abbreviation": "monz"
+          },
+          "date": "2027-02-07T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Fiorentina",
+            "abbreviation": "fio"
+          },
+          "away": {
+            "name": "Udinese",
+            "abbreviation": "udi"
+          },
+          "date": "2027-02-07T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Inter",
+            "abbreviation": "int"
+          },
+          "away": {
+            "name": "Cagliari",
+            "abbreviation": "cag"
+          },
+          "date": "2027-02-07T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Juventus",
+            "abbreviation": "juv"
+          },
+          "away": {
+            "name": "Sassuolo",
+            "abbreviation": "sas"
+          },
+          "date": "2027-02-07T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Lecce",
+            "abbreviation": "lec"
+          },
+          "away": {
+            "name": "Napoli",
+            "abbreviation": "nap"
+          },
+          "date": "2027-02-07T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Parma",
+            "abbreviation": "par"
+          },
+          "away": {
+            "name": "Frosinone",
+            "abbreviation": "fro"
+          },
+          "date": "2027-02-07T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Roma",
+            "abbreviation": "rom"
+          },
+          "away": {
+            "name": "Torino",
+            "abbreviation": "tor"
+          },
+          "date": "2027-02-07T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Venezia",
+            "abbreviation": "ven"
+          },
+          "away": {
+            "name": "Genoa",
+            "abbreviation": "gen"
+          },
+          "date": "2027-02-07T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 14,
+      "serieADay": 24,
+      "games": [
+        {
+          "home": {
+            "name": "Bologna",
+            "abbreviation": "bol"
+          },
+          "away": {
+            "name": "Como",
+            "abbreviation": "com"
+          },
+          "date": "2027-02-14T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Cagliari",
+            "abbreviation": "cag"
+          },
+          "away": {
+            "name": "Lazio",
+            "abbreviation": "laz"
+          },
+          "date": "2027-02-14T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Frosinone",
+            "abbreviation": "fro"
+          },
+          "away": {
+            "name": "Fiorentina",
+            "abbreviation": "fio"
+          },
+          "date": "2027-02-14T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Genoa",
+            "abbreviation": "gen"
+          },
+          "away": {
+            "name": "Atalanta",
+            "abbreviation": "ata"
+          },
+          "date": "2027-02-14T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Inter",
+            "abbreviation": "int"
+          },
+          "away": {
+            "name": "Milan",
+            "abbreviation": "mil"
+          },
+          "date": "2027-02-14T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Monza",
+            "abbreviation": "monz"
+          },
+          "away": {
+            "name": "Lecce",
+            "abbreviation": "lec"
+          },
+          "date": "2027-02-14T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Napoli",
+            "abbreviation": "nap"
+          },
+          "away": {
+            "name": "Juventus",
+            "abbreviation": "juv"
+          },
+          "date": "2027-02-14T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Roma",
+            "abbreviation": "rom"
+          },
+          "away": {
+            "name": "Parma",
+            "abbreviation": "par"
+          },
+          "date": "2027-02-14T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Torino",
+            "abbreviation": "tor"
+          },
+          "away": {
+            "name": "Sassuolo",
+            "abbreviation": "sas"
+          },
+          "date": "2027-02-14T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Udinese",
+            "abbreviation": "udi"
+          },
+          "away": {
+            "name": "Venezia",
+            "abbreviation": "ven"
+          },
+          "date": "2027-02-14T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 14,
+      "serieADay": 25,
+      "games": [
+        {
+          "home": {
+            "name": "Atalanta",
+            "abbreviation": "ata"
+          },
+          "away": {
+            "name": "Monza",
+            "abbreviation": "monz"
+          },
+          "date": "2027-02-21T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Como",
+            "abbreviation": "com"
+          },
+          "away": {
+            "name": "Torino",
+            "abbreviation": "tor"
+          },
+          "date": "2027-02-21T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Fiorentina",
+            "abbreviation": "fio"
+          },
+          "away": {
+            "name": "Inter",
+            "abbreviation": "int"
+          },
+          "date": "2027-02-21T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Juventus",
+            "abbreviation": "juv"
+          },
+          "away": {
+            "name": "Bologna",
+            "abbreviation": "bol"
+          },
+          "date": "2027-02-21T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Lazio",
+            "abbreviation": "laz"
+          },
+          "away": {
+            "name": "Napoli",
+            "abbreviation": "nap"
+          },
+          "date": "2027-02-21T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Lecce",
+            "abbreviation": "lec"
+          },
+          "away": {
+            "name": "Frosinone",
+            "abbreviation": "fro"
+          },
+          "date": "2027-02-21T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Milan",
+            "abbreviation": "mil"
+          },
+          "away": {
+            "name": "Genoa",
+            "abbreviation": "gen"
+          },
+          "date": "2027-02-21T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Sassuolo",
+            "abbreviation": "sas"
+          },
+          "away": {
+            "name": "Roma",
+            "abbreviation": "rom"
+          },
+          "date": "2027-02-21T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Udinese",
+            "abbreviation": "udi"
+          },
+          "away": {
+            "name": "Parma",
+            "abbreviation": "par"
+          },
+          "date": "2027-02-21T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Venezia",
+            "abbreviation": "ven"
+          },
+          "away": {
+            "name": "Cagliari",
+            "abbreviation": "cag"
+          },
+          "date": "2027-02-21T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 14,
+      "serieADay": 26,
+      "games": [
+        {
+          "home": {
+            "name": "Bologna",
+            "abbreviation": "bol"
+          },
+          "away": {
+            "name": "Lecce",
+            "abbreviation": "lec"
+          },
+          "date": "2027-02-28T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Cagliari",
+            "abbreviation": "cag"
+          },
+          "away": {
+            "name": "Udinese",
+            "abbreviation": "udi"
+          },
+          "date": "2027-02-28T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Como",
+            "abbreviation": "com"
+          },
+          "away": {
+            "name": "Milan",
+            "abbreviation": "mil"
+          },
+          "date": "2027-02-28T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Frosinone",
+            "abbreviation": "fro"
+          },
+          "away": {
+            "name": "Napoli",
+            "abbreviation": "nap"
+          },
+          "date": "2027-02-28T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Genoa",
+            "abbreviation": "gen"
+          },
+          "away": {
+            "name": "Lazio",
+            "abbreviation": "laz"
+          },
+          "date": "2027-02-28T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Inter",
+            "abbreviation": "int"
+          },
+          "away": {
+            "name": "Atalanta",
+            "abbreviation": "ata"
+          },
+          "date": "2027-02-28T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Monza",
+            "abbreviation": "monz"
+          },
+          "away": {
+            "name": "Juventus",
+            "abbreviation": "juv"
+          },
+          "date": "2027-02-28T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Parma",
+            "abbreviation": "par"
+          },
+          "away": {
+            "name": "Sassuolo",
+            "abbreviation": "sas"
+          },
+          "date": "2027-02-28T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Roma",
+            "abbreviation": "rom"
+          },
+          "away": {
+            "name": "Venezia",
+            "abbreviation": "ven"
+          },
+          "date": "2027-02-28T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Torino",
+            "abbreviation": "tor"
+          },
+          "away": {
+            "name": "Fiorentina",
+            "abbreviation": "fio"
+          },
+          "date": "2027-02-28T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 14,
+      "serieADay": 27,
+      "games": [
+        {
+          "home": {
+            "name": "Atalanta",
+            "abbreviation": "ata"
+          },
+          "away": {
+            "name": "Torino",
+            "abbreviation": "tor"
+          },
+          "date": "2027-03-07T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Fiorentina",
+            "abbreviation": "fio"
+          },
+          "away": {
+            "name": "Venezia",
+            "abbreviation": "ven"
+          },
+          "date": "2027-03-07T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Juventus",
+            "abbreviation": "juv"
+          },
+          "away": {
+            "name": "Roma",
+            "abbreviation": "rom"
+          },
+          "date": "2027-03-07T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Lazio",
+            "abbreviation": "laz"
+          },
+          "away": {
+            "name": "Frosinone",
+            "abbreviation": "fro"
+          },
+          "date": "2027-03-07T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Lecce",
+            "abbreviation": "lec"
+          },
+          "away": {
+            "name": "Como",
+            "abbreviation": "com"
+          },
+          "date": "2027-03-07T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Milan",
+            "abbreviation": "mil"
+          },
+          "away": {
+            "name": "Cagliari",
+            "abbreviation": "cag"
+          },
+          "date": "2027-03-07T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Monza",
+            "abbreviation": "monz"
+          },
+          "away": {
+            "name": "Genoa",
+            "abbreviation": "gen"
+          },
+          "date": "2027-03-07T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Napoli",
+            "abbreviation": "nap"
+          },
+          "away": {
+            "name": "Parma",
+            "abbreviation": "par"
+          },
+          "date": "2027-03-07T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Sassuolo",
+            "abbreviation": "sas"
+          },
+          "away": {
+            "name": "Bologna",
+            "abbreviation": "bol"
+          },
+          "date": "2027-03-07T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Udinese",
+            "abbreviation": "udi"
+          },
+          "away": {
+            "name": "Inter",
+            "abbreviation": "int"
+          },
+          "date": "2027-03-07T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 14,
+      "serieADay": 28,
+      "games": [
+        {
+          "home": {
+            "name": "Bologna",
+            "abbreviation": "bol"
+          },
+          "away": {
+            "name": "Napoli",
+            "abbreviation": "nap"
+          },
+          "date": "2027-03-14T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Cagliari",
+            "abbreviation": "cag"
+          },
+          "away": {
+            "name": "Fiorentina",
+            "abbreviation": "fio"
+          },
+          "date": "2027-03-14T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Como",
+            "abbreviation": "com"
+          },
+          "away": {
+            "name": "Udinese",
+            "abbreviation": "udi"
+          },
+          "date": "2027-03-14T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Frosinone",
+            "abbreviation": "fro"
+          },
+          "away": {
+            "name": "Monza",
+            "abbreviation": "monz"
+          },
+          "date": "2027-03-14T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Genoa",
+            "abbreviation": "gen"
+          },
+          "away": {
+            "name": "Roma",
+            "abbreviation": "rom"
+          },
+          "date": "2027-03-14T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Lazio",
+            "abbreviation": "laz"
+          },
+          "away": {
+            "name": "Juventus",
+            "abbreviation": "juv"
+          },
+          "date": "2027-03-14T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Milan",
+            "abbreviation": "mil"
+          },
+          "away": {
+            "name": "Sassuolo",
+            "abbreviation": "sas"
+          },
+          "date": "2027-03-14T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Parma",
+            "abbreviation": "par"
+          },
+          "away": {
+            "name": "Lecce",
+            "abbreviation": "lec"
+          },
+          "date": "2027-03-14T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Torino",
+            "abbreviation": "tor"
+          },
+          "away": {
+            "name": "Inter",
+            "abbreviation": "int"
+          },
+          "date": "2027-03-14T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Venezia",
+            "abbreviation": "ven"
+          },
+          "away": {
+            "name": "Atalanta",
+            "abbreviation": "ata"
+          },
+          "date": "2027-03-14T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 14,
+      "serieADay": 29,
+      "games": [
+        {
+          "home": {
+            "name": "Atalanta",
+            "abbreviation": "ata"
+          },
+          "away": {
+            "name": "Milan",
+            "abbreviation": "mil"
+          },
+          "date": "2027-03-21T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Fiorentina",
+            "abbreviation": "fio"
+          },
+          "away": {
+            "name": "Genoa",
+            "abbreviation": "gen"
+          },
+          "date": "2027-03-21T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Inter",
+            "abbreviation": "int"
+          },
+          "away": {
+            "name": "Frosinone",
+            "abbreviation": "fro"
+          },
+          "date": "2027-03-21T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Juventus",
+            "abbreviation": "juv"
+          },
+          "away": {
+            "name": "Como",
+            "abbreviation": "com"
+          },
+          "date": "2027-03-21T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Monza",
+            "abbreviation": "monz"
+          },
+          "away": {
+            "name": "Bologna",
+            "abbreviation": "bol"
+          },
+          "date": "2027-03-21T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Napoli",
+            "abbreviation": "nap"
+          },
+          "away": {
+            "name": "Venezia",
+            "abbreviation": "ven"
+          },
+          "date": "2027-03-21T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Parma",
+            "abbreviation": "par"
+          },
+          "away": {
+            "name": "Lazio",
+            "abbreviation": "laz"
+          },
+          "date": "2027-03-21T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Roma",
+            "abbreviation": "rom"
+          },
+          "away": {
+            "name": "Lecce",
+            "abbreviation": "lec"
+          },
+          "date": "2027-03-21T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Sassuolo",
+            "abbreviation": "sas"
+          },
+          "away": {
+            "name": "Cagliari",
+            "abbreviation": "cag"
+          },
+          "date": "2027-03-21T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Udinese",
+            "abbreviation": "udi"
+          },
+          "away": {
+            "name": "Torino",
+            "abbreviation": "tor"
+          },
+          "date": "2027-03-21T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 14,
+      "serieADay": 30,
+      "games": [
+        {
+          "home": {
+            "name": "Cagliari",
+            "abbreviation": "cag"
+          },
+          "away": {
+            "name": "Napoli",
+            "abbreviation": "nap"
+          },
+          "date": "2027-04-04T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Como",
+            "abbreviation": "com"
+          },
+          "away": {
+            "name": "Fiorentina",
+            "abbreviation": "fio"
+          },
+          "date": "2027-04-04T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Frosinone",
+            "abbreviation": "fro"
+          },
+          "away": {
+            "name": "Udinese",
+            "abbreviation": "udi"
+          },
+          "date": "2027-04-04T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Genoa",
+            "abbreviation": "gen"
+          },
+          "away": {
+            "name": "Inter",
+            "abbreviation": "int"
+          },
+          "date": "2027-04-04T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Lecce",
+            "abbreviation": "lec"
+          },
+          "away": {
+            "name": "Lazio",
+            "abbreviation": "laz"
+          },
+          "date": "2027-04-04T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Milan",
+            "abbreviation": "mil"
+          },
+          "away": {
+            "name": "Monza",
+            "abbreviation": "monz"
+          },
+          "date": "2027-04-04T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Roma",
+            "abbreviation": "rom"
+          },
+          "away": {
+            "name": "Bologna",
+            "abbreviation": "bol"
+          },
+          "date": "2027-04-04T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Sassuolo",
+            "abbreviation": "sas"
+          },
+          "away": {
+            "name": "Atalanta",
+            "abbreviation": "ata"
+          },
+          "date": "2027-04-04T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Torino",
+            "abbreviation": "tor"
+          },
+          "away": {
+            "name": "Juventus",
+            "abbreviation": "juv"
+          },
+          "date": "2027-04-04T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Venezia",
+            "abbreviation": "ven"
+          },
+          "away": {
+            "name": "Parma",
+            "abbreviation": "par"
+          },
+          "date": "2027-04-04T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 14,
+      "serieADay": 31,
+      "games": [
+        {
+          "home": {
+            "name": "Bologna",
+            "abbreviation": "bol"
+          },
+          "away": {
+            "name": "Venezia",
+            "abbreviation": "ven"
+          },
+          "date": "2027-04-11T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Cagliari",
+            "abbreviation": "cag"
+          },
+          "away": {
+            "name": "Atalanta",
+            "abbreviation": "ata"
+          },
+          "date": "2027-04-11T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Fiorentina",
+            "abbreviation": "fio"
+          },
+          "away": {
+            "name": "Milan",
+            "abbreviation": "mil"
+          },
+          "date": "2027-04-11T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Frosinone",
+            "abbreviation": "fro"
+          },
+          "away": {
+            "name": "Genoa",
+            "abbreviation": "gen"
+          },
+          "date": "2027-04-11T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Inter",
+            "abbreviation": "int"
+          },
+          "away": {
+            "name": "Roma",
+            "abbreviation": "rom"
+          },
+          "date": "2027-04-11T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Juventus",
+            "abbreviation": "juv"
+          },
+          "away": {
+            "name": "Lecce",
+            "abbreviation": "lec"
+          },
+          "date": "2027-04-11T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Lazio",
+            "abbreviation": "laz"
+          },
+          "away": {
+            "name": "Torino",
+            "abbreviation": "tor"
+          },
+          "date": "2027-04-11T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Napoli",
+            "abbreviation": "nap"
+          },
+          "away": {
+            "name": "Sassuolo",
+            "abbreviation": "sas"
+          },
+          "date": "2027-04-11T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Parma",
+            "abbreviation": "par"
+          },
+          "away": {
+            "name": "Como",
+            "abbreviation": "com"
+          },
+          "date": "2027-04-11T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Udinese",
+            "abbreviation": "udi"
+          },
+          "away": {
+            "name": "Monza",
+            "abbreviation": "monz"
+          },
+          "date": "2027-04-11T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 14,
+      "serieADay": 32,
+      "games": [
+        {
+          "home": {
+            "name": "Atalanta",
+            "abbreviation": "ata"
+          },
+          "away": {
+            "name": "Udinese",
+            "abbreviation": "udi"
+          },
+          "date": "2027-04-18T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Bologna",
+            "abbreviation": "bol"
+          },
+          "away": {
+            "name": "Cagliari",
+            "abbreviation": "cag"
+          },
+          "date": "2027-04-18T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Como",
+            "abbreviation": "com"
+          },
+          "away": {
+            "name": "Frosinone",
+            "abbreviation": "fro"
+          },
+          "date": "2027-04-18T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Fiorentina",
+            "abbreviation": "fio"
+          },
+          "away": {
+            "name": "Parma",
+            "abbreviation": "par"
+          },
+          "date": "2027-04-18T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Milan",
+            "abbreviation": "mil"
+          },
+          "away": {
+            "name": "Napoli",
+            "abbreviation": "nap"
+          },
+          "date": "2027-04-18T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Monza",
+            "abbreviation": "monz"
+          },
+          "away": {
+            "name": "Inter",
+            "abbreviation": "int"
+          },
+          "date": "2027-04-18T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Roma",
+            "abbreviation": "rom"
+          },
+          "away": {
+            "name": "Lazio",
+            "abbreviation": "laz"
+          },
+          "date": "2027-04-18T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Sassuolo",
+            "abbreviation": "sas"
+          },
+          "away": {
+            "name": "Lecce",
+            "abbreviation": "lec"
+          },
+          "date": "2027-04-18T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Torino",
+            "abbreviation": "tor"
+          },
+          "away": {
+            "name": "Genoa",
+            "abbreviation": "gen"
+          },
+          "date": "2027-04-18T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Venezia",
+            "abbreviation": "ven"
+          },
+          "away": {
+            "name": "Juventus",
+            "abbreviation": "juv"
+          },
+          "date": "2027-04-18T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 14,
+      "serieADay": 33,
+      "games": [
+        {
+          "home": {
+            "name": "Cagliari",
+            "abbreviation": "cag"
+          },
+          "away": {
+            "name": "Monza",
+            "abbreviation": "monz"
+          },
+          "date": "2027-04-25T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Frosinone",
+            "abbreviation": "fro"
+          },
+          "away": {
+            "name": "Roma",
+            "abbreviation": "rom"
+          },
+          "date": "2027-04-25T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Genoa",
+            "abbreviation": "gen"
+          },
+          "away": {
+            "name": "Sassuolo",
+            "abbreviation": "sas"
+          },
+          "date": "2027-04-25T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Inter",
+            "abbreviation": "int"
+          },
+          "away": {
+            "name": "Bologna",
+            "abbreviation": "bol"
+          },
+          "date": "2027-04-25T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Juventus",
+            "abbreviation": "juv"
+          },
+          "away": {
+            "name": "Fiorentina",
+            "abbreviation": "fio"
+          },
+          "date": "2027-04-25T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Lazio",
+            "abbreviation": "laz"
+          },
+          "away": {
+            "name": "Como",
+            "abbreviation": "com"
+          },
+          "date": "2027-04-25T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Lecce",
+            "abbreviation": "lec"
+          },
+          "away": {
+            "name": "Milan",
+            "abbreviation": "mil"
+          },
+          "date": "2027-04-25T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Napoli",
+            "abbreviation": "nap"
+          },
+          "away": {
+            "name": "Udinese",
+            "abbreviation": "udi"
+          },
+          "date": "2027-04-25T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Parma",
+            "abbreviation": "par"
+          },
+          "away": {
+            "name": "Atalanta",
+            "abbreviation": "ata"
+          },
+          "date": "2027-04-25T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Venezia",
+            "abbreviation": "ven"
+          },
+          "away": {
+            "name": "Torino",
+            "abbreviation": "tor"
+          },
+          "date": "2027-04-25T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 14,
+      "serieADay": 34,
+      "games": [
+        {
+          "home": {
+            "name": "Atalanta",
+            "abbreviation": "ata"
+          },
+          "away": {
+            "name": "Juventus",
+            "abbreviation": "juv"
+          },
+          "date": "2027-05-02T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Bologna",
+            "abbreviation": "bol"
+          },
+          "away": {
+            "name": "Fiorentina",
+            "abbreviation": "fio"
+          },
+          "date": "2027-05-02T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Como",
+            "abbreviation": "com"
+          },
+          "away": {
+            "name": "Inter",
+            "abbreviation": "int"
+          },
+          "date": "2027-05-02T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Lecce",
+            "abbreviation": "lec"
+          },
+          "away": {
+            "name": "Cagliari",
+            "abbreviation": "cag"
+          },
+          "date": "2027-05-02T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Milan",
+            "abbreviation": "mil"
+          },
+          "away": {
+            "name": "Lazio",
+            "abbreviation": "laz"
+          },
+          "date": "2027-05-02T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Monza",
+            "abbreviation": "monz"
+          },
+          "away": {
+            "name": "Venezia",
+            "abbreviation": "ven"
+          },
+          "date": "2027-05-02T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Roma",
+            "abbreviation": "rom"
+          },
+          "away": {
+            "name": "Napoli",
+            "abbreviation": "nap"
+          },
+          "date": "2027-05-02T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Sassuolo",
+            "abbreviation": "sas"
+          },
+          "away": {
+            "name": "Frosinone",
+            "abbreviation": "fro"
+          },
+          "date": "2027-05-02T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Torino",
+            "abbreviation": "tor"
+          },
+          "away": {
+            "name": "Parma",
+            "abbreviation": "par"
+          },
+          "date": "2027-05-02T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Udinese",
+            "abbreviation": "udi"
+          },
+          "away": {
+            "name": "Genoa",
+            "abbreviation": "gen"
+          },
+          "date": "2027-05-02T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 14,
+      "serieADay": 35,
+      "games": [
+        {
+          "home": {
+            "name": "Fiorentina",
+            "abbreviation": "fio"
+          },
+          "away": {
+            "name": "Roma",
+            "abbreviation": "rom"
+          },
+          "date": "2027-05-09T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Frosinone",
+            "abbreviation": "fro"
+          },
+          "away": {
+            "name": "Atalanta",
+            "abbreviation": "ata"
+          },
+          "date": "2027-05-09T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Genoa",
+            "abbreviation": "gen"
+          },
+          "away": {
+            "name": "Cagliari",
+            "abbreviation": "cag"
+          },
+          "date": "2027-05-09T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Inter",
+            "abbreviation": "int"
+          },
+          "away": {
+            "name": "Lecce",
+            "abbreviation": "lec"
+          },
+          "date": "2027-05-09T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Lazio",
+            "abbreviation": "laz"
+          },
+          "away": {
+            "name": "Sassuolo",
+            "abbreviation": "sas"
+          },
+          "date": "2027-05-09T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Napoli",
+            "abbreviation": "nap"
+          },
+          "away": {
+            "name": "Monza",
+            "abbreviation": "monz"
+          },
+          "date": "2027-05-09T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Parma",
+            "abbreviation": "par"
+          },
+          "away": {
+            "name": "Milan",
+            "abbreviation": "mil"
+          },
+          "date": "2027-05-09T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Torino",
+            "abbreviation": "tor"
+          },
+          "away": {
+            "name": "Bologna",
+            "abbreviation": "bol"
+          },
+          "date": "2027-05-09T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Udinese",
+            "abbreviation": "udi"
+          },
+          "away": {
+            "name": "Juventus",
+            "abbreviation": "juv"
+          },
+          "date": "2027-05-09T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Venezia",
+            "abbreviation": "ven"
+          },
+          "away": {
+            "name": "Como",
+            "abbreviation": "com"
+          },
+          "date": "2027-05-09T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 14,
+      "serieADay": 36,
+      "games": [
+        {
+          "home": {
+            "name": "Bologna",
+            "abbreviation": "bol"
+          },
+          "away": {
+            "name": "Frosinone",
+            "abbreviation": "fro"
+          },
+          "date": "2027-05-16T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Cagliari",
+            "abbreviation": "cag"
+          },
+          "away": {
+            "name": "Torino",
+            "abbreviation": "tor"
+          },
+          "date": "2027-05-16T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Como",
+            "abbreviation": "com"
+          },
+          "away": {
+            "name": "Atalanta",
+            "abbreviation": "ata"
+          },
+          "date": "2027-05-16T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Juventus",
+            "abbreviation": "juv"
+          },
+          "away": {
+            "name": "Inter",
+            "abbreviation": "int"
+          },
+          "date": "2027-05-16T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Lazio",
+            "abbreviation": "laz"
+          },
+          "away": {
+            "name": "Udinese",
+            "abbreviation": "udi"
+          },
+          "date": "2027-05-16T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Lecce",
+            "abbreviation": "lec"
+          },
+          "away": {
+            "name": "Fiorentina",
+            "abbreviation": "fio"
+          },
+          "date": "2027-05-16T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Milan",
+            "abbreviation": "mil"
+          },
+          "away": {
+            "name": "Roma",
+            "abbreviation": "rom"
+          },
+          "date": "2027-05-16T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Monza",
+            "abbreviation": "monz"
+          },
+          "away": {
+            "name": "Parma",
+            "abbreviation": "par"
+          },
+          "date": "2027-05-16T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Napoli",
+            "abbreviation": "nap"
+          },
+          "away": {
+            "name": "Genoa",
+            "abbreviation": "gen"
+          },
+          "date": "2027-05-16T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Sassuolo",
+            "abbreviation": "sas"
+          },
+          "away": {
+            "name": "Venezia",
+            "abbreviation": "ven"
+          },
+          "date": "2027-05-16T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 14,
+      "serieADay": 37,
+      "games": [
+        {
+          "home": {
+            "name": "Atalanta",
+            "abbreviation": "ata"
+          },
+          "away": {
+            "name": "Lecce",
+            "abbreviation": "lec"
+          },
+          "date": "2027-05-23T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Fiorentina",
+            "abbreviation": "fio"
+          },
+          "away": {
+            "name": "Monza",
+            "abbreviation": "monz"
+          },
+          "date": "2027-05-23T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Frosinone",
+            "abbreviation": "fro"
+          },
+          "away": {
+            "name": "Cagliari",
+            "abbreviation": "cag"
+          },
+          "date": "2027-05-23T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Genoa",
+            "abbreviation": "gen"
+          },
+          "away": {
+            "name": "Bologna",
+            "abbreviation": "bol"
+          },
+          "date": "2027-05-23T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Inter",
+            "abbreviation": "int"
+          },
+          "away": {
+            "name": "Lazio",
+            "abbreviation": "laz"
+          },
+          "date": "2027-05-23T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Parma",
+            "abbreviation": "par"
+          },
+          "away": {
+            "name": "Juventus",
+            "abbreviation": "juv"
+          },
+          "date": "2027-05-23T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Roma",
+            "abbreviation": "rom"
+          },
+          "away": {
+            "name": "Como",
+            "abbreviation": "com"
+          },
+          "date": "2027-05-23T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Torino",
+            "abbreviation": "tor"
+          },
+          "away": {
+            "name": "Napoli",
+            "abbreviation": "nap"
+          },
+          "date": "2027-05-23T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Udinese",
+            "abbreviation": "udi"
+          },
+          "away": {
+            "name": "Sassuolo",
+            "abbreviation": "sas"
+          },
+          "date": "2027-05-23T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Venezia",
+            "abbreviation": "ven"
+          },
+          "away": {
+            "name": "Milan",
+            "abbreviation": "mil"
+          },
+          "date": "2027-05-23T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 14,
+      "serieADay": 38,
+      "games": [
+        {
+          "home": {
+            "name": "Bologna",
+            "abbreviation": "bol"
+          },
+          "away": {
+            "name": "Parma",
+            "abbreviation": "par"
+          },
+          "date": "2027-05-30T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Cagliari",
+            "abbreviation": "cag"
+          },
+          "away": {
+            "name": "Roma",
+            "abbreviation": "rom"
+          },
+          "date": "2027-05-30T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Como",
+            "abbreviation": "com"
+          },
+          "away": {
+            "name": "Genoa",
+            "abbreviation": "gen"
+          },
+          "date": "2027-05-30T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Juventus",
+            "abbreviation": "juv"
+          },
+          "away": {
+            "name": "Frosinone",
+            "abbreviation": "fro"
+          },
+          "date": "2027-05-30T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Lazio",
+            "abbreviation": "laz"
+          },
+          "away": {
+            "name": "Fiorentina",
+            "abbreviation": "fio"
+          },
+          "date": "2027-05-30T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Lecce",
+            "abbreviation": "lec"
+          },
+          "away": {
+            "name": "Venezia",
+            "abbreviation": "ven"
+          },
+          "date": "2027-05-30T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Milan",
+            "abbreviation": "mil"
+          },
+          "away": {
+            "name": "Udinese",
+            "abbreviation": "udi"
+          },
+          "date": "2027-05-30T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Monza",
+            "abbreviation": "monz"
+          },
+          "away": {
+            "name": "Torino",
+            "abbreviation": "tor"
+          },
+          "date": "2027-05-30T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Napoli",
+            "abbreviation": "nap"
+          },
+          "away": {
+            "name": "Atalanta",
+            "abbreviation": "ata"
+          },
+          "date": "2027-05-30T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Sassuolo",
+            "abbreviation": "sas"
+          },
+          "away": {
+            "name": "Inter",
+            "abbreviation": "int"
+          },
+          "date": "2027-05-30T15:00:00Z",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        }
+      ]
+    }
+  ]
+}

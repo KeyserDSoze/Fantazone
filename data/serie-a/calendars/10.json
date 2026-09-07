@@ -1,0 +1,5553 @@
+{
+  "year": 10,
+  "days": [
+    {
+      "year": 10,
+      "serieADay": 1,
+      "games": [
+        {
+          "home": {
+            "name": "Verona",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Sassuolo",
+            "abbreviation": ""
+          },
+          "date": "2021-08-21T18:30:00",
+          "homeGoals": 2,
+          "awayGoals": 3,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Inter",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Genoa",
+            "abbreviation": ""
+          },
+          "date": "2021-08-21T18:30:00",
+          "homeGoals": 4,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Empoli",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Lazio",
+            "abbreviation": ""
+          },
+          "date": "2021-08-21T20:45:00",
+          "homeGoals": 1,
+          "awayGoals": 3,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Torino",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Atalanta",
+            "abbreviation": ""
+          },
+          "date": "2021-08-21T20:45:00",
+          "homeGoals": 1,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Bologna",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Salernitana",
+            "abbreviation": ""
+          },
+          "date": "2021-08-22T18:30:00",
+          "homeGoals": 3,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Udinese",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Juventus",
+            "abbreviation": ""
+          },
+          "date": "2021-08-22T18:30:00",
+          "homeGoals": 2,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Napoli",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Venezia",
+            "abbreviation": ""
+          },
+          "date": "2021-08-22T20:45:00",
+          "homeGoals": 2,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Roma",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Fiorentina",
+            "abbreviation": ""
+          },
+          "date": "2021-08-22T20:45:00",
+          "homeGoals": 3,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Cagliari",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Spezia",
+            "abbreviation": ""
+          },
+          "date": "2021-08-23T18:30:00",
+          "homeGoals": 2,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Sampdoria",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Milan",
+            "abbreviation": ""
+          },
+          "date": "2021-08-23T20:45:00",
+          "homeGoals": 0,
+          "awayGoals": 1,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 10,
+      "serieADay": 2,
+      "games": [
+        {
+          "home": {
+            "name": "Udinese",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Venezia",
+            "abbreviation": ""
+          },
+          "date": "2021-08-27T18:30:00",
+          "homeGoals": 3,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Verona",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Inter",
+            "abbreviation": ""
+          },
+          "date": "2021-08-27T20:45:00",
+          "homeGoals": 1,
+          "awayGoals": 3,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Atalanta",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Bologna",
+            "abbreviation": ""
+          },
+          "date": "2021-08-28T18:30:00",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Lazio",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Spezia",
+            "abbreviation": ""
+          },
+          "date": "2021-08-28T18:30:00",
+          "homeGoals": 6,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Fiorentina",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Torino",
+            "abbreviation": ""
+          },
+          "date": "2021-08-28T20:45:00",
+          "homeGoals": 2,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Juventus",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Empoli",
+            "abbreviation": ""
+          },
+          "date": "2021-08-28T20:45:00",
+          "homeGoals": 0,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Genoa",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Napoli",
+            "abbreviation": ""
+          },
+          "date": "2021-08-29T18:30:00",
+          "homeGoals": 1,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Sassuolo",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Sampdoria",
+            "abbreviation": ""
+          },
+          "date": "2021-08-29T18:30:00",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Milan",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Cagliari",
+            "abbreviation": ""
+          },
+          "date": "2021-08-29T20:45:00",
+          "homeGoals": 4,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Salernitana",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Roma",
+            "abbreviation": ""
+          },
+          "date": "2021-08-29T20:45:00",
+          "homeGoals": 0,
+          "awayGoals": 4,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 10,
+      "serieADay": 3,
+      "games": [
+        {
+          "home": {
+            "name": "Empoli",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Venezia",
+            "abbreviation": ""
+          },
+          "date": "2021-09-11T15:00:00",
+          "homeGoals": 1,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Napoli",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Juventus",
+            "abbreviation": ""
+          },
+          "date": "2021-09-11T18:00:00",
+          "homeGoals": 2,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Atalanta",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Fiorentina",
+            "abbreviation": ""
+          },
+          "date": "2021-09-11T20:45:00",
+          "homeGoals": 1,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Sampdoria",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Inter",
+            "abbreviation": ""
+          },
+          "date": "2021-09-12T12:30:00",
+          "homeGoals": 2,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Cagliari",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Genoa",
+            "abbreviation": ""
+          },
+          "date": "2021-09-12T15:00:00",
+          "homeGoals": 2,
+          "awayGoals": 3,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Torino",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Salernitana",
+            "abbreviation": ""
+          },
+          "date": "2021-09-12T15:00:00",
+          "homeGoals": 4,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Spezia",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Udinese",
+            "abbreviation": ""
+          },
+          "date": "2021-09-12T15:00:00",
+          "homeGoals": 0,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Milan",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Lazio",
+            "abbreviation": ""
+          },
+          "date": "2021-09-12T18:00:00",
+          "homeGoals": 2,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Roma",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Sassuolo",
+            "abbreviation": ""
+          },
+          "date": "2021-09-12T20:45:00",
+          "homeGoals": 2,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Bologna",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Verona",
+            "abbreviation": ""
+          },
+          "date": "2021-09-13T20:45:00",
+          "homeGoals": 1,
+          "awayGoals": 0,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 10,
+      "serieADay": 4,
+      "games": [
+        {
+          "home": {
+            "name": "Sassuolo",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Torino",
+            "abbreviation": ""
+          },
+          "date": "2021-09-17T20:45:00",
+          "homeGoals": 0,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Genoa",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Fiorentina",
+            "abbreviation": ""
+          },
+          "date": "2021-09-18T15:00:00",
+          "homeGoals": 1,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Inter",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Bologna",
+            "abbreviation": ""
+          },
+          "date": "2021-09-18T18:00:00",
+          "homeGoals": 6,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Salernitana",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Atalanta",
+            "abbreviation": ""
+          },
+          "date": "2021-09-18T20:45:00",
+          "homeGoals": 0,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Empoli",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Sampdoria",
+            "abbreviation": ""
+          },
+          "date": "2021-09-19T12:30:00",
+          "homeGoals": 0,
+          "awayGoals": 3,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Venezia",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Spezia",
+            "abbreviation": ""
+          },
+          "date": "2021-09-19T15:00:00",
+          "homeGoals": 1,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Verona",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Roma",
+            "abbreviation": ""
+          },
+          "date": "2021-09-19T18:00:00",
+          "homeGoals": 3,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Lazio",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Cagliari",
+            "abbreviation": ""
+          },
+          "date": "2021-09-19T18:00:00",
+          "homeGoals": 2,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Juventus",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Milan",
+            "abbreviation": ""
+          },
+          "date": "2021-09-19T20:45:00",
+          "homeGoals": 1,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Udinese",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Napoli",
+            "abbreviation": ""
+          },
+          "date": "2021-09-20T20:45:00",
+          "homeGoals": 0,
+          "awayGoals": 4,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 10,
+      "serieADay": 5,
+      "games": [
+        {
+          "home": {
+            "name": "Bologna",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Genoa",
+            "abbreviation": ""
+          },
+          "date": "2021-09-21T18:30:00",
+          "homeGoals": 2,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Fiorentina",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Inter",
+            "abbreviation": ""
+          },
+          "date": "2021-09-21T20:45:00",
+          "homeGoals": 1,
+          "awayGoals": 3,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Atalanta",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Sassuolo",
+            "abbreviation": ""
+          },
+          "date": "2021-09-21T20:45:00",
+          "homeGoals": 2,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Spezia",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Juventus",
+            "abbreviation": ""
+          },
+          "date": "2021-09-22T18:30:00",
+          "homeGoals": 2,
+          "awayGoals": 3,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Salernitana",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Verona",
+            "abbreviation": ""
+          },
+          "date": "2021-09-22T18:30:00",
+          "homeGoals": 2,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Milan",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Venezia",
+            "abbreviation": ""
+          },
+          "date": "2021-09-22T20:45:00",
+          "homeGoals": 2,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Cagliari",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Empoli",
+            "abbreviation": ""
+          },
+          "date": "2021-09-22T20:45:00",
+          "homeGoals": 0,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Torino",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Lazio",
+            "abbreviation": ""
+          },
+          "date": "2021-09-23T18:30:00",
+          "homeGoals": 1,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Sampdoria",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Napoli",
+            "abbreviation": ""
+          },
+          "date": "2021-09-23T18:30:00",
+          "homeGoals": 0,
+          "awayGoals": 4,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Roma",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Udinese",
+            "abbreviation": ""
+          },
+          "date": "2021-09-23T20:45:00",
+          "homeGoals": 1,
+          "awayGoals": 0,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 10,
+      "serieADay": 6,
+      "games": [
+        {
+          "home": {
+            "name": "Spezia",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Milan",
+            "abbreviation": ""
+          },
+          "date": "2021-09-25T15:00:00",
+          "homeGoals": 1,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Inter",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Atalanta",
+            "abbreviation": ""
+          },
+          "date": "2021-09-25T18:00:00",
+          "homeGoals": 2,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Genoa",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Verona",
+            "abbreviation": ""
+          },
+          "date": "2021-09-25T20:45:00",
+          "homeGoals": 3,
+          "awayGoals": 3,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Juventus",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Sampdoria",
+            "abbreviation": ""
+          },
+          "date": "2021-09-26T12:30:00",
+          "homeGoals": 3,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Empoli",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Bologna",
+            "abbreviation": ""
+          },
+          "date": "2021-09-26T15:00:00",
+          "homeGoals": 4,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Sassuolo",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Salernitana",
+            "abbreviation": ""
+          },
+          "date": "2021-09-26T15:00:00",
+          "homeGoals": 1,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Udinese",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Fiorentina",
+            "abbreviation": ""
+          },
+          "date": "2021-09-26T15:00:00",
+          "homeGoals": 0,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Lazio",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Roma",
+            "abbreviation": ""
+          },
+          "date": "2021-09-26T18:00:00",
+          "homeGoals": 3,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Napoli",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Cagliari",
+            "abbreviation": ""
+          },
+          "date": "2021-09-26T20:45:00",
+          "homeGoals": 2,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Venezia",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Torino",
+            "abbreviation": ""
+          },
+          "date": "2021-09-27T20:45:00",
+          "homeGoals": 1,
+          "awayGoals": 1,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 10,
+      "serieADay": 7,
+      "games": [
+        {
+          "home": {
+            "name": "Cagliari",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Venezia",
+            "abbreviation": ""
+          },
+          "date": "2021-10-01T20:45:00",
+          "homeGoals": 1,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Salernitana",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Genoa",
+            "abbreviation": ""
+          },
+          "date": "2021-10-02T15:00:00",
+          "homeGoals": 1,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Torino",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Juventus",
+            "abbreviation": ""
+          },
+          "date": "2021-10-02T18:00:00",
+          "homeGoals": 0,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Sassuolo",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Inter",
+            "abbreviation": ""
+          },
+          "date": "2021-10-02T20:45:00",
+          "homeGoals": 1,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Bologna",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Lazio",
+            "abbreviation": ""
+          },
+          "date": "2021-10-03T12:30:00",
+          "homeGoals": 3,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Verona",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Spezia",
+            "abbreviation": ""
+          },
+          "date": "2021-10-03T15:00:00",
+          "homeGoals": 4,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Sampdoria",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Udinese",
+            "abbreviation": ""
+          },
+          "date": "2021-10-03T15:00:00",
+          "homeGoals": 3,
+          "awayGoals": 3,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Fiorentina",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Napoli",
+            "abbreviation": ""
+          },
+          "date": "2021-10-03T18:00:00",
+          "homeGoals": 1,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Roma",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Empoli",
+            "abbreviation": ""
+          },
+          "date": "2021-10-03T18:00:00",
+          "homeGoals": 2,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Atalanta",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Milan",
+            "abbreviation": ""
+          },
+          "date": "2021-10-03T20:45:00",
+          "homeGoals": 2,
+          "awayGoals": 3,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 10,
+      "serieADay": 8,
+      "games": [
+        {
+          "home": {
+            "name": "Spezia",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Salernitana",
+            "abbreviation": ""
+          },
+          "date": "2021-10-16T15:00:00",
+          "homeGoals": 2,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Lazio",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Inter",
+            "abbreviation": ""
+          },
+          "date": "2021-10-16T18:00:00",
+          "homeGoals": 3,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Milan",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Verona",
+            "abbreviation": ""
+          },
+          "date": "2021-10-16T20:45:00",
+          "homeGoals": 3,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Cagliari",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Sampdoria",
+            "abbreviation": ""
+          },
+          "date": "2021-10-17T12:30:00",
+          "homeGoals": 3,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Genoa",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Sassuolo",
+            "abbreviation": ""
+          },
+          "date": "2021-10-17T15:00:00",
+          "homeGoals": 2,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Empoli",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Atalanta",
+            "abbreviation": ""
+          },
+          "date": "2021-10-17T15:00:00",
+          "homeGoals": 1,
+          "awayGoals": 4,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Udinese",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Bologna",
+            "abbreviation": ""
+          },
+          "date": "2021-10-17T15:00:00",
+          "homeGoals": 1,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Napoli",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Torino",
+            "abbreviation": ""
+          },
+          "date": "2021-10-17T18:00:00",
+          "homeGoals": 1,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Juventus",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Roma",
+            "abbreviation": ""
+          },
+          "date": "2021-10-17T20:45:00",
+          "homeGoals": 1,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Venezia",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Fiorentina",
+            "abbreviation": ""
+          },
+          "date": "2021-10-18T20:45:00",
+          "homeGoals": 1,
+          "awayGoals": 0,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 10,
+      "serieADay": 9,
+      "games": [
+        {
+          "home": {
+            "name": "Torino",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Genoa",
+            "abbreviation": ""
+          },
+          "date": "2021-10-22T18:30:00",
+          "homeGoals": 3,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Sampdoria",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Spezia",
+            "abbreviation": ""
+          },
+          "date": "2021-10-22T20:45:00",
+          "homeGoals": 2,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Salernitana",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Empoli",
+            "abbreviation": ""
+          },
+          "date": "2021-10-23T15:00:00",
+          "homeGoals": 2,
+          "awayGoals": 4,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Sassuolo",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Venezia",
+            "abbreviation": ""
+          },
+          "date": "2021-10-23T18:00:00",
+          "homeGoals": 3,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Bologna",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Milan",
+            "abbreviation": ""
+          },
+          "date": "2021-10-23T20:45:00",
+          "homeGoals": 2,
+          "awayGoals": 4,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Atalanta",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Udinese",
+            "abbreviation": ""
+          },
+          "date": "2021-10-24T12:30:00",
+          "homeGoals": 1,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Fiorentina",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Cagliari",
+            "abbreviation": ""
+          },
+          "date": "2021-10-24T15:00:00",
+          "homeGoals": 3,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Verona",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Lazio",
+            "abbreviation": ""
+          },
+          "date": "2021-10-24T15:00:00",
+          "homeGoals": 4,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Roma",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Napoli",
+            "abbreviation": ""
+          },
+          "date": "2021-10-24T18:00:00",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Inter",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Juventus",
+            "abbreviation": ""
+          },
+          "date": "2021-10-24T20:45:00",
+          "homeGoals": 1,
+          "awayGoals": 1,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 10,
+      "serieADay": 10,
+      "games": [
+        {
+          "home": {
+            "name": "Venezia",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Salernitana",
+            "abbreviation": ""
+          },
+          "date": "2021-10-26T18:30:00",
+          "homeGoals": 1,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Spezia",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Genoa",
+            "abbreviation": ""
+          },
+          "date": "2021-10-26T18:30:00",
+          "homeGoals": 1,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Milan",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Torino",
+            "abbreviation": ""
+          },
+          "date": "2021-10-26T20:45:00",
+          "homeGoals": 1,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Juventus",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Sassuolo",
+            "abbreviation": ""
+          },
+          "date": "2021-10-27T18:30:00",
+          "homeGoals": 1,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Sampdoria",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Atalanta",
+            "abbreviation": ""
+          },
+          "date": "2021-10-27T18:30:00",
+          "homeGoals": 1,
+          "awayGoals": 3,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Udinese",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Verona",
+            "abbreviation": ""
+          },
+          "date": "2021-10-27T18:30:00",
+          "homeGoals": 1,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Cagliari",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Roma",
+            "abbreviation": ""
+          },
+          "date": "2021-10-27T20:45:00",
+          "homeGoals": 1,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Empoli",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Inter",
+            "abbreviation": ""
+          },
+          "date": "2021-10-27T20:45:00",
+          "homeGoals": 0,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Lazio",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Fiorentina",
+            "abbreviation": ""
+          },
+          "date": "2021-10-27T20:45:00",
+          "homeGoals": 1,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Napoli",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Bologna",
+            "abbreviation": ""
+          },
+          "date": "2021-10-28T20:45:00",
+          "homeGoals": 3,
+          "awayGoals": 0,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 10,
+      "serieADay": 11,
+      "games": [
+        {
+          "home": {
+            "name": "Atalanta",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Lazio",
+            "abbreviation": ""
+          },
+          "date": "2021-10-30T15:00:00",
+          "homeGoals": 2,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Verona",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Juventus",
+            "abbreviation": ""
+          },
+          "date": "2021-10-30T18:00:00",
+          "homeGoals": 2,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Torino",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Sampdoria",
+            "abbreviation": ""
+          },
+          "date": "2021-10-30T20:45:00",
+          "homeGoals": 3,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Inter",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Udinese",
+            "abbreviation": ""
+          },
+          "date": "2021-10-31T12:30:00",
+          "homeGoals": 2,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Fiorentina",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Spezia",
+            "abbreviation": ""
+          },
+          "date": "2021-10-31T15:00:00",
+          "homeGoals": 3,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Genoa",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Venezia",
+            "abbreviation": ""
+          },
+          "date": "2021-10-31T15:00:00",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Sassuolo",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Empoli",
+            "abbreviation": ""
+          },
+          "date": "2021-10-31T15:00:00",
+          "homeGoals": 1,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Salernitana",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Napoli",
+            "abbreviation": ""
+          },
+          "date": "2021-10-31T18:00:00",
+          "homeGoals": 0,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Roma",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Milan",
+            "abbreviation": ""
+          },
+          "date": "2021-10-31T20:45:00",
+          "homeGoals": 1,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Bologna",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Cagliari",
+            "abbreviation": ""
+          },
+          "date": "2021-11-01T20:45:00",
+          "homeGoals": 2,
+          "awayGoals": 0,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 10,
+      "serieADay": 12,
+      "games": [
+        {
+          "home": {
+            "name": "Empoli",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Genoa",
+            "abbreviation": ""
+          },
+          "date": "2021-11-05T20:45:00",
+          "homeGoals": 2,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Spezia",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Torino",
+            "abbreviation": ""
+          },
+          "date": "2021-11-06T15:00:00",
+          "homeGoals": 1,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Juventus",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Fiorentina",
+            "abbreviation": ""
+          },
+          "date": "2021-11-06T18:00:00",
+          "homeGoals": 1,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Cagliari",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Atalanta",
+            "abbreviation": ""
+          },
+          "date": "2021-11-06T20:45:00",
+          "homeGoals": 1,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Venezia",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Roma",
+            "abbreviation": ""
+          },
+          "date": "2021-11-07T12:30:00",
+          "homeGoals": 3,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Sampdoria",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Bologna",
+            "abbreviation": ""
+          },
+          "date": "2021-11-07T15:00:00",
+          "homeGoals": 1,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Udinese",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Sassuolo",
+            "abbreviation": ""
+          },
+          "date": "2021-11-07T15:00:00",
+          "homeGoals": 3,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Lazio",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Salernitana",
+            "abbreviation": ""
+          },
+          "date": "2021-11-07T18:00:00",
+          "homeGoals": 3,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Napoli",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Verona",
+            "abbreviation": ""
+          },
+          "date": "2021-11-07T18:00:00",
+          "homeGoals": 1,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Milan",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Inter",
+            "abbreviation": ""
+          },
+          "date": "2021-11-07T20:45:00",
+          "homeGoals": 1,
+          "awayGoals": 1,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 10,
+      "serieADay": 13,
+      "games": [
+        {
+          "home": {
+            "name": "Atalanta",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Spezia",
+            "abbreviation": ""
+          },
+          "date": "2021-11-20T15:00:00",
+          "homeGoals": 5,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Lazio",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Juventus",
+            "abbreviation": ""
+          },
+          "date": "2021-11-20T18:00:00",
+          "homeGoals": 0,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Fiorentina",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Milan",
+            "abbreviation": ""
+          },
+          "date": "2021-11-20T20:45:00",
+          "homeGoals": 4,
+          "awayGoals": 3,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Sassuolo",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Cagliari",
+            "abbreviation": ""
+          },
+          "date": "2021-11-21T12:30:00",
+          "homeGoals": 2,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Bologna",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Venezia",
+            "abbreviation": ""
+          },
+          "date": "2021-11-21T15:00:00",
+          "homeGoals": 0,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Salernitana",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Sampdoria",
+            "abbreviation": ""
+          },
+          "date": "2021-11-21T15:00:00",
+          "homeGoals": 0,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Inter",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Napoli",
+            "abbreviation": ""
+          },
+          "date": "2021-11-21T18:00:00",
+          "homeGoals": 3,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Genoa",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Roma",
+            "abbreviation": ""
+          },
+          "date": "2021-11-21T20:45:00",
+          "homeGoals": 0,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Verona",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Empoli",
+            "abbreviation": ""
+          },
+          "date": "2021-11-22T18:30:00",
+          "homeGoals": 2,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Torino",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Udinese",
+            "abbreviation": ""
+          },
+          "date": "2021-11-22T20:45:00",
+          "homeGoals": 2,
+          "awayGoals": 1,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 10,
+      "serieADay": 14,
+      "games": [
+        {
+          "home": {
+            "name": "Cagliari",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Salernitana",
+            "abbreviation": ""
+          },
+          "date": "2021-11-26T20:45:00",
+          "homeGoals": 1,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Empoli",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Fiorentina",
+            "abbreviation": ""
+          },
+          "date": "2021-11-27T15:00:00",
+          "homeGoals": 2,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Sampdoria",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Verona",
+            "abbreviation": ""
+          },
+          "date": "2021-11-27T15:00:00",
+          "homeGoals": 3,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Juventus",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Atalanta",
+            "abbreviation": ""
+          },
+          "date": "2021-11-27T18:00:00",
+          "homeGoals": 0,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Venezia",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Inter",
+            "abbreviation": ""
+          },
+          "date": "2021-11-27T20:45:00",
+          "homeGoals": 0,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Udinese",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Genoa",
+            "abbreviation": ""
+          },
+          "date": "2021-11-28T12:30:00",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Milan",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Sassuolo",
+            "abbreviation": ""
+          },
+          "date": "2021-11-28T15:00:00",
+          "homeGoals": 1,
+          "awayGoals": 3,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Spezia",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Bologna",
+            "abbreviation": ""
+          },
+          "date": "2021-11-28T15:00:00",
+          "homeGoals": 0,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Roma",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Torino",
+            "abbreviation": ""
+          },
+          "date": "2021-11-28T18:00:00",
+          "homeGoals": 1,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Napoli",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Lazio",
+            "abbreviation": ""
+          },
+          "date": "2021-11-28T20:45:00",
+          "homeGoals": 4,
+          "awayGoals": 0,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 10,
+      "serieADay": 15,
+      "games": [
+        {
+          "home": {
+            "name": "Fiorentina",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Sampdoria",
+            "abbreviation": ""
+          },
+          "date": "2021-11-30T18:30:00",
+          "homeGoals": 3,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Atalanta",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Venezia",
+            "abbreviation": ""
+          },
+          "date": "2021-11-30T18:30:00",
+          "homeGoals": 4,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Verona",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Cagliari",
+            "abbreviation": ""
+          },
+          "date": "2021-11-30T20:45:00",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Salernitana",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Juventus",
+            "abbreviation": ""
+          },
+          "date": "2021-11-30T20:45:00",
+          "homeGoals": 0,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Bologna",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Roma",
+            "abbreviation": ""
+          },
+          "date": "2021-12-01T18:30:00",
+          "homeGoals": 1,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Inter",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Spezia",
+            "abbreviation": ""
+          },
+          "date": "2021-12-01T18:30:00",
+          "homeGoals": 2,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Genoa",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Milan",
+            "abbreviation": ""
+          },
+          "date": "2021-12-01T20:45:00",
+          "homeGoals": 0,
+          "awayGoals": 3,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Sassuolo",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Napoli",
+            "abbreviation": ""
+          },
+          "date": "2021-12-01T20:45:00",
+          "homeGoals": 2,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Torino",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Empoli",
+            "abbreviation": ""
+          },
+          "date": "2021-12-02T18:30:00",
+          "homeGoals": 2,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Lazio",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Udinese",
+            "abbreviation": ""
+          },
+          "date": "2021-12-02T20:45:00",
+          "homeGoals": 4,
+          "awayGoals": 4,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 10,
+      "serieADay": 16,
+      "games": [
+        {
+          "home": {
+            "name": "Milan",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Salernitana",
+            "abbreviation": ""
+          },
+          "date": "2021-12-04T15:00:00",
+          "homeGoals": 2,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Roma",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Inter",
+            "abbreviation": ""
+          },
+          "date": "2021-12-04T18:00:00",
+          "homeGoals": 0,
+          "awayGoals": 3,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Napoli",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Atalanta",
+            "abbreviation": ""
+          },
+          "date": "2021-12-04T20:45:00",
+          "homeGoals": 2,
+          "awayGoals": 3,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Bologna",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Fiorentina",
+            "abbreviation": ""
+          },
+          "date": "2021-12-05T12:30:00",
+          "homeGoals": 2,
+          "awayGoals": 3,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Venezia",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Verona",
+            "abbreviation": ""
+          },
+          "date": "2021-12-05T15:00:00",
+          "homeGoals": 3,
+          "awayGoals": 4,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Spezia",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Sassuolo",
+            "abbreviation": ""
+          },
+          "date": "2021-12-05T15:00:00",
+          "homeGoals": 2,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Sampdoria",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Lazio",
+            "abbreviation": ""
+          },
+          "date": "2021-12-05T18:00:00",
+          "homeGoals": 1,
+          "awayGoals": 3,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Juventus",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Genoa",
+            "abbreviation": ""
+          },
+          "date": "2021-12-05T20:45:00",
+          "homeGoals": 2,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Empoli",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Udinese",
+            "abbreviation": ""
+          },
+          "date": "2021-12-06T18:30:00",
+          "homeGoals": 3,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Cagliari",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Torino",
+            "abbreviation": ""
+          },
+          "date": "2021-12-06T20:45:00",
+          "homeGoals": 1,
+          "awayGoals": 1,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 10,
+      "serieADay": 17,
+      "games": [
+        {
+          "home": {
+            "name": "Genoa",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Sampdoria",
+            "abbreviation": ""
+          },
+          "date": "2021-12-10T20:45:00",
+          "homeGoals": 1,
+          "awayGoals": 3,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Fiorentina",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Salernitana",
+            "abbreviation": ""
+          },
+          "date": "2021-12-11T15:00:00",
+          "homeGoals": 4,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Venezia",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Juventus",
+            "abbreviation": ""
+          },
+          "date": "2021-12-11T18:00:00",
+          "homeGoals": 1,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Udinese",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Milan",
+            "abbreviation": ""
+          },
+          "date": "2021-12-11T20:45:00",
+          "homeGoals": 1,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Torino",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Bologna",
+            "abbreviation": ""
+          },
+          "date": "2021-12-12T12:30:00",
+          "homeGoals": 2,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Verona",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Atalanta",
+            "abbreviation": ""
+          },
+          "date": "2021-12-12T15:00:00",
+          "homeGoals": 1,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Sassuolo",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Lazio",
+            "abbreviation": ""
+          },
+          "date": "2021-12-12T18:00:00",
+          "homeGoals": 2,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Napoli",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Empoli",
+            "abbreviation": ""
+          },
+          "date": "2021-12-12T18:00:00",
+          "homeGoals": 0,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Inter",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Cagliari",
+            "abbreviation": ""
+          },
+          "date": "2021-12-12T20:45:00",
+          "homeGoals": 4,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Roma",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Spezia",
+            "abbreviation": ""
+          },
+          "date": "2021-12-13T20:45:00",
+          "homeGoals": 2,
+          "awayGoals": 0,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 10,
+      "serieADay": 18,
+      "games": [
+        {
+          "home": {
+            "name": "Lazio",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Genoa",
+            "abbreviation": ""
+          },
+          "date": "2021-12-17T18:30:00",
+          "homeGoals": 3,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Salernitana",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Inter",
+            "abbreviation": ""
+          },
+          "date": "2021-12-17T20:45:00",
+          "homeGoals": 0,
+          "awayGoals": 5,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Atalanta",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Roma",
+            "abbreviation": ""
+          },
+          "date": "2021-12-18T15:00:00",
+          "homeGoals": 1,
+          "awayGoals": 4,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Bologna",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Juventus",
+            "abbreviation": ""
+          },
+          "date": "2021-12-18T18:00:00",
+          "homeGoals": 0,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Cagliari",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Udinese",
+            "abbreviation": ""
+          },
+          "date": "2021-12-18T20:45:00",
+          "homeGoals": 0,
+          "awayGoals": 4,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Fiorentina",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Sassuolo",
+            "abbreviation": ""
+          },
+          "date": "2021-12-19T12:30:00",
+          "homeGoals": 2,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Spezia",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Empoli",
+            "abbreviation": ""
+          },
+          "date": "2021-12-19T15:00:00",
+          "homeGoals": 1,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Torino",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Verona",
+            "abbreviation": ""
+          },
+          "date": "2021-12-19T18:00:00",
+          "homeGoals": 1,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Sampdoria",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Venezia",
+            "abbreviation": ""
+          },
+          "date": "2021-12-19T18:00:00",
+          "homeGoals": 1,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Milan",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Napoli",
+            "abbreviation": ""
+          },
+          "date": "2021-12-19T20:45:00",
+          "homeGoals": 0,
+          "awayGoals": 1,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 10,
+      "serieADay": 19,
+      "games": [
+        {
+          "home": {
+            "name": "Udinese",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Salernitana",
+            "abbreviation": ""
+          },
+          "date": "2022-04-20T00:00:00",
+          "homeGoals": 0,
+          "awayGoals": 1,
+          "delayed": true
+        },
+        {
+          "home": {
+            "name": "Genoa",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Atalanta",
+            "abbreviation": ""
+          },
+          "date": "2021-12-21T20:45:00",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Juventus",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Cagliari",
+            "abbreviation": ""
+          },
+          "date": "2021-12-21T20:45:00",
+          "homeGoals": 2,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Venezia",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Lazio",
+            "abbreviation": ""
+          },
+          "date": "2021-12-22T16:30:00",
+          "homeGoals": 1,
+          "awayGoals": 3,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Sassuolo",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Bologna",
+            "abbreviation": ""
+          },
+          "date": "2021-12-22T16:30:00",
+          "homeGoals": 0,
+          "awayGoals": 3,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Roma",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Sampdoria",
+            "abbreviation": ""
+          },
+          "date": "2021-12-22T18:30:00",
+          "homeGoals": 1,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Verona",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Fiorentina",
+            "abbreviation": ""
+          },
+          "date": "2021-12-22T18:30:00",
+          "homeGoals": 1,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Inter",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Torino",
+            "abbreviation": ""
+          },
+          "date": "2021-12-22T18:30:00",
+          "homeGoals": 1,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Empoli",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Milan",
+            "abbreviation": ""
+          },
+          "date": "2021-12-22T20:45:00",
+          "homeGoals": 2,
+          "awayGoals": 4,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Napoli",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Spezia",
+            "abbreviation": ""
+          },
+          "date": "2021-12-22T20:45:00",
+          "homeGoals": 0,
+          "awayGoals": 1,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 10,
+      "serieADay": 20,
+      "games": [
+        {
+          "home": {
+            "name": "Fiorentina",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Udinese",
+            "abbreviation": ""
+          },
+          "date": "2022-04-27T00:00:00",
+          "homeGoals": 0,
+          "awayGoals": 4,
+          "delayed": true
+        },
+        {
+          "home": {
+            "name": "Milan",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Roma",
+            "abbreviation": ""
+          },
+          "date": "2022-01-06T00:00:00",
+          "homeGoals": 3,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Atalanta",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Torino",
+            "abbreviation": ""
+          },
+          "date": "2022-04-27T00:00:00",
+          "homeGoals": 4,
+          "awayGoals": 4,
+          "delayed": true
+        },
+        {
+          "home": {
+            "name": "Bologna",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Inter",
+            "abbreviation": ""
+          },
+          "date": "2022-04-27T00:00:00",
+          "homeGoals": 2,
+          "awayGoals": 1,
+          "delayed": true
+        },
+        {
+          "home": {
+            "name": "Juventus",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Napoli",
+            "abbreviation": ""
+          },
+          "date": "2022-01-06T00:00:00",
+          "homeGoals": 1,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Lazio",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Empoli",
+            "abbreviation": ""
+          },
+          "date": "2022-01-06T00:00:00",
+          "homeGoals": 3,
+          "awayGoals": 3,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Sampdoria",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Cagliari",
+            "abbreviation": ""
+          },
+          "date": "2022-01-06T00:00:00",
+          "homeGoals": 1,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Sassuolo",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Genoa",
+            "abbreviation": ""
+          },
+          "date": "2022-01-06T00:00:00",
+          "homeGoals": 1,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Spezia",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Verona",
+            "abbreviation": ""
+          },
+          "date": "2022-01-06T00:00:00",
+          "homeGoals": 1,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Salernitana",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Venezia",
+            "abbreviation": ""
+          },
+          "date": "2022-05-05T00:00:00",
+          "homeGoals": 2,
+          "awayGoals": 1,
+          "delayed": true
+        }
+      ]
+    },
+    {
+      "year": 10,
+      "serieADay": 21,
+      "games": [
+        {
+          "home": {
+            "name": "Roma",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Juventus",
+            "abbreviation": ""
+          },
+          "date": "2022-01-09T18:30:00",
+          "homeGoals": 3,
+          "awayGoals": 4,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Cagliari",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Bologna",
+            "abbreviation": ""
+          },
+          "date": "2022-01-11T20:45:00",
+          "homeGoals": 2,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Genoa",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Spezia",
+            "abbreviation": ""
+          },
+          "date": "2022-01-09T18:30:00",
+          "homeGoals": 0,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Empoli",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Sassuolo",
+            "abbreviation": ""
+          },
+          "date": "2022-01-09T14:30:00",
+          "homeGoals": 1,
+          "awayGoals": 5,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Torino",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Fiorentina",
+            "abbreviation": ""
+          },
+          "date": "2022-01-10T17:00:00",
+          "homeGoals": 4,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Venezia",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Milan",
+            "abbreviation": ""
+          },
+          "date": "2022-01-09T12:30:00",
+          "homeGoals": 0,
+          "awayGoals": 3,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Verona",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Salernitana",
+            "abbreviation": ""
+          },
+          "date": "2022-01-09T20:45:00",
+          "homeGoals": 1,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Inter",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Lazio",
+            "abbreviation": ""
+          },
+          "date": "2022-01-09T20:45:00",
+          "homeGoals": 2,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Napoli",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Sampdoria",
+            "abbreviation": ""
+          },
+          "date": "2022-01-09T16:30:00",
+          "homeGoals": 1,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Udinese",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Atalanta",
+            "abbreviation": ""
+          },
+          "date": "2022-01-09T16:30:00",
+          "homeGoals": 2,
+          "awayGoals": 6,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 10,
+      "serieADay": 22,
+      "games": [
+        {
+          "home": {
+            "name": "Fiorentina",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Genoa",
+            "abbreviation": ""
+          },
+          "date": "2022-01-17T20:45:00",
+          "homeGoals": 6,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Milan",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Spezia",
+            "abbreviation": ""
+          },
+          "date": "2022-01-17T18:30:00",
+          "homeGoals": 1,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Roma",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Cagliari",
+            "abbreviation": ""
+          },
+          "date": "2022-01-16T18:00:00",
+          "homeGoals": 1,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Atalanta",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Inter",
+            "abbreviation": ""
+          },
+          "date": "2022-01-16T20:45:00",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Bologna",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Napoli",
+            "abbreviation": ""
+          },
+          "date": "2022-01-17T18:30:00",
+          "homeGoals": 0,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Venezia",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Empoli",
+            "abbreviation": ""
+          },
+          "date": "2022-01-16T15:00:00",
+          "homeGoals": 1,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Juventus",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Udinese",
+            "abbreviation": ""
+          },
+          "date": "2022-01-15T20:45:00",
+          "homeGoals": 2,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Sampdoria",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Torino",
+            "abbreviation": ""
+          },
+          "date": "2022-01-15T15:00:00",
+          "homeGoals": 1,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Sassuolo",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Verona",
+            "abbreviation": ""
+          },
+          "date": "2022-01-16T12:30:00",
+          "homeGoals": 2,
+          "awayGoals": 4,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Salernitana",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Lazio",
+            "abbreviation": ""
+          },
+          "date": "2022-01-15T18:00:00",
+          "homeGoals": 0,
+          "awayGoals": 3,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 10,
+      "serieADay": 23,
+      "games": [
+        {
+          "home": {
+            "name": "Milan",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Juventus",
+            "abbreviation": ""
+          },
+          "date": "2022-01-23T20:45:00",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Cagliari",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Fiorentina",
+            "abbreviation": ""
+          },
+          "date": "2022-01-23T12:30:00",
+          "homeGoals": 1,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Genoa",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Udinese",
+            "abbreviation": ""
+          },
+          "date": "2022-01-22T15:00:00",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Empoli",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Roma",
+            "abbreviation": ""
+          },
+          "date": "2022-01-23T18:00:00",
+          "homeGoals": 2,
+          "awayGoals": 4,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Torino",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Sassuolo",
+            "abbreviation": ""
+          },
+          "date": "2022-01-23T15:00:00",
+          "homeGoals": 1,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Verona",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Bologna",
+            "abbreviation": ""
+          },
+          "date": "2022-01-21T20:45:00",
+          "homeGoals": 2,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Inter",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Venezia",
+            "abbreviation": ""
+          },
+          "date": "2022-01-22T18:00:00",
+          "homeGoals": 2,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Lazio",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Atalanta",
+            "abbreviation": ""
+          },
+          "date": "2022-01-22T20:45:00",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Spezia",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Sampdoria",
+            "abbreviation": ""
+          },
+          "date": "2022-01-23T15:00:00",
+          "homeGoals": 1,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Napoli",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Salernitana",
+            "abbreviation": ""
+          },
+          "date": "2022-01-23T15:00:00",
+          "homeGoals": 4,
+          "awayGoals": 1,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 10,
+      "serieADay": 24,
+      "games": [
+        {
+          "home": {
+            "name": "Fiorentina",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Lazio",
+            "abbreviation": ""
+          },
+          "date": "2022-02-05T20:45:00",
+          "homeGoals": 0,
+          "awayGoals": 3,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Roma",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Genoa",
+            "abbreviation": ""
+          },
+          "date": "2022-02-05T15:00:00",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Atalanta",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Cagliari",
+            "abbreviation": ""
+          },
+          "date": "2022-02-06T12:30:00",
+          "homeGoals": 1,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Bologna",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Empoli",
+            "abbreviation": ""
+          },
+          "date": "2022-02-06T15:00:00",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Venezia",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Napoli",
+            "abbreviation": ""
+          },
+          "date": "2022-02-06T15:00:00",
+          "homeGoals": 0,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Inter",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Milan",
+            "abbreviation": ""
+          },
+          "date": "2022-02-05T18:00:00",
+          "homeGoals": 1,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Juventus",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Verona",
+            "abbreviation": ""
+          },
+          "date": "2022-02-06T20:45:00",
+          "homeGoals": 2,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Sampdoria",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Sassuolo",
+            "abbreviation": ""
+          },
+          "date": "2022-02-06T15:00:00",
+          "homeGoals": 4,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Udinese",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Torino",
+            "abbreviation": ""
+          },
+          "date": "2022-02-06T18:00:00",
+          "homeGoals": 2,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Salernitana",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Spezia",
+            "abbreviation": ""
+          },
+          "date": "2022-02-07T20:45:00",
+          "homeGoals": 2,
+          "awayGoals": 2,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 10,
+      "serieADay": 25,
+      "games": [
+        {
+          "home": {
+            "name": "Milan",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Sampdoria",
+            "abbreviation": ""
+          },
+          "date": "2022-02-13T12:30:00",
+          "homeGoals": 1,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Atalanta",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Juventus",
+            "abbreviation": ""
+          },
+          "date": "2022-02-13T20:45:00",
+          "homeGoals": 1,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Genoa",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Salernitana",
+            "abbreviation": ""
+          },
+          "date": "2022-02-13T15:00:00",
+          "homeGoals": 1,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Empoli",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Cagliari",
+            "abbreviation": ""
+          },
+          "date": "2022-02-13T15:00:00",
+          "homeGoals": 1,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Torino",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Venezia",
+            "abbreviation": ""
+          },
+          "date": "2022-02-12T20:45:00",
+          "homeGoals": 1,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Verona",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Udinese",
+            "abbreviation": ""
+          },
+          "date": "2022-02-13T15:00:00",
+          "homeGoals": 4,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Lazio",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Bologna",
+            "abbreviation": ""
+          },
+          "date": "2022-02-12T15:00:00",
+          "homeGoals": 3,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Sassuolo",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Roma",
+            "abbreviation": ""
+          },
+          "date": "2022-02-13T18:00:00",
+          "homeGoals": 2,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Spezia",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Fiorentina",
+            "abbreviation": ""
+          },
+          "date": "2022-02-14T20:45:00",
+          "homeGoals": 1,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Napoli",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Inter",
+            "abbreviation": ""
+          },
+          "date": "2022-02-12T18:00:00",
+          "homeGoals": 1,
+          "awayGoals": 1,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 10,
+      "serieADay": 26,
+      "games": [
+        {
+          "home": {
+            "name": "Fiorentina",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Atalanta",
+            "abbreviation": ""
+          },
+          "date": "2022-02-20T12:30:00",
+          "homeGoals": 1,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Roma",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Verona",
+            "abbreviation": ""
+          },
+          "date": "2022-02-19T18:00:00",
+          "homeGoals": 2,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Cagliari",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Napoli",
+            "abbreviation": ""
+          },
+          "date": "2022-02-21T19:00:00",
+          "homeGoals": 1,
+          "awayGoals": 1,
+          "delayed": true
+        },
+        {
+          "home": {
+            "name": "Bologna",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Spezia",
+            "abbreviation": ""
+          },
+          "date": "2022-02-21T21:00:00",
+          "homeGoals": 2,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Venezia",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Genoa",
+            "abbreviation": ""
+          },
+          "date": "2022-02-20T15:00:00",
+          "homeGoals": 1,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Inter",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Sassuolo",
+            "abbreviation": ""
+          },
+          "date": "2022-02-20T18:00:00",
+          "homeGoals": 0,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Juventus",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Torino",
+            "abbreviation": ""
+          },
+          "date": "2022-02-18T20:45:00",
+          "homeGoals": 1,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Sampdoria",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Empoli",
+            "abbreviation": ""
+          },
+          "date": "2022-02-19T15:00:00",
+          "homeGoals": 2,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Udinese",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Lazio",
+            "abbreviation": ""
+          },
+          "date": "2022-02-20T20:45:00",
+          "homeGoals": 1,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Salernitana",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Milan",
+            "abbreviation": ""
+          },
+          "date": "2022-02-19T20:45:00",
+          "homeGoals": 2,
+          "awayGoals": 2,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 10,
+      "serieADay": 27,
+      "games": [
+        {
+          "home": {
+            "name": "Milan",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Udinese",
+            "abbreviation": ""
+          },
+          "date": "2022-02-25T18:45:00",
+          "homeGoals": 1,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Atalanta",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Sampdoria",
+            "abbreviation": ""
+          },
+          "date": "2022-02-28T20:50:00",
+          "homeGoals": 4,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Genoa",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Inter",
+            "abbreviation": ""
+          },
+          "date": "2022-02-25T21:05:00",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Empoli",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Juventus",
+            "abbreviation": ""
+          },
+          "date": "2022-02-26T18:05:00",
+          "homeGoals": 2,
+          "awayGoals": 3,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Torino",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Cagliari",
+            "abbreviation": ""
+          },
+          "date": "2022-02-27T12:35:00",
+          "homeGoals": 1,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Verona",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Venezia",
+            "abbreviation": ""
+          },
+          "date": "2022-02-27T15:05:00",
+          "homeGoals": 3,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Lazio",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Napoli",
+            "abbreviation": ""
+          },
+          "date": "2022-02-27T20:50:00",
+          "homeGoals": 1,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Sassuolo",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Fiorentina",
+            "abbreviation": ""
+          },
+          "date": "2022-02-26T20:50:00",
+          "homeGoals": 2,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Spezia",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Roma",
+            "abbreviation": ""
+          },
+          "date": "2022-02-27T18:05:00",
+          "homeGoals": 0,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Salernitana",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Bologna",
+            "abbreviation": ""
+          },
+          "date": "2022-02-26T15:05:00",
+          "homeGoals": 1,
+          "awayGoals": 1,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 10,
+      "serieADay": 28,
+      "games": [
+        {
+          "home": {
+            "name": "Fiorentina",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Verona",
+            "abbreviation": ""
+          },
+          "date": "2022-03-06T15:00:00",
+          "homeGoals": 1,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Roma",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Atalanta",
+            "abbreviation": ""
+          },
+          "date": "2022-03-05T18:00:00",
+          "homeGoals": 1,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Cagliari",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Lazio",
+            "abbreviation": ""
+          },
+          "date": "2022-03-05T20:45:00",
+          "homeGoals": 0,
+          "awayGoals": 3,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Genoa",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Empoli",
+            "abbreviation": ""
+          },
+          "date": "2022-03-06T12:30:00",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Bologna",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Torino",
+            "abbreviation": ""
+          },
+          "date": "2022-03-06T15:00:00",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Venezia",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Sassuolo",
+            "abbreviation": ""
+          },
+          "date": "2022-03-06T15:00:00",
+          "homeGoals": 1,
+          "awayGoals": 4,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Inter",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Salernitana",
+            "abbreviation": ""
+          },
+          "date": "2022-03-04T20:45:00",
+          "homeGoals": 5,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Juventus",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Spezia",
+            "abbreviation": ""
+          },
+          "date": "2022-03-06T18:00:00",
+          "homeGoals": 1,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Napoli",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Milan",
+            "abbreviation": ""
+          },
+          "date": "2022-03-06T20:45:00",
+          "homeGoals": 0,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Udinese",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Sampdoria",
+            "abbreviation": ""
+          },
+          "date": "2022-03-05T15:00:00",
+          "homeGoals": 2,
+          "awayGoals": 1,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 10,
+      "serieADay": 29,
+      "games": [
+        {
+          "home": {
+            "name": "Fiorentina",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Bologna",
+            "abbreviation": ""
+          },
+          "date": "2022-03-13T12:30:00",
+          "homeGoals": 1,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Milan",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Empoli",
+            "abbreviation": ""
+          },
+          "date": "2022-03-12T20:45:00",
+          "homeGoals": 1,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Atalanta",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Genoa",
+            "abbreviation": ""
+          },
+          "date": "2022-03-13T18:00:00",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Torino",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Inter",
+            "abbreviation": ""
+          },
+          "date": "2022-03-13T20:45:00",
+          "homeGoals": 1,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Verona",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Napoli",
+            "abbreviation": ""
+          },
+          "date": "2022-03-13T15:00:00",
+          "homeGoals": 1,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Lazio",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Venezia",
+            "abbreviation": ""
+          },
+          "date": "2022-03-14T20:45:00",
+          "homeGoals": 1,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Sampdoria",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Juventus",
+            "abbreviation": ""
+          },
+          "date": "2022-03-12T18:00:00",
+          "homeGoals": 1,
+          "awayGoals": 3,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Spezia",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Cagliari",
+            "abbreviation": ""
+          },
+          "date": "2022-03-12T15:00:00",
+          "homeGoals": 2,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Udinese",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Roma",
+            "abbreviation": ""
+          },
+          "date": "2022-03-13T18:00:00",
+          "homeGoals": 1,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Salernitana",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Sassuolo",
+            "abbreviation": ""
+          },
+          "date": "2022-03-12T15:00:00",
+          "homeGoals": 2,
+          "awayGoals": 2,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 10,
+      "serieADay": 30,
+      "games": [
+        {
+          "home": {
+            "name": "Roma",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Lazio",
+            "abbreviation": ""
+          },
+          "date": "2022-03-20T18:00:00",
+          "homeGoals": 3,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Cagliari",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Milan",
+            "abbreviation": ""
+          },
+          "date": "2022-03-19T20:45:00",
+          "homeGoals": 0,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Genoa",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Torino",
+            "abbreviation": ""
+          },
+          "date": "2022-03-18T21:00:00",
+          "homeGoals": 1,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Bologna",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Atalanta",
+            "abbreviation": ""
+          },
+          "date": "2022-03-20T20:45:00",
+          "homeGoals": 0,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Empoli",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Verona",
+            "abbreviation": ""
+          },
+          "date": "2022-03-20T15:00:00",
+          "homeGoals": 1,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Venezia",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Sampdoria",
+            "abbreviation": ""
+          },
+          "date": "2022-03-20T12:30:00",
+          "homeGoals": 0,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Inter",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Fiorentina",
+            "abbreviation": ""
+          },
+          "date": "2022-03-19T18:00:00",
+          "homeGoals": 1,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Juventus",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Salernitana",
+            "abbreviation": ""
+          },
+          "date": "2022-03-20T15:00:00",
+          "homeGoals": 2,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Sassuolo",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Spezia",
+            "abbreviation": ""
+          },
+          "date": "2022-03-18T18:45:00",
+          "homeGoals": 4,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Napoli",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Udinese",
+            "abbreviation": ""
+          },
+          "date": "2022-03-19T15:00:00",
+          "homeGoals": 2,
+          "awayGoals": 1,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 10,
+      "serieADay": 31,
+      "games": [
+        {
+          "home": {
+            "name": "Fiorentina",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Empoli",
+            "abbreviation": ""
+          },
+          "date": "2022-04-03T12:30:00",
+          "homeGoals": 1,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Milan",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Bologna",
+            "abbreviation": ""
+          },
+          "date": "2022-04-04T20:45:00",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Atalanta",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Napoli",
+            "abbreviation": ""
+          },
+          "date": "2022-04-03T15:00:00",
+          "homeGoals": 1,
+          "awayGoals": 3,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Verona",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Genoa",
+            "abbreviation": ""
+          },
+          "date": "2022-04-04T18:30:00",
+          "homeGoals": 1,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Juventus",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Inter",
+            "abbreviation": ""
+          },
+          "date": "2022-04-03T20:45:00",
+          "homeGoals": 0,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Lazio",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Sassuolo",
+            "abbreviation": ""
+          },
+          "date": "2022-04-02T18:00:00",
+          "homeGoals": 2,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Sampdoria",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Roma",
+            "abbreviation": ""
+          },
+          "date": "2022-04-03T18:00:00",
+          "homeGoals": 0,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Spezia",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Venezia",
+            "abbreviation": ""
+          },
+          "date": "2022-04-02T15:00:00",
+          "homeGoals": 1,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Udinese",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Cagliari",
+            "abbreviation": ""
+          },
+          "date": "2022-04-03T15:00:00",
+          "homeGoals": 5,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Salernitana",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Torino",
+            "abbreviation": ""
+          },
+          "date": "2022-04-02T20:45:00",
+          "homeGoals": 0,
+          "awayGoals": 1,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 10,
+      "serieADay": 32,
+      "games": [
+        {
+          "home": {
+            "name": "Roma",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Salernitana",
+            "abbreviation": ""
+          },
+          "date": "2022-04-10T18:00:00",
+          "homeGoals": 2,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Cagliari",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Juventus",
+            "abbreviation": ""
+          },
+          "date": "2022-04-09T20:45:00",
+          "homeGoals": 1,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Genoa",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Lazio",
+            "abbreviation": ""
+          },
+          "date": "2022-04-10T12:30:00",
+          "homeGoals": 1,
+          "awayGoals": 4,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Bologna",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Sampdoria",
+            "abbreviation": ""
+          },
+          "date": "2022-04-11T20:45:00",
+          "homeGoals": 2,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Empoli",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Spezia",
+            "abbreviation": ""
+          },
+          "date": "2022-04-09T15:00:00",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Torino",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Milan",
+            "abbreviation": ""
+          },
+          "date": "2022-04-10T20:45:00",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Venezia",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Udinese",
+            "abbreviation": ""
+          },
+          "date": "2022-04-10T15:00:00",
+          "homeGoals": 1,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Inter",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Verona",
+            "abbreviation": ""
+          },
+          "date": "2022-04-09T18:00:00",
+          "homeGoals": 2,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Sassuolo",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Atalanta",
+            "abbreviation": ""
+          },
+          "date": "2022-04-10T15:00:00",
+          "homeGoals": 2,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Napoli",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Fiorentina",
+            "abbreviation": ""
+          },
+          "date": "2022-04-10T15:00:00",
+          "homeGoals": 2,
+          "awayGoals": 3,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 10,
+      "serieADay": 33,
+      "games": [
+        {
+          "home": {
+            "name": "Fiorentina",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Venezia",
+            "abbreviation": ""
+          },
+          "date": "2022-04-16T16:30:00",
+          "homeGoals": 1,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Milan",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Genoa",
+            "abbreviation": ""
+          },
+          "date": "2022-04-15T21:00:00",
+          "homeGoals": 2,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Atalanta",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Verona",
+            "abbreviation": ""
+          },
+          "date": "2022-04-18T21:00:00",
+          "homeGoals": 1,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Cagliari",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Sassuolo",
+            "abbreviation": ""
+          },
+          "date": "2022-04-16T12:30:00",
+          "homeGoals": 1,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Juventus",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Bologna",
+            "abbreviation": ""
+          },
+          "date": "2022-04-16T18:30:00",
+          "homeGoals": 1,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Lazio",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Torino",
+            "abbreviation": ""
+          },
+          "date": "2022-04-16T20:45:00",
+          "homeGoals": 1,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Sampdoria",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Salernitana",
+            "abbreviation": ""
+          },
+          "date": "2022-04-16T14:30:00",
+          "homeGoals": 1,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Spezia",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Inter",
+            "abbreviation": ""
+          },
+          "date": "2022-04-15T19:00:00",
+          "homeGoals": 1,
+          "awayGoals": 3,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Napoli",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Roma",
+            "abbreviation": ""
+          },
+          "date": "2022-04-18T19:00:00",
+          "homeGoals": 1,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Udinese",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Empoli",
+            "abbreviation": ""
+          },
+          "date": "2022-04-16T14:30:00",
+          "homeGoals": 4,
+          "awayGoals": 1,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 10,
+      "serieADay": 34,
+      "games": [
+        {
+          "home": {
+            "name": "Genoa",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Cagliari",
+            "abbreviation": ""
+          },
+          "date": "2022-04-24T18:00:00",
+          "homeGoals": 1,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Bologna",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Udinese",
+            "abbreviation": ""
+          },
+          "date": "2022-04-24T15:00:00",
+          "homeGoals": 2,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Empoli",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Napoli",
+            "abbreviation": ""
+          },
+          "date": "2022-04-24T15:00:00",
+          "homeGoals": 3,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Torino",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Spezia",
+            "abbreviation": ""
+          },
+          "date": "2022-04-23T15:00:00",
+          "homeGoals": 2,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Venezia",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Atalanta",
+            "abbreviation": ""
+          },
+          "date": "2022-04-23T15:00:00",
+          "homeGoals": 1,
+          "awayGoals": 3,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Verona",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Sampdoria",
+            "abbreviation": ""
+          },
+          "date": "2022-04-23T20:45:00",
+          "homeGoals": 1,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Inter",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Roma",
+            "abbreviation": ""
+          },
+          "date": "2022-04-23T18:00:00",
+          "homeGoals": 3,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Lazio",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Milan",
+            "abbreviation": ""
+          },
+          "date": "2022-04-24T20:45:00",
+          "homeGoals": 1,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Sassuolo",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Juventus",
+            "abbreviation": ""
+          },
+          "date": "2022-04-25T20:45:00",
+          "homeGoals": 1,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Salernitana",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Fiorentina",
+            "abbreviation": ""
+          },
+          "date": "2022-04-24T12:30:00",
+          "homeGoals": 2,
+          "awayGoals": 1,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 10,
+      "serieADay": 35,
+      "games": [
+        {
+          "home": {
+            "name": "Milan",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Fiorentina",
+            "abbreviation": ""
+          },
+          "date": "2022-05-01T15:00:00",
+          "homeGoals": 1,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Roma",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Bologna",
+            "abbreviation": ""
+          },
+          "date": "2022-05-01T20:45:00",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Atalanta",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Salernitana",
+            "abbreviation": ""
+          },
+          "date": "2022-05-02T20:45:00",
+          "homeGoals": 1,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Cagliari",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Verona",
+            "abbreviation": ""
+          },
+          "date": "2022-04-30T15:00:00",
+          "homeGoals": 1,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Empoli",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Torino",
+            "abbreviation": ""
+          },
+          "date": "2022-05-01T15:00:00",
+          "homeGoals": 1,
+          "awayGoals": 3,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Juventus",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Venezia",
+            "abbreviation": ""
+          },
+          "date": "2022-05-01T12:30:00",
+          "homeGoals": 2,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Sampdoria",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Genoa",
+            "abbreviation": ""
+          },
+          "date": "2022-04-30T18:00:00",
+          "homeGoals": 1,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Spezia",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Lazio",
+            "abbreviation": ""
+          },
+          "date": "2022-04-30T20:45:00",
+          "homeGoals": 3,
+          "awayGoals": 4,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Napoli",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Sassuolo",
+            "abbreviation": ""
+          },
+          "date": "2022-04-30T15:00:00",
+          "homeGoals": 6,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Udinese",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Inter",
+            "abbreviation": ""
+          },
+          "date": "2022-05-01T18:00:00",
+          "homeGoals": 1,
+          "awayGoals": 2,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 10,
+      "serieADay": 36,
+      "games": [
+        {
+          "home": {
+            "name": "Fiorentina",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Roma",
+            "abbreviation": ""
+          },
+          "date": "2022-05-09T20:45:00",
+          "homeGoals": 2,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Genoa",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Juventus",
+            "abbreviation": ""
+          },
+          "date": "2022-05-06T21:00:00",
+          "homeGoals": 2,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Torino",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Napoli",
+            "abbreviation": ""
+          },
+          "date": "2022-05-07T15:00:00",
+          "homeGoals": 0,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Venezia",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Bologna",
+            "abbreviation": ""
+          },
+          "date": "2022-05-08T15:00:00",
+          "homeGoals": 4,
+          "awayGoals": 3,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Verona",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Milan",
+            "abbreviation": ""
+          },
+          "date": "2022-05-08T20:45:00",
+          "homeGoals": 1,
+          "awayGoals": 3,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Inter",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Empoli",
+            "abbreviation": ""
+          },
+          "date": "2022-05-06T18:45:00",
+          "homeGoals": 4,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Lazio",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Sampdoria",
+            "abbreviation": ""
+          },
+          "date": "2022-05-07T20:45:00",
+          "homeGoals": 2,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Sassuolo",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Udinese",
+            "abbreviation": ""
+          },
+          "date": "2022-05-07T18:00:00",
+          "homeGoals": 1,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Spezia",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Atalanta",
+            "abbreviation": ""
+          },
+          "date": "2022-05-08T12:30:00",
+          "homeGoals": 1,
+          "awayGoals": 3,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Salernitana",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Cagliari",
+            "abbreviation": ""
+          },
+          "date": "2022-05-08T18:00:00",
+          "homeGoals": 1,
+          "awayGoals": 1,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 10,
+      "serieADay": 37,
+      "games": [
+        {
+          "home": {
+            "name": "Milan",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Atalanta",
+            "abbreviation": ""
+          },
+          "date": "2022-05-15T18:00:00",
+          "homeGoals": 2,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Roma",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Venezia",
+            "abbreviation": ""
+          },
+          "date": "2022-05-14T20:45:00",
+          "homeGoals": 1,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Cagliari",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Inter",
+            "abbreviation": ""
+          },
+          "date": "2022-05-15T20:45:00",
+          "homeGoals": 1,
+          "awayGoals": 3,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Bologna",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Sassuolo",
+            "abbreviation": ""
+          },
+          "date": "2022-05-15T12:30:00",
+          "homeGoals": 1,
+          "awayGoals": 3,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Empoli",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Salernitana",
+            "abbreviation": ""
+          },
+          "date": "2022-05-14T15:00:00",
+          "homeGoals": 1,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Verona",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Torino",
+            "abbreviation": ""
+          },
+          "date": "2022-05-14T18:00:00",
+          "homeGoals": 0,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Juventus",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Lazio",
+            "abbreviation": ""
+          },
+          "date": "2022-05-16T20:45:00",
+          "homeGoals": 2,
+          "awayGoals": 2,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Sampdoria",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Fiorentina",
+            "abbreviation": ""
+          },
+          "date": "2022-05-16T18:30:00",
+          "homeGoals": 4,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Napoli",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Genoa",
+            "abbreviation": ""
+          },
+          "date": "2022-05-15T15:00:00",
+          "homeGoals": 3,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Udinese",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Spezia",
+            "abbreviation": ""
+          },
+          "date": "2022-05-14T18:00:00",
+          "homeGoals": 2,
+          "awayGoals": 3,
+          "delayed": false
+        }
+      ]
+    },
+    {
+      "year": 10,
+      "serieADay": 38,
+      "games": [
+        {
+          "home": {
+            "name": "Fiorentina",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Juventus",
+            "abbreviation": ""
+          },
+          "date": "2022-05-21T20:45:00",
+          "homeGoals": 2,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Atalanta",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Empoli",
+            "abbreviation": ""
+          },
+          "date": "2022-05-21T20:45:00",
+          "homeGoals": 0,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Genoa",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Bologna",
+            "abbreviation": ""
+          },
+          "date": "2022-05-21T17:15:00",
+          "homeGoals": 0,
+          "awayGoals": 1,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Torino",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Roma",
+            "abbreviation": ""
+          },
+          "date": "2022-05-20T20:45:00",
+          "homeGoals": 0,
+          "awayGoals": 3,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Venezia",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Cagliari",
+            "abbreviation": ""
+          },
+          "date": "2022-05-22T21:00:00",
+          "homeGoals": 0,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Inter",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Sampdoria",
+            "abbreviation": ""
+          },
+          "date": "2022-05-22T18:00:00",
+          "homeGoals": 3,
+          "awayGoals": 0,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Lazio",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Verona",
+            "abbreviation": ""
+          },
+          "date": "2022-05-21T20:45:00",
+          "homeGoals": 3,
+          "awayGoals": 3,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Sassuolo",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Milan",
+            "abbreviation": ""
+          },
+          "date": "2022-05-22T18:00:00",
+          "homeGoals": 0,
+          "awayGoals": 3,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Spezia",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Napoli",
+            "abbreviation": ""
+          },
+          "date": "2022-05-22T12:30:00",
+          "homeGoals": 0,
+          "awayGoals": 3,
+          "delayed": false
+        },
+        {
+          "home": {
+            "name": "Salernitana",
+            "abbreviation": ""
+          },
+          "away": {
+            "name": "Udinese",
+            "abbreviation": ""
+          },
+          "date": "2022-05-22T21:00:00",
+          "homeGoals": 0,
+          "awayGoals": 4,
+          "delayed": false
+        }
+      ]
+    }
+  ]
+}
