@@ -1,5 +1,6 @@
 export const GROUP_REPOSITORY_RUNTIME_VERSION = 8
-export const GROUP_RUNTIME_ENGINE_REF = `group-runtime-v${GROUP_REPOSITORY_RUNTIME_VERSION}`
+/** Runtime schema/workflow version. Engine code now follows the single supported main branch. */
+export const GROUP_RUNTIME_ENGINE_REF = 'main'
 export const GROUP_GLOBAL_DATA_REF = 'main'
 export const GROUP_RECALCULATION_WORKFLOW_PATH = '.github/workflows/fantazone-group.yml'
 
@@ -79,7 +80,7 @@ export const GROUP_RECALCULATION_WORKFLOW = [
   '          git fetch origin "$GITHUB_REF_NAME"',
   '          git checkout -B "$GITHUB_REF_NAME" "origin/$GITHUB_REF_NAME"',
   '',
-  '      - name: Checkout compatible Fantazone engine',
+  '      - name: Checkout current Fantazone engine',
   '        uses: actions/checkout@v6',
   '        with:',
   '          repository: KeyserDSoze/Fantazone',
