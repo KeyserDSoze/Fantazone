@@ -55,6 +55,8 @@ Before an existing group credential is accepted, the app checks:
 
 `ensureGroupInitialized()` then runs before persistence. If the group runtime must be installed/upgraded, that operation is the real check that the PAT can modify the managed workflow. The credential is not saved as usable until runtime opening and Microsoft membership authorization succeed.
 
+For a fine-grained PAT, canonical JSON reads/writes require repository `Contents: Read and write`. Installing or upgrading Fantazone-managed files under `.github/workflows/` additionally requires repository `Workflows: Read and write`. The real integration suite validates both capabilities against `Fantazone.Test`; a token with Contents write but without Workflows write can mutate league data but deliberately fails runtime bootstrap.
+
 ## Security boundary
 
 This design preserves functional authorization in the app and canonical/concurrency checks in GitHub Actions, but it is not a per-user server-side security boundary. A participant who extracts the shared PAT can call GitHub directly with the permissions granted to that PAT.
