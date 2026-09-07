@@ -11,6 +11,15 @@ export type UserSettings = {
   groups: StoredGroup[]
 }
 
+export type StoredGroupSnapshot = {
+  /** Current display name resolved from the repository root settings.json. */
+  name: string
+  /** Canonical owner/repository returned by GitHub. Defaults to the stored locator. */
+  repository?: string
+  /** Current shared PAT. Omitted to preserve the stored credential. */
+  pat?: string
+}
+
 const SETTINGS_URL = 'https://graph.microsoft.com/v1.0/me/drive/special/approot:/settings.json:/content'
 
 export async function loadUserSettings(graphAccessToken: string): Promise<UserSettings> {
@@ -54,6 +63,38 @@ export function upsertStoredGroup(settings: UserSettings, group: StoredGroup): U
   groups.push(normalized)
   groups.sort((a, b) => a.name.localeCompare(b.name, 'it-IT'))
   return { version: 2, groups }
+}
+
+/**
+ * Reconciles one user's OneDrive catalog copy with the display metadata just read
+ * from the selected group repository. The repository remains the source of truth;
+ * this only dirties the personal catalog when something actually changed.
+ */
+export function reconcileStoredGroup(
+  settings: UserSettings,
+  storedGroup: StoredGroup,
+  snapshot: StoredGroupSnapshot,
+): { settings: UserSettings; changed: boolean } {
+  const current = decodeUserSettings(settings)
+  const existing = current.groups.find(group =>
+    group.id === storedGroup.id || group.repository.toLowerCase() === storedGroup.repository.toLowerCase())
+  const next = normalizeStoredGroup({
+    ...storedGroup,
+    name: snapshot.name,
+    repository: snapshot.repository ?? storedGroup.repository,
+    pat: snapshot.pat === undefined ? storedGroup.pat : snapshot.pat,
+  })
+
+  const changed = !existing ||
+    existing.id !== next.id ||
+    existing.name !== next.name ||
+    existing.repository !== next.repository ||
+    existing.pat !== next.pat
+
+  return {
+    settings: changed ? upsertStoredGroup(current, next) : current,
+    changed,
+  }
 }
 
 export function removeStoredGroup(settings: UserSettings, groupId: string): UserSettings {

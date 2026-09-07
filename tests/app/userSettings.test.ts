@@ -4,6 +4,7 @@ import {
   createStoredGroup,
   decodeUserSettings,
   emptyUserSettings,
+  reconcileStoredGroup,
   removeStoredGroup,
   upsertStoredGroup,
 } from '../../src/app/services/userSettingsOneDrive'
@@ -60,6 +61,41 @@ test('upsert keeps one entry per repository and replaces the credential', () => 
   assert.equal(updated.groups.length, 1)
   assert.equal(updated.groups[0].id, 'new')
   assert.equal(updated.groups[0].pat, 'new-token')
+})
+
+test('reconciles the per-user catalog name from repository display settings without changing the stable id', () => {
+  const original = {
+    version: 2 as const,
+    groups: [{ id: 'amici', name: 'Vecchio nome', repository: 'owner/fantazone-data', pat: 'token-a' }],
+  }
+
+  const reconciled = reconcileStoredGroup(original, original.groups[0], {
+    name: ' Amici del Bar ',
+    repository: 'owner/fantazone-data',
+    pat: ' token-a ',
+  })
+
+  assert.equal(reconciled.changed, true)
+  assert.deepEqual(reconciled.settings.groups, [
+    { id: 'amici', name: 'Amici del Bar', repository: 'owner/fantazone-data', pat: 'token-a' },
+  ])
+  assert.equal(original.groups[0].name, 'Vecchio nome')
+})
+
+test('does not dirty the per-user catalog when the repository snapshot is unchanged', () => {
+  const original = {
+    version: 2 as const,
+    groups: [{ id: 'amici', name: 'Amici del Bar', repository: 'owner/fantazone-data', pat: 'token-a' }],
+  }
+
+  const reconciled = reconcileStoredGroup(original, original.groups[0], {
+    name: 'Amici del Bar',
+    repository: 'owner/fantazone-data',
+    pat: 'token-a',
+  })
+
+  assert.equal(reconciled.changed, false)
+  assert.deepEqual(reconciled.settings, original)
 })
 
 test('removeStoredGroup removes only the requested group without mutating the input', () => {

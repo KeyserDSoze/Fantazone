@@ -34,6 +34,7 @@ import {
   createStoredGroup,
   emptyUserSettings,
   loadUserSettings,
+  reconcileStoredGroup,
   removeStoredGroup,
   saveUserSettings,
   upsertStoredGroup,
@@ -187,7 +188,7 @@ export default function App() {
       await authorizeIdentity(opened, session.identity)
       await saveGroupConnection(connection, credentialOwnerKey(session.identity))
       const next = upsertStoredGroup(settings ?? emptyUserSettings(), createStoredGroup({
-        name: connection.groupName,
+        name: opened.group.name,
         repository: connection.repository.full_name,
         pat: connection.token,
       }))
@@ -222,8 +223,8 @@ export default function App() {
     const current = settings ?? emptyUserSettings()
     const existing = current.groups.find(group => group.repository.toLowerCase() === pendingInvite.repository.toLowerCase())
     const stored = existing
-      ? { ...existing, name: pendingInvite.group, repository: pendingInvite.repository, pat: invitedConnection.token }
-      : createStoredGroup({ name: pendingInvite.group, repository: pendingInvite.repository, pat: invitedConnection.token })
+      ? { ...existing, name: opened.group.name, repository: pendingInvite.repository, pat: invitedConnection.token }
+      : createStoredGroup({ name: opened.group.name, repository: pendingInvite.repository, pat: invitedConnection.token })
     const next = upsertStoredGroup(current, stored)
     await saveUserSettings(session.graphAccessToken, next)
 
@@ -257,11 +258,14 @@ export default function App() {
         await authorizeIdentity(opened, session.identity)
         await saveGroupConnection(connection, ownerKey)
 
-        if (group.pat !== connection.token) {
-          const current = settings ?? emptyUserSettings()
-          const next = upsertStoredGroup(current, { ...group, pat: connection.token })
-          await saveUserSettings(session.graphAccessToken, next)
-          setSettings(next)
+        const reconciled = reconcileStoredGroup(settings ?? emptyUserSettings(), group, {
+          name: opened.group.name,
+          repository: connection.repository.full_name,
+          pat: connection.token,
+        })
+        if (reconciled.changed) {
+          await saveUserSettings(session.graphAccessToken, reconciled.settings)
+          setSettings(reconciled.settings)
         }
 
         setRuntime(opened)
@@ -293,7 +297,7 @@ export default function App() {
     await saveGroupConnection(connection, credentialOwnerKey(session.identity))
     const next = upsertStoredGroup(settings ?? emptyUserSettings(), {
       ...reconnectingGroup,
-      name: connection.groupName,
+      name: opened.group.name,
       repository: connection.repository.full_name,
       pat: connection.token,
     })
