@@ -37,6 +37,13 @@ jobs:
         run: npm test
       - name: Build static web application
         run: npm run export:web --workspace=fantazone-app
+      - name: Build and verify offline runtime assets
+        shell: bash
+        run: |
+          npm run build:offline-packs
+          test -f src/app/dist/fantazone-push-sw.js
+          test -f src/app/dist/offline/serie-a/index.json
+          test -n "$(find src/app/dist/offline/serie-a -maxdepth 1 -name '*.json.gz' -print -quit)"
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
       - name: Run Playwright browser tests
