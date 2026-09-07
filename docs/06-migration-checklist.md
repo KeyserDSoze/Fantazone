@@ -30,20 +30,20 @@
 
 ## UI parity
 
-- [ ] App shell/Home.
-- [ ] Calendar/Game/day/Formation UI.
-- [ ] Ranking/luck UI.
-- [ ] Live Serie A/votes.
-- [ ] Players/statistics/Teams.
-- [ ] Market/trades/cards/group admin/settings.
-- [ ] Hall of Fame/logs/patch notes/push UX.
+- [x] App shell/Home.
+- [x] Calendar/Game/day/Formation UI.
+- [x] Ranking/luck UI.
+- [x] Live Serie A/votes.
+- [x] Players/statistics/Teams.
+- [~] Market/trades/cards/group admin/settings: market/trades and account/group settings are wired; cards and full group administration remain pending.
+- [~] Hall of Fame/logs/patch notes/push UX: Hall of Fame is wired; logs, patch notes and push UX remain pending.
 - [~] Auction realtime UI implemented for active-auction discovery, Admin host controls, participant bidding, repair substitutions and reconnect status; real multi-device validation/polish remains pending.
 
 ## Service/domain migrations
 
 - [x] Group.
 - [x] Calendar.
-- [x] Ranking.
+- [x] Ranking, including the legacy Parametro Fortuna reducer used by the ranking UI.
 - [x] Team/Player fantasy-roster domain.
 - [x] mutable season Team normalized to `playerKey + fantasy-owned fields`; RealPlayer data resolves from global master and legacy full Team documents migrate lazily on their next write.
 - [x] immutable TeamDay keeps the full RealPlayer snapshot needed for historical correctness; future-day propagation refreshes mutable RealPlayer fields from the current master without rewriting older days.
@@ -59,8 +59,8 @@
 - [x] definitive fantasy-day reducer using official votes only, including missing TeamDay and home-advantage parity.
 - [x] full canonical Rank rebuild from calculated Calendar.
 - [x] deterministic Cup/NewCup progression including Finals, Europa League and Supercoppa; perfect-tie randomness intentionally replaced by stable seeded choice.
-- [~] Game/day: read composition and scoring core are migrated; `TeamDay` is an Action-owned immutable day snapshot, while actual screens/UI enrichment remain pending.
-- [~] Formations: owner/SuperAdmin authorization + formation validation + normalized current Team write are migrated; GitHub Action selects/finalizes the correct hydrated day snapshot from the commit timestamp; UI and chance/stat automatic formation remain pending.
+- [x] Game/day: read composition, TeamDay/current-Team projection, vote enrichment and live/closed scoring UI are migrated; `TeamDay` remains an Action-owned immutable day snapshot.
+- [~] Formations: owner/SuperAdmin authorization, validation, normalized current Team write and current-formation UI are migrated; GitHub Action selects/finalizes the correct hydrated day snapshot from the commit timestamp; chance/stat automatic formation remains pending.
 - [~] Serie A ingestion: core calendar/master/vote/chance/image producers implemented; master data and guarded live votes are production-scheduled, while remaining producers still need production validation/scheduling.
 - [~] Statistics/chances/votes: deterministic reducers + producers implemented; production data bootstrap/validation remains pending for unscheduled producers.
 - [x] Market persistence/commands: append-only client commands + canonical group Action reducer with legacy voting/execution/expiry parity; Team mutations hydrate from global master and persist normalized references.
