@@ -172,7 +172,8 @@ export function formationSnapshotSourceDocumentPath(
   if (!Number.isInteger(day) || day < 1 || day > 38) throw new Error('Serie A day must be between 1 and 38')
   if (!basketId.trim()) throw new Error('Basket id is required')
   if (!owner.trim()) throw new Error('Owner email is required')
-  return `data/groups/seasons/${season}/days/${day}/formation-sources/${encodeURIComponent(basketId.trim())}/${encodeURIComponent(owner.trim())}.json`
+  if (owner.includes('/') || owner.includes('\\')) throw new Error('Owner email cannot contain path separators')
+  return `data/groups/seasons/${season}/days/${day}/formation-sources/${encodeURIComponent(basketId.trim())}/${owner.trim()}.json`
 }
 
 function changedSeasonTeamPaths(root: string, commit: string): SeasonTeamPath[] {
