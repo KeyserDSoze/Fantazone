@@ -39,7 +39,7 @@
 - [x] Market/trades/group admin/settings: market/trades, account/group settings and SuperAdmin users/baskets/leagues are wired.
 - [ ] Cards: intentionally deferred by product decision; no placeholder is exposed as an active feature.
 - [x] Hall of Fame/logs/patch notes: Hall of Fame and patch notes are wired; operational logs read actual GitHub Actions from platform + group instead of recreating backend log storage.
-- [~] Push UX: pending a real zero-backend Web Push/native notification implementation; no fake backend-dependent subscription UI is counted as parity.
+- [~] Push UX: browser Web Push preferences/subscriptions, Service Worker, group-owned readable settings, managed per-group Actions transport and manual test dispatch are implemented; a repository `FANTAZONE_VAPID_PRIVATE_KEY` secret and real delivery validation are required before automatic notifications are enabled. Native iOS/Android push remains pending.
 - [x] Serie A SuperAdmin UI: fresh global calendar reads, safe delayed-game overrides, producer dispatch and read-only fallback when the current PAT lacks platform push permission.
 - [~] Auction realtime UI implemented for active-auction discovery, Admin host controls, participant bidding, repair substitutions and reconnect status; real multi-device validation/polish remains pending.
 
@@ -71,6 +71,7 @@
 - [~] Statistics/chances/votes: deterministic reducers + producers implemented; production data bootstrap/validation remains pending for unscheduled producers.
 - [x] Market persistence/commands: append-only client commands + canonical group Action reducer with legacy voting/execution/expiry parity; Team mutations hydrate from global master and persist normalized references.
 - [x] Hall of Fame readable cross-season reducer/repository + group-owned rebuild Action; legacy TODO player-record fields remain intentionally null.
+- [~] Push notifications: readable per-user group preferences/subscriptions and browser Web Push transport are implemented; the global VAPID public key is origin-wide while the corresponding private key is accepted only as a GitHub Actions Secret. Manual delivery validation and automatic legacy event/reminder orchestration remain pending.
 - [~] Auction: readable V1 host reducer, outcomes, active-session discovery, GitHub slow signaling, browser RTCPeerConnection/DataChannel/reconnect, native WebRTC bridge/runtime dependency and first realtime UI implemented; native build validation, TURN and end-to-end device validation remain pending.
 
 ## Infrastructure backlog
@@ -83,6 +84,7 @@
 - [x] managed group-workflow upgrades use current GitHub blob SHA and advance runtime metadata only after success.
 - [x] current Team no longer duplicates global Serie A player master fields, eliminating per-group transfer fan-out and unnecessary nightly commits.
 - [x] backend operational-log persistence retired; the SuperAdmin log viewer reads GitHub Actions runs directly for the public platform repository and authenticated group repository.
+- [x] Web Push private VAPID material is excluded from platform/group JSON and versioned code; the managed group push workflow reads only `secrets.FANTAZONE_VAPID_PRIVATE_KEY` while the public key remains shared by the `fanta.plus` origin.
 - [ ] ETag conditional reads.
 - [ ] one-time schema-v1→v2 migration tooling only if compact runtime repositories that need recovery are discovered.
 - [x] zero-backend authorization limitation documented: frontend/Actions enforce business rules, but a shared client-visible PAT cannot provide a cryptographic per-user write boundary.
@@ -105,6 +107,7 @@
 - [x] Market group workflow/reducer: serialized command processing + daily 02:00 UTC expiry maintenance.
 - [x] HallOfFame group workflow/reducer: weekly Tuesday 03:00 UTC rebuild + manual dispatch.
 - [x] Auction assignment outcome processing: realtime host emits one append-only assignment request; group runtime revalidates and commits normalized Team + outcome result atomically.
+- [~] Push delivery: per-group manual Actions sender is implemented with VAPID Secret isolation; automatic reminder/live/market scheduling remains disabled until a real browser subscription and test delivery are verified.
 
 ## Auction
 

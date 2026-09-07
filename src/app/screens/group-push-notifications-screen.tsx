@@ -14,7 +14,6 @@ import {
   getExistingWebPushSubscription,
   getWebPushSupportState,
   subscribeCurrentBrowserForPush,
-  unsubscribeCurrentBrowserFromPush,
   type WebPushSupportState,
 } from '../services/webPushClient'
 
@@ -100,12 +99,11 @@ export function GroupPushNotificationsScreen({ runtime, session }: Props) {
     })
   }
 
-  async function unsubscribe() {
+  async function disableForGroup() {
+    if (!browserEndpoint) return
     await action(async () => {
-      const removed = await unsubscribeCurrentBrowserFromPush()
-      if (removed) setSettings(await service.unregisterSubscription(email, removed.endpoint))
-      setBrowserEndpoint(null)
-      setMessage('Questo browser non riceverà più Web Push dal gruppo.')
+      setSettings(await service.unregisterSubscription(email, browserEndpoint))
+      setMessage('Questo gruppo non invierà più Web Push a questo browser. La subscription fanta.plus resta attiva per gli altri gruppi.')
     })
   }
 
@@ -165,8 +163,8 @@ export function GroupPushNotificationsScreen({ runtime, session }: Props) {
                 <Text>Permesso browser: {support?.supported ? support.permission : '—'}</Text>
                 <Text>Registrazione nel gruppo: {registeredHere ? 'attiva' : 'non attiva'}</Text>
                 <XStack gap="$2" flexWrap="wrap">
-                  <Button onPress={() => { void subscribe() }} disabled={busy || registeredHere}>Abilita su questo browser</Button>
-                  <Button variant="outlined" onPress={() => { void unsubscribe() }} disabled={busy || !browserEndpoint}>Disabilita su questo browser</Button>
+                  <Button onPress={() => { void subscribe() }} disabled={busy || registeredHere}>Abilita in questo gruppo</Button>
+                  <Button variant="outlined" onPress={() => { void disableForGroup() }} disabled={busy || !registeredHere}>Disabilita in questo gruppo</Button>
                   <Button variant="outlined" onPress={() => { void sendTest() }} disabled={busy || !registeredHere || !transport?.current}>Invia notifica di prova</Button>
                 </XStack>
               </>

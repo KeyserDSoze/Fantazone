@@ -49,16 +49,6 @@ export async function subscribeCurrentBrowserForPush(now = new Date()): Promise<
   return { ...mapSubscription(created), createdAt: now.toISOString() }
 }
 
-export async function unsubscribeCurrentBrowserFromPush(): Promise<PushSubscription | null> {
-  const registration = await ensureRegistration()
-  if (!registration) return null
-  const existing = await registration.pushManager.getSubscription()
-  if (!existing) return null
-  const mapped = mapSubscription(existing)
-  await existing.unsubscribe()
-  return mapped
-}
-
 async function ensureRegistration(): Promise<ServiceWorkerRegistration | null> {
   if (!isWebPushSupported()) return null
   if (!registrationPromise) {
