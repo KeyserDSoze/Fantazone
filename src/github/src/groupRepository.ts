@@ -10,6 +10,10 @@ import {
 } from '@fantazone/domain'
 import { normalizeGroupName, type GitHubRepo } from './githubClient'
 import {
+  createGroupRepositorySettings,
+  GROUP_SETTINGS_PATH,
+} from './groupSettingsRepository'
+import {
   GROUP_RECALCULATION_WORKFLOW,
   GROUP_RECALCULATION_WORKFLOW_PATH,
   GROUP_REPOSITORY_RUNTIME_VERSION,
@@ -138,6 +142,8 @@ export class GitHubGroupRepository {
 /**
  * Creates a Fantazone.<group> repository from scratch when it does not exist and
  * immediately bootstraps the current group runtime inside that repository.
+ * Kept as a convenience for legacy/programmatic callers; the product onboarding
+ * initializes a user-selected repository whose GitHub name may be arbitrary.
  */
 export async function createAndInitializeGroup(
   client: GroupSetupClient,
@@ -204,6 +210,22 @@ export async function ensureGroupInitialized(
   // Canonical group data is never rewritten by a runtime/application upgrade.
   await ensureCreateOnlyFile(client, owner, repo, 'manifest.json', serializeJson(manifest), createdFiles)
   await ensureCreateOnlyFile(client, owner, repo, GROUP_DOCUMENT_PATH, serializeJson(initialGroup), createdFiles)
+
+  // Display metadata is also user-owned and create-only. For old repositories we
+  // seed it from the Group that is actually stored, preserving all current names.
+  const groupSnapshot = await client.tryGetContent(owner, repo, GROUP_DOCUMENT_PATH, repository.default_branch) ??
+    await client.tryGetContent(owner, repo, GROUP_DOCUMENT_PATH)
+  const displaySource = groupSnapshot
+    ? decodeStoredGroup(JSON.parse(groupSnapshot.content) as unknown, { owner, repo, ref: repository.default_branch })
+    : initialGroup
+  await ensureCreateOnlyFile(
+    client,
+    owner,
+    repo,
+    GROUP_SETTINGS_PATH,
+    serializeJson(createGroupRepositorySettings(displaySource)),
+    createdFiles,
+  )
 
   // This path is explicitly Fantazone-managed. Existing custom workflows elsewhere
   // in .github/workflows are untouched.
