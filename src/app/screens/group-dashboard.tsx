@@ -16,10 +16,12 @@ import { GroupFormationScreen } from './group-formation-screen'
 import { GroupGameScreen } from './group-game-screen'
 import { GroupHallOfFameScreen } from './group-hall-of-fame-screen'
 import { GroupHomeScreen } from './group-home-screen'
+import { GroupInfoScreen } from './group-info-screen'
 import { GroupLeagueAdminScreen } from './group-league-admin-screen'
 import { GroupLiveScreen } from './group-live-screen'
 import { GroupMarketCreateScreen } from './group-market-create-screen'
 import { GroupMarketTradesScreen } from './group-market-trades-screen'
+import { GroupPatchNotesScreen } from './group-patch-notes-screen'
 import { GroupPlayersScreen } from './group-players-screen'
 import { GroupProductShell } from './group-product-shell'
 import { GroupRankingScreen } from './group-ranking-screen'
@@ -91,6 +93,10 @@ export function GroupDashboardScreen({ runtime, session, onLogout, onDisconnect,
         <GroupHallOfFameScreen runtime={runtime} selection={selection} />
       ) : route === 'rules' ? (
         <GroupRulesScreen runtime={runtime} selection={selection} />
+      ) : route === 'info' ? (
+        <GroupInfoScreen />
+      ) : route === 'patch-notes' ? (
+        <GroupPatchNotesScreen />
       ) : route === 'group-users-admin' ? (
         <GroupUsersAdminScreen runtime={runtime} session={session} />
       ) : route === 'group-baskets-admin' ? (

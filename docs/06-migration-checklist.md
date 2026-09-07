@@ -35,14 +35,14 @@
 - [x] Ranking/luck UI.
 - [x] Live Serie A/votes.
 - [x] Players/statistics/Teams.
-- [~] Market/trades/cards/group admin/settings: market/trades and account/group settings are wired; cards and full group administration remain pending.
-- [~] Hall of Fame/logs/patch notes/push UX: Hall of Fame is wired; logs, patch notes and push UX remain pending.
+- [~] Market/trades/cards/group admin/settings: market/trades, account/group settings and SuperAdmin users/baskets/leagues are wired; cards remain pending.
+- [~] Hall of Fame/logs/patch notes/push UX: Hall of Fame and patch notes are wired; logs and push UX remain pending.
 - [~] Auction realtime UI implemented for active-auction discovery, Admin host controls, participant bidding, repair substitutions and reconnect status; real multi-device validation/polish remains pending.
 
 ## Service/domain migrations
 
 - [x] Group.
-- [x] Calendar.
+- [x] Calendar, including deterministic initial League/Cup/NewCup generation for idempotent SuperAdmin setup.
 - [x] Ranking, including the legacy Parametro Fortuna reducer used by the ranking UI.
 - [x] Team/Player fantasy-roster domain.
 - [x] mutable season Team normalized to `playerKey + fantasy-owned fields`; RealPlayer data resolves from global master and legacy full Team documents migrate lazily on their next write.
@@ -61,6 +61,7 @@
 - [x] deterministic Cup/NewCup progression including Finals, Europa League and Supercoppa; perfect-tie randomness intentionally replaced by stable seeded choice.
 - [x] Game/day: read composition, TeamDay/current-Team projection, vote enrichment and live/closed scoring UI are migrated; `TeamDay` remains an Action-owned immutable day snapshot.
 - [~] Formations: owner/SuperAdmin authorization, validation, normalized current Team write and current-formation UI are migrated; GitHub Action selects/finalizes the correct hydrated day snapshot from the commit timestamp; chance/stat automatic formation remains pending.
+- [x] Group administration: users/roles, baskets/annual teams/co-owners, leagues/settings/initial Calendar+Rank and recalculation dispatch use fresh canonical group state with fail-closed integrity guards.
 - [~] Serie A ingestion: core calendar/master/vote/chance/image producers implemented; master data and guarded live votes are production-scheduled, while remaining producers still need production validation/scheduling.
 - [~] Statistics/chances/votes: deterministic reducers + producers implemented; production data bootstrap/validation remains pending for unscheduled producers.
 - [x] Market persistence/commands: append-only client commands + canonical group Action reducer with legacy voting/execution/expiry parity; Team mutations hydrate from global master and persist normalized references.
