@@ -15,7 +15,6 @@ import {
   type Group,
   type MarketCommand,
   type Rank,
-  type RepositoryRevisionManifest,
   type SeasonTeamDocument,
   type Team,
 } from '../../src/domain/src/index'
@@ -41,6 +40,7 @@ import {
   seasonTeamDocumentPath,
   type GitHubRepo,
   type GroupRepositoryTarget,
+  type RepositoryRevisionManifest,
 } from '../../src/github/src/index'
 
 const token = requiredEnv('FANTAZONE_TEST_PAT')
@@ -66,11 +66,7 @@ const owners = [
   'delta@fantazone.test',
 ] as const
 
-const canaryLocation = {
-  owner,
-  repo,
-  path: 'integration/github-json-store-canary.json',
-}
+const canaryLocation = { owner, repo, path: 'integration/github-json-store-canary.json' }
 
 test('real Fantazone group lifecycle is reproducible, conflict-safe and atomically publishable', async t => {
   const client = new GitHubClient(token)
@@ -78,46 +74,38 @@ test('real Fantazone group lifecycle is reproducible, conflict-safe and atomical
   assert.ok(identity.login)
 
   const metadata = await getIntegrationRepository(client)
-  const defaultBranch = metadata.default_branch || 'main'
+  const branch = metadata.default_branch || 'main'
   const run = process.env.GITHUB_RUN_ID?.trim() || `local-${Date.now()}`
-  await resetIntegrationRepository(token, owner, repo, defaultBranch, run)
+  await resetIntegrationRepository(token, owner, repo, branch, run)
 
-  const target: GroupRepositoryTarget = { owner, repo, ref: defaultBranch }
+  const target: GroupRepositoryTarget = { owner, repo, ref: branch }
 
-  await t.test('starts from a clean repository and bootstraps the managed group runtime', async () => {
-    const marker = await client.getContent(owner, repo, TEST_MARKER_PATH, defaultBranch)
-    assert.equal(marker.content, TEST_MARKER_CONTENT)
-    assert.equal(await client.tryGetContent(owner, repo, GROUP_DOCUMENT_PATH, defaultBranch), null)
+  await t.test('starts clean and bootstraps the managed group runtime', async () => {
+    assert.equal((await client.getContent(owner, repo, TEST_MARKER_PATH, branch)).content, TEST_MARKER_CONTENT)
+    assert.equal(await client.tryGetContent(owner, repo, GROUP_DOCUMENT_PATH, branch), null)
 
     try {
       const result = await ensureGroupInitialized(client, metadata, 'Fantazone Integration League', {
-        initialAdmin: {
-          email: 'integration.admin@fantazone.test',
-          username: 'Integration Admin',
-        },
+        initialAdmin: { email: 'integration.admin@fantazone.test', username: 'Integration Admin' },
       })
-      assert.ok(result.createdFiles.includes('manifest.json'))
-      assert.ok(result.createdFiles.includes(GROUP_DOCUMENT_PATH))
-      assert.ok(result.createdFiles.includes(GROUP_RECALCULATION_WORKFLOW_PATH))
-      assert.ok(result.createdFiles.includes(GROUP_REPOSITORY_METADATA_PATH))
+      for (const path of [
+        'manifest.json',
+        GROUP_DOCUMENT_PATH,
+        GROUP_RECALCULATION_WORKFLOW_PATH,
+        GROUP_REPOSITORY_METADATA_PATH,
+      ]) {
+        assert.ok(result.createdFiles.includes(path), `${path} must be created from the clean tree`)
+        assert.ok(await client.tryGetContent(owner, repo, path, branch), `${path} must exist after bootstrap`)
+      }
     } catch (error) {
       if (error instanceof Error && error.message.includes(GROUP_RECALCULATION_WORKFLOW_PATH)) {
         throw new Error(
-          'FANTAZONE_TEST_PAT can write repository contents but cannot install the managed Fantazone workflow. ' +
-          'Grant the test token repository Workflows: Read and write in addition to Contents: Read and write.',
+          'FANTAZONE_TEST_PAT cannot install the managed Fantazone workflow. Grant the test token ' +
+          'repository Workflows: Read and write in addition to Contents: Read and write.',
           { cause: error },
         )
       }
       throw error
-    }
-
-    for (const path of [
-      'manifest.json',
-      GROUP_DOCUMENT_PATH,
-      GROUP_RECALCULATION_WORKFLOW_PATH,
-      GROUP_REPOSITORY_METADATA_PATH,
-    ]) {
-      assert.ok(await client.tryGetContent(owner, repo, path, defaultBranch), `${path} must exist after bootstrap`)
     }
   })
 
@@ -128,21 +116,18 @@ test('real Fantazone group lifecycle is reproducible, conflict-safe and atomical
   const rankRepository = new GitHubRankRepository(store, target)
   const teamRepository = new GitHubTeamRepository(store, target)
   const marketRepository = new GitHubMarketRepository(store, target)
-
   const group = createIntegrationGroup()
-  const teams = createIntegrationTeams(run)
+  const teams = createIntegrationTeams()
 
-  await t.test('creates a complete league and advances the repository manifest around canonical writes', async () => {
-    const before = await readJsonFile<RepositoryRevisionManifest>(client, REPOSITORY_MANIFEST_PATH, defaultBranch)
+  await t.test('creates the league and publishes two-phase manifest revisions for canonical writes', async () => {
+    const before = await readJsonFile<RepositoryRevisionManifest>(client, REPOSITORY_MANIFEST_PATH, branch)
     await groupRepository.writeGroup(group, `test: create integration league ${run}`)
-    const after = await readJsonFile<RepositoryRevisionManifest>(client, REPOSITORY_MANIFEST_PATH, defaultBranch)
+    const after = await readJsonFile<RepositoryRevisionManifest>(client, REPOSITORY_MANIFEST_PATH, branch)
 
     assert.equal(after.revision, before.revision + 2)
     assert.equal(after.updating, false)
     assert.equal(revisionClient.lastRevision, after.revision)
-
-    const canonical = await groupRepository.getGroup({ refresh: true })
-    assert.deepEqual(canonical, group)
+    assert.deepEqual(await groupRepository.getGroup({ refresh: true }), group)
     assert.equal((await groupRepository.getLeagues()).length, 1)
     assert.equal((await groupRepository.getBaskets()).length, 1)
     assert.deepEqual(await groupRepository.getAvailableYears(), [season])
@@ -154,26 +139,21 @@ test('real Fantazone group lifecycle is reproducible, conflict-safe and atomical
     const location = { ...target, path: GROUP_DOCUMENT_PATH }
     const first = await etagStore.readJson<Group>(location, { refresh: true })
     const second = await etagStore.readJson<Group>(location, { refresh: true })
-
     assert.equal(first.fromCache, false)
     assert.equal(second.fromCache, true)
     assert.equal(second.sha, first.sha)
     assert.deepEqual(second.value, first.value)
   })
 
-  await t.test('persists mutable teams as normalized v3 documents and immutable TeamDay snapshots as create-only files', async () => {
-    await teamRepository.writeTeam(basketId, season, owners[0], teams.get(owners[0])!, `test: seed Alpha team ${run}`)
-    await teamRepository.writeTeam(basketId, season, owners[1], teams.get(owners[1])!, `test: seed Beta team ${run}`)
+  await t.test('persists normalized season teams and immutable create-only TeamDay snapshots', async () => {
+    await teamRepository.writeTeam(basketId, season, owners[0], teams.get(owners[0])!, `test: seed Alpha ${run}`)
+    await teamRepository.writeTeam(basketId, season, owners[1], teams.get(owners[1])!, `test: seed Beta ${run}`)
 
-    const alphaSeason = await readJsonFile<SeasonTeamDocument>(
-      client,
-      seasonTeamDocumentPath(basketId, season, owners[0]),
-      defaultBranch,
-    )
-    assert.equal(alphaSeason.version, 3)
-    assert.equal(alphaSeason.owner, owners[0])
-    assert.equal(alphaSeason.players[0].playerKey, getPlayerKey('Alpha Forward'))
-    assert.equal('team' in alphaSeason.players[0], false)
+    const alpha = await readJsonFile<SeasonTeamDocument>(client, seasonTeamDocumentPath(basketId, season, owners[0]), branch)
+    assert.equal(alpha.version, 3)
+    assert.equal(alpha.owner, owners[0])
+    assert.equal(alpha.players[0].playerKey, getPlayerKey('Alpha Forward'))
+    assert.equal('team' in alpha.players[0], false)
 
     const daySnapshot = teams.get(owners[0])!
     await teamRepository.writeTeamDay(
@@ -185,11 +165,11 @@ test('real Fantazone group lifecycle is reproducible, conflict-safe and atomical
       `test: freeze TeamDay ${run}`,
       { createOnly: true },
     )
-    const frozen = await teamRepository.getTeamDay(basketId, season, 1, owners[0], { refresh: true })
-    assert.deepEqual(frozen, daySnapshot)
+    assert.deepEqual(await teamRepository.getTeamDay(basketId, season, 1, owners[0], { refresh: true }), daySnapshot)
 
+    const freshTeamRepository = new GitHubTeamRepository(new GitHubJsonStore(client), target)
     await assert.rejects(
-      teamRepository.writeTeamDay(
+      freshTeamRepository.writeTeamDay(
         basketId,
         season,
         1,
@@ -200,19 +180,12 @@ test('real Fantazone group lifecycle is reproducible, conflict-safe and atomical
       ),
       error => error instanceof RepositoryWriteConflictError && error.status === 409,
     )
-
-    assert.ok(await client.tryGetContent(
-      owner,
-      repo,
-      dayTeamDocumentPath(basketId, season, 1, owners[0]),
-      defaultBranch,
-    ))
+    assert.ok(await client.tryGetContent(owner, repo, dayTeamDocumentPath(basketId, season, 1, owners[0]), branch))
   })
 
-  await t.test('writes and queries league calendar and ranking through their production repositories', async () => {
+  await t.test('writes and queries calendar plus season/day ranking through production repositories', async () => {
     const calendar = createIntegrationCalendar()
     const rank = createIntegrationRank()
-
     await calendarRepository.writeCalendar(leagueId, season, calendar, `test: seed calendar ${run}`)
     await rankRepository.writeRank(leagueId, season, rank, `test: seed ranking ${run}`)
     await rankRepository.writeDailyRank(leagueId, season, 1, rank, `test: seed daily ranking ${run}`)
@@ -221,56 +194,56 @@ test('real Fantazone group lifecycle is reproducible, conflict-safe and atomical
     assert.equal((await calendarRepository.getAllGames(leagueId, season)).length, 2)
     assert.equal((await calendarRepository.getPendingGames(leagueId, season)).length, 2)
     assert.equal((await calendarRepository.getGamesForTeam(leagueId, season, 'Alpha FC')).length, 1)
-
     assert.equal(await rankRepository.getCurrentSerieADay(leagueId, season), 1)
     assert.equal(await rankRepository.getRoundTeamCount(leagueId, season, '@'), 4)
     assert.equal(await rankRepository.getTeamPosition(leagueId, season, '@', owners[0]), 1)
     assert.equal((await rankRepository.getDailyRank(leagueId, season, 1, { refresh: true }))?.serieADay, 1)
   })
 
-  await t.test('enforces single-file create-only and optimistic SHA concurrency against GitHub itself', async () => {
+  await t.test('enforces create-only and optimistic SHA concurrency against the real repository', async () => {
     const writer = new GitHubJsonStore(client)
     const contender = new GitHubJsonStore(client)
+    const baseline = await writer.writeJson(
+      canaryLocation,
+      { version: 2, run, phase: 'baseline' },
+      `test: integration baseline ${run}`,
+      { createOnly: true },
+    )
 
-    const baseline = await writer.writeJson(canaryLocation, {
-      version: 2,
-      run,
-      phase: 'baseline',
-    }, `test: integration baseline ${run}`, { createOnly: true })
-
+    const duplicateWriter = new GitHubJsonStore(client)
     await assert.rejects(
-      writer.writeJson(canaryLocation, {
-        version: 2,
-        run,
-        phase: 'duplicate-create',
-      }, `test: reject duplicate create ${run}`, { createOnly: true }),
+      duplicateWriter.writeJson(
+        canaryLocation,
+        { version: 2, run, phase: 'duplicate-create' },
+        `test: reject duplicate create ${run}`,
+        { createOnly: true },
+      ),
       error => error instanceof RepositoryWriteConflictError && error.status === 409,
     )
 
     const stale = await contender.readJson<{ version: number; run: string; phase: string }>(canaryLocation, { refresh: true })
     assert.equal(stale.sha, baseline.sha)
-
-    const winner = await writer.writeJson(canaryLocation, {
-      version: 2,
-      run,
-      phase: 'winner',
-    }, `test: integration winner ${run}`, { expectedSha: stale.sha })
-
+    const winner = await writer.writeJson(
+      canaryLocation,
+      { version: 2, run, phase: 'winner' },
+      `test: integration winner ${run}`,
+      { expectedSha: stale.sha },
+    )
     await assert.rejects(
-      contender.writeJson(canaryLocation, {
-        version: 2,
-        run,
-        phase: 'stale-writer',
-      }, `test: stale integration writer ${run}`, { expectedSha: stale.sha }),
+      contender.writeJson(
+        canaryLocation,
+        { version: 2, run, phase: 'stale-writer' },
+        `test: stale integration writer ${run}`,
+        { expectedSha: stale.sha },
+      ),
       error => error instanceof RepositoryWriteConflictError && (error.status === 409 || error.status === 422),
     )
-
-    const canonical = await writer.readJson<{ version: number; run: string; phase: string }>(canaryLocation, { refresh: true })
+    const canonical = await writer.readJson<{ phase: string }>(canaryLocation, { refresh: true })
     assert.equal(canonical.sha, winner.sha)
     assert.equal(canonical.value.phase, 'winner')
   })
 
-  await t.test('submits idempotent market commands and publishes market plus both teams in one CAS-protected Git commit', async () => {
+  await t.test('publishes market plus both changed teams as one CAS-protected Git transaction', async () => {
     const createCommand: MarketCommand = {
       version: 1,
       id: `market-${run}`,
@@ -291,22 +264,22 @@ test('real Fantazone group lifecycle is reproducible, conflict-safe and atomical
     }
 
     const submittedCreateSha = await marketRepository.submitCommand(createCommand)
+    const duplicateMarketRepository = new GitHubMarketRepository(new GitHubJsonStore(client), target)
     await assert.rejects(
-      marketRepository.submitCommand(createCommand),
+      duplicateMarketRepository.submitCommand(createCommand),
       error => error instanceof RepositoryWriteConflictError && error.status === 409,
     )
 
-    const initialMarketTeams = new Map([
-      [owners[0], { basketId, team: teams.get(owners[0])! }],
-      [owners[1], { basketId, team: teams.get(owners[1])! }],
-    ])
     const created = processMarketCommand({
       group,
       leagueId,
       season,
       command: createCommand,
       market: { markets: [] },
-      teams: initialMarketTeams,
+      teams: new Map([
+        [owners[0], { basketId, team: teams.get(owners[0])! }],
+        [owners[1], { basketId, team: teams.get(owners[1])! }],
+      ]),
       now: new Date(),
       currentSeason: season,
     })
@@ -356,10 +329,8 @@ test('real Fantazone group lifecycle is reproducible, conflict-safe and atomical
     assert.equal(approved.teams.get(owners[0])?.team.players[0].name, 'Beta Forward')
     assert.equal(approved.teams.get(owners[1])?.team.players[0].name, 'Alpha Forward')
 
-    const staleHead = await getBranchHead(token, owner, repo, defaultBranch)
+    const staleHead = await getBranchHead(token, owner, repo, branch)
     const staleManifest = await readJsonFile<RepositoryRevisionManifest>(client, REPOSITORY_MANIFEST_PATH, staleHead)
-    const staleTransaction = marketTransactionFiles(approved, staleManifest)
-
     await store.writeJson(
       { ...target, path: 'integration/transaction-race.json' },
       { version: 1, run, phase: 'branch-advanced' },
@@ -372,91 +343,73 @@ test('real Fantazone group lifecycle is reproducible, conflict-safe and atomical
         token,
         owner,
         repo,
-        defaultBranch,
+        branch,
         staleHead,
-        staleTransaction,
+        marketTransactionFiles(approved, staleManifest),
         `test: stale atomic market transaction ${run}`,
       ),
       error => error instanceof GitHubApiError && (error.status === 409 || error.status === 422),
     )
 
-    const marketAfterRejectedPublish = await readJsonFile<{ markets: Array<{ status: MarketStatus }> }>(
-      client,
-      marketDocumentPath(leagueId, season),
-      defaultBranch,
+    assert.equal(
+      (await readJsonFile<{ markets: Array<{ status: MarketStatus }> }>(client, marketDocumentPath(leagueId, season), branch)).markets[0].status,
+      MarketStatus.Pending,
     )
-    assert.equal(marketAfterRejectedPublish.markets[0].status, MarketStatus.Pending)
-    const pendingApproval = await readJsonFile<MarketCommand>(
-      client,
-      marketCommandDocumentPath(leagueId, season, approvalCommand.id),
-      defaultBranch,
+    assert.equal(
+      (await readJsonFile<MarketCommand>(client, marketCommandDocumentPath(leagueId, season, approvalCommand.id), branch)).status,
+      'pending',
     )
-    assert.equal(pendingApproval.status, 'pending')
+    assert.equal(
+      (await readJsonFile<SeasonTeamDocument>(client, seasonTeamDocumentPath(basketId, season, owners[0]), branch)).players[0].playerKey,
+      getPlayerKey('Alpha Forward'),
+    )
 
-    const alphaBeforeRetry = await readJsonFile<SeasonTeamDocument>(
-      client,
-      seasonTeamDocumentPath(basketId, season, owners[0]),
-      defaultBranch,
-    )
-    assert.equal(alphaBeforeRetry.players[0].playerKey, getPlayerKey('Alpha Forward'))
-
-    const currentHead = await getBranchHead(token, owner, repo, defaultBranch)
+    const currentHead = await getBranchHead(token, owner, repo, branch)
     const currentManifest = await readJsonFile<RepositoryRevisionManifest>(client, REPOSITORY_MANIFEST_PATH, currentHead)
+    const transactionFiles = marketTransactionFiles(approved, currentManifest)
     const transaction = await commitFilesAtomically(
       token,
       owner,
       repo,
-      defaultBranch,
+      branch,
       currentHead,
-      marketTransactionFiles(approved, currentManifest),
+      transactionFiles,
       `test: atomic market transaction ${run}`,
     )
 
     assert.equal(transaction.parent, currentHead)
-    assert.equal(await getBranchHead(token, owner, repo, defaultBranch), transaction.sha)
-
-    const publishedMarket = await readJsonFile<{ markets: Array<{ status: MarketStatus }> }>(
-      client,
-      marketDocumentPath(leagueId, season),
-      transaction.sha,
+    assert.equal(await getBranchHead(token, owner, repo, branch), transaction.sha)
+    assert.equal(
+      (await readJsonFile<{ markets: Array<{ status: MarketStatus }> }>(client, marketDocumentPath(leagueId, season), transaction.sha)).markets[0].status,
+      MarketStatus.Approved,
     )
-    const alphaAfter = await readJsonFile<SeasonTeamDocument>(
-      client,
-      seasonTeamDocumentPath(basketId, season, owners[0]),
-      transaction.sha,
+    assert.equal(
+      (await readJsonFile<SeasonTeamDocument>(client, seasonTeamDocumentPath(basketId, season, owners[0]), transaction.sha)).players[0].playerKey,
+      getPlayerKey('Beta Forward'),
     )
-    const betaAfter = await readJsonFile<SeasonTeamDocument>(
-      client,
-      seasonTeamDocumentPath(basketId, season, owners[1]),
-      transaction.sha,
+    assert.equal(
+      (await readJsonFile<SeasonTeamDocument>(client, seasonTeamDocumentPath(basketId, season, owners[1]), transaction.sha)).players[0].playerKey,
+      getPlayerKey('Alpha Forward'),
     )
-    const approvalAfter = await readJsonFile<MarketCommand>(
-      client,
-      marketCommandDocumentPath(leagueId, season, approvalCommand.id),
-      transaction.sha,
+    assert.equal(
+      (await readJsonFile<MarketCommand>(client, marketCommandDocumentPath(leagueId, season, approvalCommand.id), transaction.sha)).status,
+      'applied',
     )
     const manifestAfter = await readJsonFile<RepositoryRevisionManifest>(client, REPOSITORY_MANIFEST_PATH, transaction.sha)
-
-    assert.equal(publishedMarket.markets[0].status, MarketStatus.Approved)
-    assert.equal(alphaAfter.players[0].playerKey, getPlayerKey('Beta Forward'))
-    assert.equal(betaAfter.players[0].playerKey, getPlayerKey('Alpha Forward'))
-    assert.equal(approvalAfter.status, 'applied')
     assert.equal(manifestAfter.revision, currentManifest.revision + 1)
     assert.equal(manifestAfter.updating, false)
 
-    const transactionCommit = await integrationRequest<{ tree: { sha: string }; parents: Array<{ sha: string }> }>(
+    const commit = await integrationRequest<{ tree: { sha: string }; parents: Array<{ sha: string }> }>(
       token,
       `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/git/commits/${transaction.sha}`,
     )
-    assert.equal(transactionCommit.parents[0].sha, currentHead)
-    const transactionTree = await integrationRequest<{ tree: Array<{ path: string }> }>(
+    assert.equal(commit.parents[0].sha, currentHead)
+    const tree = await integrationRequest<{ tree: Array<{ path: string }> }>(
       token,
-      `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/git/trees/${transactionCommit.tree.sha}?recursive=1`,
+      `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/git/trees/${commit.tree.sha}?recursive=1`,
     )
-    const paths = new Set(transactionTree.tree.map(entry => entry.path))
-    for (const path of Object.keys(marketTransactionFiles(approved, currentManifest))) {
-      assert.ok(paths.has(path), `${path} must be present in the one published transaction tree`)
-    }
+    const paths = new Set(tree.tree.map(entry => entry.path))
+    for (const path of Object.keys(transactionFiles)) assert.ok(paths.has(path), `${path} must be in the transaction tree`)
   })
 })
 
@@ -492,23 +445,20 @@ function createIntegrationGroup(): Group {
       years: [{
         year: season,
         type: LeagueType.League,
-        settings: {
-          ...DefaultLeagueSetting,
-          votes: { ...DefaultLeagueSetting.votes },
-        },
+        settings: { ...DefaultLeagueSetting, votes: { ...DefaultLeagueSetting.votes } },
       }],
     }],
   }
 }
 
-function createIntegrationTeams(run: string): Map<string, Team> {
+function createIntegrationTeams(): Map<string, Team> {
   const updatedAt = new Date().toISOString()
   return new Map<string, Team>([
     [owners[0], createTeam('Alpha FC', owners[0], 'Alpha Forward', 'Alpha Serie A', 'alf', 100, updatedAt)],
     [owners[1], createTeam('Beta FC', owners[1], 'Beta Forward', 'Beta Serie A', 'bet', 120, updatedAt)],
     [owners[2], createTeam('Gamma FC', owners[2], 'Gamma Forward', 'Gamma Serie A', 'gam', 80, updatedAt)],
     [owners[3], createTeam('Delta FC', owners[3], 'Delta Forward', 'Delta Serie A', 'del', 90, updatedAt)],
-  ].map(([email, team]) => [email, { ...team, lastUpdate: `${team.lastUpdate}-${run}`.replace(`-${run}`, '') }]))
+  ])
 }
 
 function createTeam(
@@ -557,22 +507,26 @@ function createIntegrationCalendar(): Calendar {
 }
 
 function createIntegrationRank(): Rank {
-  const entries = owners.map((email, index) => ({
-    name: ['Alpha FC', 'Beta FC', 'Gamma FC', 'Delta FC'][index],
-    owner: email,
-    point: 4 - index,
-    victories: index === 0 ? 1 : 0,
-    draws: index === 1 ? 1 : 0,
-    defeats: index > 1 ? 1 : 0,
-    goal: index === 0 ? 2 : 0,
-    sufferedGoal: index > 1 ? 1 : 0,
-    valuePoint: 70 - index,
-    sufferedValuePoint: 60 + index,
-    plusMoney: 0,
-    money: 1000,
-    valueAssets: 1000 - index,
-  }))
-  return { serieADay: 1, rounds: { '@': entries } }
+  return {
+    serieADay: 1,
+    rounds: {
+      '@': owners.map((email, index) => ({
+        name: ['Alpha FC', 'Beta FC', 'Gamma FC', 'Delta FC'][index],
+        owner: email,
+        point: 4 - index,
+        victories: index === 0 ? 1 : 0,
+        draws: index === 1 ? 1 : 0,
+        defeats: index > 1 ? 1 : 0,
+        goal: index === 0 ? 2 : 0,
+        sufferedGoal: index > 1 ? 1 : 0,
+        valuePoint: 70 - index,
+        sufferedValuePoint: 60 + index,
+        plusMoney: 0,
+        money: 1000,
+        valueAssets: 1000 - index,
+      })),
+    },
+  }
 }
 
 function marketTransactionFiles(
@@ -582,7 +536,6 @@ function marketTransactionFiles(
   const alpha = result.teams.get(owners[0])
   const beta = result.teams.get(owners[1])
   if (!alpha || !beta) throw new Error('Market transaction did not return both changed teams')
-
   return {
     [marketDocumentPath(leagueId, season)]: serializeJson(result.market),
     [seasonTeamDocumentPath(alpha.basketId, season, owners[0])]: serializeJson(encodeSeasonTeamDocument(alpha.team)),
@@ -615,8 +568,7 @@ async function getIntegrationRepository(client: GitHubClient): Promise<GitHubRep
 }
 
 async function readJsonFile<T>(client: GitHubClient, path: string, ref: string): Promise<T> {
-  const snapshot = await client.getContent(owner, repo, path, ref)
-  return JSON.parse(snapshot.content) as T
+  return JSON.parse((await client.getContent(owner, repo, path, ref)).content) as T
 }
 
 async function getBranchHead(
@@ -632,11 +584,7 @@ async function getBranchHead(
   return ref.object.sha
 }
 
-type AtomicCommitResult = {
-  sha: string
-  parent: string
-  tree: string
-}
+type AtomicCommitResult = { sha: string; parent: string }
 
 async function commitFilesAtomically(
   accessToken: string,
@@ -652,7 +600,6 @@ async function commitFilesAtomically(
     accessToken,
     `${base}/git/commits/${encodeURIComponent(expectedHead)}`,
   )
-
   const entries = await Promise.all(Object.entries(files).map(async ([path, content]) => {
     const blob = await integrationRequest<{ sha: string }>(accessToken, `${base}/git/blobs`, {
       method: 'POST',
@@ -660,7 +607,6 @@ async function commitFilesAtomically(
     })
     return { path, mode: '100644', type: 'blob', sha: blob.sha }
   }))
-
   const tree = await integrationRequest<{ sha: string }>(accessToken, `${base}/git/trees`, {
     method: 'POST',
     body: JSON.stringify({ base_tree: parent.tree.sha, tree: entries }),
@@ -669,13 +615,11 @@ async function commitFilesAtomically(
     method: 'POST',
     body: JSON.stringify({ message, tree: tree.sha, parents: [expectedHead] }),
   })
-
   await integrationRequest(accessToken, `${base}/git/refs/heads/${encodeURIComponent(branch)}`, {
     method: 'PATCH',
     body: JSON.stringify({ sha: commit.sha, force: false }),
   })
-
-  return { sha: commit.sha, parent: expectedHead, tree: tree.sha }
+  return { sha: commit.sha, parent: expectedHead }
 }
 
 async function resetIntegrationRepository(
@@ -690,33 +634,18 @@ async function resetIntegrationRepository(
     accessToken,
     `${base}/git/ref/heads/${encodeURIComponent(branch)}`,
   )
-
   const blob = await integrationRequest<{ sha: string }>(accessToken, `${base}/git/blobs`, {
     method: 'POST',
     body: JSON.stringify({ content: TEST_MARKER_CONTENT, encoding: 'utf-8' }),
   })
-
   const tree = await integrationRequest<{ sha: string }>(accessToken, `${base}/git/trees`, {
     method: 'POST',
-    body: JSON.stringify({
-      tree: [{
-        path: TEST_MARKER_PATH,
-        mode: '100644',
-        type: 'blob',
-        sha: blob.sha,
-      }],
-    }),
+    body: JSON.stringify({ tree: [{ path: TEST_MARKER_PATH, mode: '100644', type: 'blob', sha: blob.sha }] }),
   })
-
   const commit = await integrationRequest<{ sha: string }>(accessToken, `${base}/git/commits`, {
     method: 'POST',
-    body: JSON.stringify({
-      message: `test: reset repository ${run}`,
-      tree: tree.sha,
-      parents: [ref.object.sha],
-    }),
+    body: JSON.stringify({ message: `test: reset repository ${run}`, tree: tree.sha, parents: [ref.object.sha] }),
   })
-
   await integrationRequest(accessToken, `${base}/git/refs/heads/${encodeURIComponent(branch)}`, {
     method: 'PATCH',
     body: JSON.stringify({ sha: commit.sha, force: false }),
