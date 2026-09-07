@@ -104,13 +104,13 @@ export class GitHubTeamRepository {
 
 export function seasonTeamDocumentPath(basketId: string, season: number, email: string): string {
   validateTeamKey(basketId, season, email)
-  return `data/groups/seasons/${season}/teams/${encodeURIComponent(basketId.trim())}/${encodeURIComponent(email.trim())}.json`
+  return `data/groups/seasons/${season}/teams/${encodeURIComponent(basketId.trim())}/${email.trim()}.json`
 }
 
 export function dayTeamDocumentPath(basketId: string, season: number, day: number, email: string): string {
   validateTeamKey(basketId, season, email)
   if (!Number.isInteger(day) || day < 1) throw new Error('Day must be a positive integer')
-  return `data/groups/seasons/${season}/days/${day}/teams/${encodeURIComponent(basketId.trim())}/${encodeURIComponent(email.trim())}.json`
+  return `data/groups/seasons/${season}/days/${day}/teams/${encodeURIComponent(basketId.trim())}/${email.trim()}.json`
 }
 
 function isNormalizedSeasonTeam(value: unknown): boolean {
@@ -121,4 +121,5 @@ function validateTeamKey(basketId: string, season: number, email: string): void 
   if (!Number.isInteger(season) || season < 1) throw new Error('Season must be a positive integer')
   if (!basketId.trim()) throw new Error('Basket id is required')
   if (!email.trim()) throw new Error('Owner email is required')
+  if (email.includes('/') || email.includes('\\')) throw new Error('Owner email cannot contain path separators')
 }
