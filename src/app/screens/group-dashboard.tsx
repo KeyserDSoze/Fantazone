@@ -29,6 +29,7 @@ import { GroupRulesScreen } from './group-rules-screen'
 import { GroupSettingsScreen } from './group-settings-screen'
 import { GroupTeamsScreen } from './group-teams-screen'
 import { GroupUsersAdminScreen } from './group-users-admin-screen'
+import { PlatformLogsScreen } from './platform-logs-screen'
 import { SerieAAdminScreen } from './serie-a-admin-screen'
 
 type Props = {
@@ -104,6 +105,8 @@ export function GroupDashboardScreen({ runtime, session, onLogout, onDisconnect,
         <GroupBasketsAdminScreen runtime={runtime} session={session} selection={selection} />
       ) : route === 'group-league-admin' ? (
         <GroupLeagueAdminScreen runtime={runtime} session={session} selection={selection} />
+      ) : route === 'logs' ? (
+        <PlatformLogsScreen runtime={runtime} />
       ) : route === 'serie-a-admin' ? (
         <SerieAAdminScreen runtime={runtime} session={session} selection={selection} />
       ) : route === 'settings' ? (

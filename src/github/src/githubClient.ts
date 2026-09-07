@@ -15,6 +15,30 @@ export type GitHubContentWriteResult = {
   sha: string
 }
 
+export type GitHubWorkflowRun = {
+  id: number
+  name: string
+  path: string
+  display_title: string
+  run_number: number
+  event: string
+  status: string
+  conclusion: string | null
+  head_branch: string | null
+  head_sha: string
+  html_url: string
+  created_at: string
+  updated_at: string
+  run_started_at?: string | null
+  actor?: { login: string } | null
+  head_commit?: { id: string; message: string; timestamp: string } | null
+}
+
+export type GitHubWorkflowRunsPage = {
+  total_count: number
+  workflow_runs: GitHubWorkflowRun[]
+}
+
 export class GitHubApiError extends Error {
   constructor(public status: number, message: string) {
     super(message)
@@ -108,6 +132,22 @@ export class GitHubClient {
     )
   }
 
+  /** Reads recent GitHub Actions runs. Authentication is optional for public repositories. */
+  async listWorkflowRuns(
+    owner: string,
+    repo: string,
+    options: { page?: number; perPage?: number; branch?: string } = {},
+  ): Promise<GitHubWorkflowRunsPage> {
+    const page = positiveInteger(options.page ?? 1, 'page')
+    const perPage = Math.min(100, positiveInteger(options.perPage ?? 50, 'perPage'))
+    const params = new URLSearchParams({ page: String(page), per_page: String(perPage) })
+    const branch = options.branch?.trim()
+    if (branch) params.set('branch', branch)
+    return this.request<GitHubWorkflowRunsPage>(
+      `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/actions/runs?${params.toString()}`,
+    )
+  }
+
   /**
    * Reads repository content. Authentication is optional so public Fantazone data can
    * be consumed without forcing the application to own a GitHub credential.
@@ -166,6 +206,11 @@ export function normalizeGroupName(value: string): string {
     .replace(/[^A-Za-z0-9._-]/g, '')
     .replace(/-+/g, '-')
     .replace(/^[.-]+|[.-]+$/g, '')
+}
+
+function positiveInteger(value: number, label: string): number {
+  if (!Number.isInteger(value) || value < 1) throw new Error(`${label} must be a positive integer`)
+  return value
 }
 
 function encodeBase64Utf8(value: string): string {
