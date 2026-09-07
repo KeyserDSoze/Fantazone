@@ -1,0 +1,19 @@
+name: Remove refactor closure branch once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/remove-refactor-branch-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete temporary branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh api --method DELETE "repos/${{ github.repository }}/git/refs/heads/refactor-closure-final"
