@@ -99,19 +99,23 @@ test('automatic score uses the last five-day trend sum when the latest day was n
 })
 
 test('automatic formation produces a valid 25-player legacy lineup and bench', () => {
+  const letters = 'ABCDEFGH'.split('')
   const players = [
-    ...Array.from({ length: 3 }, (_, i) => player(`GK ${i + 1}`, Role.GoalKeeper)),
-    ...Array.from({ length: 8 }, (_, i) => player(`D ${i + 1}`, Role.Defensor)),
-    ...Array.from({ length: 8 }, (_, i) => player(`M ${i + 1}`, Role.Midfielder)),
-    ...Array.from({ length: 6 }, (_, i) => player(`F ${i + 1}`, Role.Forward)),
+    player('Portiere Alpha', Role.GoalKeeper),
+    player('Portiere Beta', Role.GoalKeeper),
+    player('Portiere Gamma', Role.GoalKeeper),
+    ...letters.map(letter => player(`Difensore ${letter}`, Role.Defensor)),
+    ...letters.map(letter => player(`Mediano ${letter}`, Role.Midfielder)),
+    ...letters.slice(0, 6).map(letter => player(`Attaccante ${letter}`, Role.Forward)),
   ]
+  const injuredForward = 'Attaccante F'
   const team: Team = { name: 'Team', owner: 'owner@test.local', additionalOwners: [], players, moneyFromRank: 0, lastUpdate: null }
   const chances: ChancedRealPlayers = {
     year: 15,
     serieADay: 3,
     players: players.map(current => ({
       ...current,
-      chance: current.name === 'F 6' ? { ...normalChance(), status: ChanceType.Injury } : normalChance(),
+      chance: current.name === injuredForward ? { ...normalChance(), status: ChanceType.Injury } : normalChance(),
     })),
   }
   const stats: StatPlayers = {
@@ -132,6 +136,6 @@ test('automatic formation produces a valid 25-player legacy lineup and bench', (
   assert.equal(active.filter(item => [FantaSoccerRole.FirstBackupMidfielder, FantaSoccerRole.SecondBackupMidfielder].includes(item.position)).length, 2)
   assert.equal(active.filter(item => [FantaSoccerRole.FirstBackupForward, FantaSoccerRole.SecondBackupForward].includes(item.position)).length, 2)
   assert.equal(active.filter(item => item.position === FantaSoccerRole.Tribune).length, 7)
-  assert.notEqual(preview.players.find(item => item.name === 'F 6')?.position, FantaSoccerRole.Forward)
+  assert.notEqual(preview.players.find(item => item.name === injuredForward)?.position, FantaSoccerRole.Forward)
   assert.equal(validateFormation(preview).valid, true)
 })
