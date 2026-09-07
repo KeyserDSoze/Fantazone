@@ -216,7 +216,10 @@ export class GitHubJsonStore {
       )
       if (conflict) {
         await this.forget(key)
-        throw new RepositoryWriteConflictError(writeLocation, error.status, error)
+        // GitHub can return 422 when two create-only writers race. At the repository
+        // boundary this is the same logical conflict as an already-existing path.
+        const status = options.createOnly && error.status === 422 ? 409 : error.status
+        throw new RepositoryWriteConflictError(writeLocation, status, error)
       }
       throw error
     }
