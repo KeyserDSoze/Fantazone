@@ -8,7 +8,7 @@ import {
 
 test('group runtime v8 serializes formation, market, auction and Hall of Fame maintenance without transfer sync', () => {
   assert.equal(GROUP_REPOSITORY_RUNTIME_VERSION, 8)
-  assert.equal(GROUP_RUNTIME_ENGINE_REF, 'group-runtime-v8')
+  assert.equal(GROUP_RUNTIME_ENGINE_REF, 'main')
   assert.match(GROUP_RECALCULATION_WORKFLOW, /push:/)
   assert.match(GROUP_RECALCULATION_WORKFLOW, /manifest\.json/)
   assert.match(GROUP_RECALCULATION_WORKFLOW, /data\/groups\/seasons\/\*\/teams\/\*\/\*\.json/)
