@@ -113,13 +113,13 @@ test('uses manifest revision as the group cache invalidation clock', async () =>
   const runtime = await GroupSessionRuntime.open(connection, client)
 
   const initial = await runtime.syncRepositoryRevision()
-  assert.deepEqual(initial, { changed: false, previousRevision: null, revision: 1 })
+  assert.deepEqual(initial, { changed: false, previousRevision: null, revision: 1, offline: false })
 
   client.files.set(groupKey, { sha: 'group-2', content: JSON.stringify(group(IdentityRole.Participant, 'Amici aggiornati')) })
   client.files.set(manifestKey, { sha: 'manifest-2', content: manifest(2) })
   const updated = await runtime.syncRepositoryRevision()
 
-  assert.deepEqual(updated, { changed: true, previousRevision: 1, revision: 2 })
+  assert.deepEqual(updated, { changed: true, previousRevision: 1, revision: 2, offline: false })
   assert.equal(runtime.group.name, 'Amici aggiornati')
 })
 
@@ -137,14 +137,14 @@ test('treats an in-flight manifest revision as stale on every poll until it beco
   const firstInFlight = await runtime.syncRepositoryRevision()
   const secondInFlight = await runtime.syncRepositoryRevision()
 
-  assert.deepEqual(firstInFlight, { changed: true, previousRevision: 1, revision: 2 })
-  assert.deepEqual(secondInFlight, { changed: true, previousRevision: 2, revision: 2 })
+  assert.deepEqual(firstInFlight, { changed: true, previousRevision: 1, revision: 2, offline: false })
+  assert.deepEqual(secondInFlight, { changed: true, previousRevision: 2, revision: 2, offline: false })
   assert.equal(runtime.group.name, 'Durante update')
 
   client.files.set(groupKey, { sha: 'group-3', content: JSON.stringify(group(IdentityRole.Participant, 'Update completato')) })
   client.files.set(manifestKey, { sha: 'manifest-3', content: manifest(3, false) })
   const stable = await runtime.syncRepositoryRevision()
-  assert.deepEqual(stable, { changed: true, previousRevision: 2, revision: 3 })
+  assert.deepEqual(stable, { changed: true, previousRevision: 2, revision: 3, offline: false })
   assert.equal(runtime.group.name, 'Update completato')
 })
 
