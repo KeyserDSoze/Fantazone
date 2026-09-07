@@ -22,8 +22,8 @@ import {
 } from '@fantazone/github'
 
 export type GroupLeagueAdminRuntime = {
-  connection: { token: string }
-  target: { owner: string; repo: string; ref: string }
+  connection: { token: string; repository?: { default_branch: string } }
+  target: { owner: string; repo: string; ref?: string }
   refreshGroup(): Promise<Group>
   groupRepository: { writeGroup(group: Group, message?: string): Promise<string> }
   calendarRepository: {
@@ -245,12 +245,14 @@ export async function dispatchGroupRecalculation(
   requireSuperAdmin(group, actor.email)
   const workflow = GROUP_RECALCULATION_WORKFLOW_PATH.split('/').at(-1)
   if (!workflow) throw new Error('Workflow di manutenzione del gruppo non configurato.')
+  const ref = runtime.target.ref?.trim() || runtime.connection.repository?.default_branch?.trim()
+  if (!ref) throw new Error('Branch del repository di gruppo non disponibile.')
   const inputs: Record<string, string> = {
     job: input.day == null ? 'recalculate-all' : 'recalculate-day',
     season: String(input.season),
   }
   if (input.day != null) inputs.day = String(input.day)
-  await new GitHubClient(runtime.connection.token).dispatchWorkflow(runtime.target.owner, runtime.target.repo, workflow, runtime.target.ref, inputs)
+  await new GitHubClient(runtime.connection.token).dispatchWorkflow(runtime.target.owner, runtime.target.repo, workflow, ref, inputs)
 }
 
 function gatherLeagueTeams(group: Group, league: League, year: number): AnnualTeam[] {
