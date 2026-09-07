@@ -48,13 +48,13 @@ The group workflow uses three checkouts with different purposes:
 
 ```text
 group/          -> its own writable repository
-engine/         -> KeyserDSoze/Fantazone @ group-runtime-vN (stable compatible code)
-platform-data/  -> KeyserDSoze/Fantazone @ current data ref, data/ only
+engine/         -> KeyserDSoze/Fantazone @ main
+platform-data/  -> KeyserDSoze/Fantazone @ main, sparse data/ only
 ```
 
 It runs the shared job implementation from `engine/`, reads the latest normalized football data from `platform-data/` and commits only group `data/` changes with that group's own short-lived `GITHUB_TOKEN`.
 
-The platform therefore never enumerates all groups and never stores their PATs. Pinning engine code and refreshing global data are deliberately separate concerns.
+The platform therefore never enumerates all groups and never stores their PATs. Runtime v8 remains the managed workflow/schema version in `fantazone.json`; while there are no production group installations requiring backwards compatibility, both engine code and shared data follow the single supported `main` branch.
 
 See `docs/28-group-repository-lifecycle.md` for create/bootstrap/upgrade/versioning rules and `docs/35-normalized-season-team.md` for current Team versus TeamDay persistence.
 
