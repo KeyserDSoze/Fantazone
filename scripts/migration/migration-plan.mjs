@@ -4,6 +4,7 @@ import {
   mapLegacyStats, mapLegacyTeam, mapLegacyVotes, prettyJson,
 } from './legacy-mappers.mjs'
 import { mapLegacyCalendarCompatible } from './legacy-calendar-compat.mjs'
+import { buildHistoricalTeamPlayerIndex, recoverUnnamedSeasonTeamPlayers } from './team-player-recovery.mjs'
 
 const WRITABLE_CONTAINERS = new Set([
   'group', 'calendar', 'rank', 'dailyrank', 'team', 'dailyteams', 'halloffame',
@@ -141,6 +142,7 @@ export function createMigrationContext(records, options) {
     selectedGroupId: group.id,
     masterPlayersByYear: buildMasterPlayersByYear(records),
     officialPlayersByYearDay: buildOfficialPlayersByYearDay(records),
+    historicalTeamPlayers: buildHistoricalTeamPlayerIndex(records, group.id),
   }
 }
 
@@ -197,7 +199,8 @@ export function planMigrationRecord(record, context) {
     }
     if (c === 'team') {
       const k = keyObject(record, 'Team'); if (!belongsToGroup(k, context.selectedGroupId)) return skippedRecord('other-group')
-      return plannedFile('group', `data/groups/seasons/${k.y}/teams/${pathSegment(k.b)}/${String(k.e).trim()}.json`, prettyJson(mapLegacySeasonTeam(record.value)), `${c}/${record.blobName}`)
+      const recovered = recoverUnnamedSeasonTeamPlayers(record.value, k, context.historicalTeamPlayers)
+      return plannedFile('group', `data/groups/seasons/${k.y}/teams/${pathSegment(k.b)}/${String(k.e).trim()}.json`, prettyJson(mapLegacySeasonTeam(recovered)), `${c}/${record.blobName}`)
     }
     if (c === 'dailyteams') {
       const k = keyObject(record, 'TeamDay'); if (!belongsToGroup(k, context.selectedGroupId)) return skippedRecord('other-group')
