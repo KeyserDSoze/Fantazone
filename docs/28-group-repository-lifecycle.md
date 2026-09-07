@@ -1,228 +1,131 @@
 # Group repository lifecycle and managed runtime
 
-Every Fantazone fantasy group is an autonomous GitHub repository. The repository name is **not** the fantasy-group identity and no longer has to follow a `Fantazone.*` naming convention.
+Every Fantazone group is an autonomous GitHub repository. Its GitHub name is a storage locator, not the fantasy-group identity, and may be any valid repository name.
 
-A repository may be called, for example:
+## Ownership
 
-```text
-fantazone-amici-del-bar
-lega-2026
-fantacalcio
-qualsiasi-altro-nome-github-valido
-```
+### Platform repository
 
-`Fantazone.<group-name>` remains a valid legacy/convenience convention, not a contract.
+`KeyserDSoze/Fantazone@main` owns application code, shared reducers/jobs, global Serie A producers/data, Pages deployment and the maintained templates installed into group repositories.
 
-The platform repository (`KeyserDSoze/Fantazone`) does **not** own group state and does not execute group maintenance on behalf of every group. It contains the application, shared TypeScript engine, global football producers/data and maintained templates copied into group repositories.
+### Group repository
 
-## Ownership boundary
+The group owns its readable canonical state:
 
-### Platform-owned/global
+- `manifest.json`;
+- `config/group.json`;
+- root `settings.json`;
+- `data/**` league/Team/TeamDay/rank/market/auction/history state;
+- Fantazone-managed `.github/workflows/fantazone-group.yml`;
+- any unrelated custom files/workflows added by the administrator.
 
-- application source and GitHub Pages deployment;
-- shared domain/job engine;
-- Serie A calendar/master data/vote producers;
-- other data fetched once for every group;
-- source templates for Fantazone-managed group workflow files.
+Group Actions write with the repository's short-lived `GITHUB_TOKEN`. The platform repository never stores every group's PAT.
 
-### Group-owned
+## Recommended first connection
 
-Each group repository contains its own:
+1. User creates a repository, preferably private.
+2. User creates a fine-grained PAT restricted to that repository.
+3. Required permissions are `Contents: Read and write`, `Workflows: Read and write`, and `Actions: Read and write`.
+4. User signs in with Microsoft and enters `owner/repository` + PAT + group display name.
+5. Fantazone validates the exact repository and calls `ensureGroupInitialized()`.
+6. The runtime opens the group and prepares its local offline replica.
+7. Repository/PAT are persisted in the user's private OneDrive App Folder settings and locally according to the current shared-credential model.
 
-- `settings.json`: presentation metadata such as the current group display name and league display names;
-- `config/group.json`: structural fantasy model, stable IDs, users, baskets and league definitions;
-- leagues, rosters and budgets;
-- TeamDay formations;
-- fantasy calendars/results/rankings;
-- market/history/Hall of Fame state;
-- auction durable state;
-- `.github/workflows/fantazone-group.yml` and future Fantazone-managed group workflows.
+## Bootstrap rules
 
-Those workflows execute in the group repository and write with that repository's `GITHUB_TOKEN`. The platform never stores the PATs for all groups.
+`ensureGroupInitialized()` is idempotent.
 
-## Stable identity versus display names
-
-The GitHub repository full name (`owner/repository`) is the durable storage locator. Inside the fantasy model, IDs such as `group.id`, `league.id` and `basket.id` are durable keys used by paths and historical data.
-
-Human-facing names are allowed to change without changing those identifiers. Root `settings.json` is the presentation layer:
-
-```json
-{
-  "version": 1,
-  "group": {
-    "name": "Amici del Bar"
-  },
-  "leagues": {
-    "serie-a": { "name": "Campionato" },
-    "coppa": { "name": "Coppa del Nonno" }
-  }
-}
-```
-
-Renaming the group or a league therefore does **not** rename the GitHub repository, league IDs, paths, calendar files or historical results. `config/group.json` names remain readable fallback/compatibility fields while `settings.json` is the repository-owned display override.
-
-Older repositories without `settings.json` are upgraded by `ensureGroupInitialized()` before normal runtime opening: the current readable names in `config/group.json` seed version 1 using create-only semantics. `GroupSessionRuntime.open()` itself remains read-only; direct/legacy callers that bypass repository initialization simply use the canonical names in memory until the repository is initialized normally.
-
-## Recommended creation flow
-
-The product deliberately recommends creating the repository **before** the PAT. This lets the fine-grained token be restricted to exactly one repository.
+Create-only user/canonical files include:
 
 ```text
-1. user creates a GitHub repository (private recommended, any name)
-2. user creates a fine-grained PAT scoped only to that repository
-3. repository permissions:
-      Contents  -> Read and write
-      Workflows -> Read and write
-      Actions   -> Read and write
-4. user enters owner/repository + PAT + display group name
-5. Fantazone calls ensureGroupInitialized()
-6. GroupSessionRuntime opens the initialized repository read-only
+manifest.json
+config/group.json
+settings.json
 ```
 
-The creation screen links directly to GitHub repository creation and fine-grained PAT creation and explains these permissions. `Actions: Read and write` is needed for manual workflow dispatch/log operations; `Workflows: Read and write` is needed to install or upgrade managed files under `.github/workflows/`; `Contents: Read and write` covers canonical JSON and normal repository state.
-
-`ensureGroupInitialized()` initializes an existing repository without depending on its name:
-
-```text
-existing owner/repository
-        |
-        v
-ensureGroupInitialized()
-        |
-        +--> manifest.json                 create only
-        +--> config/group.json             create only + first admin
-        +--> settings.json                 create only from current readable names
-        +--> .github/workflows/...         Fantazone managed
-        +--> fantazone.json                runtime metadata
-        v
-GroupSessionRuntime.open()
-        |
-        +--> read config/group.json
-        +--> read settings.json
-        +--> overlay display names in memory
-        v
-group ready
-```
-
-Unrelated existing files are untouched. A new repository should normally be private. The initial administrator is written directly into readable schema-v2 `config/group.json` and must later prove the same email through Microsoft login.
-
-`createAndInitializeGroup()` still exists as a programmatic/legacy convenience and may create a `Fantazone.<normalized-name>` repository automatically, but the application onboarding no longer requires or suggests that naming contract.
-
-## Runtime version is independent from app version
-
-Not every UI patch needs repository changes, so group workflow compatibility has its own integer:
-
-```text
-GROUP_REPOSITORY_RUNTIME_VERSION
-```
-
-`fantazone.json` records the runtime installed in that specific group. Its `groupName` field is compatibility/runtime metadata, not the authoritative display-name source; UI display names come from `settings.json` when present.
-
-The runtime version is incremented only when a mandatory managed artifact changes.
-
-## Upgrade on application open
-
-Opening a saved or newly selected group is also the upgrade boundary:
-
-```text
-new app opens owner/repository
-        |
-        v
-ensureGroupInitialized()
-        |
-        +--> missing settings.json
-        |       -> create-only seed from current Group names
-        |
-        +--> current runtime + current managed workflow
-        |       -> zero managed-workflow writes
-        |
-        +--> old runtime / old managed workflow
-                -> update only Fantazone-managed paths using current blob SHA
-                -> write new groupRuntimeVersion last
-        |
-        v
-GroupSessionRuntime.open()
-        |
-        +--> read settings.json (or in-memory fallback for direct legacy callers)
-        +--> overlay display names on readable Group
-```
-
-The metadata version is written **after** required managed workflows succeed. A failed workflow update therefore cannot incorrectly mark a repository as upgraded.
-
-## Files that an upgrade may and may not replace
-
-Fantazone currently owns this managed path:
+Fantazone-managed files include:
 
 ```text
 .github/workflows/fantazone-group.yml
+fantazone.json
 ```
 
-It may be replaced when its maintained template changes. The file contains a warning that local edits are overwritten.
+A runtime upgrade may replace only Fantazone-managed paths. It never overwrites existing canonical `config/group.json`, `settings.json`, `data/**`, an existing manifest payload or unrelated custom workflows.
 
-Runtime upgrades must never overwrite existing canonical group data, including:
+The metadata version is written last, after required managed workflow installation succeeds.
+
+## Runtime version
+
+`GROUP_REPOSITORY_RUNTIME_VERSION` remains an integer persisted in `fantazone.json`. It identifies the installed managed workflow/schema contract.
+
+It is **not currently a Git branch version**.
+
+The project has no production group repository that requires old engine compatibility, so the historical `group-runtime-v2` … `group-runtime-v8` branches were removed. The single supported engine ref is now:
 
 ```text
-settings.json
-config/group.json
-data/**
-manifest.json (existing content)
+KeyserDSoze/Fantazone @ main
 ```
 
-Custom files and custom workflows with other names are also untouched. This gives administrators a safe extension point without letting app upgrades destroy their repository customizations.
-
-## Central workflow rule
-
-`.github/workflows/background-jobs.yml` in the platform repository exposes only platform/global producers and rebuilds. Group-only commands are deliberately absent from that workflow.
-
-The shared CLI can contain both global and group job implementations because the execution boundary is explicit. Group jobs require:
+The group workflow currently checks out:
 
 ```text
-FANTAZONE_GROUP_REPO_ROOT
-FANTAZONE_PLATFORM_REPO_ROOT
+group/          -> the writable group repository
+engine/         -> KeyserDSoze/Fantazone @ main
+platform-data/  -> KeyserDSoze/Fantazone @ main, sparse data/
 ```
 
-Without those roots they refuse to run as central platform jobs.
+If real production groups later require a frozen compatibility contract, immutable release refs/tags can be introduced at that point. We do not carry compatibility infrastructure before there is something to be compatible with.
 
-## Stable code, fresh global data
+## Local replica lifecycle
 
-A group Action needs two different views of `KeyserDSoze/Fantazone`:
+The first successful group connection requires Internet. Fantazone then prepares the device for offline use:
+
+1. download one ZIP archive of the group branch;
+2. materialize readable JSON into IndexedDB (web) or AsyncStorage (native);
+3. extract the Serie A season ids used by the group;
+4. download the corresponding compressed Pages data packs;
+5. cache the web App Shell through the unified Service Worker.
+
+The result is an application replica, not a Git clone. Commit history, refs and workflow source are not needed by normal offline screens.
+
+On subsequent online openings the Serie A pack index is checked by content hash, so unchanged season packs are not downloaded again.
+
+## Online synchronization
+
+`manifest.revision` is the group-wide change clock. While a group is open the app checks it immediately, every 60 seconds and on foreground.
+
+- unchanged stable revision: keep current cache;
+- changed/in-flight revision: discard stale process memory, refresh authoritative membership/configuration and replace the local group snapshot after the remote copy succeeds;
+- no network: continue using the durable replica;
+- GitHub `401/403/409/422`: surface the real error instead of hiding it as offline state.
+
+Normal individual document refreshes also use ETag conditional reads.
+
+## Offline mutation rule
+
+Offline mutation is opt-in by domain operation. We do not queue arbitrary JSON overwrites.
+
+Formation saves are replay-safe and use a semantic outbox. The queued record describes the user's intended formation, not an old file image. On reconnection Fantazone refreshes remote state, revalidates identity/rules and executes the normal save. The outbox entry is removed only after GitHub accepts the write.
+
+The remote GitHub commit timestamp remains the authoritative cutoff clock. Device time cannot be used to backdate a formation.
+
+Credential changes, membership administration and OneDrive changes remain online-only until they have a safe replay design.
+
+## Microsoft / OneDrive boundary
+
+After one successful Microsoft login, the last verified identity and user group catalog are cached locally so local startup does not require a fresh Graph request.
+
+An operation that actually changes OneDrive still requires Internet and a usable Microsoft Graph session. If the old session cannot be renewed, the application asks for Microsoft login at that point.
+
+## UI operation contract
+
+Every user-triggered asynchronous operation should immediately expose activity. The shared operation status surface shows a spinner plus a concise phase such as repository verification, local preparation, OneDrive synchronization or queued-write replay.
+
+The user-facing states distinguish:
 
 ```text
-engine/         -> group-runtime-vN   (stable code compatible with installed runtime)
-platform-data/  -> main               (latest shared data/serie-a files)
+Saved on device
+Synchronizing
+Synchronized with group
+Offline / pending changes
 ```
-
-This distinction is essential. Pinning the whole platform checkout would freeze votes/calendar; following `main` for the engine would silently change group business logic before that group had upgraded.
-
-## Publishing a new group runtime
-
-Production group workflows must not follow a moving engine ref. Each runtime gets a never-moved compatibility ref such as:
-
-```text
-group-runtime-v2
-group-runtime-v3
-```
-
-Release order:
-
-1. implement the shared engine/template changes for runtime `N`;
-2. pass typecheck, tests and application build;
-3. create/freeze `group-runtime-vN` at that validated engine commit;
-4. make the managed workflow template reference that engine ref;
-5. raise `GROUP_REPOSITORY_RUNTIME_VERSION` when required;
-6. deploy the application;
-7. each group upgrades independently the next time it is opened/managed.
-
-The engine ref must never be moved after publication. If behavior changes, publish a new runtime number.
-
-## Permissions
-
-The shared fine-grained group PAT should be scoped to the exact group repository and grant only what Fantazone needs:
-
-- `Contents: Read and write`;
-- `Workflows: Read and write`;
-- `Actions: Read and write`.
-
-Creating or updating `.github/workflows/*` fails explicitly when Workflows write is absent. The real integration test against `Fantazone.Test` verifies that permission on an actual clean bootstrap.
-
-Once installed, normal group Actions use the short-lived `GITHUB_TOKEN` of their own repository for canonical group-state commits; no central Fantazone secret database is required.
