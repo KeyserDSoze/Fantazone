@@ -24,6 +24,7 @@ import { GroupRankingScreen } from './group-ranking-screen'
 import { GroupRulesScreen } from './group-rules-screen'
 import { GroupSettingsScreen } from './group-settings-screen'
 import { GroupTeamsScreen } from './group-teams-screen'
+import { GroupUsersAdminScreen } from './group-users-admin-screen'
 
 type Props = {
   runtime: GroupSessionRuntime
@@ -88,6 +89,8 @@ export function GroupDashboardScreen({ runtime, session, onLogout, onDisconnect,
         <GroupHallOfFameScreen runtime={runtime} selection={selection} />
       ) : route === 'rules' ? (
         <GroupRulesScreen runtime={runtime} selection={selection} />
+      ) : route === 'group-users-admin' ? (
+        <GroupUsersAdminScreen runtime={runtime} session={session} />
       ) : route === 'settings' ? (
         <GroupSettingsScreen runtime={runtime} session={session} />
       ) : (
