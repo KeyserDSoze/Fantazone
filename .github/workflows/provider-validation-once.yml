@@ -1,5 +1,5 @@
-name: Diagnose player images fetch once
-run-name: Fantazone · diagnose player images Node fetch
+name: Diagnose player catalog once
+run-name: Fantazone · diagnose player catalog
 
 on:
   push:
@@ -7,55 +7,49 @@ on:
 
 jobs:
   diagnose:
-    if: "${{ github.event.head_commit.message == 'ops: diagnose player images fetch' }}"
+    if: "${{ github.event.head_commit.message == 'ops: diagnose player catalog' }}"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/setup-node@v6
         with:
           node-version: 22
-      - name: Probe Node fetch exactly like the ingestion
+      - name: Probe current and previous player catalog pages
         shell: bash
         run: |
           node <<'NODE'
           const base = 'https://api-sdp.legaseriea.it/v1/serie-a/football/'
-          const id = 'serie-a::Football_Competition::ec93b94f74294dc98ab5bcfd67fc0d88'
-          const url = new URL(`competitions/${encodeURIComponent(id)}/seasons?locale=it-IT`, base).toString()
-
-          const variants = [
-            ['exact-current', {
-              'User-Agent': 'Mozilla/5.0 (compatible; Fantazone/1.0; +https://fanta.plus)',
-              'Accept-Language': 'it-IT,it;q=0.9,en-US;q=0.8,en;q=0.7',
-              'Cache-Control': 'no-cache',
-            }],
-            ['without-cache-control', {
-              'User-Agent': 'Mozilla/5.0 (compatible; Fantazone/1.0; +https://fanta.plus)',
-              'Accept-Language': 'it-IT,it;q=0.9,en-US;q=0.8,en;q=0.7',
-            }],
-            ['browserish', {
-              'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/140 Safari/537.36',
-              'Accept': 'application/json,text/plain,*/*',
-              'Accept-Language': 'it-IT,it;q=0.9,en-US;q=0.8,en;q=0.7',
-              'Referer': 'https://www.legaseriea.it/',
-            }],
+          const headers = {
+            'User-Agent': 'Mozilla/5.0 (compatible; Fantazone/1.0; +https://fanta.plus)',
+            'Accept-Language': 'it-IT,it;q=0.9,en-US;q=0.8,en;q=0.7',
+            'Cache-Control': 'no-cache',
+          }
+          const seasons = [
+            ['current', 'serie-a::Football_Season::ed7fdc2a3e7b408b942ec177b7b956b5'],
+            ['previous', 'serie-a::Football_Season::5f0e080fc3a44073984b75b3a8e06a8a'],
           ]
-
-          for (const [name, headers] of variants) {
-            console.log(`===== ${name} =====`)
-            try {
-              const response = await fetch(url, { headers })
-              console.log('status', response.status, response.statusText)
-              console.log('content-type', response.headers.get('content-type'))
-              const text = await response.text()
-              console.log('body', text.slice(0, 500))
+          for (const [label, id] of seasons) {
+            for (const category of ['General', 'general']) {
+              const url = new URL(`seasons/${encodeURIComponent(id)}/stats/players?category=${category}&page=1&locale=it-IT`, base).toString()
+              console.log(`===== ${label} ${category} =====`)
               try {
-                const parsed = JSON.parse(text)
-                console.log('seasons', Array.isArray(parsed?.seasons) ? parsed.seasons.length : 'missing')
+                const response = await fetch(url, { headers })
+                const text = await response.text()
+                console.log('url', url)
+                console.log('status', response.status, response.statusText)
+                console.log('content-type', response.headers.get('content-type'))
+                console.log('body', text.slice(0, 1400))
+                try {
+                  const parsed = JSON.parse(text)
+                  console.log('top-level keys', Object.keys(parsed ?? {}))
+                  console.log('players length', Array.isArray(parsed?.players) ? parsed.players.length : 'missing')
+                  console.log('pagination', JSON.stringify(parsed?.pagination ?? null))
+                } catch (error) {
+                  console.log('json-error', error instanceof Error ? error.message : String(error))
+                }
               } catch (error) {
-                console.log('json-error', error instanceof Error ? error.message : String(error))
+                console.log('fetch-error', error)
+                console.log('cause', error?.cause)
               }
-            } catch (error) {
-              console.log('fetch-error', error)
-              console.log('cause', error?.cause)
             }
           }
           NODE
