@@ -94,10 +94,11 @@ For a group repository called `Fantazone.MyLeague`:
 
 `-PreserveExisting` is recommended when `KeyserDSoze/Fantazone` already contains current-season Serie A data: historical missing paths are planned, existing canonical paths are skipped.
 
-The report is created under `migration-output/azure-migration-<timestamp>.json` and contains:
+The report is created under the repository root at `migration-output/azure-migration-<timestamp>.json` and contains:
 
 - every Azure container and blob name/size/date discovered;
 - which containers were actually downloaded;
+- whether the local Azure scan cache was used;
 - the selected legacy group id/name;
 - every Azure blob → GitHub path mapping;
 - collisions/skips;
@@ -110,6 +111,51 @@ If the storage contains multiple groups and repository-name auto-selection is am
 ```powershell
 -GroupId 'legacy-group-id'
 ```
+
+## Local Azure scan cache
+
+The migration caches a completed Azure scan automatically at:
+
+```text
+migration-output/cache/azure-scan-v1.json
+```
+
+The cache contains the full Azure inventory plus the parsed contents of canonical migration containers. It is created **immediately after a successful Azure scan and before mapping/planning**. Therefore, if a legacy mapper fails afterwards, update/pull the migration code and rerun the same command: the next run reuses the cache and does not enumerate or download the Blob Storage again.
+
+The cache does **not** contain the Azure connection string, SAS token, AccountKey or GitHub PATs. It stores only a hash of the non-secret Azure source identity so that a cache from another storage account is rejected automatically. Rotating a SAS or AccountKey does not invalidate a cache for the same storage source.
+
+The cache does contain legacy Fantasoccer data and may include names/emails from the source. Treat it as private local data. `migration-output/` is gitignored; do not upload or commit the cache.
+
+Typical cache messages are:
+
+```text
+[Cache] Azure scan saved to ...\migration-output\cache\azure-scan-v1.json
+[Cache] Reusing Azure scan from ...\migration-output\cache\azure-scan-v1.json (...)
+```
+
+To force a fresh Azure scan and replace the cache:
+
+```powershell
+./scripts/migration/Invoke-FantazoneAzureMigration.ps1 `
+  -GroupRepository 'KeyserDSoze/Fantazone.MyLeague' `
+  -PlatformRepository 'KeyserDSoze/Fantazone' `
+  -PreserveExisting `
+  -RefreshCache
+```
+
+To disable cache reads and writes for one run:
+
+```powershell
+-NoCache
+```
+
+To put the cache in a custom location:
+
+```powershell
+-CachePath 'D:\private\fantazone-azure-scan.json'
+```
+
+`-RefreshCache` and `-NoCache` are mutually exclusive.
 
 ## 2. Apply
 
@@ -182,4 +228,4 @@ node scripts/migration/migrate-azure-to-github.mjs `
   --preserve-existing
 ```
 
-Add `--apply` for writes. Use `--help` for all options.
+Cache switches map directly to `--cache <path>`, `--refresh-cache` and `--no-cache`. Add `--apply` for writes. Use `--help` for all options.
