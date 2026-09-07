@@ -61,7 +61,7 @@ Human-facing names are allowed to change without changing those identifiers. Roo
 
 Renaming the group or a league therefore does **not** rename the GitHub repository, league IDs, paths, calendar files or historical results. `config/group.json` names remain readable fallback/compatibility fields while `settings.json` is the repository-owned display override.
 
-Older repositories without `settings.json` are upgraded lazily when `GroupSessionRuntime` opens: current readable names seed version 1 and subsequent renames are written only through the display-settings boundary.
+Older repositories without `settings.json` are upgraded by `ensureGroupInitialized()` before normal runtime opening: the current readable names in `config/group.json` seed version 1 using create-only semantics. `GroupSessionRuntime.open()` itself remains read-only; direct/legacy callers that bypass repository initialization simply use the canonical names in memory until the repository is initialized normally.
 
 ## Recommended creation flow
 
@@ -76,7 +76,7 @@ The product deliberately recommends creating the repository **before** the PAT. 
       Actions   -> Read and write
 4. user enters owner/repository + PAT + display group name
 5. Fantazone calls ensureGroupInitialized()
-6. GroupSessionRuntime opens and creates/loads settings.json
+6. GroupSessionRuntime opens the initialized repository read-only
 ```
 
 The creation screen links directly to GitHub repository creation and fine-grained PAT creation and explains these permissions. `Actions: Read and write` is needed for manual workflow dispatch/log operations; `Workflows: Read and write` is needed to install or upgrade managed files under `.github/workflows/`; `Contents: Read and write` covers canonical JSON and normal repository state.
@@ -91,12 +91,15 @@ ensureGroupInitialized()
         |
         +--> manifest.json                 create only
         +--> config/group.json             create only + first admin
+        +--> settings.json                 create only from current readable names
         +--> .github/workflows/...         Fantazone managed
         +--> fantazone.json                runtime metadata
         v
 GroupSessionRuntime.open()
         |
-        +--> settings.json                 create only when missing
+        +--> read config/group.json
+        +--> read settings.json
+        +--> overlay display names in memory
         v
 group ready
 ```
@@ -127,8 +130,11 @@ new app opens owner/repository
         v
 ensureGroupInitialized()
         |
+        +--> missing settings.json
+        |       -> create-only seed from current Group names
+        |
         +--> current runtime + current managed workflow
-        |       -> zero workflow writes
+        |       -> zero managed-workflow writes
         |
         +--> old runtime / old managed workflow
                 -> update only Fantazone-managed paths using current blob SHA
@@ -137,7 +143,7 @@ ensureGroupInitialized()
         v
 GroupSessionRuntime.open()
         |
-        +--> load/create settings.json
+        +--> read settings.json (or in-memory fallback for direct legacy callers)
         +--> overlay display names on readable Group
 ```
 
