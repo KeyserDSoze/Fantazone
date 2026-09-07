@@ -13,9 +13,10 @@ import type { GroupSessionRuntime } from '../services/groupSessionRuntime'
 type Props = {
   runtime: GroupSessionRuntime
   selection: GroupNavigationSelection
+  onOpenGame?: (gameId: string) => void
 }
 
-export function GroupCalendarScreen({ runtime, selection }: Props) {
+export function GroupCalendarScreen({ runtime, selection, onOpenGame }: Props) {
   const [calendar, setCalendar] = useState<Calendar | null>(null)
   const [roundKey, setRoundKey] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -103,7 +104,7 @@ export function GroupCalendarScreen({ runtime, selection }: Props) {
                 <Text color="$color10">Serie A {day.serieADay}ª</Text>
               </XStack>
               <YStack gap="$2">
-                {day.games.map(game => <CalendarGameRow key={game.id} game={game} />)}
+                {day.games.map(game => <CalendarGameRow key={game.id} game={game} onOpen={onOpenGame ? () => onOpenGame(game.id) : undefined} />)}
               </YStack>
             </YStack>
           </Card>
@@ -113,11 +114,11 @@ export function GroupCalendarScreen({ runtime, selection }: Props) {
   )
 }
 
-function CalendarGameRow({ game }: { game: CalendarGame }) {
+function CalendarGameRow({ game, onOpen }: { game: CalendarGame; onOpen?: () => void }) {
   const played = GameResultHelper.hasValue(game.result)
   const score = game.result ? `${game.result.homeGoals} - ${game.result.awayGoals}` : 'vs'
   return (
-    <YStack padding="$3" borderRadius="$3" backgroundColor="$color2" gap="$1">
+    <YStack padding="$3" borderRadius="$3" backgroundColor="$color2" gap="$2">
       <XStack alignItems="center" justifyContent="space-between" gap="$2">
         <Text flex={1} textAlign="right" fontWeight="700" numberOfLines={1}>{game.home}</Text>
         <Text minWidth={64} textAlign="center" fontWeight="800">{played ? score : 'vs'}</Text>
@@ -128,6 +129,7 @@ function CalendarGameRow({ game }: { game: CalendarGame }) {
           {game.result.home.value.toFixed(1)} · {game.result.away.value.toFixed(1)} punti
         </Text>
       ) : null}
+      {onOpen ? <Button size="$2" variant="outlined" alignSelf="center" onPress={onOpen}>Apri partita</Button> : null}
     </YStack>
   )
 }

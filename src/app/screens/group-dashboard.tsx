@@ -12,6 +12,7 @@ import type { GroupSessionRuntime } from '../services/groupSessionRuntime'
 import { AuctionScreen } from './auction-screen'
 import { GroupCalendarScreen } from './group-calendar-screen'
 import { GroupFormationScreen } from './group-formation-screen'
+import { GroupGameScreen } from './group-game-screen'
 import { GroupHomeScreen } from './group-home-screen'
 import { GroupLiveScreen } from './group-live-screen'
 import { GroupProductShell } from './group-product-shell'
@@ -36,6 +37,7 @@ export function GroupDashboardScreen({
   void onLogout
   const [route, setRoute] = useState<GroupProductRoute>('home')
   const [selection, setSelection] = useState<GroupNavigationSelection>(() => getDefaultGroupSelection(runtime.group))
+  const [selectedGameId, setSelectedGameId] = useState<string | null>(null)
   const group = runtime.group
 
   useEffect(() => {
@@ -47,7 +49,18 @@ export function GroupDashboardScreen({
   }
 
   function selectLeague(leagueId: string) {
+    setSelectedGameId(null)
     setSelection(current => normalizeGroupSelection(group, { leagueId, year: current.year }))
+  }
+
+  function selectYear(year: number) {
+    setSelectedGameId(null)
+    setSelection(current => ({ ...current, year }))
+  }
+
+  function navigate(next: GroupProductRoute) {
+    setSelectedGameId(null)
+    setRoute(next)
   }
 
   return (
@@ -57,26 +70,28 @@ export function GroupDashboardScreen({
       identityEmail={session.identity.email}
       route={route}
       selection={selection}
-      onRouteChange={setRoute}
+      onRouteChange={navigate}
       onLeagueChange={selectLeague}
-      onYearChange={year => setSelection(current => ({ ...current, year }))}
+      onYearChange={selectYear}
       onChangeGroup={onDisconnect}
       onExploreArchitecture={onExploreArchitecture}
     >
-      {route === 'home' ? (
-        <GroupHomeScreen runtime={runtime} selection={selection} onNavigate={setRoute} />
+      {selectedGameId ? (
+        <GroupGameScreen runtime={runtime} selection={selection} gameId={selectedGameId} onBack={() => setSelectedGameId(null)} />
+      ) : route === 'home' ? (
+        <GroupHomeScreen runtime={runtime} selection={selection} onNavigate={navigate} />
       ) : route === 'calendar' ? (
-        <GroupCalendarScreen runtime={runtime} selection={selection} />
+        <GroupCalendarScreen runtime={runtime} selection={selection} onOpenGame={setSelectedGameId} />
       ) : route === 'ranking' ? (
         <GroupRankingScreen runtime={runtime} selection={selection} />
       ) : route === 'live' ? (
-        <GroupLiveScreen runtime={runtime} selection={selection} />
+        <GroupLiveScreen runtime={runtime} selection={selection} onOpenGame={setSelectedGameId} />
       ) : route === 'formation' ? (
         <GroupFormationScreen runtime={runtime} session={session} selection={selection} />
       ) : route === 'settings' ? (
         <GroupSettingsScreen runtime={runtime} session={session} />
       ) : (
-        <PendingProductScreen route={route} onHome={() => setRoute('home')} />
+        <PendingProductScreen route={route} onHome={() => navigate('home')} />
       )}
     </GroupProductShell>
   )

@@ -16,9 +16,10 @@ const LIVE_REFRESH_MS = 30_000
 type Props = {
   runtime: GroupSessionRuntime
   selection: GroupNavigationSelection
+  onOpenGame?: (gameId: string) => void
 }
 
-export function GroupLiveScreen({ runtime, selection }: Props) {
+export function GroupLiveScreen({ runtime, selection, onOpenGame }: Props) {
   const [liveGroup, setLiveGroup] = useState<LiveGroup | null>(null)
   const [isDuringSerieADay, setIsDuringSerieADay] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -72,37 +73,21 @@ export function GroupLiveScreen({ runtime, selection }: Props) {
         <XStack justifyContent="space-between" alignItems="flex-start" gap="$3" flexWrap="wrap" paddingTop="$2">
           <YStack gap="$1">
             <H1>Live</H1>
-            <Paragraph color="$color10">
-              {leagueName}{selection.year != null ? ` · ${formatSeasonFromYear(selection.year)}` : ''}
-            </Paragraph>
+            <Paragraph color="$color10">{leagueName}{selection.year != null ? ` · ${formatSeasonFromYear(selection.year)}` : ''}</Paragraph>
             <Text color={isDuringSerieADay ? '$red10' : '$color9'} fontWeight="700">
               {isDuringSerieADay ? 'Aggiornamento automatico attivo' : 'Nessuna giornata Serie A in corso'}
             </Text>
           </YStack>
           <YStack gap="$1" alignItems="flex-end">
-            <Button variant="outlined" disabled={loading} onPress={() => { void loadLive() }}>
-              {loading ? <Spinner /> : 'Aggiorna'}
-            </Button>
-            {lastUpdated ? (
-              <Text color="$color9" fontSize="$2">
-                {lastUpdated.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}
-              </Text>
-            ) : null}
+            <Button variant="outlined" disabled={loading} onPress={() => { void loadLive() }}>{loading ? <Spinner /> : 'Aggiorna'}</Button>
+            {lastUpdated ? <Text color="$color9" fontSize="$2">{lastUpdated.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}</Text> : null}
           </YStack>
         </XStack>
 
         {error ? <Card borderWidth={1} borderColor="$red8" padding="$4"><Paragraph color="$red10">{error}</Paragraph></Card> : null}
         {!error && loading && !liveGroup ? <Spinner size="large" /> : null}
-        {!error && !loading && !liveGroup ? (
-          <Card borderWidth={1} borderColor="$borderColor" padding="$4">
-            <Paragraph color="$color10">Il live non è disponibile per questa stagione.</Paragraph>
-          </Card>
-        ) : null}
-        {!error && liveGroup && !league ? (
-          <Card borderWidth={1} borderColor="$borderColor" padding="$4">
-            <Paragraph color="$color10">La lega selezionata non ha dati live per questa giornata.</Paragraph>
-          </Card>
-        ) : null}
+        {!error && !loading && !liveGroup ? <Card borderWidth={1} borderColor="$borderColor" padding="$4"><Paragraph color="$color10">Il live non è disponibile per questa stagione.</Paragraph></Card> : null}
+        {!error && liveGroup && !league ? <Card borderWidth={1} borderColor="$borderColor" padding="$4"><Paragraph color="$color10">La lega selezionata non ha dati live per questa giornata.</Paragraph></Card> : null}
 
         {league ? (
           <>
@@ -120,19 +105,16 @@ export function GroupLiveScreen({ runtime, selection }: Props) {
                         const hasPoints = GameResultHelper.hasValue(game.result)
                         return (
                           <Card key={game.id} backgroundColor="$color2" padding="$3">
-                            <YStack gap="$1">
+                            <YStack gap="$2">
                               <XStack alignItems="center" justifyContent="space-between" gap="$2">
                                 <Text flex={1} textAlign="right" fontWeight="800" numberOfLines={1}>{game.home}</Text>
-                                <Text minWidth={72} textAlign="center" fontWeight="900" fontSize="$5">
-                                  {game.result ? `${game.result.homeGoals} - ${game.result.awayGoals}` : 'vs'}
-                                </Text>
+                                <Text minWidth={72} textAlign="center" fontWeight="900" fontSize="$5">{game.result ? `${game.result.homeGoals} - ${game.result.awayGoals}` : 'vs'}</Text>
                                 <Text flex={1} fontWeight="800" numberOfLines={1}>{game.away}</Text>
                               </XStack>
                               <Text textAlign="center" color="$color10" fontSize="$2">
-                                {game.result
-                                  ? `${game.result.home.value.toFixed(1)} · ${game.result.away.value.toFixed(1)} punti${hasPoints ? '' : ' · in attesa voti'}`
-                                  : 'Formazioni o voti non ancora disponibili'}
+                                {game.result ? `${game.result.home.value.toFixed(1)} · ${game.result.away.value.toFixed(1)} punti${hasPoints ? '' : ' · in attesa voti'}` : 'Formazioni o voti non ancora disponibili'}
                               </Text>
+                              {onOpenGame ? <Button size="$2" variant="outlined" alignSelf="center" onPress={() => onOpenGame(game.id)}>Dettaglio partita</Button> : null}
                             </YStack>
                           </Card>
                         )
