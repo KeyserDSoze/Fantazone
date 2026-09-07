@@ -85,6 +85,10 @@ export async function saveAzureScanCache(cachePath, connectionString, scan) {
 
   try {
     await writeFile(temporaryPath, `${JSON.stringify(payload)}\n`, 'utf8')
+    // Windows does not consistently allow rename() to replace an existing destination.
+    // The complete payload is already durable in the temporary file, so remove the old
+    // cache immediately before the final move.
+    await rm(cachePath, { force: true })
     await rename(temporaryPath, cachePath)
   } finally {
     await rm(temporaryPath, { force: true }).catch(() => {})
