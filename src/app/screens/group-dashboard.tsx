@@ -15,9 +15,11 @@ import { GroupFormationScreen } from './group-formation-screen'
 import { GroupGameScreen } from './group-game-screen'
 import { GroupHomeScreen } from './group-home-screen'
 import { GroupLiveScreen } from './group-live-screen'
+import { GroupPlayersScreen } from './group-players-screen'
 import { GroupProductShell } from './group-product-shell'
 import { GroupRankingScreen } from './group-ranking-screen'
 import { GroupSettingsScreen } from './group-settings-screen'
+import { GroupTeamsScreen } from './group-teams-screen'
 
 type Props = {
   runtime: GroupSessionRuntime
@@ -88,6 +90,10 @@ export function GroupDashboardScreen({
         <GroupLiveScreen runtime={runtime} selection={selection} onOpenGame={setSelectedGameId} />
       ) : route === 'formation' ? (
         <GroupFormationScreen runtime={runtime} session={session} selection={selection} />
+      ) : route === 'teams' ? (
+        <GroupTeamsScreen runtime={runtime} selection={selection} />
+      ) : route === 'players' ? (
+        <GroupPlayersScreen runtime={runtime} selection={selection} />
       ) : route === 'settings' ? (
         <GroupSettingsScreen runtime={runtime} session={session} />
       ) : (
