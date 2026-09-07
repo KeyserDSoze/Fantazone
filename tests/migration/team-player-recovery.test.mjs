@@ -14,15 +14,15 @@ const anonymousPlayer = {
   p: 17, rv: 0, s: 0, k: 3,
 }
 
-function team(players) {
-  return { n: 'Team', o: teamKey.e, a: [], p: players, m: 0, d: null }
+function team(players, name = 'Team') {
+  return { n: name, o: teamKey.e, a: [], p: players, m: 0, d: null }
 }
 
-function dailyRecord(blobName, player, day = 1) {
+function dailyRecord(blobName, player, day = 1, key = teamKey) {
   return {
     container: 'dailyteams', blobName,
-    key: { ...teamKey, d: day },
-    value: team([player]),
+    key: { ...key, d: day },
+    value: { ...team([player]), o: key.e },
   }
 }
 
@@ -87,6 +87,42 @@ test('recovers anonymized SoldForOneHalf Manolas when legacy role became Undefin
   assert.equal(season.players[0].price, 16)
   assert.equal(season.players[0].status, 1)
   assert.equal(season.players[0].position, 11)
+})
+
+test('uses another basket history only when the season Team payload is an exact mirror', () => {
+  const basketA = { ...teamKey, b: 'basket-a' }
+  const basketB = { ...teamKey, b: 'basket-b' }
+  const anonymized = { n: '', t: { n: '' }, r: -1, a: true, p: 28, s: 1, k: 11 }
+  const manolas = { n: 'Manolas', t: { n: '' }, r: 1, a: true, p: 28, s: 1, k: 11 }
+  const mirroredTeam = { ...team([anonymized], 'Mirrored Team'), o: basketA.e }
+  const records = [
+    { container: 'team', blobName: 'season-a', key: basketA, value: mirroredTeam },
+    { container: 'team', blobName: 'season-b', key: basketB, value: JSON.parse(JSON.stringify(mirroredTeam)) },
+    dailyRecord('day-b', manolas, 24, basketB),
+  ]
+  const index = buildHistoricalTeamPlayerIndex(records, groupId)
+  const recovered = recoverUnnamedSeasonTeamPlayers(mirroredTeam, basketA, index)
+  assert.equal(recovered.p[0].n, 'Manolas')
+  assert.equal(recovered.p[0].p, 28)
+})
+
+test('does not borrow history from a different basket when season Team payloads differ', () => {
+  const basketA = { ...teamKey, b: 'basket-a' }
+  const basketB = { ...teamKey, b: 'basket-b' }
+  const anonymized = { n: '', t: { n: '' }, r: -1, a: true, p: 28, s: 1, k: 11 }
+  const manolas = { n: 'Manolas', t: { n: '' }, r: 1, a: true, p: 28, s: 1, k: 11 }
+  const targetTeam = { ...team([anonymized], 'Target Team'), o: basketA.e }
+  const otherTeam = { ...team([{ ...anonymized, p: 99 }], 'Different Team'), o: basketB.e }
+  const records = [
+    { container: 'team', blobName: 'season-a', key: basketA, value: targetTeam },
+    { container: 'team', blobName: 'season-b', key: basketB, value: otherTeam },
+    dailyRecord('day-b', manolas, 24, basketB),
+  ]
+  const index = buildHistoricalTeamPlayerIndex(records, groupId)
+  assert.throws(
+    () => recoverUnnamedSeasonTeamPlayers(targetTeam, basketA, index),
+    /no historical Team\/TeamDay candidates|no metadata-compatible historical candidate/,
+  )
 })
 
 test('fails closed when two different historical players are equally compatible', () => {
