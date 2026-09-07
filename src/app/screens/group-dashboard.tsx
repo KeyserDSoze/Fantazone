@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import { Button, Card, H1, H2, Paragraph, ScrollView, YStack } from 'tamagui'
 import type { AuthenticatedGroupSession } from '@fantazone/domain'
 import {
-  findNavigationItem,
   getDefaultGroupSelection,
   normalizeGroupSelection,
   type GroupNavigationSelection,
@@ -115,26 +113,14 @@ export function GroupDashboardScreen({ runtime, session, onLogout, onDisconnect,
       ) : route === 'settings' ? (
         <GroupSettingsScreen runtime={runtime} session={session} />
       ) : (
-        <PendingProductScreen route={route} onHome={() => navigate('home')} />
+        <UnreachableRoute route={route} />
       )}
     </GroupProductShell>
   )
 }
 
-function PendingProductScreen({ route, onHome }: { route: GroupProductRoute; onHome: () => void }) {
-  const item = findNavigationItem(route)
-  return (
-    <ScrollView flex={1} contentContainerStyle={{ flexGrow: 1 }}>
-      <YStack width="100%" maxWidth={760} alignSelf="center" padding="$4" paddingTop="$8" gap="$4">
-        <H1>{item?.label ?? 'Fantazone'}</H1>
-        <Card borderWidth={1} borderColor="$borderColor" padding="$4">
-          <YStack gap="$3">
-            <H2 size="$6">Sezione in migrazione</H2>
-            <Paragraph color="$color10">La navigazione è già pronta; questa schermata verrà collegata ai servizi locali/GitHub nel prossimo blocco, senza ripristinare il vecchio backend.</Paragraph>
-            <Button alignSelf="flex-start" onPress={onHome}>Torna alla Home</Button>
-          </YStack>
-        </Card>
-      </YStack>
-    </ScrollView>
-  )
+/** Adding a GroupProductRoute without wiring a screen must fail typecheck. */
+function UnreachableRoute({ route }: { route: never }) {
+  void route
+  return null
 }
