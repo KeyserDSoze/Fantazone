@@ -10,6 +10,7 @@ import {
 } from '../services/groupNavigation'
 import type { GroupSessionRuntime } from '../services/groupSessionRuntime'
 import { AuctionScreen } from './auction-screen'
+import { GroupBasketsAdminScreen } from './group-baskets-admin-screen'
 import { GroupCalendarScreen } from './group-calendar-screen'
 import { GroupFormationScreen } from './group-formation-screen'
 import { GroupGameScreen } from './group-game-screen'
@@ -91,6 +92,8 @@ export function GroupDashboardScreen({ runtime, session, onLogout, onDisconnect,
         <GroupRulesScreen runtime={runtime} selection={selection} />
       ) : route === 'group-users-admin' ? (
         <GroupUsersAdminScreen runtime={runtime} session={session} />
+      ) : route === 'group-baskets-admin' ? (
+        <GroupBasketsAdminScreen runtime={runtime} session={session} selection={selection} />
       ) : route === 'settings' ? (
         <GroupSettingsScreen runtime={runtime} session={session} />
       ) : (
