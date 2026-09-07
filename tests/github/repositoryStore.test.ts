@@ -180,13 +180,16 @@ test('supports create-only writes and rejects an existing path', async () => {
   assert.equal(client.writes, 0)
 })
 
-test('maps a GitHub 422 create race to RepositoryWriteConflictError', async () => {
+test('normalizes a GitHub 422 create race to a 409 repository conflict', async () => {
   const client = new FakeContentClient()
   client.failWriteStatus = 422
   const store = new GitHubJsonStore(client)
   await assert.rejects(
     store.writeJson(location, { name: 'Demo' }, 'test: racing create', { createOnly: true }),
-    error => error instanceof RepositoryWriteConflictError && error.status === 422,
+    error => error instanceof RepositoryWriteConflictError &&
+      error.status === 409 &&
+      error.cause instanceof GitHubApiError &&
+      error.cause.status === 422,
   )
 })
 
