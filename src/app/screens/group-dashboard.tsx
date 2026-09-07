@@ -24,6 +24,7 @@ import { GroupMarketTradesScreen } from './group-market-trades-screen'
 import { GroupPatchNotesScreen } from './group-patch-notes-screen'
 import { GroupPlayersScreen } from './group-players-screen'
 import { GroupProductShell } from './group-product-shell'
+import { GroupPushNotificationsScreen } from './group-push-notifications-screen'
 import { GroupRankingScreen } from './group-ranking-screen'
 import { GroupRulesScreen } from './group-rules-screen'
 import { GroupSettingsScreen } from './group-settings-screen'
@@ -97,6 +98,8 @@ export function GroupDashboardScreen({ runtime, session, onLogout, onDisconnect,
         <GroupRulesScreen runtime={runtime} selection={selection} />
       ) : route === 'info' ? (
         <GroupInfoScreen />
+      ) : route === 'push-notifications' ? (
+        <GroupPushNotificationsScreen runtime={runtime} session={session} />
       ) : route === 'patch-notes' ? (
         <GroupPatchNotesScreen />
       ) : route === 'group-users-admin' ? (
