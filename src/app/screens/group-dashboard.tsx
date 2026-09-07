@@ -13,6 +13,7 @@ import { AuctionScreen } from './auction-screen'
 import { GroupCalendarScreen } from './group-calendar-screen'
 import { GroupFormationScreen } from './group-formation-screen'
 import { GroupGameScreen } from './group-game-screen'
+import { GroupHallOfFameScreen } from './group-hall-of-fame-screen'
 import { GroupHomeScreen } from './group-home-screen'
 import { GroupLiveScreen } from './group-live-screen'
 import { GroupMarketCreateScreen } from './group-market-create-screen'
@@ -20,6 +21,7 @@ import { GroupMarketTradesScreen } from './group-market-trades-screen'
 import { GroupPlayersScreen } from './group-players-screen'
 import { GroupProductShell } from './group-product-shell'
 import { GroupRankingScreen } from './group-ranking-screen'
+import { GroupRulesScreen } from './group-rules-screen'
 import { GroupSettingsScreen } from './group-settings-screen'
 import { GroupTeamsScreen } from './group-teams-screen'
 
@@ -31,41 +33,23 @@ type Props = {
   onExploreArchitecture: () => void
 }
 
-export function GroupDashboardScreen({
-  runtime,
-  session,
-  onLogout,
-  onDisconnect,
-  onExploreArchitecture,
-}: Props) {
+export function GroupDashboardScreen({ runtime, session, onLogout, onDisconnect, onExploreArchitecture }: Props) {
   void onLogout
   const [route, setRoute] = useState<GroupProductRoute>('home')
   const [selection, setSelection] = useState<GroupNavigationSelection>(() => getDefaultGroupSelection(runtime.group))
   const [selectedGameId, setSelectedGameId] = useState<string | null>(null)
   const group = runtime.group
 
-  useEffect(() => {
-    setSelection(current => normalizeGroupSelection(group, current))
-  }, [group])
+  useEffect(() => { setSelection(current => normalizeGroupSelection(group, current)) }, [group])
 
-  if (route === 'auction') {
-    return <AuctionScreen runtime={runtime} session={session} onBack={() => setRoute('home')} />
-  }
+  if (route === 'auction') return <AuctionScreen runtime={runtime} session={session} onBack={() => setRoute('home')} />
 
   function selectLeague(leagueId: string) {
     setSelectedGameId(null)
     setSelection(current => normalizeGroupSelection(group, { leagueId, year: current.year }))
   }
-
-  function selectYear(year: number) {
-    setSelectedGameId(null)
-    setSelection(current => ({ ...current, year }))
-  }
-
-  function navigate(next: GroupProductRoute) {
-    setSelectedGameId(null)
-    setRoute(next)
-  }
+  function selectYear(year: number) { setSelectedGameId(null); setSelection(current => ({ ...current, year })) }
+  function navigate(next: GroupProductRoute) { setSelectedGameId(null); setRoute(next) }
 
   return (
     <GroupProductShell
@@ -100,6 +84,10 @@ export function GroupDashboardScreen({
         <GroupMarketCreateScreen runtime={runtime} session={session} selection={selection} />
       ) : route === 'market-trades' ? (
         <GroupMarketTradesScreen runtime={runtime} session={session} selection={selection} />
+      ) : route === 'hall-of-fame' ? (
+        <GroupHallOfFameScreen runtime={runtime} selection={selection} />
+      ) : route === 'rules' ? (
+        <GroupRulesScreen runtime={runtime} selection={selection} />
       ) : route === 'settings' ? (
         <GroupSettingsScreen runtime={runtime} session={session} />
       ) : (
