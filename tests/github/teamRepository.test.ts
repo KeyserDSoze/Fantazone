@@ -80,7 +80,8 @@ test('writes mutable Team as player references and hydrates it from the global m
   const refreshed = await repository.getTeam('main', 15, 'Ale@Example.com', { refresh: true })
   assert.equal(refreshed?.players[0].team.name, 'Milan')
   assert.equal(refreshed?.players[0].price, 12)
-  assert.equal(dayTeamDocumentPath('main', 15, 3, 'Ale@Example.com'), 'data/groups/seasons/15/days/3/teams/main/Ale%40Example.com.json')
+  assert.equal(seasonPath, 'data/groups/seasons/15/teams/main/Ale@Example.com.json')
+  assert.equal(dayTeamDocumentPath('main', 15, 3, 'Ale@Example.com'), 'data/groups/seasons/15/days/3/teams/main/Ale@Example.com.json')
 })
 
 test('enhanced team derives moneyFromRank from the readable shared Rank document', async () => {
