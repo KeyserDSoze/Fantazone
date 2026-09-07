@@ -1,0 +1,82 @@
+name: Finalize validated refactor data once
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/refactor-finalize-once.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fantazone-platform-background-jobs
+  cancel-in-progress: false
+
+env:
+  FANTAZONE_FINAL_VOTES_BASE_URL: ${{ vars.FANTAZONE_FINAL_VOTES_BASE_URL }}
+  FANTAZONE_FANTAGAZZETTA_FORMATIONS_URL: ${{ vars.FANTAZONE_FANTAGAZZETTA_FORMATIONS_URL }}
+  FANTAZONE_GAZZETTA_FORMATIONS_URL: ${{ vars.FANTAZONE_GAZZETTA_FORMATIONS_URL }}
+  FANTAZONE_INJURY_URL: ${{ vars.FANTAZONE_INJURY_URL }}
+
+jobs:
+  persist-validated-data:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: npm run typecheck --workspace=@fantazone/jobs
+      - name: Persist complete official votes day 2
+        run: npm run job --workspace=@fantazone/jobs -- ingest-final-votes 2 15
+      - name: Refresh current player odds
+        run: npm run job --workspace=@fantazone/jobs -- ingest-player-odds '' 15
+      - name: Verify canonical outputs
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs')
+          const official = JSON.parse(fs.readFileSync('data/serie-a/votes/official/15/2.json', 'utf8'))
+          if (!Array.isArray(official.players) || official.players.length < 250) throw new Error('Official vote output is implausibly small')
+          const chances = JSON.parse(fs.readFileSync('data/serie-a/chances/15/3.json', 'utf8'))
+          if (!Array.isArray(chances.players) || chances.players.length < 500) throw new Error('Chance output is implausibly small')
+          console.log(`official=${official.players.length}; chances=${chances.players.length}`)
+          NODE
+      - name: Commit canonical data
+        shell: bash
+        run: |
+          if [ -z "$(git status --porcelain -- data)" ]; then
+            echo "Canonical data already current"
+            exit 0
+          fi
+          git config user.name "fantazone-actions[bot]"
+          git config user.email "fantazone-actions[bot]@users.noreply.github.com"
+          git add -A -- data
+          git commit -m "data: persist validated Serie A provider outputs"
+          git pull --rebase origin main
+          git push origin HEAD:main
+
+  native-prebuild:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - run: npm ci
+      - name: Prebuild Android
+        working-directory: src/app
+        env:
+          CI: '1'
+        run: npx expo prebuild --no-install --platform android
+      - name: Prebuild iOS
+        working-directory: src/app
+        env:
+          CI: '1'
+        run: npx expo prebuild --no-install --platform ios
