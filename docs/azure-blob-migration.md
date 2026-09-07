@@ -125,6 +125,8 @@ migration-output/cache/azure-scan-v1.json
 
 The cache contains the full Azure inventory plus the parsed contents of canonical migration containers. It is created **immediately after a successful Azure scan and before mapping/staging**. Therefore, if a legacy mapper fails afterwards, update/pull the migration code and rerun the same command: the next run reuses the cache and does not enumerate or download the Blob Storage again.
 
+If you already produced this cache with an earlier version of the migration tool, the new resumable staging layer can use it directly. You do **not** need `-RefreshCache` just because the staging implementation changed.
+
 The cache does **not** contain the Azure connection string, SAS token, AccountKey or GitHub PATs. It stores only a hash of the non-secret Azure source identity so that a cache from another storage account is rejected automatically. Rotating a SAS or AccountKey does not invalidate a cache for the same storage source.
 
 The cache does contain legacy Fantasoccer data and may include names/emails from the source. Treat it as private local data. `migration-output/` is gitignored; do not upload or commit the cache.
