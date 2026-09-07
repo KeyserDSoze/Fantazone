@@ -141,25 +141,33 @@ export class GitHubJsonStore {
     if (!options.refresh && cachedEntry) return snapshotFromCache<T>(cachedEntry)
 
     let content: GitHubContentReadResult | null
-    if (options.refresh && cachedEntry?.etag && this.client.tryGetContentConditional) {
-      const conditional = await this.client.tryGetContentConditional(
-        location.owner,
-        location.repo,
-        location.path,
-        location.ref,
-        cachedEntry.etag,
-      )
-      if (conditional?.status === 'not-modified') {
-        const reused: CacheEntry = {
-          ...cachedEntry,
-          etag: conditional.etag ?? cachedEntry.etag,
+    try {
+      if (options.refresh && cachedEntry?.etag && this.client.tryGetContentConditional) {
+        const conditional = await this.client.tryGetContentConditional(
+          location.owner,
+          location.repo,
+          location.path,
+          location.ref,
+          cachedEntry.etag,
+        )
+        if (conditional?.status === 'not-modified') {
+          const reused: CacheEntry = {
+            ...cachedEntry,
+            etag: conditional.etag ?? cachedEntry.etag,
+          }
+          await this.remember(key, reused)
+          return snapshotFromCache<T>(reused)
         }
-        await this.remember(key, reused)
-        return snapshotFromCache<T>(reused)
+        content = conditional?.status === 'found' ? conditional.value : null
+      } else {
+        content = await this.client.tryGetContent(location.owner, location.repo, location.path, location.ref)
       }
-      content = conditional?.status === 'found' ? conditional.value : null
-    } else {
-      content = await this.client.tryGetContent(location.owner, location.repo, location.path, location.ref)
+    } catch (error) {
+      // HTTP errors are authoritative (expired PAT, revoked permissions, conflicts).
+      // A transport failure instead means the local durable snapshot is the best
+      // available source and keeps the application usable without connectivity.
+      if (cachedEntry && !(error instanceof GitHubApiError)) return snapshotFromCache<T>(cachedEntry)
+      throw error
     }
 
     if (!content) {
@@ -234,6 +242,19 @@ export class GitHubJsonStore {
     await this.forget(cacheKey(location))
   }
 
+  /** Clears only process memory while preserving the durable offline replica. */
+  invalidateRepositoryMemory(
+    owner: string,
+    repo: string,
+    preserveLocations: readonly RepositoryJsonLocation[] = [],
+  ): void {
+    const prefix = repositoryCachePrefix(owner, repo)
+    const preserveKeys = new Set(preserveLocations.map(cacheKey))
+    for (const key of this.cache.keys()) {
+      if (key.startsWith(prefix) && !preserveKeys.has(key)) this.cache.delete(key)
+    }
+  }
+
   async invalidateRepository(
     owner: string,
     repo: string,
@@ -241,9 +262,7 @@ export class GitHubJsonStore {
   ): Promise<void> {
     const prefix = repositoryCachePrefix(owner, repo)
     const preserveKeys = new Set(preserveLocations.map(cacheKey))
-    for (const key of this.cache.keys()) {
-      if (key.startsWith(prefix) && !preserveKeys.has(key)) this.cache.delete(key)
-    }
+    this.invalidateRepositoryMemory(owner, repo, preserveLocations)
     await this.safePersistentDeleteByPrefix(prefix, [...preserveKeys])
   }
 
