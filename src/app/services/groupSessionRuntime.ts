@@ -58,6 +58,7 @@ export type GroupRepositorySyncResult = {
   changed: boolean
   previousRevision: number | null
   revision: number
+  offline: boolean
 }
 
 export type GroupDisplaySettingsUpdate = {
@@ -238,15 +239,23 @@ export class GroupSessionRuntime {
     const freshSnapshot = await this.store.readJson<unknown>(manifestLocation, { refresh: true })
     const freshManifest = decodeRepositoryRevisionManifest(freshSnapshot.value)
     const revision = freshManifest.revision
-    this.observedRevision = revision
 
-    if (freshManifest.updating !== true && (previousRevision == null || previousRevision === revision)) {
-      return { changed: false, previousRevision, revision }
+    // When refresh fell back to IndexedDB/AsyncStorage there is no new remote fact
+    // to reconcile. Keep the current runtime and durable replica untouched.
+    if (freshSnapshot.fromCache) {
+      return { changed: false, previousRevision, revision, offline: true }
     }
 
-    await this.store.invalidateRepository(this.target.owner, this.target.repo, [manifestLocation])
+    this.observedRevision = revision
+    if (freshManifest.updating !== true && (previousRevision == null || previousRevision === revision)) {
+      return { changed: false, previousRevision, revision, offline: false }
+    }
+
+    // Preserve the durable offline replica until a replacement snapshot has been
+    // downloaded successfully by the app. Only stale process memory is discarded.
+    this.store.invalidateRepositoryMemory(this.target.owner, this.target.repo, [manifestLocation])
     await this.refreshGroup()
-    return { changed: true, previousRevision, revision }
+    return { changed: true, previousRevision, revision, offline: false }
   }
 
   async resolveIdentity(identity: ExternalIdentity, options: { refreshMembership?: boolean; expectedEmail?: string } = {}): Promise<GroupLoginResolution> {
