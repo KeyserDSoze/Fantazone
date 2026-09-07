@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   validate:
-    if: github.event.head_commit.message == 'ops: force validate master data'
+    if: github.event.head_commit.message == 'force master data now'
     runs-on: ubuntu-latest
     env:
       FANTAZONE_PLAYERS_SOURCE_URL: ${{ vars.FANTAZONE_PLAYERS_SOURCE_URL }}
