@@ -1,12 +1,19 @@
 #!/usr/bin/env node
 import { mkdir, writeFile } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { scanAzureStorage } from './azure-source.mjs'
+import { loadAzureScanCache, saveAzureScanCache } from './scan-cache.mjs'
 import { buildMigrationPlan } from './migration-plan.mjs'
 import { GitHubApi, writeFilesAtomically } from './github-writer.mjs'
 
+const REPO_ROOT = resolve(fileURLToPath(new URL('../..', import.meta.url)))
+
 function parseArgs(argv) {
-  const result = { platformRepository: 'KeyserDSoze/Fantazone', branch: 'main', apply: false, overwrite: false, preserveExisting: false }
+  const result = {
+    platformRepository: 'KeyserDSoze/Fantazone', branch: 'main', apply: false,
+    overwrite: false, preserveExisting: false, refreshCache: false, noCache: false,
+  }
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i]
     const next = () => { if (++i >= argv.length) throw new Error(`${arg} requires a value`); return argv[i] }
@@ -15,6 +22,9 @@ function parseArgs(argv) {
     else if (arg === '--branch') result.branch = next()
     else if (arg === '--group-id') result.groupId = next()
     else if (arg === '--report') result.reportPath = next()
+    else if (arg === '--cache') result.cachePath = next()
+    else if (arg === '--refresh-cache') result.refreshCache = true
+    else if (arg === '--no-cache') result.noCache = true
     else if (arg === '--apply') result.apply = true
     else if (arg === '--overwrite') result.overwrite = true
     else if (arg === '--preserve-existing') result.preserveExisting = true
@@ -31,7 +41,10 @@ function usage() {
 `Usage:\n  node scripts/migration/migrate-azure-to-github.mjs --group-repository owner/Fantazone.Group [options]\n\n` +
 `Options:\n  --platform-repository owner/repo   Shared Serie A repository (default KeyserDSoze/Fantazone)\n` +
 `  --branch branch                   Target branch (default main)\n  --group-id id                     Explicit legacy group id when auto-selection is ambiguous\n` +
-`  --report path                     JSON report path\n  --apply                           Perform GitHub writes (default is dry-run)\n` +
+`  --report path                     JSON report path\n  --cache path                      Azure scan cache path\n` +
+`  --refresh-cache                   Ignore existing cache and scan Azure again\n` +
+`  --no-cache                        Do not read or write the local Azure scan cache\n` +
+`  --apply                           Perform GitHub writes (default is dry-run)\n` +
 `  --overwrite                       Replace canonical paths that already exist\n  --preserve-existing               Keep existing canonical paths and skip collisions\n` +
 `  -h, --help                        Show this help\n`
 }
@@ -40,7 +53,10 @@ function requireEnv(name) { const value = process.env[name]; if (!value?.trim())
 function reportPath(value) {
   if (value) return resolve(value)
   const stamp = new Date().toISOString().replace(/[:.]/g, '-')
-  return resolve('migration-output', `azure-migration-${stamp}.json`)
+  return resolve(REPO_ROOT, 'migration-output', `azure-migration-${stamp}.json`)
+}
+function scanCachePath(value) {
+  return value ? resolve(value) : resolve(REPO_ROOT, 'migration-output', 'cache', 'azure-scan-v1.json')
 }
 
 function formatBytes(bytes) {
@@ -79,19 +95,56 @@ function logAzureProgress(event) {
   }
 }
 
+async function obtainAzureScan(connectionString, args) {
+  const cachePath = scanCachePath(args.cachePath)
+  const cacheInfo = { enabled: !args.noCache, path: args.noCache ? null : cachePath, used: false, createdAt: null }
+
+  if (args.noCache) {
+    console.log('[Cache] Disabled; Azure will be scanned for this run.')
+  } else if (args.refreshCache) {
+    console.log(`[Cache] Refresh requested; ignoring existing cache at ${cachePath}`)
+  } else {
+    const cached = await loadAzureScanCache(cachePath, connectionString)
+    if (cached.status === 'hit') {
+      cacheInfo.used = true
+      cacheInfo.createdAt = cached.createdAt
+      console.log(`[Cache] Reusing Azure scan from ${cachePath}${cached.createdAt ? ` (${cached.createdAt})` : ''}`)
+      console.log(`[Cache] Cached scan contains containers=${cached.scan.inventory.length}, canonical records=${cached.scan.records.length}`)
+      return { scan: cached.scan, cacheInfo }
+    }
+    const detail = cached.reason ? `: ${cached.reason}` : ''
+    console.log(`[Cache] No reusable Azure scan (${cached.status}${detail}).`)
+  }
+
+  console.log('Scanning Azure Blob Storage metadata and canonical containers...')
+  const scan = await scanAzureStorage(connectionString, { onProgress: logAzureProgress })
+
+  if (!args.noCache) {
+    const saved = await saveAzureScanCache(cachePath, connectionString, scan)
+    if (saved.saved) {
+      cacheInfo.createdAt = saved.createdAt
+      console.log(`[Cache] Azure scan saved to ${cachePath}`)
+      console.log('[Cache] If mapping fails, fix/update the mapper and rerun: the next run will reuse this scan without reading Azure again.')
+    } else {
+      console.log(`[Cache] Scan was not cached: ${saved.reason}`)
+    }
+  }
+  return { scan, cacheInfo }
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2))
   if (args.help) { console.log(usage()); return }
   if (!args.groupRepository) throw new Error('--group-repository is required')
   if (args.overwrite && args.preserveExisting) throw new Error('--overwrite and --preserve-existing are mutually exclusive')
+  if (args.refreshCache && args.noCache) throw new Error('--refresh-cache and --no-cache are mutually exclusive')
   const mode = args.overwrite ? 'overwrite' : args.preserveExisting ? 'preserve' : 'fail'
 
   const connectionString = requireEnv('FANTAZONE_AZURE_CONNECTION_STRING')
   const groupPat = requireEnv('FANTAZONE_GROUP_PAT')
   const platformPat = requireEnv('FANTAZONE_PLATFORM_PAT')
 
-  console.log('Scanning Azure Blob Storage metadata and canonical containers...')
-  const scan = await scanAzureStorage(connectionString, { onProgress: logAzureProgress })
+  const { scan, cacheInfo } = await obtainAzureScan(connectionString, args)
   const plan = buildMigrationPlan(scan.records, args)
   console.log(`Selected legacy group: ${plan.group.id} (${plan.group.name})`)
   console.log(`Planned files: group=${plan.groupFiles.length}, platform=${plan.platformFiles.length}, skipped=${plan.skipped.length}`)
@@ -107,7 +160,10 @@ async function main() {
 
   const output = {
     generatedAt: new Date().toISOString(), mode: args.apply ? 'apply' : 'dry-run', collisionMode: mode,
-    source: { containers: scan.inventory.map(container => ({ name: container.name, downloaded: container.downloaded, blobCount: container.blobs.length, blobs: container.blobs })) },
+    source: {
+      cache: cacheInfo,
+      containers: scan.inventory.map(container => ({ name: container.name, downloaded: container.downloaded, blobCount: container.blobs.length, blobs: container.blobs })),
+    },
     selectedGroup: { id: plan.group.id, name: plan.group.name },
     targets: { group: groupResult, platform: platformResult },
     files: { group: plan.groupFiles.map(x => ({ path: x.path, source: x.source })), platform: plan.platformFiles.map(x => ({ path: x.path, source: x.source })) },
