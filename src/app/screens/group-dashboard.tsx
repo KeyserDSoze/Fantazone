@@ -15,6 +15,8 @@ import { GroupFormationScreen } from './group-formation-screen'
 import { GroupGameScreen } from './group-game-screen'
 import { GroupHomeScreen } from './group-home-screen'
 import { GroupLiveScreen } from './group-live-screen'
+import { GroupMarketCreateScreen } from './group-market-create-screen'
+import { GroupMarketTradesScreen } from './group-market-trades-screen'
 import { GroupPlayersScreen } from './group-players-screen'
 import { GroupProductShell } from './group-product-shell'
 import { GroupRankingScreen } from './group-ranking-screen'
@@ -94,6 +96,10 @@ export function GroupDashboardScreen({
         <GroupTeamsScreen runtime={runtime} selection={selection} />
       ) : route === 'players' ? (
         <GroupPlayersScreen runtime={runtime} selection={selection} />
+      ) : route === 'market' ? (
+        <GroupMarketCreateScreen runtime={runtime} session={session} selection={selection} />
+      ) : route === 'market-trades' ? (
+        <GroupMarketTradesScreen runtime={runtime} session={session} selection={selection} />
       ) : route === 'settings' ? (
         <GroupSettingsScreen runtime={runtime} session={session} />
       ) : (
