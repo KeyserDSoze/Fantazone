@@ -1,8 +1,9 @@
 import {
-  getLegacyPlayerKey, mapLegacyCalendarCompatible, mapLegacyChances, mapLegacyGroup, mapLegacyHallOfFame, mapLegacyRank,
+  getLegacyPlayerKey, mapLegacyChances, mapLegacyGroup, mapLegacyHallOfFame, mapLegacyRank,
   mapLegacyRealCalendar, mapLegacyRealPlayers, mapLegacyRealTeams, mapLegacySeasonTeam,
   mapLegacyStats, mapLegacyTeam, mapLegacyVotes, prettyJson,
 } from './legacy-mappers.mjs'
+import { mapLegacyCalendarCompatible } from './legacy-calendar-compat.mjs'
 
 const WRITABLE_CONTAINERS = new Set([
   'group', 'calendar', 'rank', 'dailyrank', 'team', 'dailyteams', 'halloffame',
