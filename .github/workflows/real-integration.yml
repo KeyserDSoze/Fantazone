@@ -35,7 +35,7 @@ jobs:
           node-version: 22
       - name: Install workspace dependencies
         if: steps.integration_secret.outputs.available == 'true'
-        run: npm install
+        run: npm ci
       - name: Run real GitHub integration
         if: steps.integration_secret.outputs.available == 'true'
         env:
