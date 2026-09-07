@@ -26,7 +26,7 @@ Fantazone is both a real migration and an educational repository. Contributions 
 ## Development
 
 ```bash
-npm install
+npm ci
 npm run typecheck
 npm test
 npm run export:web --workspace=fantazone-app

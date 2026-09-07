@@ -95,7 +95,7 @@ A useful order is:
 ## Local development
 
 ```bash
-npm install
+npm ci
 npm run typecheck
 npm test
 npm run app:web

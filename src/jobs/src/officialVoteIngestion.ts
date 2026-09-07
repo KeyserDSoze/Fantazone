@@ -77,6 +77,11 @@ export async function ingestFinalVotes(
     .filter(player => Boolean(getPlayerKey(player.name)))
 
   const expectedPlayedTeams = calendarDay.games.filter(game => !game.delayed).length * 2
+  if (parsed.length === 0 && expectedPlayedTeams > 0) {
+    throw new Error(
+      `La sorgente voti ufficiali non ha restituito alcun giocatore valido per la giornata ${serieADay}; il documento canonico esistente non viene modificato.`,
+    )
+  }
   const parsedPlayedTeams = new Set(parsed.map(player => normalizeTeamName(player.team.name))).size
   const complete = parsedPlayedTeams >= expectedPlayedTeams
 
@@ -147,7 +152,7 @@ export function parseOfficialVotesHtml(html: string): VotedRealPlayer[] {
     const anchor = teamAnchors[teamIndex]
     const next = teamAnchors[teamIndex + 1]
     const section = body.slice(anchor.index, next?.index ?? body.length)
-    const rawTeamName = extractAttribute(anchor.tag, 'content')
+    const rawTeamName = extractAttribute(anchor.tag, 'content') ?? extractNestedTeamName(section)
     const teamName = normalizeSourceTeamName(decodeHtmlEntities(rawTeamName ?? ''))
     if (!teamName) continue
 
@@ -257,6 +262,18 @@ function canonicalizePlayerTeam(player: VotedRealPlayer, day: RealDay): VotedRea
   const canonical = teams.find(team => normalizeTeamName(team.name) === sourceName)
     ?? teams.find(team => team.abbreviation.trim().toLocaleLowerCase('it-IT') === sourceAbbreviation)
   return canonical ? { ...player, team: { ...canonical } } : player
+}
+
+function extractNestedTeamName(section: string): string | null {
+  const tbodyIndex = section.search(/<tbody\b/i)
+  const header = tbodyIndex >= 0 ? section.slice(0, tbodyIndex) : section
+  for (const meta of header.matchAll(/<meta\b([^>]*)>/gi)) {
+    const attributes = meta[1] ?? ''
+    if (extractAttribute(attributes, 'itemprop')?.trim().toLocaleLowerCase('it-IT') !== 'name') continue
+    const content = extractAttribute(attributes, 'content')
+    if (content) return content
+  }
+  return null
 }
 
 function extractPlayerName(element: string): string {

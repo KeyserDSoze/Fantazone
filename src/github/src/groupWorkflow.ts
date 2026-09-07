@@ -104,7 +104,7 @@ export const GROUP_RECALCULATION_WORKFLOW = [
   '',
   '      - name: Install Fantazone engine dependencies',
   '        working-directory: engine',
-  '        run: npm install',
+  '        run: npm ci',
   '',
   '      - name: Run group maintenance',
   '        working-directory: engine',
