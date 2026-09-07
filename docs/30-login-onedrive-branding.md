@@ -6,26 +6,27 @@ The application is Microsoft-login first. After OAuth completes, fanta.plus read
 
 ## User settings
 
-The OneDrive document is deliberately small and portable:
+The OneDrive document is deliberately small and portable. Schema v2 stores the selected repository together with the shared group GitHub credential, by product design:
 
 ```json
 {
-  "version": 1,
+  "version": 2,
   "groups": [
     {
       "id": "...",
       "name": "Amici del Bar",
-      "repository": "owner/Fantazone.AmiciDelBar"
+      "repository": "owner/Fantazone.AmiciDelBar",
+      "pat": "github_pat_..."
     }
   ]
 }
 ```
 
-The GitHub credential is **not** synchronized in clear text through OneDrive. It remains device-local through the existing credential storage adapter; native builds use Expo SecureStore, while the current web build keeps browser-local storage behavior. A new device therefore knows which groups exist but asks for the GitHub credential once before opening a group.
+The PAT is the same shared group credential used by the browser/native client to access that exact repository. This is an explicit zero-backend trade-off: participants who can use the group can inspect the client-visible credential, so frontend and Actions enforce product rules but the PAT is not a cryptographic per-user authorization boundary.
 
-Repository credentials are namespaced by the authenticated application identity (`provider + subject`). Switching Microsoft accounts on the same device does not automatically reuse the previous account's PAT map. Legacy unscoped PAT storage is purged the first time a repository credential is saved under the new identity-scoped model.
+OneDrive App Folder is the cross-device source for the group catalog and its shared PAT. The credential is also cached locally so normal reconnect does not require another cloud read. Legacy v1 settings contained only `id`, `name` and `repository`; after one successful reconnect with an available local/invite credential, the app upgrades the entry to v2 and persists the PAT in OneDrive.
 
-This is an intentional security correction to the initial idea of putting the PAT directly inside `settings.json`: the group catalog is cloud-synced, the secret is not.
+Repository credentials cached locally remain namespaced by the authenticated application identity (`provider + subject`). Switching Microsoft accounts on the same device does not automatically reuse another account's local PAT map. The OneDrive copy remains scoped to the Microsoft account whose App Folder is being read.
 
 ## Microsoft permission and session lifetime
 

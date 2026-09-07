@@ -13,26 +13,29 @@ import { rebuildPlayerStats } from './playerStatsRebuild'
 import { bootstrapSerieAPlatformData } from './serieAPlatformBootstrap'
 import { ingestSerieACalendar } from './serieAIngestion'
 
-type JobName =
-  | 'bootstrap-serie-a'
-  | 'ingest-serie-a'
-  | 'ingest-master-data'
-  | 'rebuild-player-stats'
-  | 'ingest-live-votes'
-  | 'ingest-final-votes'
-  | 'ingest-player-odds'
-  | 'ingest-player-images'
-  | 'snapshot-formations'
-  | 'set-next-formations'
-  | 'rebuild-hall-of-fame'
-  | 'process-market'
-  | 'process-auction-outcomes'
-  | 'recalculate-day'
-  | 'recalculate-all'
+const JOB_NAMES = [
+  'bootstrap-serie-a',
+  'ingest-serie-a',
+  'ingest-master-data',
+  'rebuild-player-stats',
+  'ingest-live-votes',
+  'ingest-final-votes',
+  'ingest-player-odds',
+  'ingest-player-images',
+  'snapshot-formations',
+  'set-next-formations',
+  'rebuild-hall-of-fame',
+  'process-market',
+  'process-auction-outcomes',
+  'recalculate-day',
+  'recalculate-all',
+] as const
 
+type JobName = typeof JOB_NAMES[number]
 type JobContext = { day?: number; season?: number }
+type JobHandler = (context: JobContext) => Promise<void>
 
-const migrated: Partial<Record<JobName, (context: JobContext) => Promise<void>>> = {
+const migrated: Record<JobName, JobHandler> = {
   'bootstrap-serie-a': async context => {
     const result = await bootstrapSerieAPlatformData({ season: context.season })
     console.log(
@@ -162,23 +165,25 @@ const migrated: Partial<Record<JobName, (context: JobContext) => Promise<void>>>
   },
 }
 
-const name = process.argv[2] as JobName | undefined
-if (!name) {
+const requestedName = process.argv[2]
+if (!requestedName) {
   console.error('Usage: npm run job -- <job-name> [day] [season]')
   process.exit(2)
+}
+if (!isJobName(requestedName)) {
+  console.error(`Unknown Fantazone job: ${requestedName}. Supported jobs: ${JOB_NAMES.join(', ')}`)
+  process.exit(3)
 }
 
 const context: JobContext = {
   day: optionalPositiveInteger(process.argv[3] || process.env.FANTAZONE_DAY, 'day'),
   season: optionalPositiveInteger(process.argv[4] || process.env.FANTAZONE_SEASON, 'season'),
 }
-const handler = migrated[name]
-if (!handler) {
-  console.error(`Job ${name} is registered in the migration plan but is not implemented yet.`)
-  process.exit(3)
-}
+await migrated[requestedName](context)
 
-await handler(context)
+function isJobName(value: string): value is JobName {
+  return (JOB_NAMES as readonly string[]).includes(value)
+}
 
 function groupJobRoots(): { groupRepoRoot: string; platformRepoRoot: string } {
   const groupRepoRoot = process.env.FANTAZONE_GROUP_REPO_ROOT?.trim()
