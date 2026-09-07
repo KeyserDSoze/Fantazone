@@ -1,23 +1,31 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { IdentityRole, type Group } from '../../src/domain/src/index'
-import { GROUP_DOCUMENT_PATH, REPOSITORY_MANIFEST_PATH, type RepositoryContentClient } from '../../src/github/src/index'
+import { GROUP_DOCUMENT_PATH, GROUP_SETTINGS_PATH, REPOSITORY_MANIFEST_PATH, type RepositoryContentClient } from '../../src/github/src/index'
 import { DEFAULT_PLATFORM_TARGET, GroupSessionRuntime } from '../../src/app/services/groupSessionRuntime'
 
 class FakeContentClient implements RepositoryContentClient {
   readonly files = new Map<string, { sha: string; content: string }>()
   reads = 0
   writes = 0
+  readonly readsByPath = new Map<string, number>()
+
   async tryGetContent(owner: string, repo: string, path: string, ref?: string) {
     this.reads += 1
+    this.readsByPath.set(path, (this.readsByPath.get(path) ?? 0) + 1)
     return this.files.get(`${owner}/${repo}/${path}@${ref ?? ''}`) ?? null
   }
+
   async putContent(owner: string, repo: string, path: string, content: string, _message: string, _sha?: string, branch?: string) {
     this.writes += 1
     const key = `${owner}/${repo}/${path}@${branch ?? ''}`
     const sha = `write-${this.writes}`
     this.files.set(key, { sha, content })
     return { sha }
+  }
+
+  readCount(path: string): number {
+    return this.readsByPath.get(path) ?? 0
   }
 }
 
@@ -61,12 +69,31 @@ test('opens one selected group and composes group plus shared platform repositor
   assert.deepEqual(runtime.target, { owner: 'KeyserDSoze', repo: 'Fantazone.Amici', ref: 'main' })
   assert.deepEqual(runtime.platformTarget, DEFAULT_PLATFORM_TARGET)
   assert.ok(runtime.groupRepository)
+  assert.ok(runtime.groupSettingsRepository)
   assert.ok(runtime.calendarRepository)
   assert.ok(runtime.rankRepository)
   assert.ok(runtime.teamRepository)
   assert.ok(runtime.liveGroupRepository)
   assert.ok(runtime.realCalendarRepository)
-  assert.equal(client.reads, 1)
+  assert.equal(client.readCount(GROUP_DOCUMENT_PATH), 1)
+  assert.equal(client.readCount(GROUP_SETTINGS_PATH), 1)
+  assert.equal(client.writes, 0)
+})
+
+test('overlays root display settings without mutating the canonical group document', async () => {
+  const client = new FakeContentClient()
+  const canonical = group()
+  client.files.set(`KeyserDSoze/Fantazone.Amici/${GROUP_DOCUMENT_PATH}@main`, { sha: 'group-1', content: JSON.stringify(canonical) })
+  client.files.set(`KeyserDSoze/Fantazone.Amici/${GROUP_SETTINGS_PATH}@main`, {
+    sha: 'settings-1',
+    content: JSON.stringify({ version: 1, group: { name: 'Nome nuovo' }, leagues: {} }),
+  })
+
+  const runtime = await GroupSessionRuntime.open({ ...connection }, client)
+  assert.equal(runtime.group.name, 'Nome nuovo')
+  assert.equal(runtime.connection.groupName, 'Nome nuovo')
+  assert.equal(canonical.name, 'Amici')
+  assert.equal(client.writes, 0)
 })
 
 test('allows tests or alternate deployments to override the shared platform repository target', async () => {
@@ -131,7 +158,8 @@ test('re-reads selected group.users membership when resolving external identity'
   const result = await runtime.resolveIdentity({ provider: 'microsoft', subject: 'external-subject', email: 'ALE@example.com' })
 
   assert.equal(result.status, 'disabled')
-  assert.equal(client.reads, 2)
+  assert.equal(client.readCount(GROUP_DOCUMENT_PATH), 2)
+  assert.equal(client.readCount(GROUP_SETTINGS_PATH), 2)
 })
 
 test('invite expectedEmail is enforced in addition to group membership', async () => {
