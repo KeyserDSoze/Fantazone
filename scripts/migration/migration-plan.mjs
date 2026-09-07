@@ -1,8 +1,9 @@
 import {
-  mapLegacyCalendar, mapLegacyChances, mapLegacyGroup, mapLegacyHallOfFame, mapLegacyRank,
+  mapLegacyChances, mapLegacyGroup, mapLegacyHallOfFame, mapLegacyRank,
   mapLegacyRealCalendar, mapLegacyRealPlayers, mapLegacyRealTeams, mapLegacySeasonTeam,
   mapLegacyStats, mapLegacyTeam, mapLegacyVotes, prettyJson,
 } from './legacy-mappers.mjs'
+import { mapLegacyCalendarCompatible } from './legacy-calendar-compat.mjs'
 
 const WRITABLE_CONTAINERS = new Set([
   'group', 'calendar', 'rank', 'dailyrank', 'team', 'dailyteams', 'halloffame',
@@ -66,7 +67,7 @@ export function buildMigrationPlan(records, options) {
       if (c === 'group') continue
       if (c === 'calendar') {
         const k = keyObject(record, 'Calendar'); if (!belongsToGroup(k, selectedGroupId)) continue
-        addFile(groupFiles, { path: `data/groups/seasons/${k.y}/leagues/${pathSegment(k.l)}/calendar.json`, content: prettyJson(mapLegacyCalendar(record.value)), source: `${c}/${record.blobName}` })
+        addFile(groupFiles, { path: `data/groups/seasons/${k.y}/leagues/${pathSegment(k.l)}/calendar.json`, content: prettyJson(mapLegacyCalendarCompatible(record.value)), source: `${c}/${record.blobName}` })
       } else if (c === 'rank') {
         const k = keyObject(record, 'Rank'); if (!belongsToGroup(k, selectedGroupId)) continue
         addFile(groupFiles, { path: `data/groups/seasons/${k.y}/leagues/${pathSegment(k.l)}/ranking.json`, content: prettyJson(mapLegacyRank(record.value)), source: `${c}/${record.blobName}` })
