@@ -8,12 +8,15 @@ import {
   type UserOfAGroup,
 } from '@fantazone/domain'
 import {
+  applyGroupRepositorySettings,
+  createGroupRepositorySettings,
   decodeRepositoryRevisionManifest,
   GitHubAuctionRepository,
   GitHubAuctionSignalingRepository,
   GitHubCalendarRepository,
   GitHubClient,
   GitHubGroupRepository,
+  GitHubGroupSettingsRepository,
   GitHubHallOfFameRepository,
   GitHubJsonStore,
   GitHubLiveGroupRepository,
@@ -25,7 +28,9 @@ import {
   GitHubTeamRepository,
   REPOSITORY_MANIFEST_PATH,
   RepositoryRevisionContentClient,
+  RepositoryWriteConflictError,
   type GitHubRepo,
+  type GroupRepositorySettings,
   type GroupRepositoryTarget,
   type PlatformRepositoryTarget,
   type RepositoryContentClient,
@@ -56,6 +61,11 @@ export type GroupRepositorySyncResult = {
   revision: number
 }
 
+export type GroupDisplaySettingsUpdate = {
+  groupName: string
+  leagueNames: Record<string, string>
+}
+
 export const DEFAULT_PLATFORM_TARGET: PlatformRepositoryTarget = {
   owner: 'KeyserDSoze',
   repo: 'Fantazone',
@@ -74,6 +84,7 @@ export class GroupSessionRuntime {
   readonly platformTarget: PlatformRepositoryTarget
   readonly store: GitHubJsonStore
   readonly groupRepository: GitHubGroupRepository
+  readonly groupSettingsRepository: GitHubGroupSettingsRepository
   readonly calendarRepository: GitHubCalendarRepository
   readonly rankRepository: GitHubRankRepository
   readonly realPlayersRepository: GitHubRealPlayersRepository
@@ -111,6 +122,7 @@ export class GroupSessionRuntime {
     this.revisionClient = new RepositoryRevisionContentClient(contentClient, this.target, options.now)
     this.store = new GitHubJsonStore(this.revisionClient, options.persistentCache)
     this.groupRepository = new GitHubGroupRepository(this.store, this.target)
+    this.groupSettingsRepository = new GitHubGroupSettingsRepository(this.store, this.target)
     this.calendarRepository = new GitHubCalendarRepository(this.store, this.target)
     this.rankRepository = new GitHubRankRepository(this.store, this.target)
     this.realPlayersRepository = new GitHubRealPlayersRepository(this.store, this.platformTarget)
@@ -172,10 +184,48 @@ export class GroupSessionRuntime {
   }
 
   async refreshGroup(): Promise<Group> {
-    const group = await this.groupRepository.getGroup({ refresh: true })
-    if (!group) throw new GroupDocumentUnavailableError(this.connection)
+    const canonical = await this.groupRepository.getGroup({ refresh: true })
+    if (!canonical) throw new GroupDocumentUnavailableError(this.connection)
+    const settings = await this.ensureDisplaySettings(canonical)
+    const group = applyGroupRepositorySettings(canonical, settings)
     this.currentGroup = group
+    this.connection.groupName = group.name
     return group
+  }
+
+  async updateDisplaySettings(actor: UserOfAGroup, input: GroupDisplaySettingsUpdate): Promise<GroupRepositorySettings> {
+    const group = await this.refreshGroup()
+    const currentActor = GroupHelper.findUserByEmail(group, actor.email)
+    const canManageSettings = Boolean(currentActor) && (
+      GroupHelper.hasRole(currentActor!, IdentityRole.Admin) ||
+      GroupHelper.hasRole(currentActor!, IdentityRole.SuperAdmin)
+    )
+    if (!canManageSettings) throw new Error('Solo Admin o SuperAdmin possono modificare i nomi del gruppo e delle leghe.')
+
+    const groupName = input.groupName.trim()
+    if (!groupName) throw new Error('Il nome visualizzato del gruppo non può essere vuoto.')
+    const current = await this.groupSettingsRepository.getSettings({ refresh: true }) ?? createGroupRepositorySettings(group)
+    const leagues = { ...current.leagues }
+    for (const league of group.leagues) {
+      const requested = input.leagueNames[league.id]
+      const name = requested == null ? (leagues[league.id]?.name || league.name || league.id) : requested.trim()
+      if (!name) throw new Error(`Il nome visualizzato della lega ${league.id} non può essere vuoto.`)
+      leagues[league.id] = { name }
+    }
+
+    const normalizedLeagueNames = Object.values(leagues).map(item => item.name.trim().toLowerCase())
+    if (new Set(normalizedLeagueNames).size !== normalizedLeagueNames.length) {
+      throw new Error('Due leghe non possono avere lo stesso nome visualizzato.')
+    }
+
+    const next: GroupRepositorySettings = {
+      ...current,
+      group: { ...current.group, name: groupName },
+      leagues,
+    }
+    await this.groupSettingsRepository.writeSettings(next, 'chore: update group display names')
+    await this.refreshGroup()
+    return next
   }
 
   async syncRepositoryRevision(): Promise<GroupRepositorySyncResult> {
@@ -229,6 +279,19 @@ export class GroupSessionRuntime {
     await this.groupRepository.writeGroup(updated, `chore: invite ${email}`)
     this.currentGroup = updated
     return invited
+  }
+
+  private async ensureDisplaySettings(group: Group): Promise<GroupRepositorySettings> {
+    const existing = await this.groupSettingsRepository.getSettings({ refresh: true })
+    if (existing) return existing
+    const initial = createGroupRepositorySettings(group)
+    try {
+      await this.groupSettingsRepository.writeSettings(initial, 'chore: initialize group display settings', { createOnly: true })
+      return initial
+    } catch (error) {
+      if (!(error instanceof RepositoryWriteConflictError)) throw error
+      return await this.groupSettingsRepository.getSettings({ refresh: true }) ?? initial
+    }
   }
 }
 
