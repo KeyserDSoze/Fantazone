@@ -27,7 +27,7 @@
 - [x] app-open runtime upgrade updates only Fantazone-managed workflow paths and preserves group/custom data.
 - [x] group runtime engine refs are versioned (`group-runtime-vN`) instead of following moving `main`.
 - [x] legacy global AppIdentity/user-administration surface retired: zero-backend membership is group-scoped in `config/group.json`; no replacement central user database is created.
-- [ ] native Google/Microsoft OAuth redirects/deep links for iOS/Android.
+- [~] native Microsoft OAuth authorization-code + PKCE, `fantaplus://auth` deep link, Expo system auth browser, SecureStore refresh-token persistence/rotation, silent restore and logout cleanup are implemented and contract-tested; Microsoft Entra mobile/desktop redirect registration plus real iOS/Android device validation remain external gates. Google remains intentionally disabled/unconfigured.
 
 ## UI parity
 
@@ -42,6 +42,7 @@
 - [~] Push UX: browser Web Push preferences/subscriptions, Service Worker, group-owned readable settings, managed per-group Actions transport and manual test dispatch are implemented; a repository `FANTAZONE_VAPID_PRIVATE_KEY` secret and real delivery validation are required before automatic notifications are enabled. Native iOS/Android push remains pending.
 - [x] Serie A SuperAdmin UI: fresh global calendar reads, safe delayed-game overrides, producer dispatch and read-only fallback when the current PAT lacks platform push permission.
 - [~] Auction realtime UI implemented for active-auction discovery, Admin host controls, participant bidding, repair substitutions and reconnect status; real multi-device validation/polish remains pending.
+- [x] Product routing is exhaustive at compile time: every active `GroupProductRoute` resolves to a real screen and there is no generic “section in migration” runtime fallback.
 
 ## Service/domain migrations
 
@@ -85,7 +86,7 @@
 - [x] current Team no longer duplicates global Serie A player master fields, eliminating per-group transfer fan-out and unnecessary nightly commits.
 - [x] backend operational-log persistence retired; the SuperAdmin log viewer reads GitHub Actions runs directly for the public platform repository and authenticated group repository.
 - [x] Web Push private VAPID material is excluded from platform/group JSON and versioned code; the managed group push workflow reads only `secrets.FANTAZONE_VAPID_PRIVATE_KEY` while the public key remains shared by the `fanta.plus` origin.
-- [ ] ETag conditional reads.
+- [x] ETag conditional reads: GitHub content responses persist validators alongside JSON/SHA, `refresh:true` sends `If-None-Match`, `304 Not Modified` reuses durable cached JSON, changed `200` responses replace value/SHA/ETag, and older cache entries without ETag remain compatible.
 - [ ] one-time schema-v1→v2 migration tooling only if compact runtime repositories that need recovery are discovered.
 - [x] zero-backend authorization limitation documented: frontend/Actions enforce business rules, but a shared client-visible PAT cannot provide a cryptographic per-user write boundary.
 
@@ -107,7 +108,7 @@
 - [x] Market group workflow/reducer: serialized command processing + daily 02:00 UTC expiry maintenance.
 - [x] HallOfFame group workflow/reducer: weekly Tuesday 03:00 UTC rebuild + manual dispatch.
 - [x] Auction assignment outcome processing: realtime host emits one append-only assignment request; group runtime revalidates and commits normalized Team + outcome result atomically.
-- [~] Push delivery: per-group manual Actions sender is implemented with VAPID Secret isolation; automatic reminder/live/market scheduling remains disabled until a real browser subscription and test delivery are verified.
+- [~] Push delivery: per-group manual Actions sender is implemented with VAPID Secret isolation; automatic reminder/live/market scheduling remains disabled until a real browser subscription and test delivery are verified. Deterministic deployment-reminder targeting/deduplication is implemented but not scheduled.
 
 ## Auction
 
