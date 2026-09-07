@@ -4,6 +4,7 @@ import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { scanAzureStorage } from './azure-source.mjs'
 import { azureSourceFingerprint, loadAzureScanCache, saveAzureScanCache } from './scan-cache.mjs'
+import { clearMigrationErrorSnapshot, writeMigrationErrorSnapshot } from './error-snapshot.mjs'
 import { GitHubApi, writeFilesAtomically } from './github-writer.mjs'
 import { markStagingGitResult, stageMigrationRecords } from './staging.mjs'
 
@@ -177,12 +178,24 @@ async function main() {
 
   const { scan, cacheInfo } = await obtainAzureScan(connectionString, args)
   const workDir = workPath(args.workDir, args.groupRepository)
-  const plan = await stageMigrationRecords(scan.records, {
-    ...args,
-    workDir,
-    sourceFingerprint: azureSourceFingerprint(connectionString),
-    onProgress: logStagingProgress,
-  })
+  let plan
+  try {
+    plan = await stageMigrationRecords(scan.records, {
+      ...args,
+      workDir,
+      sourceFingerprint: azureSourceFingerprint(connectionString),
+      onProgress: logStagingProgress,
+    })
+  } catch (error) {
+    try {
+      const snapshotPath = await writeMigrationErrorSnapshot({ workDir, records: scan.records, args, error })
+      console.error(`[Stage] Error snapshot: ${snapshotPath}`)
+    } catch (snapshotError) {
+      console.error(`[Stage] Could not write last-error.json: ${snapshotError.message}`)
+    }
+    throw error
+  }
+  await clearMigrationErrorSnapshot(workDir).catch(() => {})
 
   console.log(`Selected legacy group: ${plan.group.id} (${plan.group.name})`)
   console.log(`Planned files: group=${plan.groupFiles.length}, platform=${plan.platformFiles.length}, skipped=${plan.skipped.length}`)
