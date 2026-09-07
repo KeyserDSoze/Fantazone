@@ -10,11 +10,14 @@
 - [x] GitHub Pages production deployment at canonical `https://fanta.plus` with automatic deploy from `main`.
 - [x] readable canonical JSON; migrated documents avoid compact/single-letter persistence. Mutable season Team uses explicit reference schema v3 while the overall group model remains readable.
 - [x] layered validation: deterministic unit/contract/filesystem tests plus Playwright Chromium desktop/mobile in CI; guarded real-GitHub integration workflow available with a dedicated test PAT.
+- [x] web offline App Shell: unified Service Worker caches the Expo shell and a real Playwright test verifies reload after connectivity is removed.
+- [x] local-first repository replica: web IndexedDB/native AsyncStorage persist group JSON plus the required compressed Serie A season packs without cloning Git history.
 
 ## Identity and groups
 
 - [~] Google web adapter implemented but product login intentionally disabled until configured.
 - [x] Microsoft web login after group selection through authorization-code + PKCE.
+- [x] last verified Microsoft identity + OneDrive group catalog are cached locally so an already-used device can reopen without a fresh Graph request; an actual OneDrive mutation still requires network and a renewable/re-authenticated Microsoft session.
 - [x] shared group PAT preflight validates token, exact repository, read/write access and canonical Fantazone documents before persistence/use.
 - [x] readable Group initialization and `group.users` membership resolution.
 - [x] first-admin bootstrap for newly created/legacy-empty groups.
@@ -23,9 +26,11 @@
 - [x] GroupSession shares per-group repositories plus global football repositories.
 - [x] authenticated web session after provider email + selected-group membership resolution.
 - [x] create a `Fantazone.<group>` repository from zero and bootstrap current canonical/managed files.
-- [x] independent `GROUP_REPOSITORY_RUNTIME_VERSION` persisted in `fantazone.json`.
+- [x] independent `GROUP_REPOSITORY_RUNTIME_VERSION` persisted in `fantazone.json` as managed workflow/schema metadata.
 - [x] app-open runtime upgrade updates only Fantazone-managed workflow paths and preserves group/custom data.
-- [x] group runtime engine refs are versioned (`group-runtime-vN`) instead of following moving `main`.
+- [x] pre-production runtime engine follows the single supported `main` branch; obsolete `group-runtime-vN` refs were removed because no production group requires backward compatibility yet.
+- [x] initial offline hydration uses one group ZIP plus only the compressed Serie A season packs referenced by that group; pack hashes avoid unnecessary repeat downloads.
+- [x] group sync checks `manifest.revision` immediately/every 60 seconds/on foreground, uses ETag conditional reads, preserves the durable replica on network loss and never masks GitHub authorization errors as offline success.
 - [x] legacy global AppIdentity/user-administration surface retired: zero-backend membership is group-scoped in `config/group.json`; no replacement central user database is created.
 - [~] native Microsoft OAuth authorization-code + PKCE, `fantaplus://auth` deep link, Expo system auth browser, SecureStore refresh-token persistence/rotation, silent restore and logout cleanup are implemented and contract-tested; Microsoft Entra mobile/desktop redirect registration plus real iOS/Android device validation remain external gates. Google remains intentionally disabled/unconfigured.
 
@@ -40,9 +45,9 @@
 - [ ] Cards: intentionally deferred by product decision; no placeholder is exposed as an active feature.
 - [x] Hall of Fame/logs/patch notes: Hall of Fame and patch notes are wired; operational logs read actual GitHub Actions from platform + group instead of recreating backend log storage.
 - [~] Push UX: browser Web Push preferences/subscriptions, Service Worker, group-owned readable settings, managed per-group Actions transport and manual test dispatch are implemented; a repository `FANTAZONE_VAPID_PRIVATE_KEY` secret and real delivery validation are required before automatic notifications are enabled. Native iOS/Android push remains pending.
-- [x] Serie A SuperAdmin UI: fresh global calendar reads, safe delayed-game overrides, producer dispatch and read-only fallback when the current PAT lacks platform push permission.
 - [~] Auction realtime UI implemented for active-auction discovery, Admin host controls, participant bidding, repair substitutions and reconnect status; real multi-device validation/polish remains pending.
 - [x] Product routing is exhaustive at compile time: every active `GroupProductRoute` resolves to a real screen and there is no generic “section in migration” runtime fallback.
+- [x] shared operation-status UI reports spinner + understandable phase for app/group/OneDrive sync and distinguishes offline, locally pending and remotely synchronized state.
 
 ## Service/domain migrations
 
@@ -66,6 +71,7 @@
 - [x] deterministic Cup/NewCup progression including Finals, Europa League and Supercoppa; perfect-tie randomness intentionally replaced by stable seeded choice.
 - [x] Game/day: read composition, TeamDay/current-Team projection, vote enrichment and live/closed scoring UI are migrated; `TeamDay` remains an Action-owned immutable day snapshot.
 - [x] Formations: owner/SuperAdmin authorization, validation, normalized current Team write, commit-timestamp TeamDay snapshotting and the legacy local automatic proposal based on chances/statistics/home-opponent score are migrated; automatic proposal remains reversible and is persisted only by the normal Save action.
+- [x] offline formation outbox: a network failure stores a semantic formation intent locally, updates the UI immediately, then revalidates/replays it through the normal writer when connectivity returns; GitHub commit time remains the authoritative cutoff clock.
 - [x] Group administration: users/roles, baskets/annual teams/co-owners, leagues/settings/initial Calendar+Rank and recalculation dispatch use fresh canonical group state with fail-closed integrity guards.
 - [x] Serie A administration: manual delayed-game correction merges over a fresh global calendar with optimistic concurrency; producer actions dispatch through the platform workflow only after fresh SuperAdmin + repository push checks.
 - [~] Serie A ingestion: core calendar/master/vote/chance/image producers implemented; master data and guarded live votes are production-scheduled, while remaining producers still need production validation/scheduling.
@@ -87,6 +93,7 @@
 - [x] backend operational-log persistence retired; the SuperAdmin log viewer reads GitHub Actions runs directly for the public platform repository and authenticated group repository.
 - [x] Web Push private VAPID material is excluded from platform/group JSON and versioned code; the managed group push workflow reads only `secrets.FANTAZONE_VAPID_PRIVATE_KEY` while the public key remains shared by the `fanta.plus` origin.
 - [x] ETag conditional reads: GitHub content responses persist validators alongside JSON/SHA, `refresh:true` sends `If-None-Match`, `304 Not Modified` reuses durable cached JSON, changed `200` responses replace value/SHA/ETag, and older cache entries without ETag remain compatible.
+- [x] transport-only offline fallback: refresh requests use the durable local snapshot after genuine network failure, while HTTP authorization/conflict errors remain authoritative.
 - [ ] one-time schema-v1→v2 migration tooling only if compact runtime repositories that need recovery are discovered.
 - [x] zero-backend authorization limitation documented: frontend/Actions enforce business rules, but a shared client-visible PAT cannot provide a cryptographic per-user write boundary.
 
@@ -118,9 +125,3 @@
 - [x] canonical roster assignment crosses an append-only outcome boundary and is revalidated by the serialized group Action.
 - [x] active-auction pointer/discovery lets clients resolve one canonical league/season session without technical auction IDs or GitHub directory listing.
 - [~] browser/Tamagui Auction V1 UI supports creation/resume, legacy queue modes, host controls, participant bids, repair substitutions, explicit finish/reopen/archive and realtime reconnect status; real multi-device validation and UX enrichment remain pending.
-- [~] native iOS/Android RTCPeerConnection bridge + `react-native-webrtc@124.0.8` runtime import implemented; Expo dev-client/prebuild/device validation remains pending. Expo-57 config-plugin support is not yet declared upstream, so no unsupported config plugin is committed.
-- [ ] production TURN credential strategy for restrictive NAT/firewall networks; not a zero-backend refactor blocker.
-
-## Definition of done
-
-A feature preserves desired Fantasoccer behavior, uses readable canonical JSON, has representative deterministic tests and no longer depends on the legacy backend/storage transport. Browser-facing changes also pass Playwright desktop/mobile. Group-owned behavior must be deployable and upgradeable inside each `Fantazone.<group>` repository rather than being centralized in the platform repository.
