@@ -6,7 +6,11 @@ import {
   type CalendarGame,
   type EnhancedCalendar,
 } from '@fantazone/domain'
-import { GitHubJsonStore, type RepositoryJsonReadOptions } from './repositoryStore'
+import {
+  GitHubJsonStore,
+  type RepositoryJsonReadOptions,
+  type RepositoryJsonWriteOptions,
+} from './repositoryStore'
 import type { GroupRepositoryTarget } from './repositoryTarget'
 
 export class GitHubCalendarRepository {
@@ -22,6 +26,17 @@ export class GitHubCalendarRepository {
   ): Promise<Calendar | null> {
     const snapshot = await this.store.tryReadJson<Calendar>(this.location(leagueId, season), options)
     return snapshot?.value ?? null
+  }
+
+  async writeCalendar(
+    leagueId: string,
+    season: number,
+    calendar: Calendar,
+    message = 'calendar: initialize league calendar',
+    options: RepositoryJsonWriteOptions = {},
+  ): Promise<string> {
+    const snapshot = await this.store.writeJson(this.location(leagueId, season), calendar, message, options)
+    return snapshot.sha
   }
 
   async getEnhancedCalendar(
