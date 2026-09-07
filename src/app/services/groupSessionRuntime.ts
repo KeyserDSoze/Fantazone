@@ -28,7 +28,6 @@ import {
   GitHubTeamRepository,
   REPOSITORY_MANIFEST_PATH,
   RepositoryRevisionContentClient,
-  RepositoryWriteConflictError,
   type GitHubRepo,
   type GroupRepositorySettings,
   type GroupRepositoryTarget,
@@ -186,7 +185,9 @@ export class GroupSessionRuntime {
   async refreshGroup(): Promise<Group> {
     const canonical = await this.groupRepository.getGroup({ refresh: true })
     if (!canonical) throw new GroupDocumentUnavailableError(this.connection)
-    const settings = await this.ensureDisplaySettings(canonical)
+    // Repository bootstrap owns creation of settings.json. A direct runtime used by
+    // tests/legacy callers stays read-only and simply falls back to canonical names.
+    const settings = await this.groupSettingsRepository.getSettings({ refresh: true }) ?? createGroupRepositorySettings(canonical)
     const group = applyGroupRepositorySettings(canonical, settings)
     this.currentGroup = group
     this.connection.groupName = group.name
@@ -279,19 +280,6 @@ export class GroupSessionRuntime {
     await this.groupRepository.writeGroup(updated, `chore: invite ${email}`)
     this.currentGroup = updated
     return invited
-  }
-
-  private async ensureDisplaySettings(group: Group): Promise<GroupRepositorySettings> {
-    const existing = await this.groupSettingsRepository.getSettings({ refresh: true })
-    if (existing) return existing
-    const initial = createGroupRepositorySettings(group)
-    try {
-      await this.groupSettingsRepository.writeSettings(initial, 'chore: initialize group display settings', { createOnly: true })
-      return initial
-    } catch (error) {
-      if (!(error instanceof RepositoryWriteConflictError)) throw error
-      return await this.groupSettingsRepository.getSettings({ refresh: true }) ?? initial
-    }
   }
 }
 
