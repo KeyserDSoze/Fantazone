@@ -32,6 +32,7 @@ This documentation is the migration contract from `KeyserDSoze/Fantasoccer` to F
 26. [`26-local-live-composition.md`](26-local-live-composition.md) — local team/rank reducers, GroupLiveComposer and retirement of LiveJob.
 27. [`27-definitive-day-recalculation.md`](27-definitive-day-recalculation.md) — definitive scoring/ranking, deterministic Cup/NewCup progression and group-owned recalculation workflow.
 28. [`28-group-repository-lifecycle.md`](28-group-repository-lifecycle.md) — create-from-zero group repositories, managed runtime versioning, workflow upgrades and pinned engine refs.
+29. [`azure-blob-migration.md`](azure-blob-migration.md) — one-time PowerShell/Node migration from legacy Azure Blob Storage to readable GitHub repositories.
 
 ## Source of truth
 
