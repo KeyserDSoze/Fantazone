@@ -50,6 +50,23 @@ test('writes and reuses a scan cache for the same Azure source', async () => {
   })
 })
 
+test('refresh replaces an existing cache file', async () => {
+  await fixture(async cachePath => {
+    const connection = 'BlobEndpoint=https://example.blob.core.windows.net;SharedAccessSignature=sig=secret'
+    await saveAzureScanCache(cachePath, connection, scan)
+
+    const refreshed = {
+      inventory: [...scan.inventory, { name: 'rank', downloaded: true, blobs: [] }],
+      records: [...scan.records, { container: 'rank', blobName: 'rank-1', key: { g: 'group', l: 'league', y: 12 }, value: { d: 38, r: {} } }],
+    }
+    await saveAzureScanCache(cachePath, connection, refreshed)
+
+    const cached = await loadAzureScanCache(cachePath, connection)
+    assert.equal(cached.status, 'hit')
+    assert.deepEqual(cached.scan, refreshed)
+  })
+})
+
 test('rejects a cache created for a different Azure source', async () => {
   await fixture(async cachePath => {
     await saveAzureScanCache(cachePath, 'BlobEndpoint=https://one.blob.core.windows.net;SharedAccessSignature=sig=one', scan)
