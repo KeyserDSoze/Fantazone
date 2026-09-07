@@ -4,6 +4,7 @@ function isObject(value) { return Boolean(value && typeof value === 'object' && 
 function hasOwn(value, key) { return isObject(value) && Object.prototype.hasOwnProperty.call(value, key) }
 function playerName(value) { return typeof value?.n === 'string' ? value.n.trim() : '' }
 function playerKey(value) { return playerName(value).toLowerCase().replace(/[^a-z]/g, '') }
+function hasConcreteLegacyRole(value) { return Number.isInteger(value) && value >= 0 && value <= 3 }
 
 function teamIdentity(key) {
   if (!isObject(key)) return null
@@ -19,28 +20,35 @@ function candidateScore(source, candidate) {
   if (!isObject(source) || !isObject(candidate) || !playerKey(candidate)) return null
   let score = 0
 
-  const strongNumeric = [
-    ['p', 4],   // acquisition price
-    ['r', 4],   // Serie A role
-  ]
-  for (const [field, weight] of strongNumeric) {
-    if (!hasOwn(source, field) || source[field] == null) continue
-    if (source[field] !== candidate[field]) return null
-    score += weight
+  // Acquisition price survives even when old cleanup code has blanked the player's Serie A
+  // identity, so it remains strong evidence.
+  if (hasOwn(source, 'p') && source.p != null) {
+    if (source.p !== candidate.p) return null
+    score += 4
   }
 
-  // RealTeam is strong evidence when the broken row still has it.
+  // Role -1 is Role.Undefined in the legacy model. Historical season-Team rows can end up with
+  // name/team blank and r=-1 after a player leaves Serie A; that sentinel is missing metadata,
+  // not evidence that the historical candidate must also have role -1.
+  if (hasConcreteLegacyRole(source.r)) {
+    if (source.r !== candidate.r) return null
+    score += 4
+  }
+
+  // RealTeam is strong evidence only when the broken row still has actual team metadata.
   if (isObject(source.t)) {
-    if (!isObject(candidate.t)) return null
     const sourceName = norm(source.t.n)
     const sourceAbbreviation = norm(source.t.a)
-    if (sourceName) {
-      if (sourceName !== norm(candidate.t.n)) return null
-      score += 4
-    }
-    if (sourceAbbreviation) {
-      if (sourceAbbreviation !== norm(candidate.t.a)) return null
-      score += 2
+    if (sourceName || sourceAbbreviation) {
+      if (!isObject(candidate.t)) return null
+      if (sourceName) {
+        if (sourceName !== norm(candidate.t.n)) return null
+        score += 4
+      }
+      if (sourceAbbreviation) {
+        if (sourceAbbreviation !== norm(candidate.t.a)) return null
+        score += 2
+      }
     }
   }
 
@@ -121,7 +129,9 @@ function chooseHistoricalPlayer(source, key, index) {
   scored.sort((a, b) => b.score - a.score || a.nameKey.localeCompare(b.nameKey))
   const bestScore = scored[0].score
   const best = scored.filter(item => item.score === bestScore)
-  // Require substantial evidence. price+role, team+role, or equivalent combinations qualify.
+  // Require substantial evidence. price+concrete-role, price+status+position+another matching
+  // property, team+role, or equivalent combinations qualify. This permits legacy rows whose
+  // identity was blanked to Role.Undefined while still failing closed on price-only guesses.
   if (bestScore < 8) {
     throw new Error(`Cannot recover unnamed legacy Team player safely: best historical score ${bestScore} is too weak; candidates=${best.slice(0, 5).map(x => x.nameKey).join(',')}; metadata=${describeBrokenPlayer(source)}`)
   }
