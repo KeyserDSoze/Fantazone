@@ -4,12 +4,13 @@ import { buildMigrationPlan, resolveGroup, shouldDownloadContainer } from '../..
 
 const groupRaw = { i: 'my-group', n: 'My Group', l: [], u: [], b: [] }
 const teamRaw = { n: 'T', o: 'owner@example.com', a: [], p: [{ n: 'Mario Rossi', t: { n: 'Roma', a: 'ROM' }, r: 3, a: true, vh: true, p: 10, rv: 0, s: 0, k: 3 }], m: 0, d: null }
+const masterPlayer = { n: 'Mario Rossi', t: { n: 'Roma', a: 'ROM' }, r: 3, a: true, vh: true }
 const records = [
   { container: 'group', blobName: 'g', key: 'my-group', value: groupRaw },
   { container: 'team', blobName: 't', key: { g: 'my-group', y: 14, b: 'basket a', e: 'owner@example.com' }, value: teamRaw },
   { container: 'dailyteams', blobName: 'td', key: { g: 'my-group', y: 14, b: 'basket a', e: 'owner@example.com', d: 4 }, value: teamRaw },
   { container: 'team', blobName: 'other', key: { g: 'other-group', y: 14, b: 'b', e: 'x@y' }, value: teamRaw },
-  { container: 'realplayerswrapper', blobName: '14', key: 14, value: { p: [{ n: 'Mario Rossi', t: { n: 'Roma', a: 'ROM' }, r: 3, a: true, vh: true }] } },
+  { container: 'realplayerswrapper', blobName: '14', key: 14, value: { p: [masterPlayer] } },
   { container: 'official', blobName: 'v', key: { y: 14, d: 2 }, value: { p: [] } },
 ]
 
@@ -43,6 +44,21 @@ test('season team output is v3 while daily team output keeps readable full playe
   assert.equal(season.version, 3)
   assert.equal(season.players[0].playerKey, 'mariorossi')
   assert.equal(day.players[0].name, 'Mario Rossi')
+})
+
+test('historical live vote with null team is enriched from the same-season RealPlayers master', () => {
+  const live = {
+    container: 'live', blobName: '14|||2', key: { y: 14, d: 2 },
+    value: { p: [{
+      n: 'Mario Rossi', t: null, r: 0, a: false,
+      v: { r: 3, v: 6.5, i: false, g: 0, p: 0, a: 0, s: 0, d: 0, w: 0, o: 0, t: 0, h: true, u: false, n: false, j: false, c: false },
+    }] },
+  }
+  const plan = buildMigrationPlan([...records, live], { groupRepository: 'owner/Fantazone.My-Group' })
+  const document = JSON.parse(plan.platformFiles.find(file => file.path === 'data/serie-a/votes/live/14/2.json').content)
+  assert.equal(document.players[0].team.name, 'Roma')
+  assert.equal(document.players[0].role, 3)
+  assert.equal(document.players[0].vote.value, 6.5)
 })
 
 test('does not download retired or encrypted Auction container content', () => {
