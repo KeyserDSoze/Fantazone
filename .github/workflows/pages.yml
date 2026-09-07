@@ -44,9 +44,18 @@ jobs:
           EXPO_PUBLIC_MICROSOFT_AUTHORITY_TENANT: ${{ vars.EXPO_PUBLIC_MICROSOFT_AUTHORITY_TENANT || 'common' }}
         run: npm run export:web --workspace=fantazone-app
 
+      - name: Build compressed offline Serie A packs
+        run: npm run build:offline-packs
+
       - name: Verify player image static assets
         shell: bash
         run: test -f src/app/dist/images/players/default.webp
+
+      - name: Verify offline runtime assets
+        shell: bash
+        run: |
+          test -f src/app/dist/fantazone-push-sw.js
+          test -f src/app/dist/offline/serie-a/index.json
 
       - name: Prepare GitHub Pages SPA artifact
         shell: bash
@@ -74,7 +83,7 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Deploy to GitHub Pages
+      - name: Deploy production
         id: deployment
         uses: actions/deploy-pages@v5
 

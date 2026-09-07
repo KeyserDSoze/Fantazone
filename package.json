@@ -20,6 +20,7 @@
     "test:migration": "node --test tests/migration/*.test.mjs",
     "test:integration:github": "tsx --test tests/integration/githubReal.test.ts",
     "test:e2e": "playwright test",
+    "build:offline-packs": "node scripts/build-offline-serie-a-packs.mjs",
     "migrate:azure": "node scripts/migration/migrate-azure-to-github.mjs"
   },
   "devDependencies": {
