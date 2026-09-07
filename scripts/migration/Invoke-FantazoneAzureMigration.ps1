@@ -9,8 +9,10 @@ param(
     [string]$GroupId,
     [string]$ReportPath,
     [string]$CachePath,
+    [string]$WorkDir,
     [switch]$RefreshCache,
     [switch]$NoCache,
+    [switch]$ResetWork,
     [switch]$Apply,
     [switch]$Overwrite,
     [switch]$PreserveExisting
@@ -51,8 +53,10 @@ try {
     if ($GroupId) { $arguments += @("--group-id", $GroupId) }
     if ($ReportPath) { $arguments += @("--report", $ReportPath) }
     if ($CachePath) { $arguments += @("--cache", $CachePath) }
+    if ($WorkDir) { $arguments += @("--work-dir", $WorkDir) }
     if ($RefreshCache) { $arguments += "--refresh-cache" }
     if ($NoCache) { $arguments += "--no-cache" }
+    if ($ResetWork) { $arguments += "--reset-work" }
     if ($Apply) { $arguments += "--apply" }
     if ($Overwrite) { $arguments += "--overwrite" }
     if ($PreserveExisting) { $arguments += "--preserve-existing" }
