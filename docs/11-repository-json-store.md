@@ -1,95 +1,91 @@
-# Repository JSON store
+# Repository JSON store and offline replica
 
-The first GitHub client can read and write raw repository files, but product features should not know about base64 content, Contents API payloads or stale SHA errors. `GitHubJsonStore` is the persistence boundary for canonical JSON documents.
+`GitHubJsonStore` is the persistence boundary for canonical JSON documents. Product code does not deal directly with base64 Contents API payloads, stale SHA handling or HTTP cache validators.
 
-## Goals
+## Responsibilities
 
-- keep GitHub transport details out of React screens and business-domain code;
-- allow public repository reads without requiring a PAT;
-- parse/serialize canonical JSON in one place;
 - cache documents by `owner/repo/path/ref`;
-- optionally persist snapshots across application restarts without cloning a repository;
-- carry the GitHub content SHA as an optimistic-concurrency token;
-- avoid blind overwrites by fetching the current SHA before an uncached update;
-- turn GitHub `409` / stale-version failures into `RepositoryWriteConflictError`;
-- update local caches with the new SHA returned by GitHub after a successful write;
-- invalidate group documents automatically when `manifest.revision` changes.
+- persist snapshots across application restarts;
+- carry Git blob SHA for optimistic concurrency;
+- use `ETag` / `If-None-Match` for cheap refreshes;
+- preserve HTTP authorization/conflict errors as authoritative failures;
+- fall back to the durable local snapshot only for transport/network failures;
+- invalidate process memory when `manifest.revision` changes without destroying the last usable offline replica;
+- refresh the durable replica only after newer remote data has been obtained successfully.
 
-## Example
-
-```ts
-const github = new GitHubClient(groupPat)
-const store = new GitHubJsonStore(github)
-
-const location = {
-  owner: 'KeyserDSoze',
-  repo: 'Fantazone.Amici-del-Bar',
-  path: 'config/group.json',
-  ref: 'main',
-}
-
-const current = await store.readJson<GroupConfig>(location)
-
-await store.writeJson(
-  location,
-  { ...current.value, title: 'Nuovo nome' },
-  'group: rename',
-  { expectedSha: current.sha },
-)
-```
-
-A second writer using the old SHA receives a typed conflict instead of silently replacing newer state.
-
-## Cache semantics
-
-A normal `readJson` checks the in-memory snapshot first and, when configured, a durable application cache next. `readJson(..., { refresh: true })` bypasses both and captures the current GitHub SHA. Values returned to callers are defensive JSON copies so mutating an object in a component does not mutate the cached canonical value.
+## Local storage
 
 The application provides the durable adapter:
 
-- web: IndexedDB (`fantazone-repository-cache`);
+- web: IndexedDB database `fantazone-repository-cache`;
 - iOS/Android: React Native AsyncStorage;
-- GitHub package: storage-agnostic `RepositoryJsonPersistentCache` interface.
+- credentials remain separate: localStorage on web for the current PAT model and SecureStore on native.
 
-The durable cache stores only JSON snapshots plus their Git blob SHA. It is not a Git clone and does not contain repository history, refs, workflow files or the full repository tree.
+A cache entry contains the readable JSON value, its GitHub blob SHA when known and optionally its HTTP ETag. This is a materialized application database, **not a Git clone**: it contains no commit graph, refs or repository history.
 
-Persistent-cache failures are deliberately non-fatal. GitHub remains the source of truth and a remote refresh can always repopulate the local cache.
+## Offline hydration
+
+Normal lazy reads still populate the cache, but a connected group also receives an explicit offline hydration pass.
+
+### Group repository
+
+The app downloads the selected group branch once through GitHub's ZIP archive endpoint. It parses the JSON documents client-side and materializes them in the same cache key space used by `GitHubJsonStore`.
+
+This avoids a first-sync loop that performs one Contents API request for every group file.
+
+### Shared Serie A data
+
+The Pages deployment builds one compressed `.json.gz` pack per Serie A season from `data/serie-a/**`. A group snapshot extracts the season ids referenced by `config/group.json` and downloads only those season packs.
+
+Each pack has a SHA-256 content hash in `/offline/serie-a/index.json`. A device that already has the same hash skips the pack; changed packs replace only the paths belonging to that season.
+
+The result is:
+
+```text
+GitHub group repository --ZIP--> local group JSON
+Fantazone Pages --------packs--> local Serie A JSON
+                               |
+                               v
+                    IndexedDB / AsyncStorage
+```
+
+## Read semantics
+
+A normal `readJson()` checks memory, then durable storage, then GitHub only when needed.
+
+`readJson(..., { refresh: true })` asks GitHub for current data. When an ETag is available, unchanged content returns `304 Not Modified` and the cached JSON is reused.
+
+If the network request itself cannot be made and a durable snapshot exists, the refresh returns that snapshot with `fromCache: true`. A real GitHub error such as `401`, `403`, `409` or `422` is never converted into offline success.
 
 ## Revision synchronization
 
 Every group repository contains `manifest.json` with a monotonically increasing `revision`.
 
-Application writes go through `RepositoryRevisionContentClient` and publish the revision in two phases:
+Application writes publish a two-phase revision around the canonical write:
 
-1. advance `manifest.revision` and set `updating: true`;
-2. write the canonical group document using its Git blob SHA;
-3. advance `manifest.revision` again and set `updating: false`.
+1. increment revision with `updating: true`;
+2. write the canonical document using optimistic concurrency;
+3. increment revision again with `updating: false`.
 
-The two-phase state closes the polling race between the manifest update and the GitHub Contents API write. A watcher that observes `updating: true` always treats the repository as potentially stale, invalidates its group cache and refreshes again on subsequent checks until it sees a stable manifest. If a process or network failure leaves the manifest in the updating state, the system therefore remains conservative rather than silently accepting stale data.
+Group Actions commit `data/**` and a stable manifest revision together.
 
-When the canonical document write itself conflicts, the client best-effort publishes a stable follow-up revision before rethrowing the original conflict. A failure to close the transition leaves `updating: true`, which is still safe because watchers continue to invalidate.
+While a group is open the app checks the manifest immediately, every 60 seconds and when the app returns to foreground. If the remote revision is unchanged, no group-wide refresh occurs. If it changed, stale **memory** is discarded, current membership/configuration is refreshed and a new ZIP snapshot replaces the durable group replica. The old durable copy is not deleted merely because a newer revision exists.
 
-Managed group jobs update canonical `data/` and `manifest.json` in the same Git commit, so they only need one revision increment and explicitly publish `updating: false`.
+## Offline writes
 
-While a group is open, the app checks only `manifest.json`:
+Offline writes are not implemented as blind cached JSON replacement. Only operations with a safe semantic replay contract should enter an outbox.
 
-- immediately after the runtime opens;
-- every 60 seconds;
-- whenever the application returns to the foreground.
+Formation saves use an appendable local intent containing identity, fixture/team target and requested positions. When connectivity returns the app:
 
-If a stable revision is unchanged, no group documents are invalidated or downloaded. If the revision changes, or if the manifest is marked `updating`, cached documents for that group repository are removed while the freshly fetched manifest is preserved; `config/group.json` is then refreshed immediately so membership and group metadata are authoritative. Other documents are fetched lazily when their repositories/screens request them.
+1. refreshes authoritative remote state;
+2. revalidates membership and formation rules;
+3. replays the formation save through the normal writer;
+4. removes the outbox item only after GitHub accepts it.
 
-A stable revision observed from the app's own write is kept in the runtime, preventing the next poll from treating that local write as an unrelated remote update.
+The GitHub commit timestamp remains the authoritative cutoff clock. A formation prepared before kickoff but synchronized after kickoff therefore applies according to the actual remote commit time, not a user-controlled device clock.
 
-## Public reads
+Administrative, credential and OneDrive mutations remain online-only unless they receive an equally safe replay contract.
 
-`new GitHubClient()` can read public repository content without an `Authorization` header. Operations involving `/user`, repository creation or writes still require a token. This separation is important for the planned public shared Serie A data source: spectators and demo users should not need a GitHub credential just to read canonical public data.
+## Conflict rule
 
-## What this does not solve yet
-
-- HTTP `ETag` / `If-None-Match` conditional requests;
-- fully offline authorization/session policy;
-- automatic semantic merge after a write conflict;
-- path/area-level manifest revisions for selectively invalidating only one logical subset;
-- append-only command/event reducers for highly concurrent operations.
-
-Those remain separate layers. A conflict should only be retried automatically when the domain operation is known to be idempotent/safely replayable.
+A second writer using an obsolete SHA receives `RepositoryWriteConflictError` instead of silently overwriting newer state. Automatic retry is allowed only where the domain operation is explicitly idempotent or semantically replayable.
