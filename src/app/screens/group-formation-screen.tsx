@@ -5,6 +5,7 @@ import {
   PlayerInTeamStatus,
   Role,
   applyFormationPositions,
+  calculateAutomaticFormation,
   formatSeasonFromYear,
   getPlayerKey,
   validateFormation,
@@ -14,6 +15,7 @@ import {
   type Player,
   type Team,
 } from '@fantazone/domain'
+import { GitHubChanceRepository, GitHubStatPlayersRepository } from '@fantazone/github'
 import { resolveFormationTarget, type FormationTarget } from '../services/groupFormationTarget'
 import type { GroupNavigationSelection } from '../services/groupNavigation'
 import type { GroupSessionRuntime } from '../services/groupSessionRuntime'
@@ -31,11 +33,15 @@ export function GroupFormationScreen({ runtime, session, selection }: Props) {
   const [wrapper, setWrapper] = useState<GameWrapper | null>(null)
   const [team, setTeam] = useState<Team | null>(null)
   const [positions, setPositions] = useState<PositionState>({})
+  const [automaticBackup, setAutomaticBackup] = useState<PositionState | null>(null)
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [automaticLoading, setAutomaticLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [status, setStatus] = useState<string | null>(null)
   const league = runtime.group.leagues.find(item => item.id === selection.leagueId) ?? null
+  const chanceRepository = useMemo(() => new GitHubChanceRepository(runtime.store, runtime.platformTarget), [runtime])
+  const statRepository = useMemo(() => new GitHubStatPlayersRepository(runtime.store, runtime.platformTarget), [runtime])
 
   async function loadFormation() {
     if (!selection.leagueId || selection.year == null) {
@@ -43,12 +49,14 @@ export function GroupFormationScreen({ runtime, session, selection }: Props) {
       setTarget(null)
       setWrapper(null)
       setTeam(null)
+      setAutomaticBackup(null)
       return
     }
 
     setLoading(true)
     setError(null)
     setStatus(null)
+    setAutomaticBackup(null)
     try {
       const [calendar, realCalendar] = await Promise.all([
         runtime.calendarRepository.getCalendar(selection.leagueId, selection.year, { refresh: true }),
@@ -82,6 +90,7 @@ export function GroupFormationScreen({ runtime, session, selection }: Props) {
       setWrapper(null)
       setTeam(null)
       setPositions({})
+      setAutomaticBackup(null)
       setError(toMessage(caught))
     } finally {
       setLoading(false)
@@ -98,6 +107,46 @@ export function GroupFormationScreen({ runtime, session, selection }: Props) {
     return applyFormationPositions(team, formationUpdates(activePlayers, positions))
   }, [team, activePlayers, positions])
   const validation = useMemo(() => previewTeam ? validateFormation(previewTeam) : null, [previewTeam])
+
+  async function applyAutomaticProposal() {
+    if (!team || !wrapper || selection.year == null) return
+    setAutomaticLoading(true)
+    setError(null)
+    setStatus(null)
+    try {
+      const [chances, stats, realCalendar] = await Promise.all([
+        chanceRepository.get(selection.year, wrapper.serieADay, { refresh: true }),
+        statRepository.getStats(selection.year, { refresh: true }),
+        runtime.realCalendarRepository.getCalendar(selection.year, { refresh: true }),
+      ])
+      if (!chances) {
+        throw new Error(`Probabilità Serie A ${selection.year}/${wrapper.serieADay} non disponibili. Esegui prima il producer delle probabilità.`)
+      }
+      const realDay = realCalendar?.days.find(day => day.serieADay === wrapper.serieADay) ?? null
+      const result = calculateAutomaticFormation({ team, chances, stats, realDay })
+      const preview = applyFormationPositions(team, result.updates)
+      const checked = validateFormation(preview)
+      if (!checked.valid) throw new Error(checked.errors[0] ?? 'La proposta automatica non produce una formazione valida.')
+
+      setAutomaticBackup({ ...positions })
+      setPositions(Object.fromEntries(result.updates.map(update => [update.playerKey, update.position])) as PositionState)
+      setStatus(stats
+        ? 'Proposta automatica applicata localmente usando probabilità, stato, statistiche recenti e difficoltà della partita. Controllala e premi Salva formazione per renderla effettiva.'
+        : 'Proposta automatica applicata localmente usando le probabilità disponibili. Le statistiche della stagione non sono ancora disponibili; controllala prima di salvare.')
+    } catch (caught) {
+      setError(toMessage(caught))
+    } finally {
+      setAutomaticLoading(false)
+    }
+  }
+
+  function restoreAutomaticBackup() {
+    if (!automaticBackup) return
+    setPositions(automaticBackup)
+    setAutomaticBackup(null)
+    setError(null)
+    setStatus('Ripristinata la formazione precedente alla proposta automatica.')
+  }
 
   async function saveFormation() {
     if (!selection.leagueId || selection.year == null || !target || !team) return
@@ -123,7 +172,8 @@ export function GroupFormationScreen({ runtime, session, selection }: Props) {
       })
       setTeam(saved.team)
       setPositions(positionStateFromTeam(saved.team))
-      setStatus(`Formazione salvata sulla squadra corrente. La GitHub Action applicherà lo snapshot alla giornata corretta (Serie A ${saved.serieADay}ª).`)
+      setAutomaticBackup(null)
+      setStatus('Formazione salvata sulla squadra corrente. La GitHub Action determinerà la TeamDay corretta dal timestamp del commit, senza riscrivere le giornate già congelate.')
     } catch (caught) {
       setError(toMessage(caught))
     } finally {
@@ -141,7 +191,7 @@ export function GroupFormationScreen({ runtime, session, selection }: Props) {
               {league?.name ?? 'Lega'}{selection.year != null ? ` · ${formatSeasonFromYear(selection.year)}` : ''}
             </Paragraph>
           </YStack>
-          <Button variant="outlined" disabled={loading || saving} onPress={() => { void loadFormation() }}>
+          <Button variant="outlined" disabled={loading || saving || automaticLoading} onPress={() => { void loadFormation() }}>
             {loading ? <Spinner /> : 'Ricarica'}
           </Button>
         </XStack>
@@ -172,15 +222,34 @@ export function GroupFormationScreen({ runtime, session, selection }: Props) {
         {team ? (
           <>
             <Card borderWidth={1} borderColor={validation?.valid === false ? '$yellow8' : '$borderColor'} padding="$4">
-              <YStack gap="$2">
-                <H2 size="$6">{team.name}</H2>
-                <Text color="$color10">Owner: {team.owner}</Text>
-                <FormationSummary players={activePlayers} positions={positions} />
-                {validation?.valid === false ? (
-                  <Paragraph color="$yellow10">{validation.errors[0]}</Paragraph>
-                ) : (
-                  <Paragraph color="$green10">Formazione valida.</Paragraph>
-                )}
+              <YStack gap="$3">
+                <YStack gap="$2">
+                  <H2 size="$6">{team.name}</H2>
+                  <Text color="$color10">Owner: {team.owner}</Text>
+                  <FormationSummary players={activePlayers} positions={positions} />
+                  {validation?.valid === false ? (
+                    <Paragraph color="$yellow10">{validation.errors[0]}</Paragraph>
+                  ) : (
+                    <Paragraph color="$green10">Formazione valida.</Paragraph>
+                  )}
+                </YStack>
+                <XStack gap="$2" flexWrap="wrap">
+                  <Button
+                    variant="outlined"
+                    disabled={saving || automaticLoading}
+                    onPress={() => { void applyAutomaticProposal() }}
+                  >
+                    {automaticLoading ? <Spinner /> : 'Proponi formazione automatica'}
+                  </Button>
+                  {automaticBackup ? (
+                    <Button variant="outlined" disabled={saving || automaticLoading} onPress={restoreAutomaticBackup}>
+                      Ripristina precedente
+                    </Button>
+                  ) : null}
+                </XStack>
+                <Paragraph size="$2" color="$color9">
+                  La proposta automatica resta locale finché non premi Salva formazione. Ordina i giocatori con la logica legacy su probabilità Fantacalcio.it, indisponibilità, forma recente e casa/avversario.
+                </Paragraph>
               </YStack>
             </Card>
 
@@ -195,7 +264,7 @@ export function GroupFormationScreen({ runtime, session, selection }: Props) {
                       key={getPlayerKey(player.name)}
                       player={player}
                       value={positions[getPlayerKey(player.name)] ?? player.position}
-                      disabled={saving}
+                      disabled={saving || automaticLoading}
                       onChange={position => setPositions(current => ({ ...current, [getPlayerKey(player.name)]: position }))}
                     />
                   ))}
@@ -206,7 +275,7 @@ export function GroupFormationScreen({ runtime, session, selection }: Props) {
             <Button
               theme="accent"
               size="$5"
-              disabled={saving || validation?.valid !== true}
+              disabled={saving || automaticLoading || validation?.valid !== true}
               onPress={() => { void saveFormation() }}
             >
               {saving ? <Spinner /> : 'Salva formazione'}
