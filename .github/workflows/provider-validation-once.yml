@@ -1,5 +1,5 @@
-name: Diagnose player catalog once
-run-name: Fantazone · diagnose player catalog
+name: Diagnose player catalog pagination once
+run-name: Fantazone · diagnose player catalog pagination
 
 on:
   push:
@@ -7,13 +7,13 @@ on:
 
 jobs:
   diagnose:
-    if: "${{ github.event.head_commit.message == 'ops: diagnose player catalog' }}"
+    if: "${{ github.event.head_commit.message == 'ops: diagnose player catalog pagination' }}"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/setup-node@v6
         with:
           node-version: 22
-      - name: Probe current and previous player catalog pages
+      - name: Probe every player catalog page
         shell: bash
         run: |
           node <<'NODE'
@@ -24,31 +24,28 @@ jobs:
             'Cache-Control': 'no-cache',
           }
           const seasons = [
-            ['current', 'serie-a::Football_Season::ed7fdc2a3e7b408b942ec177b7b956b5'],
-            ['previous', 'serie-a::Football_Season::5f0e080fc3a44073984b75b3a8e06a8a'],
+            ['current', 'serie-a::Football_Season::ed7fdc2a3e7b408b942ec177b7b956b5', 14],
+            ['previous', 'serie-a::Football_Season::5f0e080fc3a44073984b75b3a8e06a8a', 27],
           ]
-          for (const [label, id] of seasons) {
-            for (const category of ['General', 'general']) {
-              const url = new URL(`seasons/${encodeURIComponent(id)}/stats/players?category=${category}&page=1&locale=it-IT`, base).toString()
-              console.log(`===== ${label} ${category} =====`)
+          for (const [label, id, pages] of seasons) {
+            console.log(`===== ${label}: ${pages} pages =====`)
+            for (let page = 1; page <= pages; page++) {
+              const url = new URL(`seasons/${encodeURIComponent(id)}/stats/players?category=General&page=${page}&locale=it-IT`, base).toString()
+              const started = Date.now()
               try {
                 const response = await fetch(url, { headers })
                 const text = await response.text()
-                console.log('url', url)
-                console.log('status', response.status, response.statusText)
-                console.log('content-type', response.headers.get('content-type'))
-                console.log('body', text.slice(0, 1400))
+                let players = -1
+                let last = null
                 try {
                   const parsed = JSON.parse(text)
-                  console.log('top-level keys', Object.keys(parsed ?? {}))
-                  console.log('players length', Array.isArray(parsed?.players) ? parsed.players.length : 'missing')
-                  console.log('pagination', JSON.stringify(parsed?.pagination ?? null))
-                } catch (error) {
-                  console.log('json-error', error instanceof Error ? error.message : String(error))
-                }
+                  players = Array.isArray(parsed?.players) ? parsed.players.length : -1
+                  last = parsed?.pagination?.isLastPage ?? null
+                } catch {}
+                console.log(`${label} page=${page} status=${response.status} players=${players} last=${last} ms=${Date.now()-started} retry-after=${response.headers.get('retry-after') ?? ''}`)
+                if (!response.ok) console.log('body', text.slice(0, 500))
               } catch (error) {
-                console.log('fetch-error', error)
-                console.log('cause', error?.cause)
+                console.log(`${label} page=${page} FETCH_ERROR`, error, error?.cause)
               }
             }
           }
