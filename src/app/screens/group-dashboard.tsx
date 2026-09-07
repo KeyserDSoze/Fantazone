@@ -20,7 +20,9 @@ import {
 } from '../services/groupNavigation'
 import type { GroupSessionRuntime } from '../services/groupSessionRuntime'
 import { AuctionScreen } from './auction-screen'
+import { GroupCalendarScreen } from './group-calendar-screen'
 import { GroupProductShell } from './group-product-shell'
+import { GroupRankingScreen } from './group-ranking-screen'
 
 type Props = {
   runtime: GroupSessionRuntime
@@ -69,6 +71,10 @@ export function GroupDashboardScreen({
     >
       {route === 'home' ? (
         <GroupHome runtime={runtime} selection={selection} onNavigate={setRoute} />
+      ) : route === 'calendar' ? (
+        <GroupCalendarScreen runtime={runtime} selection={selection} />
+      ) : route === 'ranking' ? (
+        <GroupRankingScreen runtime={runtime} selection={selection} />
       ) : route === 'settings' ? (
         <GroupSettings runtime={runtime} session={session} />
       ) : (
