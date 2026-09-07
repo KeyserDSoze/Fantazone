@@ -16,6 +16,15 @@ function teamIdentity(key) {
   return `${group}|${year}|${basket}|${owner}`
 }
 
+function teamOwnerIdentity(key) {
+  if (!isObject(key)) return null
+  const group = norm(key.g ?? key.group)
+  const year = Number(key.y ?? key.year)
+  const owner = norm(key.e ?? key.email ?? key.owner)
+  if (!group || !Number.isFinite(year) || !owner) return null
+  return `${group}|${year}|${owner}`
+}
+
 function candidateScore(source, candidate) {
   if (!isObject(source) || !isObject(candidate) || !playerKey(candidate)) return null
   let score = 0
@@ -76,12 +85,56 @@ function describeBrokenPlayer(player) {
   return JSON.stringify(summary)
 }
 
+function addPlayerSnapshot(index, identity, player) {
+  if (!identity) return
+  const keyName = playerKey(player)
+  if (!keyName) return
+  let bucket = index.get(identity)
+  if (!bucket) { bucket = new Map(); index.set(identity, bucket) }
+  let snapshots = bucket.get(keyName)
+  if (!snapshots) { snapshots = []; bucket.set(keyName, snapshots) }
+  snapshots.push(player)
+}
+
+function registerMirroredSeasonTeams(records, selectedGroupId, mirrors) {
+  // Some old groups contain the exact same season Team under two basket ids, while TeamDay history
+  // exists only under one of them. Cross-basket recovery is allowed only when the raw season-Team
+  // payloads are exactly identical for the same group/year/owner; this proves they are aliases of
+  // the same historical team rather than two unrelated teams owned by the same person.
+  const byOwnerAndPayload = new Map()
+  for (const record of records) {
+    if (String(record?.container ?? '').toLowerCase() !== 'team') continue
+    const key = record?.key
+    if (!isObject(key) || norm(key.g ?? key.group) !== norm(selectedGroupId)) continue
+    const identity = teamIdentity(key)
+    const ownerIdentity = teamOwnerIdentity(key)
+    if (!identity || !ownerIdentity) continue
+    const payload = JSON.stringify(record.value ?? null)
+    const signature = `${ownerIdentity}|${payload}`
+    let identities = byOwnerAndPayload.get(signature)
+    if (!identities) { identities = new Set(); byOwnerAndPayload.set(signature, identities) }
+    identities.add(identity)
+  }
+
+  for (const identities of byOwnerAndPayload.values()) {
+    if (identities.size < 2) continue
+    const all = [...identities]
+    for (const identity of all) {
+      let aliases = mirrors.get(identity)
+      if (!aliases) { aliases = new Set(); mirrors.set(identity, aliases) }
+      for (const candidate of all) if (candidate !== identity) aliases.add(candidate)
+    }
+  }
+}
+
 /**
  * Build historical candidates from both season Teams and immutable TeamDay snapshots.
- * Only rows with a real player name are indexed. The key is group/year/basket/owner.
+ * Only rows with a real player name are indexed. The primary key is group/year/basket/owner.
+ * A secondary mirror map is populated only for exact duplicate season-Team payloads.
  */
 export function buildHistoricalTeamPlayerIndex(records, selectedGroupId) {
   const index = new Map()
+  const mirrors = new Map()
   for (const record of records) {
     const container = String(record?.container ?? '').toLowerCase()
     if (container !== 'team' && container !== 'dailyteams') continue
@@ -89,26 +142,36 @@ export function buildHistoricalTeamPlayerIndex(records, selectedGroupId) {
     if (!isObject(key) || norm(key.g ?? key.group) !== norm(selectedGroupId)) continue
     const identity = teamIdentity(key)
     if (!identity) continue
+    for (const player of asArray(record?.value?.p)) addPlayerSnapshot(index, identity, player)
+  }
+  registerMirroredSeasonTeams(records, selectedGroupId, mirrors)
+  // Keep the public shape Map-compatible for the recovery caller/tests while carrying the proven
+  // alias relation alongside it.
+  index.mirrors = mirrors
+  return index
+}
 
-    let bucket = index.get(identity)
-    if (!bucket) { bucket = new Map(); index.set(identity, bucket) }
-
-    for (const player of asArray(record?.value?.p)) {
-      const keyName = playerKey(player)
-      if (!keyName) continue
-      let snapshots = bucket.get(keyName)
-      if (!snapshots) { snapshots = []; bucket.set(keyName, snapshots) }
-      snapshots.push(player)
+function mergedCandidateBucket(identity, index) {
+  const identities = [identity, ...(index?.mirrors?.get(identity) ?? [])]
+  const merged = new Map()
+  for (const currentIdentity of identities) {
+    const bucket = index.get(currentIdentity)
+    if (!bucket) continue
+    for (const [nameKey, snapshots] of bucket) {
+      let target = merged.get(nameKey)
+      if (!target) { target = []; merged.set(nameKey, target) }
+      target.push(...snapshots)
     }
   }
-  return index
+  return merged
 }
 
 function chooseHistoricalPlayer(source, key, index) {
   const identity = teamIdentity(key)
-  const bucket = identity ? index.get(identity) : null
+  const bucket = identity ? mergedCandidateBucket(identity, index) : null
   if (!bucket?.size) {
-    throw new Error(`Cannot recover unnamed legacy Team player: no historical Team/TeamDay candidates for ${identity ?? 'invalid team key'}; metadata=${describeBrokenPlayer(source)}`)
+    const mirrorCount = identity ? (index?.mirrors?.get(identity)?.size ?? 0) : 0
+    throw new Error(`Cannot recover unnamed legacy Team player: no historical Team/TeamDay candidates for ${identity ?? 'invalid team key'}${mirrorCount ? ` (including ${mirrorCount} proven mirrored basket)` : ''}; metadata=${describeBrokenPlayer(source)}`)
   }
 
   const scored = []
@@ -143,7 +206,8 @@ function chooseHistoricalPlayer(source, key, index) {
 
 /**
  * Repair only season-Team players whose legacy name is empty. A historical candidate must be
- * uniquely supported by the same group/year/basket/owner Team/TeamDay history.
+ * uniquely supported by the same group/year/basket/owner history, or by a basket whose season
+ * Team is proven to be an exact duplicate of the target season Team.
  */
 export function recoverUnnamedSeasonTeamPlayers(rawTeam, key, index) {
   if (!isObject(rawTeam)) return rawTeam
