@@ -16,6 +16,7 @@ import { GroupFormationScreen } from './group-formation-screen'
 import { GroupGameScreen } from './group-game-screen'
 import { GroupHallOfFameScreen } from './group-hall-of-fame-screen'
 import { GroupHomeScreen } from './group-home-screen'
+import { GroupLeagueAdminScreen } from './group-league-admin-screen'
 import { GroupLiveScreen } from './group-live-screen'
 import { GroupMarketCreateScreen } from './group-market-create-screen'
 import { GroupMarketTradesScreen } from './group-market-trades-screen'
@@ -94,6 +95,8 @@ export function GroupDashboardScreen({ runtime, session, onLogout, onDisconnect,
         <GroupUsersAdminScreen runtime={runtime} session={session} />
       ) : route === 'group-baskets-admin' ? (
         <GroupBasketsAdminScreen runtime={runtime} session={session} selection={selection} />
+      ) : route === 'group-league-admin' ? (
+        <GroupLeagueAdminScreen runtime={runtime} session={session} selection={selection} />
       ) : route === 'settings' ? (
         <GroupSettingsScreen runtime={runtime} session={session} />
       ) : (

@@ -91,6 +91,23 @@ export class GitHubClient {
     })
   }
 
+  async dispatchWorkflow(
+    owner: string,
+    repo: string,
+    workflowId: string,
+    ref: string,
+    inputs: Record<string, string> = {},
+  ): Promise<void> {
+    this.requireToken()
+    const normalizedWorkflow = workflowId.trim()
+    const normalizedRef = ref.trim()
+    if (!normalizedWorkflow || !normalizedRef) throw new Error('Workflow id and ref are required')
+    await this.request<void>(
+      `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/actions/workflows/${encodeURIComponent(normalizedWorkflow)}/dispatches`,
+      { method: 'POST', body: JSON.stringify({ ref: normalizedRef, inputs }) },
+    )
+  }
+
   /**
    * Reads repository content. Authentication is optional so public Fantazone data can
    * be consumed without forcing the application to own a GitHub credential.
