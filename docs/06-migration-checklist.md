@@ -5,8 +5,8 @@
 ## Foundation
 
 - [x] Initialize Fantazone repository and documentation.
-- [~] Expo/React Native/Tamagui app.
-- [~] shared TypeScript domain/GitHub client/Actions runner.
+- [x] Expo/React Native/Tamagui app; web export and Android/iOS Expo prebuild are green. Real-device acceptance remains an external validation gate, not missing implementation.
+- [x] shared TypeScript domain/GitHub client/Actions runner.
 - [x] GitHub Pages production deployment at canonical `https://fanta.plus` with automatic deploy from `main`.
 - [x] readable canonical JSON; migrated documents avoid compact/single-letter persistence. Mutable season Team uses explicit reference schema v3 while the overall group model remains readable.
 - [x] layered validation: deterministic unit/contract/filesystem tests plus Playwright Chromium desktop/mobile in CI; guarded real-GitHub integration workflow available with a dedicated test PAT.
@@ -15,7 +15,7 @@
 
 ## Identity and groups
 
-- [~] Google web adapter implemented but product login intentionally disabled until configured.
+- [x] Google adapter intentionally remains disabled by product configuration; Microsoft is the configured production login and the disabled Google path is not a refactor blocker.
 - [x] Microsoft web login after group selection through authorization-code + PKCE.
 - [x] last verified Microsoft identity + OneDrive group catalog are cached locally so an already-used device can reopen without a fresh Graph request; an actual OneDrive mutation still requires network and a renewable/re-authenticated Microsoft session.
 - [x] shared group PAT preflight validates token, exact repository, read/write access and canonical Fantazone documents before persistence/use.
@@ -42,10 +42,10 @@
 - [x] Live Serie A/votes.
 - [x] Players/statistics/Teams.
 - [x] Market/trades/group admin/settings: market/trades, account/group settings and SuperAdmin users/baskets/leagues are wired.
-- [ ] Cards: intentionally deferred by product decision; no placeholder is exposed as an active feature.
+- [x] Cards scope decision: intentionally excluded from this refactor because no active Cards implementation exists yet; no placeholder is exposed as an active feature.
 - [x] Hall of Fame/logs/patch notes: Hall of Fame and patch notes are wired; operational logs read actual GitHub Actions from platform + group instead of recreating backend log storage.
 - [~] Push UX: browser Web Push preferences/subscriptions, Service Worker, group-owned readable settings, managed per-group Actions transport and manual test dispatch are implemented; a repository `FANTAZONE_VAPID_PRIVATE_KEY` secret and real delivery validation are required before automatic notifications are enabled. Native iOS/Android push remains pending.
-- [~] Auction realtime UI implemented for active-auction discovery, Admin host controls, participant bidding, repair substitutions and reconnect status; real multi-device validation/polish remains pending.
+- [~] Auction realtime UI implemented for active-auction discovery, Admin host controls, participant bidding, repair substitutions and reconnect status; Android/iOS Expo prebuild is green, while real multi-device validation/polish remains an external gate.
 - [x] Product routing is exhaustive at compile time: every active `GroupProductRoute` resolves to a real screen and there is no generic “section in migration” runtime fallback.
 - [x] shared operation-status UI reports spinner + understandable phase for app/group/OneDrive sync and distinguishes offline, locally pending and remotely synchronized state.
 
@@ -62,8 +62,8 @@
 - [x] global RealTeams/RealPlayers readable master-data + reconciliation; real provider path validated and daily production scheduling enabled with fail-closed structural guards.
 - [x] Vote/StatPlayer readable contracts + FinalValue/statistics reducers + rebuild job.
 - [x] live/final Serie A vote producer logic and canonical repositories; live producer is scheduled with calendar guard while remaining real-source producer validation/scheduling is operational work.
-- [x] PlayerOdds/chance readable domain + global reducer/parsers/Action; real-source production validation/scheduling remains operational work (#35).
-- [x] player-image catalog matching + global static WebP ingestion + frontend URL/fallback helper; real-source production validation/scheduling remains operational work (#36).
+- [x] PlayerOdds/chance readable domain + global reducer/parsers/Action; real-source validation passed with a 593-player canonical snapshot and the central producer is scheduled daily at 05:17 UTC (#35 closed).
+- [x] player-image catalog matching + global static WebP ingestion + frontend URL/fallback helper; real-source catalog/media validation passed with zero download failures and the central producer is scheduled monthly (#36 closed).
 - [x] local fantasy team scoring reducer: official-over-live precedence, substitutions, Best Formation, defence/good-people/own-goal behavior.
 - [x] local live Rank projection + `GroupLiveComposer`; legacy `LiveJob` retired.
 - [x] definitive fantasy-day reducer using official votes only, including missing TeamDay and home-advantage parity.
@@ -74,12 +74,12 @@
 - [x] offline formation outbox: a network failure stores a semantic formation intent locally, updates the UI immediately, then revalidates/replays it through the normal writer when connectivity returns; GitHub commit time remains the authoritative cutoff clock.
 - [x] Group administration: users/roles, baskets/annual teams/co-owners, leagues/settings/initial Calendar+Rank and recalculation dispatch use fresh canonical group state with fail-closed integrity guards.
 - [x] Serie A administration: manual delayed-game correction merges over a fresh global calendar with optimistic concurrency; producer actions dispatch through the platform workflow only after fresh SuperAdmin + repository push checks.
-- [~] Serie A ingestion: core calendar/master/vote/chance/image producers implemented; master data and guarded live votes are production-scheduled, while remaining producers still need production validation/scheduling.
-- [~] Statistics/chances/votes: deterministic reducers + producers implemented; production data bootstrap/validation remains pending for unscheduled producers.
+- [~] Serie A ingestion: core calendar/master/vote/chance/image producers implemented; master data, guarded live votes, odds and images are production-scheduled, official votes/odds/images have real-source validation, while final-vote automatic scheduling and one positive live-feed observation remain operational gates.
+- [~] Statistics/chances/votes: deterministic reducers + producers implemented; official day 2 and chance day 3 are materialized from real providers, while a positive live-vote observation during an active match and final-vote scheduling remain operational gates.
 - [x] Market persistence/commands: append-only client commands + canonical group Action reducer with legacy voting/execution/expiry parity; Team mutations hydrate from global master and persist normalized references.
 - [x] Hall of Fame readable cross-season reducer/repository + group-owned rebuild Action; legacy TODO player-record fields remain intentionally null.
 - [~] Push notifications: readable per-user group preferences/subscriptions and browser Web Push transport are implemented; the global VAPID public key is origin-wide while the corresponding private key is accepted only as a GitHub Actions Secret. Manual delivery validation and automatic legacy event/reminder orchestration remain pending.
-- [~] Auction: readable V1 host reducer, outcomes, active-session discovery, GitHub slow signaling, browser RTCPeerConnection/DataChannel/reconnect, native WebRTC bridge/runtime dependency and first realtime UI implemented; native build validation, TURN and end-to-end device validation remain pending.
+- [~] Auction: readable V1 host reducer, outcomes, active-session discovery, GitHub slow signaling, browser RTCPeerConnection/DataChannel/reconnect, native WebRTC bridge/runtime dependency and realtime UI implemented; Android/iOS Expo prebuild is green, while TURN and end-to-end multi-device validation remain external gates.
 
 ## Infrastructure backlog
 
@@ -94,7 +94,7 @@
 - [x] Web Push private VAPID material is excluded from platform/group JSON and versioned code; the managed group push workflow reads only `secrets.FANTAZONE_VAPID_PRIVATE_KEY` while the public key remains shared by the `fanta.plus` origin.
 - [x] ETag conditional reads: GitHub content responses persist validators alongside JSON/SHA, `refresh:true` sends `If-None-Match`, `304 Not Modified` reuses durable cached JSON, changed `200` responses replace value/SHA/ETag, and older cache entries without ETag remain compatible.
 - [x] transport-only offline fallback: refresh requests use the durable local snapshot after genuine network failure, while HTTP authorization/conflict errors remain authoritative.
-- [ ] one-time schema-v1→v2 migration tooling only if compact runtime repositories that need recovery are discovered.
+- [x] one-time schema-v1→v2 runtime repository recovery is not required before launch: there are no production group repositories needing compact-schema recovery; the completed Azure migration tooling remains available for legacy import/recovery.
 - [x] zero-backend authorization limitation documented: frontend/Actions enforce business rules, but a shared client-visible PAT cannot provide a cryptographic per-user write boundary.
 
 ## Background jobs
@@ -102,9 +102,9 @@
 - [~] Serie A calendar ingestion: implementation/tests/manual global Action ready; scheduling waits for production validation.
 - [x] player/team master-data ingestion: real `bootstrap-serie-a` Action validated the provider path on 2026-09-06; `ingest-master-data` is scheduled daily at 04:17 UTC with minimum roster/team coverage and active-retention guards. No per-group transfer propagation is required.
 - [~] player statistics rebuild implemented and canonical season data exists; ongoing production refresh still depends on final-vote operational validation.
-- [~] live/final votes: provider adapters + global Actions + offline parity tests implemented; `ingest-live-votes` is scheduled every five minutes with RealCalendar guard and no-op unchanged writes; final-vote production scheduling/validation remains.
-- [~] player odds: reducer + three provider parsers + global Action implemented; first real provider run and scheduling remain pending (#35). No canonical chance document has been materialized yet for the current season.
-- [~] player images: SDP catalog + matching + static WebP ingestion + global Action implemented; first real provider run/Pages asset validation and scheduling remain pending (#36).
+- [~] live/final votes: provider adapters + global Actions + parity tests implemented; `ingest-live-votes` is scheduled every five minutes with RealCalendar guard, official day 2 real-source validation passed with 320 players / 20 teams, and only a positive live-feed observation plus final-vote automatic scheduling remain operational gates.
+- [x] player odds: reducer + three provider parsers + global Action implemented; real provider validation produced 593 canonical day-3 players and the central job is scheduled daily at 05:17 UTC (#35 closed).
+- [x] player images: SDP catalog + matching + static WebP ingestion + global Action implemented; real provider validation recognized 295 existing assets with 0 failures, Pages/static export is green and the central job is scheduled monthly (#36 closed).
 - [x] legacy `LiveJob`: retired; local `GroupLiveComposer` replaces it.
 - [x] legacy `AllPlayersAndAllTeamsJob` group-roster transfer side effect: retired; mutable Teams resolve RealPlayer fields from global master by `playerKey`.
 - [x] legacy `GroupsManagerJob`: retired; definitive scoring/ranking/progression use shared reducers and group-owned `recalculate-day` / `recalculate-all`.
