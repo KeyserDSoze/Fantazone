@@ -62,13 +62,15 @@ test('admin navigation exposes auction but not SuperAdmin management', () => {
   assert.equal(routes.includes('serie-a-admin'), false)
 })
 
-test('SuperAdmin navigation includes group and platform management', () => {
+test('SuperAdmin navigation exposes only active group/platform administration', () => {
   const routes = routesFor(IdentityRole.SuperAdmin)
   assert.ok(routes.includes('auction'))
   assert.ok(routes.includes('group-users-admin'))
   assert.ok(routes.includes('group-league-admin'))
+  assert.ok(routes.includes('logs'))
   assert.ok(routes.includes('serie-a-admin'))
-  assert.ok(routes.includes('cards-admin'))
+  assert.equal(routes.includes('users'), false)
+  assert.equal(routes.includes('cards-admin'), false)
 })
 
 test('default selection prefers the main league and the current Fantazone season when available', () => {

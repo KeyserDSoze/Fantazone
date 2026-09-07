@@ -26,10 +26,8 @@ export type GroupProductRoute =
   | 'group-users-admin'
   | 'group-baskets-admin'
   | 'group-league-admin'
-  | 'users'
   | 'logs'
   | 'serie-a-admin'
-  | 'cards-admin'
 
 export type GroupNavigationItem = {
   route: GroupProductRoute
@@ -109,10 +107,8 @@ const SUPER_ADMIN_SECTIONS: GroupNavigationSection[] = [
   {
     title: 'Piattaforma · SuperAdmin',
     items: [
-      { route: 'users', label: 'Gestione utenti', description: 'Consulta gli utenti della piattaforma' },
       { route: 'logs', label: 'Log di piattaforma', description: 'Controlla job ed errori operativi' },
       { route: 'serie-a-admin', label: 'Gestione Serie A', description: 'Gestisci eccezioni del calendario Serie A' },
-      { route: 'cards-admin', label: 'Gestione carte', description: 'Crea e gestisci carte speciali' },
     ],
   },
 ]

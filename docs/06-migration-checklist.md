@@ -26,6 +26,7 @@
 - [x] independent `GROUP_REPOSITORY_RUNTIME_VERSION` persisted in `fantazone.json`.
 - [x] app-open runtime upgrade updates only Fantazone-managed workflow paths and preserves group/custom data.
 - [x] group runtime engine refs are versioned (`group-runtime-vN`) instead of following moving `main`.
+- [x] legacy global AppIdentity/user-administration surface retired: zero-backend membership is group-scoped in `config/group.json`; no replacement central user database is created.
 - [ ] native Google/Microsoft OAuth redirects/deep links for iOS/Android.
 
 ## UI parity
@@ -35,8 +36,11 @@
 - [x] Ranking/luck UI.
 - [x] Live Serie A/votes.
 - [x] Players/statistics/Teams.
-- [~] Market/trades/cards/group admin/settings: market/trades, account/group settings and SuperAdmin users/baskets/leagues are wired; cards remain pending.
-- [~] Hall of Fame/logs/patch notes/push UX: Hall of Fame and patch notes are wired; logs and push UX remain pending.
+- [x] Market/trades/group admin/settings: market/trades, account/group settings and SuperAdmin users/baskets/leagues are wired.
+- [ ] Cards: intentionally deferred by product decision; no placeholder is exposed as an active feature.
+- [x] Hall of Fame/logs/patch notes: Hall of Fame and patch notes are wired; operational logs read actual GitHub Actions from platform + group instead of recreating backend log storage.
+- [~] Push UX: pending a real zero-backend Web Push/native notification implementation; no fake backend-dependent subscription UI is counted as parity.
+- [x] Serie A SuperAdmin UI: fresh global calendar reads, safe delayed-game overrides, producer dispatch and read-only fallback when the current PAT lacks platform push permission.
 - [~] Auction realtime UI implemented for active-auction discovery, Admin host controls, participant bidding, repair substitutions and reconnect status; real multi-device validation/polish remains pending.
 
 ## Service/domain migrations
@@ -60,8 +64,9 @@
 - [x] full canonical Rank rebuild from calculated Calendar.
 - [x] deterministic Cup/NewCup progression including Finals, Europa League and Supercoppa; perfect-tie randomness intentionally replaced by stable seeded choice.
 - [x] Game/day: read composition, TeamDay/current-Team projection, vote enrichment and live/closed scoring UI are migrated; `TeamDay` remains an Action-owned immutable day snapshot.
-- [~] Formations: owner/SuperAdmin authorization, validation, normalized current Team write and current-formation UI are migrated; GitHub Action selects/finalizes the correct hydrated day snapshot from the commit timestamp; chance/stat automatic formation remains pending.
+- [x] Formations: owner/SuperAdmin authorization, validation, normalized current Team write, commit-timestamp TeamDay snapshotting and the legacy local automatic proposal based on chances/statistics/home-opponent score are migrated; automatic proposal remains reversible and is persisted only by the normal Save action.
 - [x] Group administration: users/roles, baskets/annual teams/co-owners, leagues/settings/initial Calendar+Rank and recalculation dispatch use fresh canonical group state with fail-closed integrity guards.
+- [x] Serie A administration: manual delayed-game correction merges over a fresh global calendar with optimistic concurrency; producer actions dispatch through the platform workflow only after fresh SuperAdmin + repository push checks.
 - [~] Serie A ingestion: core calendar/master/vote/chance/image producers implemented; master data and guarded live votes are production-scheduled, while remaining producers still need production validation/scheduling.
 - [~] Statistics/chances/votes: deterministic reducers + producers implemented; production data bootstrap/validation remains pending for unscheduled producers.
 - [x] Market persistence/commands: append-only client commands + canonical group Action reducer with legacy voting/execution/expiry parity; Team mutations hydrate from global master and persist normalized references.
@@ -77,6 +82,7 @@
 - [x] SHA cache + optimistic concurrency for migrated mutable JSON.
 - [x] managed group-workflow upgrades use current GitHub blob SHA and advance runtime metadata only after success.
 - [x] current Team no longer duplicates global Serie A player master fields, eliminating per-group transfer fan-out and unnecessary nightly commits.
+- [x] backend operational-log persistence retired; the SuperAdmin log viewer reads GitHub Actions runs directly for the public platform repository and authenticated group repository.
 - [ ] ETag conditional reads.
 - [ ] one-time schema-v1→v2 migration tooling only if compact runtime repositories that need recovery are discovered.
 - [x] zero-backend authorization limitation documented: frontend/Actions enforce business rules, but a shared client-visible PAT cannot provide a cryptographic per-user write boundary.
@@ -85,9 +91,9 @@
 
 - [~] Serie A calendar ingestion: implementation/tests/manual global Action ready; scheduling waits for production validation.
 - [x] player/team master-data ingestion: real `bootstrap-serie-a` Action validated the provider path on 2026-09-06; `ingest-master-data` is scheduled daily at 04:17 UTC with minimum roster/team coverage and active-retention guards. No per-group transfer propagation is required.
-- [~] player statistics rebuild implemented; real runtime data initialization remains pending.
+- [~] player statistics rebuild implemented and canonical season data exists; ongoing production refresh still depends on final-vote operational validation.
 - [~] live/final votes: provider adapters + global Actions + offline parity tests implemented; `ingest-live-votes` is scheduled every five minutes with RealCalendar guard and no-op unchanged writes; final-vote production scheduling/validation remains.
-- [~] player odds: reducer + three provider parsers + global Action implemented; first real provider run and scheduling remain pending (#35).
+- [~] player odds: reducer + three provider parsers + global Action implemented; first real provider run and scheduling remain pending (#35). No canonical chance document has been materialized yet for the current season.
 - [~] player images: SDP catalog + matching + static WebP ingestion + global Action implemented; first real provider run/Pages asset validation and scheduling remain pending (#36).
 - [x] legacy `LiveJob`: retired; local `GroupLiveComposer` replaces it.
 - [x] legacy `AllPlayersAndAllTeamsJob` group-roster transfer side effect: retired; mutable Teams resolve RealPlayer fields from global master by `playerKey`.
