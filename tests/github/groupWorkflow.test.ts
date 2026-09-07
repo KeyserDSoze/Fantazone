@@ -56,7 +56,7 @@ function fileKey(path: string) {
   return `KeyserDSoze/Fantazone.Amici/${path}`
 }
 
-test('fresh group bootstrap installs runtime with pinned engine and current global data', async () => {
+test('fresh group bootstrap installs current main engine and current global data', async () => {
   const client = new FakeSetupClient()
 
   const result = await ensureGroupInitialized(client, repo, 'Amici', {
@@ -67,13 +67,13 @@ test('fresh group bootstrap installs runtime with pinned engine and current glob
   const metadata = JSON.parse(client.files.get(fileKey(GROUP_REPOSITORY_METADATA_PATH))!.content)
 
   assert.equal(result.runtimeVersion, GROUP_REPOSITORY_RUNTIME_VERSION)
-  assert.equal(GROUP_RUNTIME_ENGINE_REF, `group-runtime-v${GROUP_REPOSITORY_RUNTIME_VERSION}`)
+  assert.equal(GROUP_RUNTIME_ENGINE_REF, 'main')
   assert.equal(GROUP_GLOBAL_DATA_REF, 'main')
   assert.equal(workflow, GROUP_RECALCULATION_WORKFLOW)
   assert.match(workflow!, /recalculate-day/)
   assert.match(workflow!, /recalculate-all/)
   assert.match(workflow!, /set-next-formations/)
-  assert.match(workflow!, /Checkout compatible Fantazone engine/)
+  assert.match(workflow!, /Checkout current Fantazone engine/)
   assert.match(workflow!, new RegExp(`ref: ${GROUP_RUNTIME_ENGINE_REF}`))
   assert.match(workflow!, /path: engine/)
   assert.match(workflow!, /Checkout current global football data/)
