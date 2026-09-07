@@ -84,6 +84,34 @@ test('parses official vote HTML, bonuses and legacy card-without-vote fallback',
   assert.equal(defender.vote?.value, 6)
 })
 
+
+test('parses the current 2026/27 nested team metadata markup', () => {
+  const html = `
+    <ul class="teams my-3">
+      <li class="team-table">
+        <a class="team-name team-link">
+          <meta itemprop="name" content="Atalanta" />
+          Atalanta
+        </a>
+        <table><tbody><tr>
+          <td><div class="player-item cell"><span class="role" data-value="p"></span><a class="player-name player-link"><span>Carnesecchi</span></a></div></td>
+          <td><div class="group"><span class="player-grade" data-value="7"></span><span class="player-fanta-grade" data-value="7"></span></div></td>
+          <td><div class="group">
+            <span class="player-bonus" data-value="0"></span><span class="player-bonus" data-value="0"></span>
+            <span class="player-bonus" data-value="0"></span><span class="player-bonus" data-value="0"></span>
+            <span class="player-bonus" data-value="0"></span><span class="player-bonus" data-value="0"></span>
+            <span class="player-bonus" data-value="0"></span><span class="player-bonus" data-value="0"></span>
+          </div></td>
+        </tr></tbody></table>
+      </li>
+    </ul>`
+  const player = assertSingle(parseOfficialVotesHtml(html))
+  assert.equal(player.name, 'Carnesecchi')
+  assert.equal(player.team.name, 'Atalanta')
+  assert.equal(player.role, Role.GoalKeeper)
+  assert.equal(player.vote?.value, 7)
+  assert.equal(player.vote?.hasVote, true)
+})
 test('returns no players for missing teams markup and tolerates missing bonus cells', () => {
   assert.deepEqual(parseOfficialVotesHtml('<html>missing expected block</html>'), [])
   const html = `
@@ -154,6 +182,21 @@ test('partial source is persisted but marked incomplete so callers can retry wit
   assert.equal(result.complete, false)
 })
 
+
+test('zero-player provider output fails closed instead of persisting an empty official document', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'fantazone-final-empty-provider-'))
+  await writeJson(join(root, realCalendarDocumentPath(YEAR)), calendarWithGame(false))
+  await assert.rejects(
+    ingestFinalVotes({
+      repoRoot: root,
+      season: YEAR,
+      day: 1,
+      now: NOW,
+      fetchText: async () => '<ul class="teams my-3"></ul>',
+    }),
+    /non ha restituito alcun giocatore valido/,
+  )
+})
 test('delayed games receive legacy default-six votes from complete RealPlayers without counting as played teams', async () => {
   const root = await mkdtemp(join(tmpdir(), 'fantazone-final-delayed-'))
   await writeJson(join(root, realCalendarDocumentPath(YEAR)), calendarWithGame(true))

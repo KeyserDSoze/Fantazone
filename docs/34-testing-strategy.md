@@ -20,7 +20,7 @@ Current projects:
 Run locally after building the web app:
 
 ```bash
-npm install
+npm ci
 npm run export:web --workspace=fantazone-app
 npx playwright install chromium
 npm run test:e2e

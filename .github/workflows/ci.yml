@@ -30,7 +30,7 @@ jobs:
         with:
           node-version: 22
       - name: Install workspace dependencies
-        run: npm install
+        run: npm ci
       - name: Typecheck application
         run: npm run typecheck
       - name: Run tests

@@ -12,11 +12,11 @@ An invite may add a third constraint: the provider email must also match the inv
 Public client id: `fc83d630-7c49-4bb8-9361-c14950b6ff49`.
 Home tenant id: `302135a8-33c7-448c-87cb-cc71fe0136c9`.
 
-The web app uses the `common` Microsoft identity authority by default so a fantasy group is not artificially limited to the registration's home tenant. The App Registration must therefore allow the account types that the product wants to accept.
+Fantazone production accepts **personal Microsoft accounts**. The Entra registration is `Consumer`, so web and native default to the `consumers` authority; `common` must not be used with this registration.
 
 `https://fanta.plus` must be registered under **Authentication -> Single-page application (SPA)**, not as a confidential Web redirect. The browser uses authorization code + PKCE and no client secret.
 
-If a deployment must become tenant-only, set `EXPO_PUBLIC_MICROSOFT_AUTHORITY_TENANT` to the tenant id instead of `common`.
+If a deployment later becomes tenant-only, set `EXPO_PUBLIC_MICROSOFT_AUTHORITY_TENANT` to the tenant id instead of `consumers`.
 
 ## Google
 

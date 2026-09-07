@@ -73,6 +73,29 @@ test('decodes legacy live protobuf fields and maps vote events exactly', () => {
   assert.equal(goalkeeper.vote?.status, Behaviour.RedCard)
 })
 
+
+test('skips unknown 64-bit protobuf varints without coercing them to JavaScript numbers', () => {
+  const hugeUnknownVarint = Uint8Array.from([
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x01,
+  ])
+  const playerWithUnknownField = concat(
+    player({ name: 'mario rossi', position: 'A', vote: 7, events: [3] }),
+    tag(7, 0),
+    hugeUnknownVarint,
+  )
+  const fixture = liveMessage([game({
+    teamHome: 'Roma',
+    teamAway: 'Milan',
+    playersHome: [playerWithUnknownField],
+    playersAway: [],
+  })])
+  const games = decodeLiveVoteProtobuf(fixture)
+  assert.equal(games.length, 1)
+  const players = mapLiveSourceGames(games)
+  assert.equal(players.length, 1)
+  assert.equal(players[0].name, 'Mario rossi')
+  assert.equal(players[0].vote?.value, 7)
+})
 test('requests SignedUri with the legacy resource season id and downloads the protobuf payload', async () => {
   const requests: LiveVoteHttpRequest[] = []
   const client: LiveVoteHttpClient = async request => {

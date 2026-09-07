@@ -362,6 +362,15 @@ class ProtoReader {
     return Number(result)
   }
 
+  private skipVarint(): void {
+    for (let count = 0; count < 10; count += 1) {
+      this.require(1)
+      const byte = this.bytes[this.offset++]
+      if ((byte & 0x80) === 0) return
+    }
+    throw new Error('Invalid protobuf varint')
+  }
+
   readBytes(): Uint8Array {
     const length = this.readVarint()
     this.require(length)
@@ -393,7 +402,7 @@ class ProtoReader {
   skip(wire: number): void {
     switch (wire) {
       case 0:
-        this.readVarint()
+        this.skipVarint()
         return
       case 1:
         this.require(8)
