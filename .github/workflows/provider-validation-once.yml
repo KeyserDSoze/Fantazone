@@ -1,5 +1,5 @@
-name: Diagnose player images provider once
-run-name: Fantazone · diagnose player images provider
+name: Diagnose player images fetch once
+run-name: Fantazone · diagnose player images Node fetch
 
 on:
   push:
@@ -7,36 +7,55 @@ on:
 
 jobs:
   diagnose:
-    if: "${{ github.event.head_commit.message == 'ops: diagnose player images' }}"
+    if: "${{ github.event.head_commit.message == 'ops: diagnose player images fetch' }}"
     runs-on: ubuntu-latest
     steps:
-      - name: Probe Lega Serie A season catalog
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - name: Probe Node fetch exactly like the ingestion
         shell: bash
         run: |
-          set -euo pipefail
-          BASE='https://api-sdp.legaseriea.it/v1/serie-a/football'
-          COMP='serie-a%3A%3AFootball_Competition%3A%3Aec93b94f74294dc98ab5bcfd67fc0d88'
+          node <<'NODE'
+          const base = 'https://api-sdp.legaseriea.it/v1/serie-a/football/'
+          const id = 'serie-a::Football_Competition::ec93b94f74294dc98ab5bcfd67fc0d88'
+          const url = new URL(`competitions/${encodeURIComponent(id)}/seasons?locale=it-IT`, base).toString()
 
-          probe() {
-            LABEL="$1"
-            LOCALE="$2"
-            REFERER="$3"
-            URL="$BASE/competitions/$COMP/seasons?locale=$LOCALE"
-            echo "===== $LABEL ====="
-            ARGS=(-sS -L -A 'Mozilla/5.0 (compatible; Fantazone/1.0; +https://fanta.plus)' -H 'Accept: application/json,text/plain,*/*' -H 'Accept-Language: it-IT,it;q=0.9,en-US;q=0.8,en;q=0.7' -D headers.txt -o body.txt -w '%{http_code}')
-            if [ "$REFERER" = 'yes' ]; then
-              ARGS+=(-H 'Referer: https://www.legaseriea.it/' -H 'Origin: https://www.legaseriea.it')
-            fi
-            STATUS="$(curl "${ARGS[@]}" "$URL" || true)"
-            echo "HTTP $STATUS"
-            grep -iE '^(content-type|server|via|x-|cf-)' headers.txt || true
-            echo 'Body preview:'
-            head -c 800 body.txt || true
-            echo
-            echo
+          const variants = [
+            ['exact-current', {
+              'User-Agent': 'Mozilla/5.0 (compatible; Fantazone/1.0; +https://fanta.plus)',
+              'Accept-Language': 'it-IT,it;q=0.9,en-US;q=0.8,en;q=0.7',
+              'Cache-Control': 'no-cache',
+            }],
+            ['without-cache-control', {
+              'User-Agent': 'Mozilla/5.0 (compatible; Fantazone/1.0; +https://fanta.plus)',
+              'Accept-Language': 'it-IT,it;q=0.9,en-US;q=0.8,en;q=0.7',
+            }],
+            ['browserish', {
+              'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/140 Safari/537.36',
+              'Accept': 'application/json,text/plain,*/*',
+              'Accept-Language': 'it-IT,it;q=0.9,en-US;q=0.8,en;q=0.7',
+              'Referer': 'https://www.legaseriea.it/',
+            }],
+          ]
+
+          for (const [name, headers] of variants) {
+            console.log(`===== ${name} =====`)
+            try {
+              const response = await fetch(url, { headers })
+              console.log('status', response.status, response.statusText)
+              console.log('content-type', response.headers.get('content-type'))
+              const text = await response.text()
+              console.log('body', text.slice(0, 500))
+              try {
+                const parsed = JSON.parse(text)
+                console.log('seasons', Array.isArray(parsed?.seasons) ? parsed.seasons.length : 'missing')
+              } catch (error) {
+                console.log('json-error', error instanceof Error ? error.message : String(error))
+              }
+            } catch (error) {
+              console.log('fetch-error', error)
+              console.log('cause', error?.cause)
+            }
           }
-
-          probe 'it-IT current headers' 'it-IT' 'no'
-          probe 'en-GB current headers' 'en-GB' 'no'
-          probe 'it-IT browser referer' 'it-IT' 'yes'
-          probe 'en-GB browser referer' 'en-GB' 'yes'
+          NODE
