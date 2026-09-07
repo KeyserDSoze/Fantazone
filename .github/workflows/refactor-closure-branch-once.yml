@@ -1,0 +1,226 @@
+name: Stage final refactor closure patch
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/refactor-closure-branch-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: refactor-closure-final
+          fetch-depth: 0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - name: Apply validated source and test patches
+        shell: bash
+        run: |
+          python <<'PY'
+          from pathlib import Path
+
+          def replace_once(path: str, old: str, new: str, label: str):
+              p = Path(path)
+              text = p.read_text()
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'{label}: expected exactly one anchor in {path}, found {count}')
+              p.write_text(text.replace(old, new, 1))
+
+          replace_once(
+              'src/jobs/src/liveVoteIngestion.ts',
+              "      case 0:\n        this.readVarint()\n        return\n",
+              "      case 0:\n        this.skipVarint()\n        return\n",
+              'protobuf raw varint skip',
+          )
+          replace_once(
+              'src/jobs/src/liveVoteIngestion.ts',
+              "  readBytes(): Uint8Array {\n",
+              "  private skipVarint(): void {\n    for (let count = 0; count < 10; count += 1) {\n      this.require(1)\n      const byte = this.bytes[this.offset++]\n      if ((byte & 0x80) === 0) return\n    }\n    throw new Error('Invalid protobuf varint')\n  }\n\n  readBytes(): Uint8Array {\n",
+              'protobuf raw varint helper',
+          )
+
+          live_tests = Path('tests/jobs/liveVoteIngestion.test.ts')
+          text = live_tests.read_text()
+          anchor = "\ntest('requests SignedUri with the legacy resource season id and downloads the protobuf payload', async () => {\n"
+          regression = """
+
+test('skips unknown 64-bit protobuf varints without coercing them to JavaScript numbers', () => {
+  const hugeUnknownVarint = Uint8Array.from([
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x01,
+  ])
+  const playerWithUnknownField = concat(
+    player({ name: 'mario rossi', position: 'A', vote: 7, events: [3] }),
+    tag(7, 0),
+    hugeUnknownVarint,
+  )
+  const fixture = liveMessage([game({
+    teamHome: 'Roma',
+    teamAway: 'Milan',
+    playersHome: [playerWithUnknownField],
+    playersAway: [],
+  })])
+  const games = decodeLiveVoteProtobuf(fixture)
+  assert.equal(games.length, 1)
+  const players = mapLiveSourceGames(games)
+  assert.equal(players.length, 1)
+  assert.equal(players[0].name, 'Mario rossi')
+  assert.equal(players[0].vote?.value, 7)
+})"""
+          if text.count(anchor) != 1:
+              raise SystemExit(f'live regression anchor: expected 1, found {text.count(anchor)}')
+          live_tests.write_text(text.replace(anchor, regression + anchor, 1))
+
+          replace_once(
+              'src/jobs/src/officialVoteIngestion.ts',
+              "  const expectedPlayedTeams = calendarDay.games.filter(game => !game.delayed).length * 2\n  const parsedPlayedTeams = new Set(parsed.map(player => normalizeTeamName(player.team.name))).size\n",
+              "  const expectedPlayedTeams = calendarDay.games.filter(game => !game.delayed).length * 2\n  if (parsed.length === 0 && expectedPlayedTeams > 0) {\n    throw new Error(\n      `La sorgente voti ufficiali non ha restituito alcun giocatore valido per la giornata ${serieADay}; il documento canonico esistente non viene modificato.`,\n    )\n  }\n  const parsedPlayedTeams = new Set(parsed.map(player => normalizeTeamName(player.team.name))).size\n",
+              'official zero-player guard',
+          )
+          replace_once(
+              'src/jobs/src/officialVoteIngestion.ts',
+              "    const rawTeamName = extractAttribute(anchor.tag, 'content')\n",
+              "    const rawTeamName = extractAttribute(anchor.tag, 'content') ?? extractNestedTeamName(section)\n",
+              'official nested team metadata',
+          )
+          replace_once(
+              'src/jobs/src/officialVoteIngestion.ts',
+              "function extractPlayerName(element: string): string {\n",
+              "function extractNestedTeamName(section: string): string | null {\n  const tbodyIndex = section.search(/<tbody\\b/i)\n  const header = tbodyIndex >= 0 ? section.slice(0, tbodyIndex) : section\n  for (const meta of header.matchAll(/<meta\\b([^>]*)>/gi)) {\n    const attributes = meta[1] ?? ''\n    if (extractAttribute(attributes, 'itemprop')?.trim().toLocaleLowerCase('it-IT') !== 'name') continue\n    const content = extractAttribute(attributes, 'content')\n    if (content) return content\n  }\n  return null\n}\n\nfunction extractPlayerName(element: string): string {\n",
+              'official nested team helper',
+          )
+
+          final_tests = Path('tests/jobs/finalVoteIngestion.test.ts')
+          tests = final_tests.read_text()
+          modern_anchor = "\ntest('returns no players for missing teams markup and tolerates missing bonus cells', () => {\n"
+          modern_test = """
+
+test('parses the current 2026/27 nested team metadata markup', () => {
+  const html = `
+    <ul class="teams my-3">
+      <li class="team-table">
+        <a class="team-name team-link">
+          <meta itemprop="name" content="Atalanta" />
+          Atalanta
+        </a>
+        <table><tbody><tr>
+          <td><div class="player-item cell"><span class="role" data-value="p"></span><a class="player-name player-link"><span>Carnesecchi</span></a></div></td>
+          <td><div class="group"><span class="player-grade" data-value="7"></span><span class="player-fanta-grade" data-value="7"></span></div></td>
+          <td><div class="group">
+            <span class="player-bonus" data-value="0"></span><span class="player-bonus" data-value="0"></span>
+            <span class="player-bonus" data-value="0"></span><span class="player-bonus" data-value="0"></span>
+            <span class="player-bonus" data-value="0"></span><span class="player-bonus" data-value="0"></span>
+            <span class="player-bonus" data-value="0"></span><span class="player-bonus" data-value="0"></span>
+          </div></td>
+        </tr></tbody></table>
+      </li>
+    </ul>`
+  const player = assertSingle(parseOfficialVotesHtml(html))
+  assert.equal(player.name, 'Carnesecchi')
+  assert.equal(player.team.name, 'Atalanta')
+  assert.equal(player.role, Role.GoalKeeper)
+  assert.equal(player.vote?.value, 7)
+  assert.equal(player.vote?.hasVote, true)
+})"""
+          if tests.count(modern_anchor) != 1:
+              raise SystemExit(f'official markup test anchor: expected 1, found {tests.count(modern_anchor)}')
+          tests = tests.replace(modern_anchor, modern_test + modern_anchor, 1)
+          fail_anchor = "\ntest('delayed games receive legacy default-six votes from complete RealPlayers without counting as played teams', async () => {\n"
+          fail_test = """
+
+test('zero-player provider output fails closed instead of persisting an empty official document', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'fantazone-final-empty-provider-'))
+  await writeJson(join(root, realCalendarDocumentPath(YEAR)), calendarWithGame(false))
+  await assert.rejects(
+    ingestFinalVotes({
+      repoRoot: root,
+      season: YEAR,
+      day: 1,
+      now: NOW,
+      fetchText: async () => '<ul class="teams my-3"></ul>',
+    }),
+    /non ha restituito alcun giocatore valido/,
+  )
+})"""
+          if tests.count(fail_anchor) != 1:
+              raise SystemExit(f'official fail test anchor: expected 1, found {tests.count(fail_anchor)}')
+          final_tests.write_text(tests.replace(fail_anchor, fail_test + fail_anchor, 1))
+
+          docs = Path('docs/19-web-oauth-group-invites.md')
+          doc = docs.read_text()
+          old = "The web app uses the `common` Microsoft identity authority by default so a fantasy group is not artificially limited to the registration's home tenant. The App Registration must therefore allow the account types that the product wants to accept.\n\n`https://fanta.plus` must be registered under **Authentication -> Single-page application (SPA)**, not as a confidential Web redirect. The browser uses authorization code + PKCE and no client secret.\n\nIf a deployment must become tenant-only, set `EXPO_PUBLIC_MICROSOFT_AUTHORITY_TENANT` to the tenant id instead of `common`."
+          new = "Fantazone production accepts **personal Microsoft accounts**. The Entra registration is `Consumer`, so web and native default to the `consumers` authority; `common` must not be used with this registration.\n\n`https://fanta.plus` must be registered under **Authentication -> Single-page application (SPA)**, not as a confidential Web redirect. The browser uses authorization code + PKCE and no client secret.\n\nIf a deployment later becomes tenant-only, set `EXPO_PUBLIC_MICROSOFT_AUTHORITY_TENANT` to the tenant id instead of `consumers`."
+          if doc.count(old) != 1:
+              raise SystemExit(f'Microsoft docs anchor: expected 1, found {doc.count(old)}')
+          docs.write_text(doc.replace(old, new, 1))
+
+          workflow = Path('src/github/src/groupWorkflow.ts')
+          value = workflow.read_text()
+          if 'npm install' not in value:
+              raise SystemExit('npm install anchor missing in src/github/src/groupWorkflow.ts')
+          workflow.write_text(value.replace('npm install', 'npm ci'))
+
+          for path in ['README.md', 'CONTRIBUTING.md', 'docs/34-testing-strategy.md']:
+              p = Path(path)
+              p.write_text(p.read_text().replace('npm install\n', 'npm ci\n'))
+          PY
+      - name: Generate deterministic lockfile
+        run: |
+          npm install --package-lock-only --ignore-scripts
+          npm audit fix --package-lock-only --ignore-scripts || true
+      - name: Clean install
+        run: npm ci
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Test
+        run: npm test
+      - name: Web export
+        run: npm run export:web --workspace=fantazone-app
+      - name: Offline packs
+        run: npm run build:offline-packs
+      - name: Classify dependency audit
+        shell: bash
+        run: |
+          npm audit --omit=dev --json > /tmp/audit-prod.json || true
+          npm audit --json > /tmp/audit-full.json || true
+          python <<'PY'
+          import json
+          from pathlib import Path
+          def counts(path):
+              data = json.loads(Path(path).read_text() or '{}')
+              raw = data.get('metadata', {}).get('vulnerabilities', {})
+              return {k: int(raw.get(k, 0) or 0) for k in ['low','moderate','high','critical','total']}
+          prod = counts('/tmp/audit-prod.json')
+          full = counts('/tmp/audit-full.json')
+          print('Production audit:', prod)
+          print('Full audit:', full)
+          if prod['high'] or prod['critical']:
+              raise SystemExit(f'High/critical production vulnerabilities remain: {prod}')
+          Path('docs/41-dependency-hardening.md').write_text('\n'.join([
+              '# Dependency hardening', '',
+              'Fantazone uses one committed root npm workspace lockfile. CI, Pages, platform jobs, real integration and generated group workflows install it with `npm ci`.', '',
+              '## Audit classification', '',
+              'Audit captured on 2026-09-08 after a non-breaking lockfile-only `npm audit fix`.', '',
+              '| Scope | Low | Moderate | High | Critical | Total |',
+              '|---|---:|---:|---:|---:|---:|',
+              f"| production (`--omit=dev`) | {prod['low']} | {prod['moderate']} | {prod['high']} | {prod['critical']} | {prod['total']} |",
+              f"| full workspace | {full['low']} | {full['moderate']} | {full['high']} | {full['critical']} | {full['total']} |", '',
+              'High/critical production advisories fail this closure workflow. Remaining low/moderate transitive findings are reviewed during routine dependency maintenance instead of forcing breaking Expo ecosystem upgrades during refactor closure.', '',
+          ]))
+          PY
+      - name: Commit validated non-workflow changes to closure branch
+        shell: bash
+        run: |
+          git config user.name "fantazone-actions[bot]"
+          git config user.email "fantazone-actions[bot]@users.noreply.github.com"
+          git add package-lock.json src/jobs/src/liveVoteIngestion.ts src/jobs/src/officialVoteIngestion.ts tests/jobs/liveVoteIngestion.test.ts tests/jobs/finalVoteIngestion.test.ts src/github/src/groupWorkflow.ts README.md CONTRIBUTING.md docs/19-web-oauth-group-invites.md docs/34-testing-strategy.md docs/41-dependency-hardening.md
+          git diff --cached --check
+          git commit -m "fix: close production refactor hardening gaps"
+          git push origin HEAD:refactor-closure-final
