@@ -46,6 +46,8 @@ The reader also accepts the older `Key` / `Value` names. Composite keys therefor
 
 The value mapper is type-specific. There is intentionally no generic rule such as “`p` always means players”: in different aggregates the same compact name means different things.
 
+Historical `live` vote documents may contain `RealPlayer.Team = null`. When the same player exists in that season's `realplayerswrapper`, the migration enriches the missing team/role metadata from that master document while preserving the historical vote payload.
+
 ## Prerequisites
 
 - PowerShell 7+ recommended (Windows PowerShell 5.1 also works for the wrapper);
@@ -81,7 +83,7 @@ If one of these variables is absent, the wrapper prompts for it as a secure inpu
 
 ## 1. Dry-run first
 
-Dry-run is the default: it reads Azure, builds every converted JSON document, checks GitHub target paths and writes only a local report.
+Dry-run is the default: it reads/reuses the Azure cache, incrementally converts records into local Git-ready trees, checks GitHub target paths and writes a local report.
 
 For a group repository called `Fantazone.MyLeague`:
 
@@ -99,6 +101,7 @@ The report is created under the repository root at `migration-output/azure-migra
 - every Azure container and blob name/size/date discovered;
 - which containers were actually downloaded;
 - whether the local Azure scan cache was used;
+- local staging/checkpoint paths and resume counts;
 - the selected legacy group id/name;
 - every Azure blob → GitHub path mapping;
 - collisions/skips;
@@ -120,7 +123,7 @@ The migration caches a completed Azure scan automatically at:
 migration-output/cache/azure-scan-v1.json
 ```
 
-The cache contains the full Azure inventory plus the parsed contents of canonical migration containers. It is created **immediately after a successful Azure scan and before mapping/planning**. Therefore, if a legacy mapper fails afterwards, update/pull the migration code and rerun the same command: the next run reuses the cache and does not enumerate or download the Blob Storage again.
+The cache contains the full Azure inventory plus the parsed contents of canonical migration containers. It is created **immediately after a successful Azure scan and before mapping/staging**. Therefore, if a legacy mapper fails afterwards, update/pull the migration code and rerun the same command: the next run reuses the cache and does not enumerate or download the Blob Storage again.
 
 The cache does **not** contain the Azure connection string, SAS token, AccountKey or GitHub PATs. It stores only a hash of the non-secret Azure source identity so that a cache from another storage account is rejected automatically. Rotating a SAS or AccountKey does not invalidate a cache for the same storage source.
 
@@ -157,9 +160,66 @@ To put the cache in a custom location:
 
 `-RefreshCache` and `-NoCache` are mutually exclusive.
 
+## Resumable local staging and checkpoint state
+
+After the Azure scan/cache layer, every source record is converted independently and persisted immediately into a local tree that mirrors the final Git repository layout.
+
+Default location for `KeyserDSoze/Fantazone.MyLeague`:
+
+```text
+migration-output/
+  work/
+    KeyserDSoze_Fantazone.MyLeague/
+      state.json
+      progress.ndjson
+      group-repo/
+        config/
+        data/
+      platform-repo/
+        data/
+          serie-a/
+```
+
+`group-repo/` and `platform-repo/` are **Git-ready repository roots**. The final GitHub writer reads the JSON files back from these staged trees; it does not need to rerun all mappers after staging is complete.
+
+The durable checkpoint is `progress.ndjson`, an append-only journal keyed by the exact Azure `container/blobName`, not by a numeric index. Each successful entry records the destination repository, final path, source hash and staged-content hash. `state.json` is the human-readable summary containing status, counts, last record and last error.
+
+If conversion fails at one record:
+
+```text
+[Stage] Stopped at live/12|||10. Earlier staged files and checkpoint are preserved...
+```
+
+pull/fix the mapper and run the **same command** again. Records whose source hash and staged-file hash still match are skipped immediately:
+
+```text
+[Stage] Checkpoint found: completed=7342, skipped=0, total source records=10420
+[Stage] processed=... converted-now=... resumed=...
+```
+
+The failed record is retried and processing continues from there. If a staged file was manually deleted or corrupted, only that source record is rebuilt. If a cached Azure record changes after a fresh scan, its source hash changes and only that record is invalidated/reconverted.
+
+The work tree is tied to the Azure source fingerprint, group repository, platform repository, branch and selected group. A work tree for another target is rejected instead of being mixed accidentally.
+
+To choose a custom staging directory:
+
+```powershell
+-WorkDir 'D:\private\fantazone-migration-work'
+```
+
+To deliberately discard every staging checkpoint/output and rebuild from the Azure cache:
+
+```powershell
+-ResetWork
+```
+
+`-ResetWork` does **not** delete the Azure scan cache; it only rebuilds the converted local repository trees/checkpoint state.
+
+Like the Azure cache, the staging trees contain legacy fantasy data and can contain names/emails. The whole `migration-output/` directory is gitignored and must remain private/local.
+
 ## 2. Apply
 
-After reviewing the dry-run report, add `-Apply`:
+After reviewing the dry-run report and the local `group-repo/` / `platform-repo/` trees, add `-Apply`:
 
 ```powershell
 ./scripts/migration/Invoke-FantazoneAzureMigration.ps1 `
@@ -169,7 +229,7 @@ After reviewing the dry-run report, add `-Apply`:
   -Apply
 ```
 
-Each target repository is updated with one Git tree/commit/ref fast-forward, not one commit per migrated file.
+Each target repository is updated with one Git tree/commit/ref fast-forward, not one commit per migrated file. After both writes complete, `state.json` records status `applied` and the resulting GitHub write metadata.
 
 ### Collision modes
 
@@ -205,7 +265,7 @@ npm test
 npm run typecheck
 ```
 
-Then inspect both GitHub commits listed in the apply report and run the normal Fantazone CI.
+Then inspect both staged trees, both GitHub commits listed in the apply report and run the normal Fantazone CI.
 
 Recommended functional checks:
 
@@ -213,9 +273,9 @@ Recommended functional checks:
 2. open historical Calendar and Ranking pages;
 3. inspect at least one season Team and one immutable TeamDay;
 4. verify Hall of Fame;
-5. inspect old Serie A players/teams/calendar and official votes;
+5. inspect old Serie A players/teams/calendar and official/live votes;
 6. compare report source counts against the Azure inventory;
-7. run the same command again in dry-run with `-PreserveExisting`: all already imported paths should appear as collisions/skips rather than producing duplicates.
+7. run the same command again in dry-run with `-PreserveExisting`: staged conversion should be almost entirely `resumed`, and existing GitHub paths should appear as collisions/skips rather than producing duplicates.
 
 ## Direct Node CLI
 
@@ -228,4 +288,4 @@ node scripts/migration/migrate-azure-to-github.mjs `
   --preserve-existing
 ```
 
-Cache switches map directly to `--cache <path>`, `--refresh-cache` and `--no-cache`. Add `--apply` for writes. Use `--help` for all options.
+Cache switches map directly to `--cache <path>`, `--refresh-cache` and `--no-cache`. Staging switches map to `--work-dir <path>` and `--reset-work`. Add `--apply` for writes. Use `--help` for all options.
