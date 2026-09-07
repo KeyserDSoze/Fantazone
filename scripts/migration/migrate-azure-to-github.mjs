@@ -6,6 +6,7 @@ import { scanAzureStorage } from './azure-source.mjs'
 import { azureSourceFingerprint, loadAzureScanCache, saveAzureScanCache } from './scan-cache.mjs'
 import { clearMigrationErrorSnapshot, writeMigrationErrorSnapshot } from './error-snapshot.mjs'
 import { GitHubApi, writeFilesAtomically } from './github-writer.mjs'
+import { writeFilesWithGit } from './git-writer.mjs'
 import { markStagingGitResult, stageMigrationRecords } from './staging.mjs'
 
 const REPO_ROOT = resolve(fileURLToPath(new URL('../..', import.meta.url)))
@@ -49,7 +50,7 @@ function usage() {
 `  --refresh-cache                   Ignore existing cache and scan Azure again\n` +
 `  --no-cache                        Do not read or write the local Azure scan cache\n` +
 `  --reset-work                      Delete and rebuild local staging/checkpoint state\n` +
-`  --apply                           Perform GitHub writes (default is dry-run)\n` +
+`  --apply                           Commit staged trees and git push them to the target branch\n` +
 `  --overwrite                       Replace canonical paths that already exist\n  --preserve-existing               Keep existing canonical paths and skip collisions\n` +
 `  -h, --help                        Show this help\n`
 }
@@ -127,6 +128,28 @@ function logStagingProgress(event) {
   }
 }
 
+function logGitProgress(event) {
+  if (event.type === 'clone') {
+    console.log(`[Git] ${event.repository}: cloning target branch '${event.branch}' into isolated transport workspace...`)
+    return
+  }
+  if (event.type === 'selection') {
+    console.log(`[Git] ${event.repository}: staged=${event.total}, selected=${event.selected}, preserved-collisions=${event.collisions}`)
+    return
+  }
+  if (event.type === 'commit') {
+    console.log(`[Git] ${event.repository}: creating one commit with ${event.changed} changed files...`)
+    return
+  }
+  if (event.type === 'push') {
+    console.log(`[Git] ${event.repository}: pushing commit ${event.commit} to ${event.branch} (non-force)...`)
+    return
+  }
+  if (event.type === 'complete') {
+    console.log(`[Git] ${event.repository}: complete - written=${event.written}${event.commit ? `, commit=${event.commit}` : ', no new commit required'}`)
+  }
+}
+
 async function obtainAzureScan(connectionString, args) {
   const cachePath = scanCachePath(args.cachePath)
   const cacheInfo = { enabled: !args.noCache, path: args.noCache ? null : cachePath, used: false, createdAt: null }
@@ -162,6 +185,18 @@ async function obtainAzureScan(connectionString, args) {
     }
   }
   return { scan, cacheInfo }
+}
+
+async function dryRunTarget(pat, repository, branch, files, message, mode) {
+  return writeFilesAtomically({
+    api: new GitHubApi(pat), repository, branch, files, message, mode, apply: false,
+  })
+}
+
+async function applyTargetWithGit(pat, repository, branch, files, message, mode, gitRoot) {
+  return writeFilesWithGit({
+    pat, repository, branch, files, message, mode, gitRoot, onProgress: logGitProgress,
+  })
 }
 
 async function main() {
@@ -200,19 +235,24 @@ async function main() {
   console.log(`Selected legacy group: ${plan.group.id} (${plan.group.name})`)
   console.log(`Planned files: group=${plan.groupFiles.length}, platform=${plan.platformFiles.length}, skipped=${plan.skipped.length}`)
 
-  const groupResult = await writeFilesAtomically({
-    api: new GitHubApi(groupPat), repository: args.groupRepository, branch: args.branch, files: plan.groupFiles,
-    message: 'feat: migrate legacy Fantasoccer data from Azure Blob Storage', mode, apply: args.apply,
-  })
-  const platformResult = await writeFilesAtomically({
-    api: new GitHubApi(platformPat), repository: args.platformRepository, branch: args.branch, files: plan.platformFiles,
-    message: 'feat: import legacy Serie A data from Azure Blob Storage', mode, apply: args.apply,
-  })
+  const groupMessage = 'feat: migrate legacy Fantasoccer data from Azure Blob Storage'
+  const platformMessage = 'feat: import legacy Serie A data from Azure Blob Storage'
+  let groupResult, platformResult
 
-  if (args.apply) await markStagingGitResult(workDir, { group: groupResult, platform: platformResult })
+  if (args.apply) {
+    const gitRoot = resolve(workDir, 'git-targets')
+    console.log('[Git] Apply mode uses native git clone/commit/push; staged JSON files are not uploaded one-by-one through the GitHub REST API.')
+    groupResult = await applyTargetWithGit(groupPat, args.groupRepository, args.branch, plan.groupFiles, groupMessage, mode, gitRoot)
+    platformResult = await applyTargetWithGit(platformPat, args.platformRepository, args.branch, plan.platformFiles, platformMessage, mode, gitRoot)
+    await markStagingGitResult(workDir, { group: groupResult, platform: platformResult })
+  } else {
+    groupResult = await dryRunTarget(groupPat, args.groupRepository, args.branch, plan.groupFiles, groupMessage, mode)
+    platformResult = await dryRunTarget(platformPat, args.platformRepository, args.branch, plan.platformFiles, platformMessage, mode)
+  }
 
   const output = {
     generatedAt: new Date().toISOString(), mode: args.apply ? 'apply' : 'dry-run', collisionMode: mode,
+    transport: args.apply ? 'native-git' : 'github-api-inspection',
     source: {
       cache: cacheInfo,
       staging: plan.staging,
