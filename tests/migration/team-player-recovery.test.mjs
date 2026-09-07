@@ -18,10 +18,10 @@ function team(players) {
   return { n: 'Team', o: teamKey.e, a: [], p: players, m: 0, d: null }
 }
 
-function dailyRecord(blobName, player) {
+function dailyRecord(blobName, player, day = 1) {
   return {
     container: 'dailyteams', blobName,
-    key: { ...teamKey, d: 1 },
+    key: { ...teamKey, d: day },
     value: team([player]),
   }
 }
@@ -47,9 +47,51 @@ test('migration plan emits schema-v3 playerKey after unnamed historical Team rec
   assert.equal(season.players[0].price, 17)
 })
 
+test('recovers anonymized SoldForOneHalf Manolas when legacy role became Undefined', () => {
+  const manolasActive = {
+    n: 'Manolas', t: { n: '' }, r: 1, a: true,
+    p: 16, s: 0, k: 1,
+  }
+  const manolasSold = {
+    n: 'Manolas', t: { n: '' }, r: 1, a: true,
+    p: 16, s: 1, k: 11,
+  }
+  const traore = {
+    n: 'Traore-Hj', t: { n: 'Sassuolo' }, r: 2, a: true,
+    p: 16, s: 2, k: 7,
+  }
+  const anonymized = {
+    n: '', t: { n: '' }, r: -1, a: true,
+    p: 16, s: 1, k: 11,
+  }
+  const records = [
+    dailyRecord('day-4', manolasActive, 4),
+    dailyRecord('day-30', manolasSold, 30),
+    dailyRecord('day-31', traore, 31),
+  ]
+  const index = buildHistoricalTeamPlayerIndex(records, groupId)
+  const recovered = recoverUnnamedSeasonTeamPlayers(team([anonymized]), teamKey, index)
+  assert.equal(recovered.p[0].n, 'Manolas')
+  assert.equal(recovered.p[0].p, 16)
+  assert.equal(recovered.p[0].s, 1)
+  assert.equal(recovered.p[0].k, 11)
+
+  const migrationRecords = [
+    { container: 'group', blobName: 'group', key: groupId, value: { i: groupId, n: 'Group One', l: [], u: [], b: [] } },
+    ...records,
+    { container: 'team', blobName: 'season-team', key: teamKey, value: team([anonymized]) },
+  ]
+  const plan = buildMigrationPlan(migrationRecords, { groupRepository: 'owner/Fantazone.Group-One', groupId })
+  const season = JSON.parse(plan.groupFiles.find(file => file.path.includes('/teams/') && !file.path.includes('/days/')).content)
+  assert.equal(season.players[0].playerKey, 'manolas')
+  assert.equal(season.players[0].price, 16)
+  assert.equal(season.players[0].status, 1)
+  assert.equal(season.players[0].position, 11)
+})
+
 test('fails closed when two different historical players are equally compatible', () => {
   const second = { ...namedPlayer, n: 'Luigi Bianchi' }
-  const records = [dailyRecord('day-1', namedPlayer), dailyRecord('day-2', second)]
+  const records = [dailyRecord('day-1', namedPlayer), dailyRecord('day-2', second, 2)]
   const index = buildHistoricalTeamPlayerIndex(records, groupId)
   assert.throws(
     () => recoverUnnamedSeasonTeamPlayers(team([anonymousPlayer]), teamKey, index),
