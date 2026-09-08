@@ -62,7 +62,7 @@ async function replayJournal(journalPath) {
   catch (error) { if (error?.code === 'ENOENT') return { completed: new Map(), skipped: new Map() }; throw error }
 
   const lines = text.split('\n')
-  const completed = new Map(), skipped = new Map()
+  const completed = new Map(), skipped = new Map(), lastFileContent = new Map()
   for (let index = 0; index < lines.length; index++) {
     const line = lines[index].trim()
     if (!line) continue
@@ -74,9 +74,23 @@ async function replayJournal(journalPath) {
       throw new Error(`Invalid migration progress journal at line ${index + 1}: ${error.message}`)
     }
     if (!event?.recordId) continue
-    if (event.type === 'file') { completed.set(event.recordId, event); skipped.delete(event.recordId) }
-    else if (event.type === 'skip') { skipped.set(event.recordId, event); completed.delete(event.recordId) }
-    else if (event.type === 'invalidate') { completed.delete(event.recordId); skipped.delete(event.recordId) }
+    if (event.type === 'file') {
+      const prior = lastFileContent.get(event.recordId) ?? null
+      if (!event.previousContentSha256 && prior && prior !== event.contentSha256) {
+        event = { ...event, previousContentSha256: prior }
+      }
+      if (event.contentSha256) lastFileContent.set(event.recordId, event.contentSha256)
+      completed.set(event.recordId, event)
+      skipped.delete(event.recordId)
+    } else if (event.type === 'skip') {
+      skipped.set(event.recordId, event)
+      completed.delete(event.recordId)
+    } else if (event.type === 'invalidate') {
+      completed.delete(event.recordId)
+      skipped.delete(event.recordId)
+      // Keep lastFileContent: old 0.3.1 journals did not persist previousContentSha256
+      // on the replacement file event, so its predecessor is reconstructed here.
+    }
   }
   return { completed, skipped }
 }
