@@ -163,7 +163,6 @@ export function FeatureCard({
       borderColor="$color5"
       backgroundColor="$color2"
       borderRadius="$5"
-      animation="quick"
       hoverStyle={{ y: -2, borderColor: '$blue7', backgroundColor: '$color3' }}
       pressStyle={{ scale: 0.985 }}
       onPress={onPress}
