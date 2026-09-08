@@ -1,5 +1,7 @@
 import React from 'react'
-import { Button, Card, H1, H2, Paragraph, ScrollView, Text, XStack, YStack } from 'tamagui'
+import { Github, LockKeyhole } from '@tamagui/lucide-icons-2'
+import { Button, Paragraph, Text, XStack, YStack } from 'tamagui'
+import { AppScreen, PageIntro, PrimaryAction, StatusPill, Surface } from '../components/design-system'
 
 type Props = {
   onConnectGroup: () => void
@@ -7,93 +9,121 @@ type Props = {
 
 const buildingBlocks = [
   {
-    title: '1 · GitHub = stato durevole',
-    body: 'Ogni lega vive in un repository Fantazone.<gruppo>. File versionati, history e SHA diventano persistenza e audit trail.',
-    status: 'Repository-per-group',
+    number: '01',
+    title: 'GitHub = stato durevole',
+    body: 'Ogni gruppo vive in un repository Fantazone. File versionati, history e SHA diventano persistenza, replica e audit trail.',
+    status: 'Repository per gruppo',
+    tone: 'blue' as const,
   },
   {
-    title: '2 · Actions = background jobs',
-    body: 'Ingestion, ricalcoli e rebuild non richiedono un worker sempre acceso. I job deterministici girano nelle GitHub Actions.',
+    number: '02',
+    title: 'Actions = background jobs',
+    body: 'Ingestion, ricalcoli e rebuild non richiedono un worker sempre acceso: i job deterministici girano nelle GitHub Actions.',
     status: 'Zero worker host',
+    tone: 'green' as const,
   },
   {
-    title: '3 · WebRTC = asta realtime',
-    body: 'I rilanci non possono diventare commit. Durante l’asta il dispositivo del banditore è host autorevole e usa RTCDataChannel.',
-    status: 'No commit per bid',
+    number: '03',
+    title: 'WebRTC = asta realtime',
+    body: 'I rilanci non diventano commit. Durante l’asta il dispositivo del banditore è host autorevole e comunica via RTCDataChannel.',
+    status: 'Realtime peer-to-peer',
+    tone: 'purple' as const,
   },
   {
-    title: '4 · Domain condiviso',
-    body: 'Le regole pure vengono estratte da Fantasoccer in TypeScript e usate da app, test e Actions per evitare due implementazioni diverse.',
-    status: 'Parity-first migration',
+    number: '04',
+    title: 'Domain condiviso',
+    body: 'Le regole pure estratte da Fantasoccer sono TypeScript condiviso tra app, test e Actions, così non esistono due implementazioni della stessa regola.',
+    status: 'Parity first',
+    tone: 'yellow' as const,
   },
 ]
 
 export function PlatformOverviewScreen({ onConnectGroup }: Props) {
   return (
-    <ScrollView flex={1} contentContainerStyle={{ flexGrow: 1 }}>
-      <YStack width="100%" maxWidth={1040} alignSelf="center" padding="$5" gap="$5">
-        <YStack gap="$2" paddingVertical="$5">
-          <Text fontSize="$3" fontWeight="800" color="$blue10">ZERO-SERVER LAB</Text>
-          <H1>Fantazone</H1>
-          <Paragraph size="$5" color="$color10" maxWidth={760}>
-            Un’app React Native reale che prova a sostituire backend, worker e realtime server con GitHub e WebRTC — mantenendo il comportamento di Fantasoccer sotto test.
-          </Paragraph>
-          <XStack gap="$3" flexWrap="wrap" marginTop="$2">
-            <Button theme="accent" onPress={onConnectGroup}>Collega un gruppo reale</Button>
-            <Button onPress={() => {
-              if (typeof window !== 'undefined') window.open('https://github.com/KeyserDSoze/Fantazone', '_blank')
-            }}>
-              Apri il codice su GitHub
+    <AppScreen maxWidth={1180}>
+      <PageIntro
+        eyebrow="Zero-server lab"
+        title="Fantazone, senza backend applicativo."
+        description="Un’app React Native reale che sostituisce backend, worker e realtime server con primitive GitHub, replica offline e WebRTC — mantenendo il comportamento di Fantasoccer sotto test."
+        action={(
+          <XStack gap="$2" flexWrap="wrap">
+            <PrimaryAction onPress={onConnectGroup}>Collega un gruppo reale</PrimaryAction>
+            <Button
+              variant="outlined"
+              borderRadius="$4"
+              icon={Github}
+              onPress={() => {
+                if (typeof window !== 'undefined') window.open('https://github.com/KeyserDSoze/Fantazone', '_blank')
+              }}
+            >
+              Apri il codice
             </Button>
           </XStack>
-        </YStack>
+        )}
+      />
 
-        <YStack gap="$3">
-          <H2>Quattro primitive, quattro responsabilità</H2>
-          <XStack gap="$3" flexWrap="wrap">
-            {buildingBlocks.map(item => (
-              <Card
-                key={item.title}
-                borderWidth={1}
-                borderColor="$borderColor"
-                padding="$4"
-                flexGrow={1}
-                flexBasis={420}
-                minWidth={280}
-              >
-                <YStack gap="$2">
-                  <Text fontWeight="800" fontSize="$5">{item.title}</Text>
-                  <Paragraph color="$color10">{item.body}</Paragraph>
-                  <Text fontSize="$2" fontWeight="700" color="$blue10">{item.status}</Text>
-                </YStack>
-              </Card>
-            ))}
-          </XStack>
-        </YStack>
-
-        <Card borderWidth={1} borderColor="$yellow8" padding="$4">
-          <YStack gap="$2">
-            <Text fontWeight="800">Cosa NON stiamo sostenendo</Text>
-            <Paragraph>
-              GitHub non è “il database migliore per tutto”. Questa repo studia quali workload si adattano bene a versioning, Actions e contenuti statici — e dove serve una primitiva diversa, come WebRTC per l’asta.
-            </Paragraph>
+      <XStack gap="$3" flexWrap="wrap" alignItems="stretch">
+        {buildingBlocks.map(item => (
+          <YStack
+            key={item.number}
+            flexGrow={1}
+            flexBasis={470}
+            minWidth={280}
+            minHeight={220}
+            padding="$5"
+            gap="$4"
+            borderWidth={1}
+            borderColor="$color5"
+            backgroundColor="$color2"
+            borderRadius="$6"
+          >
+            <XStack justifyContent="space-between" alignItems="flex-start" gap="$3">
+              <Text color="$color7" fontSize="$8" lineHeight="$8" fontWeight="900">{item.number}</Text>
+              <StatusPill tone={item.tone}>{item.status}</StatusPill>
+            </XStack>
+            <YStack gap="$2" flex={1}>
+              <Text color="$color12" fontSize="$6" fontWeight="900">{item.title}</Text>
+              <Paragraph color="$color10" lineHeight="$6">{item.body}</Paragraph>
+            </YStack>
           </YStack>
-        </Card>
+        ))}
+      </XStack>
 
-        <Card borderWidth={1} borderColor="$red8" padding="$4">
-          <YStack gap="$2">
-            <Text fontWeight="800">Il PAT condiviso è V1 didattica</Text>
-            <Paragraph>
-              Il link di invito attuale può contenere un bearer token codificato, non cifrato. È utile per prototipare il modello repository-per-gruppo, ma il target è GitHub App/OAuth con credenziali più strette e sostituibili.
-            </Paragraph>
-          </YStack>
-        </Card>
-
-        <YStack paddingVertical="$5" gap="$2">
-          <H2>Come leggere il progetto</H2>
-          <Paragraph>Parti da docs/01-feature-inventory.md, poi passa alla zero-server architecture e alla runtime topology. La migration checklist mostra cosa è realmente completato e cosa no.</Paragraph>
+      <XStack gap="$4" flexWrap="wrap" alignItems="stretch">
+        <YStack flexGrow={1} flexBasis={440} minWidth={280}>
+          <Surface accent="yellow" padding="$5">
+            <YStack gap="$2">
+              <Text color="$color12" fontSize="$6" fontWeight="900">Non è “GitHub come database per tutto”</Text>
+              <Paragraph color="$color10" lineHeight="$6">
+                Fantazone studia quali workload si adattano a versioning, Actions e contenuti statici e usa primitive diverse quando serve. L’asta, per esempio, usa WebRTC proprio perché un commit per ogni rilancio sarebbe il modello sbagliato.
+              </Paragraph>
+            </YStack>
+          </Surface>
         </YStack>
-      </YStack>
-    </ScrollView>
+
+        <YStack flexGrow={1} flexBasis={440} minWidth={280}>
+          <Surface accent="red" padding="$5">
+            <XStack gap="$3" alignItems="flex-start">
+              <LockKeyhole size="$1.3" color="$red10" />
+              <YStack flex={1} gap="$2">
+                <Text color="$color12" fontSize="$6" fontWeight="900">PAT condiviso: compromesso intenzionale</Text>
+                <Paragraph color="$color10" lineHeight="$6">
+                  Nell’architettura zero-backend attuale la credenziale del gruppo è disponibile al client e viene salvata nello spazio privato OneDrive. Va trattata come una password del gruppo e ruotata quando necessario.
+                </Paragraph>
+              </YStack>
+            </XStack>
+          </Surface>
+        </YStack>
+      </XStack>
+
+      <Surface padding="$5">
+        <YStack gap="$2">
+          <Text color="$color12" fontSize="$6" fontWeight="900">Come leggere il progetto</Text>
+          <Paragraph color="$color10" lineHeight="$6">
+            Parti dall’inventario funzionale, passa alla zero-server architecture e alla runtime topology, poi usa la migration checklist per distinguere ciò che è già operativo dai gate ancora aperti.
+          </Paragraph>
+        </YStack>
+      </Surface>
+    </AppScreen>
   )
 }
