@@ -14,7 +14,7 @@ const REPO_ROOT = resolve(fileURLToPath(new URL('../..', import.meta.url)))
 function parseArgs(argv) {
   const result = {
     platformRepository: 'KeyserDSoze/Fantazone', branch: 'main', apply: false,
-    overwrite: false, preserveExisting: false, refreshCache: false, noCache: false, resetWork: false,
+    overwrite: false, preserveExisting: false, refreshCache: false, reuseCache: false, noCache: false, resetWork: false,
   }
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i]
@@ -27,6 +27,7 @@ function parseArgs(argv) {
     else if (arg === '--cache') result.cachePath = next()
     else if (arg === '--work-dir') result.workDir = next()
     else if (arg === '--refresh-cache') result.refreshCache = true
+    else if (arg === '--reuse-cache') result.reuseCache = true
     else if (arg === '--no-cache') result.noCache = true
     else if (arg === '--reset-work') result.resetWork = true
     else if (arg === '--apply') result.apply = true
@@ -47,7 +48,8 @@ function usage() {
 `  --branch branch                   Target branch (default main)\n  --group-id id                     Explicit legacy group id when auto-selection is ambiguous\n` +
 `  --report path                     JSON report path\n  --cache path                      Azure scan cache path\n` +
 `  --work-dir path                   Local resumable staging directory\n` +
-`  --refresh-cache                   Ignore existing cache and scan Azure again\n` +
+`  --refresh-cache                   Ignore cache and download every canonical Azure blob again\n` +
+`  --reuse-cache                     Use the existing cache without contacting Azure\n` +
 `  --no-cache                        Do not read or write the local Azure scan cache\n` +
 `  --reset-work                      Delete and rebuild local staging/checkpoint state\n` +
 `  --apply                           Commit staged trees and git push them to the target branch\n` +
@@ -88,21 +90,25 @@ function formatElapsed(ms) {
 
 function logAzureProgress(event) {
   if (event.type === 'container-start') {
-    console.log(`[Azure] Container #${event.containerNumber}: ${event.container} - ${event.download ? 'canonical, reading content' : 'inventory only'}`)
+    console.log(`[Azure] Container #${event.containerNumber}: ${event.container} - ${event.download ? 'canonical, syncing content' : 'inventory only'}`)
     return
   }
   if (event.type === 'container-progress') {
-    const downloaded = event.download ? `, downloaded=${event.downloadedCount} (${formatBytes(event.downloadedBytes)})` : ''
-    console.log(`[Azure] ${event.container}: enumerated=${event.blobCount}${downloaded}, elapsed=${formatElapsed(event.elapsedMs)}, current=${event.currentBlob}`)
+    const synced = event.download
+      ? `, downloaded=${event.downloadedCount} (${formatBytes(event.downloadedBytes)}), reused=${event.reusedCount ?? 0}, recovered=${event.recoveredCount ?? 0}`
+      : ''
+    console.log(`[Azure] ${event.container}: enumerated=${event.blobCount}${synced}, elapsed=${formatElapsed(event.elapsedMs)}, current=${event.currentBlob}`)
     return
   }
   if (event.type === 'container-complete') {
-    const downloaded = event.download ? `, downloaded=${event.downloadedCount} (${formatBytes(event.downloadedBytes)})` : ''
-    console.log(`[Azure] ${event.container}: complete - blobs=${event.blobCount}${downloaded}, elapsed=${formatElapsed(event.elapsedMs)}`)
+    const synced = event.download
+      ? `, downloaded=${event.downloadedCount} (${formatBytes(event.downloadedBytes)}), reused=${event.reusedCount ?? 0}, recovered=${event.recoveredCount ?? 0}`
+      : ''
+    console.log(`[Azure] ${event.container}: complete - blobs=${event.blobCount}${synced}, elapsed=${formatElapsed(event.elapsedMs)}`)
     return
   }
   if (event.type === 'scan-complete') {
-    console.log(`[Azure] Scan complete - containers=${event.containerCount}, blobs=${event.blobCount}, canonical records downloaded=${event.downloadedCount}`)
+    console.log(`[Azure] Scan complete - containers=${event.containerCount}, blobs=${event.blobCount}, canonical=${event.canonicalRecordCount}, downloaded=${event.downloadedCount}, reused=${event.reusedCount}, recovered=${event.recoveredVersionCount}, issues=${event.issueCount}`)
   }
 }
 
@@ -152,34 +158,61 @@ function logGitProgress(event) {
 
 async function obtainAzureScan(connectionString, args) {
   const cachePath = scanCachePath(args.cachePath)
-  const cacheInfo = { enabled: !args.noCache, path: args.noCache ? null : cachePath, used: false, createdAt: null }
+  const cacheInfo = {
+    enabled: !args.noCache,
+    path: args.noCache ? null : cachePath,
+    used: false,
+    mode: args.noCache ? 'disabled' : args.refreshCache ? 'refresh' : args.reuseCache ? 'reuse' : 'incremental',
+    createdAt: null,
+    baselineCreatedAt: null,
+  }
+  let previousScan = null
 
   if (args.noCache) {
-    console.log('[Cache] Disabled; Azure will be scanned for this run.')
+    console.log('[Cache] Disabled; Azure will be fully scanned for this run.')
   } else if (args.refreshCache) {
-    console.log(`[Cache] Refresh requested; ignoring existing cache at ${cachePath}`)
+    console.log(`[Cache] Full refresh requested; ignoring existing cache at ${cachePath}`)
   } else {
     const cached = await loadAzureScanCache(cachePath, connectionString)
     if (cached.status === 'hit') {
       cacheInfo.used = true
       cacheInfo.createdAt = cached.createdAt
-      console.log(`[Cache] Reusing Azure scan from ${cachePath}${cached.createdAt ? ` (${cached.createdAt})` : ''}`)
-      console.log(`[Cache] Cached scan contains containers=${cached.scan.inventory.length}, canonical records=${cached.scan.records.length}`)
-      return { scan: cached.scan, cacheInfo }
+      cacheInfo.baselineCreatedAt = cached.createdAt
+      if (args.reuseCache) {
+        console.log(`[Cache] Reusing Azure scan without contacting Azure: ${cachePath}${cached.createdAt ? ` (${cached.createdAt})` : ''}`)
+        console.log(`[Cache] Cached scan contains containers=${cached.scan.inventory.length}, canonical records=${cached.scan.records.length}`)
+        return { scan: cached.scan, cacheInfo }
+      }
+      previousScan = cached.scan
+      console.log(`[Cache] Incremental baseline loaded from ${cachePath}${cached.createdAt ? ` (${cached.createdAt})` : ''}`)
+      console.log('[Cache] Azure metadata will be enumerated; unchanged blob bodies are reused and only new/changed blobs are downloaded.')
+    } else {
+      const detail = cached.reason ? `: ${cached.reason}` : ''
+      if (args.reuseCache) throw new Error(`--reuse-cache requires a reusable Azure cache (${cached.status}${detail})`)
+      console.log(`[Cache] No reusable Azure scan (${cached.status}${detail}).`)
     }
-    const detail = cached.reason ? `: ${cached.reason}` : ''
-    console.log(`[Cache] No reusable Azure scan (${cached.status}${detail}).`)
   }
 
-  console.log('Scanning Azure Blob Storage metadata and canonical containers...')
-  const scan = await scanAzureStorage(connectionString, { onProgress: logAzureProgress })
+  console.log(previousScan ? 'Synchronizing Azure Blob Storage incrementally...' : 'Scanning Azure Blob Storage metadata and canonical containers...')
+  const scan = await scanAzureStorage(connectionString, { onProgress: logAzureProgress, previousScan })
+
+  if (scan.recoveries?.length) {
+    console.log(`[Azure] Recovered ${scan.recoveries.length} historical RealCalendar blob(s) from Azure version history.`)
+    for (const recovery of scan.recoveries.slice(0, 10)) {
+      console.log(`[Azure] Recovered ${recovery.container}/${recovery.blobName} from version ${recovery.versionId}${recovery.lastModified ? ` (${recovery.lastModified})` : ''}`)
+    }
+  }
+  if (scan.issues?.length) {
+    console.warn(`[Azure] ${scan.issues.length} source record(s) were quarantined and will not be migrated.`)
+    for (const issue of scan.issues.slice(0, 10)) console.warn(`[Azure] ${issue.container}/${issue.blobName}: ${issue.detail ?? issue.reason}`)
+  }
 
   if (!args.noCache) {
     const saved = await saveAzureScanCache(cachePath, connectionString, scan)
     if (saved.saved) {
       cacheInfo.createdAt = saved.createdAt
       console.log(`[Cache] Azure scan saved to ${cachePath}`)
-      console.log('[Cache] If mapping fails, rerun after updating the mapper: the next run will reuse this scan.')
+      console.log('[Cache] Normal reruns now sync Azure incrementally; use --reuse-cache only when you intentionally want zero Azure reads.')
     } else {
       console.log(`[Cache] Scan was not cached: ${saved.reason}`)
     }
@@ -204,7 +237,9 @@ async function main() {
   if (args.help) { console.log(usage()); return }
   if (!args.groupRepository) throw new Error('--group-repository is required')
   if (args.overwrite && args.preserveExisting) throw new Error('--overwrite and --preserve-existing are mutually exclusive')
-  if (args.refreshCache && args.noCache) throw new Error('--refresh-cache and --no-cache are mutually exclusive')
+  if ([args.refreshCache, args.reuseCache, args.noCache].filter(Boolean).length > 1) {
+    throw new Error('--refresh-cache, --reuse-cache and --no-cache are mutually exclusive')
+  }
   const mode = args.overwrite ? 'overwrite' : args.preserveExisting ? 'preserve' : 'fail'
 
   const connectionString = requireEnv('FANTAZONE_AZURE_CONNECTION_STRING')
@@ -256,6 +291,9 @@ async function main() {
     source: {
       cache: cacheInfo,
       staging: plan.staging,
+      stats: scan.stats ?? null,
+      issues: scan.issues ?? [],
+      recoveries: scan.recoveries ?? [],
       containers: scan.inventory.map(container => ({ name: container.name, downloaded: container.downloaded, blobCount: container.blobs.length, blobs: container.blobs })),
     },
     selectedGroup: { id: plan.group.id, name: plan.group.name },
