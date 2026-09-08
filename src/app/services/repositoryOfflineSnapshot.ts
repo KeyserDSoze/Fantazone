@@ -68,13 +68,11 @@ export async function hydrateRepositoryOfflineSnapshot(
   onProgress?.('Indicizzazione dei dati del gruppo per la copia offline…')
   const blobs = await listJsonBlobs(client, owner, repo, ref, onProgress)
   const entries: SnapshotEntry[] = []
-  const preserveKeys = blobs.map(blob => `${prefix}${blob.path}@${ref}`)
   let totalBytes = 0
 
   for (let index = 0; index < blobs.length; index += SNAPSHOT_BATCH_SIZE) {
     const chunk = blobs.slice(index, index + SNAPSHOT_BATCH_SIZE)
     const loaded = await Promise.all(chunk.map(async descriptor => {
-      totalBytes += descriptor.size ?? 0
       const key = `${prefix}${descriptor.path}@${ref}`
       const cached = await repositoryPersistentCache.get(key)
       if (cached?.sha === descriptor.sha) {
@@ -100,21 +98,22 @@ export async function hydrateRepositoryOfflineSnapshot(
       }
     }))
 
-    for (const entry of loaded) {
-      if (!entry) continue
-      entries.push(entry)
-      await repositoryPersistentCache.set(
-        `${prefix}${entry.path}@${ref}`,
-        { value: entry.value, sha: entry.sha },
-      )
-    }
+    const validEntries = loaded.filter((entry): entry is SnapshotEntry => entry !== null)
+    entries.push(...validEntries)
+    totalBytes += validEntries.reduce((sum, entry) => sum + entry.bytes, 0)
+    await Promise.all(validEntries.map(entry => repositoryPersistentCache.set(
+      `${prefix}${entry.path}@${ref}`,
+      { value: entry.value, sha: entry.sha },
+    )))
 
     if (blobs.length > SNAPSHOT_BATCH_SIZE) {
       onProgress?.(`Preparazione copia offline ${Math.min(index + chunk.length, blobs.length)}/${blobs.length}…`)
     }
   }
 
-  // Remove JSON documents deleted from the branch while preserving every current SHA-backed entry.
+  // Remove JSON documents deleted from the branch, plus malformed documents that
+  // must not leave a previously valid but now stale value in the local cache.
+  const preserveKeys = entries.map(entry => `${prefix}${entry.path}@${ref}`)
   await repositoryPersistentCache.deleteByPrefix(prefix, preserveKeys)
 
   const seasonIds = groupSeasonIds(entries.find(entry => entry.path === 'config/group.json')?.value)
