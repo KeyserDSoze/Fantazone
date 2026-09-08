@@ -29,8 +29,8 @@ if ($Overwrite -and $PreserveExisting) {
 if ($RepairImportedCalendars -and -not $PreserveExisting) {
     throw "-RepairImportedCalendars requires -PreserveExisting."
 }
-$cacheModes = @($RefreshCache, $ReuseCache, $NoCache) | Where-Object { $_ }
-if ($cacheModes.Count -gt 1) {
+$cacheModeCount = [int]($RefreshCache.IsPresent) + [int]($ReuseCache.IsPresent) + [int]($NoCache.IsPresent)
+if ($cacheModeCount -gt 1) {
     throw "-RefreshCache, -ReuseCache and -NoCache are mutually exclusive."
 }
 
