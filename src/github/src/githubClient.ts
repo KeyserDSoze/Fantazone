@@ -22,6 +22,26 @@ export type GitHubContentReadResult = {
   etag?: string
 }
 
+export type GitHubTreeEntry = {
+  path: string
+  mode: string
+  type: 'blob' | 'tree' | 'commit'
+  sha: string
+  size?: number
+}
+
+export type GitHubTreeReadResult = {
+  sha: string
+  truncated: boolean
+  tree: GitHubTreeEntry[]
+}
+
+export type GitHubBlobReadResult = {
+  sha: string
+  content: string
+  size: number
+}
+
 export type GitHubConditionalContentReadResult =
   | { status: 'found'; value: GitHubContentReadResult }
   | { status: 'not-modified'; etag?: string }
@@ -145,6 +165,27 @@ export class GitHubClient {
       `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/actions/workflows/${encodeURIComponent(normalizedWorkflow)}/dispatches`,
       { method: 'POST', body: JSON.stringify({ ref: normalizedRef, inputs }) },
     )
+  }
+
+  /** Reads a repository tree through api.github.com. Authentication is optional for public repositories. */
+  async getTree(owner: string, repo: string, treeish: string, recursive = false): Promise<GitHubTreeReadResult> {
+    const suffix = recursive ? '?recursive=1' : ''
+    return this.request<GitHubTreeReadResult>(
+      `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/git/trees/${encodeURIComponent(treeish)}${suffix}`,
+    )
+  }
+
+  /** Reads and UTF-8 decodes one Git blob through api.github.com, avoiding raw/codeload redirects. */
+  async getBlob(owner: string, repo: string, sha: string): Promise<GitHubBlobReadResult> {
+    const result = await this.request<{ sha: string; content: string; encoding: string; size: number }>(
+      `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/git/blobs/${encodeURIComponent(sha)}`,
+    )
+    if (result.encoding !== 'base64') throw new Error(`Unsupported blob encoding ${result.encoding}`)
+    return {
+      sha: result.sha,
+      content: decodeBase64Utf8(result.content.replace(/\n/g, '')),
+      size: result.size,
+    }
   }
 
   /** Reads recent GitHub Actions runs. Authentication is optional for public repositories. */
