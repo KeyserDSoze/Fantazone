@@ -57,6 +57,7 @@ export function PageIntro({
       <YStack gap="$2" flex={1} minWidth={240}>
         {eyebrow ? <Eyebrow>{eyebrow}</Eyebrow> : null}
         <H1
+          accessibilityRole="header"
           color="$color12"
           fontSize="$10"
           lineHeight="$10"
