@@ -179,7 +179,9 @@ function clearDefault(group: StoredGroup): StoredGroup {
 }
 
 function isLegacySettingsVersion(value: unknown): boolean {
-  return Boolean(value && typeof value === 'object' && (value as { version?: unknown }).version !== 3)
+  if (!value || typeof value !== 'object') return false
+  const version = (value as { version?: unknown }).version
+  return version === 1 || version === 2
 }
 
 function newId(): string {
