@@ -15,6 +15,18 @@ const releases: Release[] = [
   {
     version: APP_VERSION,
     date: RELEASE_DATE,
+    title: 'Replica offline incrementale',
+    items: [
+      { category: 'Fix', text: 'Un reload o Ctrl+F5 non riscrive più l’intero snapshot del gruppo quando la revisione GitHub non è cambiata.' },
+      { category: 'Miglioria', text: 'All’apertura viene controllato prima il piccolo manifest di revisione; il pacchetto completo del gruppo viene scaricato soltanto quando serve.' },
+      { category: 'Architettura', text: 'La revisione dell’ultimo snapshot installato con successo è tracciata separatamente dalla cache del manifest, così un download fallito resta correttamente da ritentare.' },
+      { category: 'Fix', text: 'Uno snapshot generato da una Action ma ancora indietro rispetto al manifest remoto non viene applicato: Fantazone conserva la replica locale precedente finché il nuovo pack non è coerente.' },
+      { category: 'Miglioria', text: 'I pacchetti Serie A continuano a essere controllati per hash e vengono aggiornati solo quando cambia davvero il relativo contenuto.' },
+    ],
+  },
+  {
+    version: '0.2.1',
+    date: '8 settembre 2026',
     title: 'Apertura automatica e aggiornamenti applicativi',
     items: [
       { category: 'Miglioria', text: 'Se l’account ha un solo gruppo, Fantazone lo apre automaticamente senza mostrare ogni volta il selettore.' },
