@@ -21,8 +21,17 @@ function calendarRecord(season, { payloadYear = season, dayYear = season, date =
 test('uses the Azure/Rystem key to repair zero RealCalendar year fields when dates match the season', () => {
   const normalized = normalizeLegacyRealCalendarRecord(calendarRecord(13, { payloadYear: 0, dayYear: 0 }))
   assert.equal(normalized.ok, true)
+  assert.equal(normalized.repaired, true)
+  assert.equal(normalized.record.migrationRepair, true)
   assert.equal(normalized.record.value.y, 13)
   assert.equal(normalized.record.value.d[0].y, 13)
+})
+
+test('leaves an already coherent calendar unmarked', () => {
+  const normalized = normalizeLegacyRealCalendarRecord(calendarRecord(13))
+  assert.equal(normalized.ok, true)
+  assert.equal(normalized.repaired, false)
+  assert.equal(normalized.record.migrationRepair, false)
 })
 
 test('quarantines a RealCalendar that was overwritten by the following season', () => {
@@ -33,6 +42,7 @@ test('quarantines a RealCalendar that was overwritten by the following season', 
   }))
   assert.equal(normalized.ok, false)
   assert.equal(normalized.issue.reason, 'invalid-realcalendar-season')
+  assert.equal(normalized.issue.targetPath, 'data/serie-a/calendars/12.json')
   assert.match(normalized.issue.detail, /outside season 12 \(2023\/24\)/)
 })
 
