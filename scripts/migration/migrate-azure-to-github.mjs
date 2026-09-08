@@ -14,7 +14,8 @@ const REPO_ROOT = resolve(fileURLToPath(new URL('../..', import.meta.url)))
 function parseArgs(argv) {
   const result = {
     platformRepository: 'KeyserDSoze/Fantazone', branch: 'main', apply: false,
-    overwrite: false, preserveExisting: false, refreshCache: false, reuseCache: false, noCache: false, resetWork: false,
+    overwrite: false, preserveExisting: false, repairImportedCalendars: false,
+    refreshCache: false, reuseCache: false, noCache: false, resetWork: false,
   }
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i]
@@ -33,6 +34,7 @@ function parseArgs(argv) {
     else if (arg === '--apply') result.apply = true
     else if (arg === '--overwrite') result.overwrite = true
     else if (arg === '--preserve-existing') result.preserveExisting = true
+    else if (arg === '--repair-imported-calendars') result.repairImportedCalendars = true
     else if (arg === '--help' || arg === '-h') result.help = true
     else throw new Error(`Unknown argument '${arg}'`)
   }
@@ -54,6 +56,7 @@ function usage() {
 `  --reset-work                      Delete and rebuild local staging/checkpoint state\n` +
 `  --apply                           Commit staged trees and git push them to the target branch\n` +
 `  --overwrite                       Replace canonical paths that already exist\n  --preserve-existing               Keep existing canonical paths and skip collisions\n` +
+`  --repair-imported-calendars       With preserve mode, overwrite only proven RealCalendar repairs\n` +
 `  -h, --help                        Show this help\n`
 }
 
@@ -140,7 +143,7 @@ function logGitProgress(event) {
     return
   }
   if (event.type === 'selection') {
-    console.log(`[Git] ${event.repository}: staged=${event.total}, selected=${event.selected}, preserved-collisions=${event.collisions}`)
+    console.log(`[Git] ${event.repository}: staged=${event.total}, selected=${event.selected}, collisions=${event.collisions}, forced-repairs=${event.forcedOverwrites ?? 0}`)
     return
   }
   if (event.type === 'commit') {
@@ -220,6 +223,16 @@ async function obtainAzureScan(connectionString, args) {
   return { scan, cacheInfo }
 }
 
+function markTargetedCalendarRepairs(files, scan, enabled) {
+  if (!enabled) return files
+  const repairPaths = new Set(
+    (scan.records ?? [])
+      .filter(record => record.container === 'realcalendar' && (record.migrationRepair === true || Boolean(record.sourceVersionId)))
+      .map(record => `data/serie-a/calendars/${Number(record.key)}.json`),
+  )
+  return files.map(file => repairPaths.has(file.path) ? { ...file, forceOverwrite: true } : file)
+}
+
 async function dryRunTarget(pat, repository, branch, files, message, mode) {
   return writeFilesAtomically({
     api: new GitHubApi(pat), repository, branch, files, message, mode, apply: false,
@@ -237,6 +250,9 @@ async function main() {
   if (args.help) { console.log(usage()); return }
   if (!args.groupRepository) throw new Error('--group-repository is required')
   if (args.overwrite && args.preserveExisting) throw new Error('--overwrite and --preserve-existing are mutually exclusive')
+  if (args.repairImportedCalendars && !args.preserveExisting) {
+    throw new Error('--repair-imported-calendars requires --preserve-existing so only proven calendar repairs can bypass preservation')
+  }
   if ([args.refreshCache, args.reuseCache, args.noCache].filter(Boolean).length > 1) {
     throw new Error('--refresh-cache, --reuse-cache and --no-cache are mutually exclusive')
   }
@@ -267,8 +283,15 @@ async function main() {
   }
   await clearMigrationErrorSnapshot(workDir).catch(() => {})
 
+  const platformFiles = markTargetedCalendarRepairs(plan.platformFiles, scan, args.repairImportedCalendars)
+  const targetedRepairs = platformFiles.filter(file => file.forceOverwrite === true).map(file => file.path)
   console.log(`Selected legacy group: ${plan.group.id} (${plan.group.name})`)
-  console.log(`Planned files: group=${plan.groupFiles.length}, platform=${plan.platformFiles.length}, skipped=${plan.skipped.length}`)
+  console.log(`Planned files: group=${plan.groupFiles.length}, platform=${platformFiles.length}, skipped=${plan.skipped.length}`)
+  if (targetedRepairs.length) console.log(`[Repair] Proven imported RealCalendar repairs allowed to overwrite in preserve mode: ${targetedRepairs.join(', ')}`)
+  if (args.repairImportedCalendars && scan.issues?.length) {
+    const unresolved = scan.issues.map(issue => issue.targetPath).filter(Boolean)
+    if (unresolved.length) console.warn(`[Repair] Unrecoverable calendar source(s) cannot be repaired automatically: ${unresolved.join(', ')}`)
+  }
 
   const groupMessage = 'feat: migrate legacy Fantasoccer data from Azure Blob Storage'
   const platformMessage = 'feat: import legacy Serie A data from Azure Blob Storage'
@@ -278,11 +301,11 @@ async function main() {
     const gitRoot = resolve(workDir, 'git-targets')
     console.log('[Git] Apply mode uses native git clone/commit/push; staged JSON files are not uploaded one-by-one through the GitHub REST API.')
     groupResult = await applyTargetWithGit(groupPat, args.groupRepository, args.branch, plan.groupFiles, groupMessage, mode, gitRoot)
-    platformResult = await applyTargetWithGit(platformPat, args.platformRepository, args.branch, plan.platformFiles, platformMessage, mode, gitRoot)
+    platformResult = await applyTargetWithGit(platformPat, args.platformRepository, args.branch, platformFiles, platformMessage, mode, gitRoot)
     await markStagingGitResult(workDir, { group: groupResult, platform: platformResult })
   } else {
     groupResult = await dryRunTarget(groupPat, args.groupRepository, args.branch, plan.groupFiles, groupMessage, mode)
-    platformResult = await dryRunTarget(platformPat, args.platformRepository, args.branch, plan.platformFiles, platformMessage, mode)
+    platformResult = await dryRunTarget(platformPat, args.platformRepository, args.branch, platformFiles, platformMessage, mode)
   }
 
   const output = {
@@ -296,9 +319,13 @@ async function main() {
       recoveries: scan.recoveries ?? [],
       containers: scan.inventory.map(container => ({ name: container.name, downloaded: container.downloaded, blobCount: container.blobs.length, blobs: container.blobs })),
     },
+    repair: { enabled: args.repairImportedCalendars, targetedPaths: targetedRepairs },
     selectedGroup: { id: plan.group.id, name: plan.group.name },
     targets: { group: groupResult, platform: platformResult },
-    files: { group: plan.groupFiles.map(x => ({ path: x.path, source: x.source })), platform: plan.platformFiles.map(x => ({ path: x.path, source: x.source })) },
+    files: {
+      group: plan.groupFiles.map(x => ({ path: x.path, source: x.source })),
+      platform: platformFiles.map(x => ({ path: x.path, source: x.source, forcedRepair: x.forceOverwrite === true })),
+    },
     skipped: plan.skipped,
   }
   const target = reportPath(args.reportPath)
