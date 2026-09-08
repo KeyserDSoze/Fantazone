@@ -90,42 +90,84 @@ async function downloadText(blobClient) {
   return { text, bytes: Buffer.byteLength(text) }
 }
 
-async function recoverRealCalendarVersion(containerClient, blobName, expectedSeason) {
-  const versions = []
-  for await (const item of containerClient.listBlobsFlat({ prefix: blobName, includeVersions: true })) {
-    if (item.name !== blobName || !item.versionId) continue
-    versions.push(item)
-  }
-  versions.sort((left, right) => {
-    const leftTime = left.properties.lastModified?.getTime?.() ?? 0
-    const rightTime = right.properties.lastModified?.getTime?.() ?? 0
-    return rightTime - leftTime
-  })
+function historyTimestamp(item) {
+  return item.properties?.lastModified?.getTime?.() ?? 0
+}
 
+async function collectCalendarHistory(containerClient, blobName) {
+  const candidates = []
+  const seen = new Set()
+  const add = (kind, id, item) => {
+    if (!id) return
+    const key = `${kind}:${id}`
+    if (seen.has(key)) return
+    seen.add(key)
+    candidates.push({ kind, id, item })
+  }
+
+  try {
+    for await (const item of containerClient.listBlobsFlat({ prefix: blobName, includeVersions: true })) {
+      if (item.name === blobName && item.versionId) add('version', item.versionId, item)
+    }
+  } catch {
+    // Version history is best-effort; snapshot recovery below may still be available.
+  }
+
+  const collectSnapshots = async includeDeleted => {
+    for await (const item of containerClient.listBlobsFlat({ prefix: blobName, includeSnapshots: true, ...(includeDeleted ? { includeDeleted: true } : {}) })) {
+      if (item.name === blobName && item.snapshot) add('snapshot', item.snapshot, item)
+    }
+  }
+  try {
+    await collectSnapshots(true)
+  } catch {
+    try { await collectSnapshots(false) } catch { /* Snapshot history is optional/best-effort. */ }
+  }
+
+  candidates.sort((left, right) => historyTimestamp(right.item) - historyTimestamp(left.item))
+  return candidates
+}
+
+async function recoverRealCalendarHistory(containerClient, blobName, expectedSeason) {
+  const candidates = await collectCalendarHistory(containerClient, blobName)
   let downloadedCount = 0
   let downloadedBytes = 0
   const baseClient = containerClient.getBlobClient(blobName)
-  if (typeof baseClient.withVersion !== 'function') return { record: null, downloadedCount, downloadedBytes }
 
-  for (const version of versions) {
-    const versionClient = baseClient.withVersion(version.versionId)
-    const downloaded = await downloadText(versionClient)
+  for (const candidate of candidates) {
+    let historicalClient = null
+    if (candidate.kind === 'version' && typeof baseClient.withVersion === 'function') historicalClient = baseClient.withVersion(candidate.id)
+    if (candidate.kind === 'snapshot' && typeof baseClient.withSnapshot === 'function') historicalClient = baseClient.withSnapshot(candidate.id)
+    if (!historicalClient) continue
+
+    let downloaded
+    try { downloaded = await downloadText(historicalClient) }
+    catch { continue }
     downloadedCount += 1
     downloadedBytes += downloaded.bytes
-    const candidate = recordFromText('realcalendar', blobName, downloaded.text)
-    candidate.key = expectedSeason
-    const normalized = normalizeLegacyRealCalendarRecord(candidate)
+
+    let parsed
+    try { parsed = recordFromText('realcalendar', blobName, downloaded.text) }
+    catch { continue }
+    parsed.key = expectedSeason
+    const normalized = normalizeLegacyRealCalendarRecord(parsed)
     if (!normalized.ok) continue
+
+    const sourceMetadata = candidate.kind === 'version'
+      ? { sourceVersionId: candidate.id }
+      : { sourceSnapshot: candidate.id }
     return {
-      record: { ...normalized.record, sourceVersionId: version.versionId },
-      versionId: version.versionId,
-      lastModified: version.properties.lastModified?.toISOString?.() ?? null,
+      record: { ...normalized.record, migrationRepair: true, ...sourceMetadata },
+      sourceKind: candidate.kind,
+      versionId: candidate.kind === 'version' ? candidate.id : null,
+      snapshot: candidate.kind === 'snapshot' ? candidate.id : null,
+      lastModified: candidate.item.properties?.lastModified?.toISOString?.() ?? null,
       downloadedCount,
       downloadedBytes,
     }
   }
 
-  return { record: null, downloadedCount, downloadedBytes }
+  return { record: null, sourceKind: null, versionId: null, snapshot: null, downloadedCount, downloadedBytes }
 }
 
 export async function scanAzureStorage(connectionString, options = {}) {
@@ -141,6 +183,8 @@ export async function scanAzureStorage(connectionString, options = {}) {
   let totalDownloadedBytes = 0
   let totalReusedCount = 0
   let totalRecoveredCount = 0
+  let totalRecoveredVersionCount = 0
+  let totalRecoveredSnapshotCount = 0
 
   for await (const container of client.listContainers()) {
     containerNumber += 1
@@ -155,6 +199,8 @@ export async function scanAzureStorage(connectionString, options = {}) {
     let downloadedBytes = 0
     let reusedCount = 0
     let recoveredCount = 0
+    let recoveredVersionCount = 0
+    let recoveredSnapshotCount = 0
     let lastProgressAt = Date.now()
     const startedAt = lastProgressAt
 
@@ -193,17 +239,21 @@ export async function scanAzureStorage(connectionString, options = {}) {
           records.push(normalized.record)
         } else if (name === 'realcalendar') {
           const expectedSeason = Number(cachedRecord?.key ?? Number.parseInt(blob.name, 10))
-          const recovered = await recoverRealCalendarVersion(containerClient, blob.name, expectedSeason)
+          const recovered = await recoverRealCalendarHistory(containerClient, blob.name, expectedSeason)
           downloadedCount += recovered.downloadedCount
           downloadedBytes += recovered.downloadedBytes
           if (recovered.record) {
             recoveredCount += 1
+            if (recovered.sourceKind === 'version') recoveredVersionCount += 1
+            if (recovered.sourceKind === 'snapshot') recoveredSnapshotCount += 1
             records.push(recovered.record)
             recoveries.push({
               container: name,
               blobName: blob.name,
               key: expectedSeason,
+              sourceKind: recovered.sourceKind,
               versionId: recovered.versionId,
+              snapshot: recovered.snapshot,
               lastModified: recovered.lastModified,
               reason: initialIssue?.detail ?? 'Current RealCalendar payload is not valid for its Azure/Rystem season key.',
             })
@@ -213,7 +263,7 @@ export async function scanAzureStorage(connectionString, options = {}) {
               blobName: blob.name,
               key: expectedSeason,
               reason: 'invalid-realcalendar-season',
-              detail: 'Current RealCalendar payload is invalid and no valid Azure blob version could be recovered.',
+              detail: 'Current RealCalendar payload is invalid and no valid Azure blob version or snapshot could be recovered.',
             })
           }
         } else if (initialIssue) {
@@ -233,6 +283,8 @@ export async function scanAzureStorage(connectionString, options = {}) {
           downloadedBytes,
           reusedCount,
           recoveredCount,
+          recoveredVersionCount,
+          recoveredSnapshotCount,
           currentBlob: blob.name,
           elapsedMs: now - startedAt,
         })
@@ -244,6 +296,8 @@ export async function scanAzureStorage(connectionString, options = {}) {
     totalDownloadedBytes += downloadedBytes
     totalReusedCount += reusedCount
     totalRecoveredCount += recoveredCount
+    totalRecoveredVersionCount += recoveredVersionCount
+    totalRecoveredSnapshotCount += recoveredSnapshotCount
     onProgress({
       type: 'container-complete',
       container: name,
@@ -254,6 +308,8 @@ export async function scanAzureStorage(connectionString, options = {}) {
       downloadedBytes,
       reusedCount,
       recoveredCount,
+      recoveredVersionCount,
+      recoveredSnapshotCount,
       elapsedMs: Date.now() - startedAt,
     })
   }
@@ -262,7 +318,9 @@ export async function scanAzureStorage(connectionString, options = {}) {
     downloadedCount: totalDownloadedCount,
     downloadedBytes: totalDownloadedBytes,
     reusedCount: totalReusedCount,
-    recoveredVersionCount: totalRecoveredCount,
+    recoveredHistoryCount: totalRecoveredCount,
+    recoveredVersionCount: totalRecoveredVersionCount,
+    recoveredSnapshotCount: totalRecoveredSnapshotCount,
   }
   onProgress({
     type: 'scan-complete',

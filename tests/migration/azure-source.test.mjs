@@ -123,6 +123,7 @@ test('invalid current RealCalendar is recovered from the newest valid Azure blob
             yield { name: '12', versionId: 'valid-history', properties: { lastModified } }
             return
           }
+          if (options.includeSnapshots) return
           yield { name: '12', properties: { contentLength: currentPayload.length, lastModified, etag: 'current' } }
         },
         getBlobClient() { return blobClient },
@@ -139,4 +140,55 @@ test('invalid current RealCalendar is recovered from the newest valid Azure blob
   assert.equal(result.records[0].value.d[0].g[0].d, '2023-08-19T18:30:00Z')
   assert.equal(result.records[0].sourceVersionId, 'valid-history')
   assert.equal(result.stats.recoveredVersionCount, 1)
+  assert.equal(result.stats.recoveredSnapshotCount, 0)
+})
+
+test('invalid current RealCalendar falls back to an Azure snapshot when version history is unavailable', async () => {
+  const currentPayload = JSON.stringify({
+    y: 0,
+    d: [{ y: 14, a: 1, g: [{ h: { n: 'Inter', a: 'int' }, a: { n: 'Milan', a: 'mil' }, d: '2026-08-22T18:30:00Z', g: null, y: null, e: false }] }],
+  })
+  const historicalPayload = JSON.stringify({
+    y: 14,
+    d: [{ y: 14, a: 1, g: [{ h: { n: 'Genoa', a: 'gen' }, a: { n: 'Lecce', a: 'lec' }, d: '2025-08-23T18:30:00Z', g: 0, y: 0, e: false }] }],
+  })
+  const currentModified = new Date('2026-08-01T10:00:00Z')
+  const snapshotModified = new Date('2026-07-31T22:00:00Z')
+  const snapshotId = '2026-07-31T22:00:00.0000000Z'
+  const blobClient = {
+    async download() { return { readableStreamBody: Readable.from([currentPayload]) } },
+    withSnapshot(snapshot) {
+      assert.equal(snapshot, snapshotId)
+      return {
+        async download() { return { readableStreamBody: Readable.from([historicalPayload]) } },
+      }
+    },
+  }
+  const client = {
+    async *listContainers() { yield { name: 'realcalendar' } },
+    getContainerClient() {
+      return {
+        async *listBlobsFlat(options = {}) {
+          if (options.includeVersions) return
+          if (options.includeSnapshots) {
+            yield { name: '14', snapshot: snapshotId, properties: { lastModified: snapshotModified } }
+            return
+          }
+          yield { name: '14', properties: { contentLength: currentPayload.length, lastModified: currentModified, etag: 'current' } }
+        },
+        getBlobClient() { return blobClient },
+      }
+    },
+  }
+
+  const result = await scanAzureStorage('unused-for-injected-client', { client })
+  assert.equal(result.issues.length, 0)
+  assert.equal(result.recoveries.length, 1)
+  assert.equal(result.recoveries[0].sourceKind, 'snapshot')
+  assert.equal(result.records[0].sourceSnapshot, snapshotId)
+  assert.equal(result.records[0].value.y, 14)
+  assert.equal(result.records[0].value.d[0].g[0].d, '2025-08-23T18:30:00Z')
+  assert.equal(result.stats.recoveredVersionCount, 0)
+  assert.equal(result.stats.recoveredSnapshotCount, 1)
+  assert.equal(result.stats.recoveredHistoryCount, 1)
 })

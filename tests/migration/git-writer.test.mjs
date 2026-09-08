@@ -1,5 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
+import { createHash } from 'node:crypto'
 import { execFile as execFileCallback } from 'node:child_process'
 import { mkdtemp, readFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
@@ -33,6 +34,7 @@ async function showRemoteFile(remote, path) {
 function file(path, value, extra = {}) {
   return { path, content: `${JSON.stringify(value, null, 2)}\n`, source: `test/${path}`, ...extra }
 }
+function sha256(content) { return createHash('sha256').update(content).digest('hex') }
 
 test('native git writer creates one commit and pushes staged files directly to main', async () => {
   await fixture(async root => {
@@ -72,8 +74,53 @@ test('preserve mode makes reruns idempotent and only commits paths still missing
     assert.equal(second.written, 1)
     assert.deepEqual(second.collisions, ['existing.json'])
     assert.deepEqual(second.forcedOverwrites, [])
+    assert.deepEqual(second.safeUpdates, [])
+    assert.deepEqual(second.preservedCollisions, ['existing.json'])
     assert.equal(JSON.parse(await showRemoteFile(remote, 'existing.json')).value, 1)
     assert.equal(JSON.parse(await showRemoteFile(remote, 'new.json')).value, 2)
+  })
+})
+
+test('preserve mode safely updates a changed Azure record when GitHub still matches the previous import', async () => {
+  await fixture(async root => {
+    const remote = await createBareRemote(root)
+    const common = {
+      repository: 'owner/group', branch: 'main', remoteUrl: remote,
+      gitRoot: join(root, 'transport'), mode: 'preserve', message: 'feat: sync changed legacy data',
+    }
+    const previous = file('value.json', { value: 1 })
+    await writeFilesWithGit({ ...common, files: [previous] })
+
+    const updated = file('value.json', { value: 2 }, { previousContentSha256: sha256(previous.content) })
+    const result = await writeFilesWithGit({ ...common, files: [updated] })
+
+    assert.equal(result.planned, 1)
+    assert.equal(result.written, 1)
+    assert.deepEqual(result.safeUpdates, ['value.json'])
+    assert.deepEqual(result.preservedCollisions, [])
+    assert.equal(JSON.parse(await showRemoteFile(remote, 'value.json')).value, 2)
+  })
+})
+
+test('preserve mode does not overwrite a target that diverged after the previous import', async () => {
+  await fixture(async root => {
+    const remote = await createBareRemote(root)
+    const common = {
+      repository: 'owner/group', branch: 'main', remoteUrl: remote,
+      gitRoot: join(root, 'transport'), message: 'test data',
+    }
+    const previous = file('value.json', { value: 1 })
+    await writeFilesWithGit({ ...common, mode: 'preserve', files: [previous] })
+    await writeFilesWithGit({ ...common, mode: 'overwrite', files: [file('value.json', { value: 99 })] })
+
+    const incoming = file('value.json', { value: 2 }, { previousContentSha256: sha256(previous.content) })
+    const result = await writeFilesWithGit({ ...common, mode: 'preserve', files: [incoming] })
+
+    assert.equal(result.planned, 0)
+    assert.equal(result.written, 0)
+    assert.deepEqual(result.safeUpdates, [])
+    assert.deepEqual(result.preservedCollisions, ['value.json'])
+    assert.equal(JSON.parse(await showRemoteFile(remote, 'value.json')).value, 99)
   })
 })
 

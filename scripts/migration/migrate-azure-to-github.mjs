@@ -55,7 +55,8 @@ function usage() {
 `  --no-cache                        Do not read or write the local Azure scan cache\n` +
 `  --reset-work                      Delete and rebuild local staging/checkpoint state\n` +
 `  --apply                           Commit staged trees and git push them to the target branch\n` +
-`  --overwrite                       Replace canonical paths that already exist\n  --preserve-existing               Keep existing canonical paths and skip collisions\n` +
+`  --overwrite                       Replace canonical paths that already exist\n` +
+`  --preserve-existing               Add missing paths; safely update untouched prior imports; preserve diverged collisions\n` +
 `  --repair-imported-calendars       With preserve mode, overwrite only proven RealCalendar repairs\n` +
 `  -h, --help                        Show this help\n`
 }
@@ -111,7 +112,8 @@ function logAzureProgress(event) {
     return
   }
   if (event.type === 'scan-complete') {
-    console.log(`[Azure] Scan complete - containers=${event.containerCount}, blobs=${event.blobCount}, canonical=${event.canonicalRecordCount}, downloaded=${event.downloadedCount}, reused=${event.reusedCount}, recovered=${event.recoveredVersionCount}, issues=${event.issueCount}`)
+    const recovered = event.recoveredHistoryCount ?? event.recoveredVersionCount ?? 0
+    console.log(`[Azure] Scan complete - containers=${event.containerCount}, blobs=${event.blobCount}, canonical=${event.canonicalRecordCount}, downloaded=${event.downloadedCount}, reused=${event.reusedCount}, recovered=${recovered} (versions=${event.recoveredVersionCount ?? 0}, snapshots=${event.recoveredSnapshotCount ?? 0}), issues=${event.issueCount}`)
   }
 }
 
@@ -143,7 +145,7 @@ function logGitProgress(event) {
     return
   }
   if (event.type === 'selection') {
-    console.log(`[Git] ${event.repository}: staged=${event.total}, selected=${event.selected}, collisions=${event.collisions}, forced-repairs=${event.forcedOverwrites ?? 0}`)
+    console.log(`[Git] ${event.repository}: staged=${event.total}, selected=${event.selected}, collisions=${event.collisions}, safe-updates=${event.safeUpdates ?? 0}, forced-repairs=${event.forcedOverwrites ?? 0}, preserved-conflicts=${event.preservedCollisions ?? 0}`)
     return
   }
   if (event.type === 'commit') {
@@ -200,9 +202,12 @@ async function obtainAzureScan(connectionString, args) {
   const scan = await scanAzureStorage(connectionString, { onProgress: logAzureProgress, previousScan })
 
   if (scan.recoveries?.length) {
-    console.log(`[Azure] Recovered ${scan.recoveries.length} historical RealCalendar blob(s) from Azure version history.`)
+    console.log(`[Azure] Recovered ${scan.recoveries.length} historical RealCalendar blob(s) from Azure version/snapshot history.`)
     for (const recovery of scan.recoveries.slice(0, 10)) {
-      console.log(`[Azure] Recovered ${recovery.container}/${recovery.blobName} from version ${recovery.versionId}${recovery.lastModified ? ` (${recovery.lastModified})` : ''}`)
+      const source = recovery.sourceKind === 'snapshot'
+        ? `snapshot ${recovery.snapshot}`
+        : `version ${recovery.versionId}`
+      console.log(`[Azure] Recovered ${recovery.container}/${recovery.blobName} from ${source}${recovery.lastModified ? ` (${recovery.lastModified})` : ''}`)
     }
   }
   if (scan.issues?.length) {
@@ -227,7 +232,9 @@ function markTargetedCalendarRepairs(files, scan, enabled) {
   if (!enabled) return files
   const repairPaths = new Set(
     (scan.records ?? [])
-      .filter(record => record.container === 'realcalendar' && (record.migrationRepair === true || Boolean(record.sourceVersionId)))
+      .filter(record => record.container === 'realcalendar' && (
+        record.migrationRepair === true || Boolean(record.sourceVersionId) || Boolean(record.sourceSnapshot)
+      ))
       .map(record => `data/serie-a/calendars/${Number(record.key)}.json`),
   )
   return files.map(file => repairPaths.has(file.path) ? { ...file, forceOverwrite: true } : file)

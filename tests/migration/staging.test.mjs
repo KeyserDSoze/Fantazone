@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { mkdtemp, readFile, rm } from 'node:fs/promises'
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { stageMigrationRecords } from '../../scripts/migration/staging.mjs'
@@ -72,6 +72,58 @@ test('second run resumes every completed source record without reconverting it',
     assert.equal(second.staging.resumed, 4)
     assert.equal(second.groupFiles.length, first.groupFiles.length)
     assert.equal(second.platformFiles.length, first.platformFiles.length)
+  })
+})
+
+test('changed source record carries the previous staged content hash for safe target updates', async () => {
+  await fixture(async workDir => {
+    const first = await stageMigrationRecords(records, options(workDir))
+    const originalTeam = first.groupFiles.find(file => file.source === 'team/t')
+    assert.ok(originalTeam)
+
+    const changedRecords = records.map(record => record.container === 'team'
+      ? { ...record, value: { ...teamRaw, m: 25 } }
+      : record)
+    const second = await stageMigrationRecords(changedRecords, options(workDir))
+    assert.equal(second.staging.convertedThisRun, 1)
+    assert.equal(second.staging.resumed, 3)
+
+    const changedTeam = second.groupFiles.find(file => file.source === 'team/t')
+    assert.ok(changedTeam)
+    assert.equal(typeof changedTeam.previousContentSha256, 'string')
+    assert.equal(changedTeam.previousContentSha256.length, 64)
+    assert.notEqual(changedTeam.content, originalTeam.content)
+  })
+})
+
+test('0.3.1 journal history reconstructs the previous import hash after a changed source was already staged', async () => {
+  await fixture(async workDir => {
+    const first = await stageMigrationRecords(records, options(workDir))
+    const originalTeam = first.groupFiles.find(file => file.source === 'team/t')
+    assert.ok(originalTeam)
+
+    const changedRecords = records.map(record => record.container === 'team'
+      ? { ...record, value: { ...teamRaw, m: 25 } }
+      : record)
+    await stageMigrationRecords(changedRecords, options(workDir))
+
+    const journalPath = join(workDir, 'progress.ndjson')
+    const lines = (await readFile(journalPath, 'utf8')).trimEnd().split('\n')
+    for (let index = lines.length - 1; index >= 0; index -= 1) {
+      const event = JSON.parse(lines[index])
+      if (event.type !== 'file' || event.recordId !== 'team/t') continue
+      delete event.previousContentSha256
+      lines[index] = JSON.stringify(event)
+      break
+    }
+    await writeFile(journalPath, `${lines.join('\n')}\n`, 'utf8')
+
+    const resumed = await stageMigrationRecords(changedRecords, options(workDir))
+    assert.equal(resumed.staging.convertedThisRun, 0)
+    const changedTeam = resumed.groupFiles.find(file => file.source === 'team/t')
+    assert.ok(changedTeam)
+    assert.equal(typeof changedTeam.previousContentSha256, 'string')
+    assert.equal(changedTeam.previousContentSha256.length, 64)
   })
 })
 
