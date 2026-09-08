@@ -1,9 +1,9 @@
 import React from 'react'
-import { Card, H1, H2, Paragraph, ScrollView, Separator, Text, XStack, YStack } from 'tamagui'
+import { Paragraph, Text, XStack, YStack } from 'tamagui'
+import { AppScreen, PageIntro, StatusPill, Surface } from '../components/design-system'
 import { APP_VERSION, RELEASE_DATE } from '../config/version'
 
 type ReleaseCategory = 'Nuovo' | 'Miglioria' | 'Fix' | 'Architettura'
-
 type Release = {
   version: string
   date: string
@@ -15,6 +15,22 @@ const releases: Release[] = [
   {
     version: APP_VERSION,
     date: RELEASE_DATE,
+    title: 'Fantazone, ridisegnato con Tamagui',
+    items: [
+      { category: 'Nuovo', text: 'Introdotto un design system Tamagui condiviso con AppScreen, PageIntro, Surface, FeatureCard, StatusPill e azioni primarie coerenti su web, tablet e mobile.' },
+      { category: 'Miglioria', text: 'La shell desktop usa una sidebar persistente con contesto lega/stagione; mobile e tablet usano un header compatto con drawer touch-friendly.' },
+      { category: 'Miglioria', text: 'Login, selezione gruppo, onboarding GitHub, Home, Calendario, Classifica, Live, Squadre, Giocatori, Mercato, Regolamento, Impostazioni, Notifiche, Hall of Fame e guida sono stati riallineati allo stesso linguaggio visuale.' },
+      { category: 'Miglioria', text: 'Formazione e dettaglio partita sono diventati viste prodotto complete: contesto match, validazione, proposta automatica, immagini giocatori, scoreboard, voti e stati Live più leggibili.' },
+      { category: 'Miglioria', text: 'Asta ridisegnata come console realtime: giocatore corrente, foto, offerta leader, timer grande, incrementi rapidi, stato WebRTC e controlli host separati.' },
+      { category: 'Miglioria', text: 'Le schermate SuperAdmin di utenti, basket/squadre, leghe/calcoli, Serie A e log GitHub Actions ora usano lo stesso sistema responsive del resto dell’app e isolano chiaramente le azioni distruttive.' },
+      { category: 'Miglioria', text: 'Lo stato offline/sync resta discreto in basso a sinistra e si espande soltanto mentre Fantazone sta realmente eseguendo un’operazione.' },
+      { category: 'Fix', text: 'Le intestazioni principali espongono nuovamente la semantica accessibile corretta sul web, mantenendo verdi gli smoke test Playwright della login e della shell offline.' },
+      { category: 'Architettura', text: 'Versione, marker pubblico e patch notes tornano a essere aggiornati come parte esplicita di ogni rilascio, invece di restare scollegati dallo sviluppo.' },
+    ],
+  },
+  {
+    version: '0.2.2',
+    date: '8 settembre 2026',
     title: 'Replica offline incrementale',
     items: [
       { category: 'Fix', text: 'Un reload o Ctrl+F5 non riscrive più l’intero snapshot del gruppo quando la revisione GitHub non è cambiata.' },
@@ -60,10 +76,7 @@ const releases: Release[] = [
       { category: 'Nuovo', text: 'Hall of Fame e Parametro Fortuna integrati nella UI.' },
       { category: 'Nuovo', text: 'Gestione SuperAdmin di utenti, basket, squadre e leghe con controlli di integrità fail-closed.' },
       { category: 'Miglioria', text: 'La Formazione salva sempre il Team corrente; la giornata dello snapshot viene determinata dal timestamp Git del commit.' },
-      { category: 'Miglioria', text: 'Live e dettaglio partita forzano letture fresche solo dei documenti che cambiano durante la giornata, senza invalidare l’intero repository.' },
-      { category: 'Miglioria', text: 'Il generatore Calendar iniziale è deterministico: un retry produce gli stessi accoppiamenti e può riparare un Rank mancante.' },
       { category: 'Architettura', text: 'Rimosse le dipendenze runtime dal backend legacy: dati di gruppo su JSON canonici GitHub, calcoli condivisi e Actions group-owned.' },
-      { category: 'Architettura', text: 'Team corrente normalizzato per playerKey; TeamDay mantiene snapshot completi e immutabili per la correttezza storica.' },
       { category: 'Architettura', text: 'Login Microsoft + impostazioni private OneDrive per i gruppi e la credenziale GitHub condivisa, coerentemente con il vincolo zero-backend.' },
     ],
   },
@@ -84,66 +97,86 @@ const roadmap = [
   },
   {
     title: 'Asta multi-device',
-    text: 'Eseguire test reali tra più dispositivi, completare il percorso TURN e rifinire la UX realtime.',
+    text: 'Eseguire test reali tra più dispositivi, completare il percorso TURN e verificare reconnect e recovery durante una sessione lunga.',
+  },
+  {
+    title: 'Acceptance nativa',
+    text: 'Fare il pass finale su iOS/Android reali per safe area, tastiera, touch target, icone/adaptive icon e installazione PWA/native.',
   },
 ]
 
 export function GroupPatchNotesScreen() {
   return (
-    <ScrollView flex={1} contentContainerStyle={{ flexGrow: 1 }}>
-      <YStack width="100%" maxWidth={900} alignSelf="center" padding="$4" paddingBottom="$8" gap="$4">
-        <YStack gap="$1" paddingTop="$2">
-          <Text fontSize="$2" fontWeight="800" color="$blue10">VERSIONE {APP_VERSION}</Text>
-          <H1>Patch notes</H1>
-          <Paragraph color="$color10">Cosa è entrato nell’app e quali sono i prossimi gate ancora da chiudere.</Paragraph>
-        </YStack>
+    <AppScreen maxWidth={1040}>
+      <PageIntro
+        eyebrow={`Versione ${APP_VERSION}`}
+        title="Patch notes"
+        description="Cosa è entrato davvero in Fantazone e quali gate operativi restano da chiudere."
+      />
 
-        {releases.map(release => (
-          <Card key={release.version} borderWidth={1} borderColor="$borderColor" padding="$4">
-            <YStack gap="$3">
+      <YStack gap="$4">
+        {releases.map((release, releaseIndex) => (
+          <Surface key={release.version} accent={releaseIndex === 0 ? 'blue' : 'neutral'} padding="$5">
+            <YStack gap="$4">
               <XStack justifyContent="space-between" alignItems="flex-start" gap="$3" flexWrap="wrap">
-                <YStack>
-                  <H2 size="$6">{release.title}</H2>
-                  <Text color="$color10">v{release.version}</Text>
+                <YStack gap="$1" flex={1} minWidth={240}>
+                  <XStack alignItems="center" gap="$2" flexWrap="wrap">
+                    <Text color="$color12" fontSize="$6" fontWeight="900">{release.title}</Text>
+                    {releaseIndex === 0 ? <StatusPill tone="green">Corrente</StatusPill> : null}
+                  </XStack>
+                  <Text color="$color9">v{release.version}</Text>
                 </YStack>
-                <Text color="$color10">{release.date}</Text>
+                <Text color="$color9" fontSize="$2" fontWeight="700">{release.date}</Text>
               </XStack>
-              <YStack gap="$2">
+
+              <YStack gap="$3">
                 {release.items.map((item, index) => (
                   <XStack key={`${release.version}-${item.category}-${index}`} gap="$3" alignItems="flex-start" flexWrap="wrap">
-                    <Text
-                      width={100}
-                      fontWeight="800"
-                      color={item.category === 'Nuovo' ? '$green10' : item.category === 'Miglioria' ? '$blue10' : item.category === 'Fix' ? '$orange10' : '$purple10'}
-                    >
-                      {item.category}
-                    </Text>
-                    <Paragraph flex={1} minWidth={220} color="$color10">{item.text}</Paragraph>
+                    <StatusPill tone={categoryTone(item.category)}>{item.category}</StatusPill>
+                    <Paragraph flex={1} minWidth={240} color="$color10" lineHeight="$5">{item.text}</Paragraph>
                   </XStack>
                 ))}
               </YStack>
             </YStack>
-          </Card>
+          </Surface>
         ))}
-
-        <Separator marginVertical="$2" />
-
-        <YStack gap="$2">
-          <H2>Da fare / In arrivo</H2>
-          <Paragraph color="$color10">Gate operativi ancora aperti dopo il refactoring applicativo.</Paragraph>
-        </YStack>
-
-        <YStack gap="$2">
-          {roadmap.map(item => (
-            <Card key={item.title} borderWidth={1} borderColor="$borderColor" padding="$3">
-              <YStack gap="$1">
-                <Text fontWeight="800">{item.title}</Text>
-                <Paragraph color="$color10">{item.text}</Paragraph>
-              </YStack>
-            </Card>
-          ))}
-        </YStack>
       </YStack>
-    </ScrollView>
+
+      <YStack gap="$3" paddingTop="$2">
+        <YStack gap="$1">
+          <Text color="$color12" fontSize="$7" fontWeight="900">Da fare / In arrivo</Text>
+          <Paragraph color="$color10">Questi sono i gate operativi ancora aperti dopo il refactoring e il redesign.</Paragraph>
+        </YStack>
+        <XStack gap="$3" flexWrap="wrap" alignItems="stretch">
+          {roadmap.map((item, index) => (
+            <YStack
+              key={item.title}
+              flexGrow={1}
+              flexBasis={300}
+              minWidth={260}
+              padding="$4"
+              gap="$2"
+              borderWidth={1}
+              borderColor="$color5"
+              backgroundColor="$color2"
+              borderRadius="$5"
+            >
+              <Text color="$blue10" fontSize="$2" fontWeight="900">GATE {index + 1}</Text>
+              <Text color="$color12" fontSize="$5" fontWeight="900">{item.title}</Text>
+              <Paragraph color="$color10" lineHeight="$5">{item.text}</Paragraph>
+            </YStack>
+          ))}
+        </XStack>
+      </YStack>
+    </AppScreen>
   )
+}
+
+function categoryTone(category: ReleaseCategory): 'blue' | 'green' | 'yellow' | 'purple' {
+  switch (category) {
+    case 'Nuovo': return 'green'
+    case 'Miglioria': return 'blue'
+    case 'Fix': return 'yellow'
+    case 'Architettura': return 'purple'
+  }
 }
