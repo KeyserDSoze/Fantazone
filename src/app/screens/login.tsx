@@ -38,6 +38,7 @@ export function LoginScreen({ loading, error, onMicrosoftLogin }: {
           <YStack gap="$3">
             <StatusPill tone="blue">Zero backend · offline first</StatusPill>
             <H1
+              accessibilityRole="header"
               color="$color12"
               fontSize={compact ? '$9' : '$11'}
               lineHeight={compact ? '$9' : '$11'}
