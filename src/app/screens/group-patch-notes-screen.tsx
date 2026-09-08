@@ -15,6 +15,17 @@ const releases: Release[] = [
   {
     version: APP_VERSION,
     date: RELEASE_DATE,
+    title: 'Apertura automatica e gruppo predefinito',
+    items: [
+      { category: 'Miglioria', text: 'Se l’account ha un solo gruppo, Fantazone lo apre automaticamente senza mostrare ogni volta il selettore.' },
+      { category: 'Nuovo', text: 'Con più gruppi puoi scegliere un gruppo predefinito: la preferenza viene salvata nei settings privati OneDrive e si apre automaticamente agli avvii successivi.' },
+      { category: 'Miglioria', text: 'Il comando Cambia gruppo nel menu interno apre intenzionalmente il selettore senza essere subito rimandato al gruppo predefinito.' },
+      { category: 'Architettura', text: 'I settings utente passano allo schema v3 mantenendo migrazione automatica dai formati v1/v2 e una sola preferenza predefinita valida.' },
+    ],
+  },
+  {
+    version: '0.2.0',
+    date: '8 settembre 2026',
     title: 'Offline-first e UI riallineata a Fantasoccer',
     items: [
       { category: 'Miglioria', text: 'Header principale riallineato alla UI di Fantasoccer: logo compatto, menu hamburger e utility raccolte nel menu.' },

@@ -7,6 +7,7 @@ import {
   type GroupProductRoute,
 } from '../services/groupNavigation'
 import type { GroupSessionRuntime } from '../services/groupSessionRuntime'
+import { markManualGroupSwitchRequest } from '../services/groupSwitcher'
 import { AuctionScreen } from './auction-screen'
 import { GroupBasketsAdminScreen } from './group-baskets-admin-screen'
 import { GroupCalendarScreen } from './group-calendar-screen'
@@ -66,6 +67,10 @@ export function GroupDashboardScreen({
   }
   function selectYear(year: number) { setSelectedGameId(null); setSelection(current => ({ ...current, year })) }
   function navigate(next: GroupProductRoute) { setSelectedGameId(null); setRoute(next) }
+  function changeGroup() {
+    markManualGroupSwitchRequest()
+    void onDisconnect()
+  }
 
   return (
     <GroupProductShell
@@ -79,7 +84,7 @@ export function GroupDashboardScreen({
       onRouteChange={navigate}
       onLeagueChange={selectLeague}
       onYearChange={selectYear}
-      onChangeGroup={onDisconnect}
+      onChangeGroup={changeGroup}
       onExploreArchitecture={onExploreArchitecture}
     >
       {selectedGameId ? (

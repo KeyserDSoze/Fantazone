@@ -4,10 +4,12 @@ export type StoredGroup = {
   repository: string
   /** Shared GitHub credential for this group. Missing only on legacy v1 settings. */
   pat?: string
+  /** Opens this group automatically when more than one group is configured. */
+  isDefault?: boolean
 }
 
 export type UserSettings = {
-  version: 2
+  version: 3
   groups: StoredGroup[]
 }
 
@@ -30,7 +32,10 @@ export async function loadUserSettings(graphAccessToken: string): Promise<UserSe
     return initial
   }
   if (!response.ok) throw new Error(`Impossibile leggere settings.json da OneDrive (HTTP ${response.status}).`)
-  return decodeUserSettings(await response.json())
+  const raw = await response.json()
+  const decoded = decodeUserSettings(raw)
+  if (isLegacySettingsVersion(raw)) await saveUserSettings(graphAccessToken, decoded)
+  return decoded
 }
 
 export async function saveUserSettings(graphAccessToken: string, settings: UserSettings): Promise<void> {
@@ -43,7 +48,7 @@ export async function saveUserSettings(graphAccessToken: string, settings: UserS
 }
 
 export function emptyUserSettings(): UserSettings {
-  return { version: 2, groups: [] }
+  return { version: 3, groups: [] }
 }
 
 export function createStoredGroup(input: { name: string; repository: string; pat?: string }): StoredGroup {
@@ -58,11 +63,13 @@ export function createStoredGroup(input: { name: string; repository: string; pat
 export function upsertStoredGroup(settings: UserSettings, group: StoredGroup): UserSettings {
   const current = decodeUserSettings(settings)
   const normalized = normalizeStoredGroup(group)
-  const groups = current.groups.filter(existing =>
+  let groups = current.groups.filter(existing =>
     existing.id !== normalized.id && existing.repository.toLowerCase() !== normalized.repository.toLowerCase())
+
+  if (normalized.isDefault) groups = groups.map(clearDefault)
   groups.push(normalized)
   groups.sort((a, b) => a.name.localeCompare(b.name, 'it-IT'))
-  return { version: 2, groups }
+  return normalizeDefaultGroup({ version: 3, groups })
 }
 
 /**
@@ -89,7 +96,8 @@ export function reconcileStoredGroup(
     existing.id !== next.id ||
     existing.name !== next.name ||
     existing.repository !== next.repository ||
-    existing.pat !== next.pat
+    existing.pat !== next.pat ||
+    Boolean(existing.isDefault) !== Boolean(next.isDefault)
 
   return {
     settings: changed ? upsertStoredGroup(current, next) : current,
@@ -101,27 +109,28 @@ export function removeStoredGroup(settings: UserSettings, groupId: string): User
   const normalizedId = groupId.trim()
   const current = decodeUserSettings(settings)
   if (!normalizedId) return current
-  return {
-    version: 2,
+  return normalizeDefaultGroup({
+    version: 3,
     groups: current.groups.filter(group => group.id !== normalizedId),
-  }
+  })
 }
 
 /**
- * Reads both the old catalog-only v1 format and the shared-credential v2 format.
- * v1 groups are retained with `pat` absent so the app can migrate an existing
- * local credential into OneDrive after one successful open/reconnect.
+ * Reads the catalog-only v1 format, the shared-credential v2 format and v3 with
+ * an optional default group. A single group is always considered the default.
  */
 export function decodeUserSettings(value: unknown): UserSettings {
   if (!value || typeof value !== 'object') return emptyUserSettings()
   const raw = value as { version?: unknown; groups?: unknown }
-  if ((raw.version !== 1 && raw.version !== 2) || !Array.isArray(raw.groups)) return emptyUserSettings()
-  return {
-    version: 2,
+  if ((raw.version !== 1 && raw.version !== 2 && raw.version !== 3) || !Array.isArray(raw.groups)) {
+    return emptyUserSettings()
+  }
+  return normalizeDefaultGroup({
+    version: 3,
     groups: raw.groups.flatMap(value => {
       try { return [normalizeStoredGroup(value as StoredGroup)] } catch { return [] }
     }),
-  }
+  })
 }
 
 async function graphRequest(token: string, url: string, init: RequestInit = {}): Promise<Response> {
@@ -140,7 +149,37 @@ function normalizeStoredGroup(group: StoredGroup): StoredGroup {
   const repository = group.repository?.trim()
   const pat = typeof group.pat === 'string' ? group.pat.trim() : ''
   if (!id || !name || !repository) throw new Error('Gruppo OneDrive non valido.')
-  return { id, name, repository, ...(pat ? { pat } : {}) }
+  return {
+    id,
+    name,
+    repository,
+    ...(pat ? { pat } : {}),
+    ...(group.isDefault === true ? { isDefault: true } : {}),
+  }
+}
+
+function normalizeDefaultGroup(settings: UserSettings): UserSettings {
+  let foundDefault = false
+  let groups = settings.groups.map(group => {
+    if (!group.isDefault) return group
+    if (!foundDefault) {
+      foundDefault = true
+      return group
+    }
+    return clearDefault(group)
+  })
+
+  if (groups.length === 1 && !groups[0].isDefault) groups = [{ ...groups[0], isDefault: true }]
+  return { version: 3, groups }
+}
+
+function clearDefault(group: StoredGroup): StoredGroup {
+  const { isDefault: _isDefault, ...rest } = group
+  return rest
+}
+
+function isLegacySettingsVersion(value: unknown): boolean {
+  return Boolean(value && typeof value === 'object' && (value as { version?: unknown }).version !== 3)
 }
 
 function newId(): string {
