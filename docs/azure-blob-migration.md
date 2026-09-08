@@ -2,7 +2,7 @@
 
 This tool moves legacy Fantasoccer data from Azure Blob Storage into the readable Fantazone repositories. It is intentionally outside the app runtime: compact legacy JSON is decoded once and committed as the current canonical contracts.
 
-The migration is **resumable and repeatable**. A normal rerun now performs an incremental Azure sync: it enumerates blob metadata, reuses cached bodies for unchanged blobs, downloads only new or changed canonical blobs, resumes already-converted staging records, and can add only missing GitHub paths with `-PreserveExisting`.
+The migration is **resumable and repeatable**. A normal rerun performs an incremental Azure sync: it enumerates blob metadata, reuses cached bodies for unchanged blobs, downloads only new or changed canonical blobs, resumes already-converted staging records, and with `-PreserveExisting` can add new paths or safely update a changed legacy path only when GitHub still matches the previous imported content.
 
 ## What is migrated
 
@@ -35,9 +35,11 @@ Legacy Rystem stores the repository key separately from the compact value. That 
 
 The migration therefore treats the **Azure/Rystem key as the canonical season id**, but it does not blindly rewrite the payload year. Every dated Serie A match must also fall inside that season's August-10-to-August-10 window. A zero `y` is repaired only when the dates prove the payload belongs to the keyed season.
 
-If the current `realcalendar` blob belongs to the wrong season, the scanner automatically checks Azure Blob **version history** and selects the newest older version that validates for that key. This recovers overwritten historical calendars when Storage versioning was enabled. If no valid version exists, the record is quarantined, listed under `source.issues` in the migration report, and is not emitted as a canonical JSON file. The migration continues with the other blobs instead of importing knowingly wrong football data.
+If the current `realcalendar` blob belongs to the wrong season, the scanner automatically checks Azure Blob **version history and snapshots**. Candidates are tried newest-first and accepted only when the same season/date validation succeeds. Snapshot enumeration is attempted with soft-deleted visibility when the Storage account permits it, then retried without deleted entries when that option is unavailable.
 
-Recovered calendars are listed under `source.recoveries` in the report with the Azure `versionId` used.
+This can recover an overwritten historical calendar when either blob versioning or a suitable snapshot was retained. If no valid version or snapshot exists, the record is quarantined, listed under `source.issues` in the migration report, and is not emitted as a canonical JSON file. The migration continues with the other blobs instead of importing knowingly wrong football data.
+
+Recovered calendars are listed under `source.recoveries` with their source kind (`version` or `snapshot`) and the corresponding Azure identifier.
 
 ## Prerequisites
 
@@ -60,9 +62,9 @@ $env:FANTAZONE_GROUP_PAT = '<group repository PAT>'
 $env:FANTAZONE_PLATFORM_PAT = '<platform repository PAT>'
 ```
 
-## Recommended rerun: discover and add new blobs
+## Recommended rerun: discover and safely synchronize legacy changes
 
-For the common case "I have used the legacy app again and Azure now contains additional blobs", run the **same migration again** with `-PreserveExisting`:
+For the common case "I have used the legacy app again and Azure now contains additional or modified blobs", run the **same migration again** with `-PreserveExisting`:
 
 ```powershell
 ./scripts/migration/Invoke-FantazoneAzureMigration.ps1 `
@@ -80,7 +82,9 @@ Dry-run remains the default, so this first invocation does not modify GitHub. On
 5. resumes unchanged conversion checkpoints;
 6. converts new/changed records;
 7. inspects the current GitHub targets;
-8. with `-PreserveExisting`, plans only paths that do not already exist.
+8. adds a path that is new in Azure and missing in GitHub;
+9. for a changed Azure record whose GitHub path exists, compares the current GitHub content with the SHA-256 of the previous imported output;
+10. updates the path automatically only when that comparison proves GitHub is still untouched; otherwise the path is preserved as a conflict.
 
 After reviewing the report/staged trees, repeat with `-Apply`:
 
@@ -92,13 +96,17 @@ After reviewing the report/staged trees, repeat with `-Apply`:
   -Apply
 ```
 
-This is the **add-only incremental sync** mode: old GitHub files remain untouched and newly-created Azure entities are added automatically.
+The resulting `-PreserveExisting` behavior is deliberately three-way:
 
-If an existing Azure entity changed and the corresponding canonical GitHub file must also be replaced, use `-Overwrite` instead of `-PreserveExisting`. The two switches are mutually exclusive.
+- **new Azure blob → add** the missing canonical file;
+- **changed Azure blob + GitHub still equals the previous import → safe update**;
+- **changed Azure blob + GitHub has diverged → preserve GitHub and report a conflict**.
+
+This means recurring imports can follow legitimate legacy changes without turning into a global overwrite. `-Overwrite` still exists for an intentional unconditional replacement of every colliding canonical path in the plan, but it should not be needed for normal incremental reruns.
 
 ## One-time repair of already-imported calendars
 
-To repair the bad `RealCalendar` files produced by the earlier migration without opening every existing path to overwrite, add `-RepairImportedCalendars` together with `-PreserveExisting`:
+To repair bad `RealCalendar` files produced by an earlier migration without opening every existing path to overwrite, add `-RepairImportedCalendars` together with `-PreserveExisting`:
 
 ```powershell
 ./scripts/migration/Invoke-FantazoneAzureMigration.ps1 `
@@ -111,9 +119,9 @@ To repair the bad `RealCalendar` files produced by the earlier migration without
 Review the dry-run report first. A path is allowed to bypass preservation only when the scanner has **proved** it is a repair candidate:
 
 - the Azure/Rystem season key is valid and a zero payload/day year was normalized after date validation; or
-- the current blob was invalid and a valid older Azure blob version was recovered.
+- the current blob was invalid and a valid older Azure blob version or snapshot was recovered.
 
-Every other GitHub collision remains preserved. The report lists the exceptions under `repair.targetedPaths` and the writer result under `forcedOverwrites`.
+Every other GitHub collision follows normal preserve semantics. The report lists explicit repair exceptions under `repair.targetedPaths` and the writer result under `forcedOverwrites`.
 
 Then apply the reviewed repair:
 
@@ -126,7 +134,7 @@ Then apply the reviewed repair:
   -Apply
 ```
 
-If a corrupted historical calendar has no valid Azure version, it appears in `source.issues` with its `targetPath` and **is not overwritten or fabricated**. That season needs a separate historical backfill/recovery source.
+If a corrupted historical calendar has no valid Azure version or snapshot, it appears in `source.issues` with its `targetPath` and **is not overwritten or fabricated**. That season needs a separate historical backfill/recovery source.
 
 ## Azure scan cache modes
 
@@ -185,7 +193,7 @@ A custom cache path can be selected with:
 -CachePath 'D:\private\fantazone-azure-scan.json'
 ```
 
-## Resumable local staging
+## Resumable local staging and update provenance
 
 Every source record is converted independently into a Git-ready local tree. The default work directory for `KeyserDSoze/Fantazone.MyLeague` is:
 
@@ -200,6 +208,10 @@ migration-output/
 ```
 
 `progress.ndjson` is an append-only checkpoint keyed by exact Azure `container/blobName`. It records the source fingerprint and staged content fingerprint. A normal rerun resumes unchanged records immediately; a changed source blob invalidates only its own checkpoint and is reconverted.
+
+For changed records, the journal also retains the SHA-256 of the **previous imported canonical content**. This is the proof used by `-PreserveExisting` to decide whether an existing GitHub file is safe to update. The replay logic can reconstruct that predecessor hash from existing 0.3.1 append-only journals, so migration work directories created before 0.3.2 continue to work without a reset.
+
+Keep the work directory if you want provenance-aware safe updates across reruns. `-ResetWork` deliberately discards the local conversion history; after a reset, `-PreserveExisting` remains conservative for pre-existing paths because it can no longer prove which GitHub content came from the prior import.
 
 If mapping fails, previous successful files/checkpoints are kept. Fix/pull the mapper and rerun. To deliberately rebuild all staging output while retaining the Azure cache:
 
@@ -216,8 +228,8 @@ A custom staging directory can be selected with:
 ## Collision modes
 
 - no switch: fail closed if any destination migration path already exists;
-- `-PreserveExisting`: keep existing GitHub files and add only missing paths; recommended for recurring incremental imports;
-- `-PreserveExisting -RepairImportedCalendars`: preserve every collision except proven `RealCalendar` repair candidates;
+- `-PreserveExisting`: add missing paths, safely update a changed source only when GitHub still matches the previous import, and preserve diverged collisions; recommended for recurring incremental imports;
+- `-PreserveExisting -RepairImportedCalendars`: same safe behavior plus explicit overwrite of proven `RealCalendar` repair candidates;
 - `-Overwrite`: replace all existing canonical paths present in the migration plan.
 
 `-Overwrite` and `-PreserveExisting` are mutually exclusive. `-RepairImportedCalendars` requires `-PreserveExisting`.
@@ -233,15 +245,15 @@ migration-output/azure-migration-<timestamp>.json
 It contains:
 
 - current Azure inventory (container/blob name, size, date and ETag when available);
-- incremental source statistics: downloaded, reused and recovered-version counts;
+- incremental source statistics: downloaded, reused and recovered-history counts;
 - quarantined source issues and their target paths;
-- historical Azure-version recoveries;
+- historical Azure version/snapshot recoveries;
 - cache mode/baseline information;
 - staging/checkpoint paths and resume counts;
 - selected legacy group;
 - Azure blob → canonical GitHub path mappings;
 - targeted calendar repair paths;
-- GitHub collisions, forced repairs and planned/written counts.
+- GitHub collisions, safe updates, preserved conflicts, forced repairs and planned/written counts.
 
 It never contains the connection string or PAT values.
 
@@ -275,17 +287,6 @@ Recommended post-migration checks:
 4. Hall of Fame is readable;
 5. old Serie A players/teams/calendar and official/live votes are readable;
 6. `source.issues` is reviewed, especially `invalid-realcalendar-season`;
-7. `source.recoveries` is reviewed for any versioned calendar recovery;
-8. `repair.targetedPaths` and `forcedOverwrites` are reviewed before applying a repair;
+7. `source.recoveries` is reviewed for any version/snapshot calendar recovery;
+8. `repair.targetedPaths`, `safeUpdates`, `preservedCollisions` and `forcedOverwrites` are reviewed before applying changes;
 9. rerunning with `-PreserveExisting` produces mostly cache/staging reuse and no duplicate GitHub writes.
-
-## Direct Node CLI
-
-```powershell
-node scripts/migration/migrate-azure-to-github.mjs `
-  --group-repository 'KeyserDSoze/Fantazone.MyLeague' `
-  --platform-repository 'KeyserDSoze/Fantazone' `
-  --preserve-existing
-```
-
-Cache switches are `--refresh-cache`, `--reuse-cache`, `--no-cache` and `--cache <path>`. Staging switches are `--work-dir <path>` and `--reset-work`. Targeted repair is `--repair-imported-calendars` and requires `--preserve-existing`. Add `--apply` for writes. Use `--help` for the complete option list.
