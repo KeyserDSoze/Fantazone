@@ -1,36 +1,117 @@
 import React from 'react'
 import { Image } from 'react-native'
-import { Button, Card, H2, Paragraph, Spinner, Text, YStack } from 'tamagui'
+import { Cloud, Github, LockKeyhole, LogIn } from '@tamagui/lucide-icons-2'
+import { Paragraph, Spinner, Text, XStack, YStack, useMedia } from 'tamagui'
+import { PrimaryAction, StatusPill, Surface } from '../components/design-system'
 
 export function LoginScreen({ loading, error, onMicrosoftLogin }: {
   loading: boolean
   error?: string | null
   onMicrosoftLogin: () => void
 }) {
+  const media = useMedia()
+  const compact = media.sm ?? false
+
   return (
-    <YStack flex={1} justifyContent="center" alignItems="center" padding="$4" backgroundColor="$background">
-      <Card width="100%" maxWidth={520} padding="$5" borderWidth={1} borderColor="$borderColor">
-        <YStack gap="$4" alignItems="center">
-          <Image
-            source={{ uri: '/brand/logo.svg' }}
-            accessibilityLabel="fanta.plus"
-            style={{ width: 320, height: 180, resizeMode: 'contain' }}
-          />
-          <YStack gap="$2" alignItems="center">
-            <H2 accessibilityRole="header" textAlign="center">Il tuo fantacalcio, senza backend.</H2>
-            <Paragraph textAlign="center" color="$color10">
-              Accedi con Microsoft. I tuoi gruppi vengono sincronizzati nel tuo OneDrive, nello spazio privato dedicato a fanta.plus.
+    <YStack flex={1} backgroundColor="$background" justifyContent="center" padding={compact ? '$3' : '$6'}>
+      <XStack
+        width="100%"
+        maxWidth={1120}
+        alignSelf="center"
+        gap="$6"
+        alignItems="stretch"
+        flexDirection={compact ? 'column' : 'row'}
+      >
+        <YStack flex={1.15} justifyContent="center" gap="$5" padding={compact ? '$2' : '$5'}>
+          <XStack alignItems="center" gap="$3">
+            <Image
+              source={require('../assets/icon.png')}
+              accessibilityLabel="Fantazone"
+              style={{ width: 54, height: 54, borderRadius: 16 }}
+            />
+            <YStack>
+              <Text color="$color12" fontSize="$7" fontWeight="900" letterSpacing={-0.3}>Fantazone</Text>
+              <Text color="$color9" fontSize="$2" fontWeight="700">fanta.plus</Text>
+            </YStack>
+          </XStack>
+
+          <YStack gap="$3">
+            <StatusPill tone="blue">Zero backend · offline first</StatusPill>
+            <Text
+              color="$color12"
+              fontSize={compact ? '$9' : '$11'}
+              lineHeight={compact ? '$9' : '$11'}
+              fontWeight="900"
+              letterSpacing={-1}
+            >
+              Il fantacalcio che resta tuo.
+            </Text>
+            <Paragraph color="$color10" fontSize="$5" lineHeight="$7" maxWidth={650}>
+              I dati del gruppo vivono su GitHub, le tue impostazioni personali su OneDrive e l’app continua a funzionare anche quando la rete non collabora.
             </Paragraph>
           </YStack>
-          {error ? <Card width="100%" borderWidth={1} borderColor="$red8" padding="$3"><Text>{error}</Text></Card> : null}
-          <Button width="100%" size="$5" theme="accent" disabled={loading} onPress={onMicrosoftLogin}>
-            {loading ? <Spinner /> : 'Accedi con Microsoft'}
-          </Button>
-          <Paragraph size="$2" textAlign="center" color="$color9">
-            fanta.plus richiede l’accesso al proprio App Folder OneDrive per leggere e salvare la lista dei gruppi. Le credenziali GitHub restano sul dispositivo.
-          </Paragraph>
+
+          <XStack gap="$3" flexWrap="wrap">
+            <TrustItem icon={<Cloud size="$1.1" color="$blue10" />} title="OneDrive privato" text="Gruppi e preferenze del tuo account." />
+            <TrustItem icon={<Github size="$1.1" color="$blue10" />} title="Repository GitHub" text="Storico e dati del fantacalcio." />
+            <TrustItem icon={<LockKeyhole size="$1.1" color="$blue10" />} title="Credenziali locali" text="Il PAT resta sotto il tuo controllo." />
+          </XStack>
         </YStack>
-      </Card>
+
+        <YStack flex={0.85} justifyContent="center">
+          <Surface accent="neutral" padding="$6">
+            <YStack gap="$5">
+              <YStack gap="$2">
+                <Text color="$color12" fontSize="$7" fontWeight="900">Accedi al tuo Fantazone</Text>
+                <Paragraph color="$color10" lineHeight="$6">
+                  Usa il tuo account Microsoft per ritrovare automaticamente i gruppi salvati nel tuo App Folder OneDrive.
+                </Paragraph>
+              </YStack>
+
+              {error ? (
+                <Surface accent="red" padding="$3">
+                  <Paragraph color="$red11">{error}</Paragraph>
+                </Surface>
+              ) : null}
+
+              <PrimaryAction
+                disabled={loading}
+                onPress={onMicrosoftLogin}
+                icon={loading ? <Spinner color="white" /> : <LogIn size="$1" color="white" />}
+              >
+                {loading ? 'Accesso in corso…' : 'Continua con Microsoft'}
+              </PrimaryAction>
+
+              <YStack gap="$2" paddingTop="$1">
+                <Text color="$color10" fontSize="$2" fontWeight="800">PERCHÉ SERVE MICROSOFT?</Text>
+                <Paragraph size="$2" color="$color9" lineHeight="$5">
+                  Fantazone usa esclusivamente lo spazio privato dedicato all’app su OneDrive per sincronizzare la lista dei gruppi tra i tuoi dispositivi. I dati del fantacalcio non vengono spostati su un backend Fantazone.
+                </Paragraph>
+              </YStack>
+            </YStack>
+          </Surface>
+        </YStack>
+      </XStack>
+    </YStack>
+  )
+}
+
+function TrustItem({ icon, title, text }: { icon: React.ReactNode; title: string; text: string }) {
+  return (
+    <YStack
+      flexGrow={1}
+      flexBasis={175}
+      minWidth={165}
+      gap="$2"
+      padding="$3"
+      borderRadius="$4"
+      backgroundColor="$color2"
+      borderWidth={1}
+      borderColor="$color4"
+    >
+      {icon}
+      <Text color="$color12" fontWeight="800" fontSize="$3">{title}</Text>
+      <Text color="$color9" fontSize="$2" lineHeight="$4">{text}</Text>
     </YStack>
   )
 }
