@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto'
+
 const BOOTSTRAP_PATH = '.fantazone-migration-bootstrap'
 
 function parseRepo(fullName) {
@@ -6,6 +8,7 @@ function parseRepo(fullName) {
   return { owner, repo }
 }
 function branchPath(branch) { return branch.split('/').map(encodeURIComponent).join('/') }
+function contentFingerprint(content) { return createHash('sha256').update(content).digest('hex') }
 
 export class GitHubApi {
   constructor(pat, fetchImpl = globalThis.fetch) {
@@ -81,23 +84,57 @@ export function selectFilesForCollisionMode(files, existingPaths, mode = 'fail')
   }
 }
 
+function decodeGitBlob(blob) {
+  if (!blob?.content) return ''
+  if (blob.encoding === 'base64') return Buffer.from(String(blob.content).replace(/\s/g, ''), 'base64').toString('utf8')
+  return String(blob.content)
+}
+
+async function addSafePreserveUpdates(api, info, base, files, selection, mode) {
+  if (mode !== 'preserve') return { ...selection, safeUpdates: [], preservedCollisions: [] }
+
+  const safeUpdates = []
+  for (const file of selection.collisions) {
+    if (file.forceOverwrite === true || !file.previousContentSha256) continue
+    const blobSha = base.paths.get(file.path)
+    if (!blobSha) continue
+    const blob = await api.request('GET', `/repos/${info.owner}/${info.repo}/git/blobs/${blobSha}`)
+    if (contentFingerprint(decodeGitBlob(blob)) === file.previousContentSha256) safeUpdates.push(file)
+  }
+
+  const selectedPaths = new Set([...selection.files, ...safeUpdates].map(file => file.path))
+  return {
+    ...selection,
+    files: files.filter(file => selectedPaths.has(file.path)),
+    safeUpdates,
+    preservedCollisions: selection.collisions.filter(file => !selectedPaths.has(file.path)),
+  }
+}
+
 export async function writeFilesAtomically({ api, repository, branch, files, message, mode = 'fail', apply = false }) {
   if (!['fail', 'preserve', 'overwrite'].includes(mode)) throw new Error(`Invalid collision mode '${mode}'`)
   let info = await inspectRepository(api, repository, branch)
   let bootstrapped = false
   if (info.empty) {
     if (info.branch !== info.defaultBranch) throw new Error(`Empty repository '${info.owner}/${info.repo}' cannot be bootstrapped directly on custom branch '${info.branch}'. Use '${info.defaultBranch}' first.`)
-    if (!apply) return { repository, branch: info.branch, empty: true, planned: files.length, written: 0, collisions: [], forcedOverwrites: [] }
+    if (!apply) return {
+      repository, branch: info.branch, empty: true, planned: files.length, written: 0,
+      collisions: [], forcedOverwrites: [], safeUpdates: [], preservedCollisions: [],
+    }
     info = await bootstrapEmptyRepository(api, info)
     bootstrapped = true
   }
 
   try {
     const base = await currentTree(api, info)
-    const selection = selectFilesForCollisionMode(files, base.paths, mode)
+    const basicSelection = selectFilesForCollisionMode(files, base.paths, mode)
+    const selection = await addSafePreserveUpdates(api, info, base, files, basicSelection, mode)
     if (!apply) return {
       repository, branch: info.branch, empty: false, planned: selection.files.length, written: 0,
-      collisions: selection.collisions.map(x => x.path), forcedOverwrites: selection.forcedOverwrites.map(x => x.path),
+      collisions: selection.collisions.map(x => x.path),
+      forcedOverwrites: selection.forcedOverwrites.map(x => x.path),
+      safeUpdates: selection.safeUpdates.map(x => x.path),
+      preservedCollisions: selection.preservedCollisions.map(x => x.path),
     }
 
     const treeEntries = []
@@ -110,7 +147,11 @@ export async function writeFilesAtomically({ api, repository, branch, files, mes
       if (base.paths.has(BOOTSTRAP_PATH)) await cleanupBootstrap(api, info)
       return {
         repository, branch: info.branch, planned: 0, written: 0,
-        collisions: selection.collisions.map(x => x.path), forcedOverwrites: selection.forcedOverwrites.map(x => x.path), commit: null,
+        collisions: selection.collisions.map(x => x.path),
+        forcedOverwrites: selection.forcedOverwrites.map(x => x.path),
+        safeUpdates: selection.safeUpdates.map(x => x.path),
+        preservedCollisions: selection.preservedCollisions.map(x => x.path),
+        commit: null,
       }
     }
     const tree = await api.request('POST', `/repos/${info.owner}/${info.repo}/git/trees`, { base_tree: base.treeSha, tree: treeEntries })
@@ -118,7 +159,11 @@ export async function writeFilesAtomically({ api, repository, branch, files, mes
     await api.request('PATCH', `/repos/${info.owner}/${info.repo}/git/refs/heads/${branchPath(info.branch)}`, { sha: commit.sha, force: false })
     return {
       repository, branch: info.branch, planned: selection.files.length, written: selection.files.length,
-      collisions: selection.collisions.map(x => x.path), forcedOverwrites: selection.forcedOverwrites.map(x => x.path), commit: commit.sha,
+      collisions: selection.collisions.map(x => x.path),
+      forcedOverwrites: selection.forcedOverwrites.map(x => x.path),
+      safeUpdates: selection.safeUpdates.map(x => x.path),
+      preservedCollisions: selection.preservedCollisions.map(x => x.path),
+      commit: commit.sha,
     }
   } catch (error) {
     if (bootstrapped) {
