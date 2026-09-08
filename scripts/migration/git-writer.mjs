@@ -1,5 +1,6 @@
+import { createHash } from 'node:crypto'
 import { execFile as execFileCallback } from 'node:child_process'
-import { mkdir, rm, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { dirname, resolve, sep } from 'node:path'
 import { promisify } from 'node:util'
 
@@ -20,6 +21,10 @@ function safeOutputPath(root, relativePath) {
   const target = resolve(base, ...String(relativePath).split('/'))
   if (target !== base && !target.startsWith(`${base}${sep}`)) throw new Error(`Unsafe git target path '${relativePath}'`)
   return target
+}
+
+function contentFingerprint(content) {
+  return createHash('sha256').update(content).digest('hex')
 }
 
 function redact(value, secret) {
@@ -97,17 +102,27 @@ async function checkoutTargetBranch(repoDir, branch, pat) {
   await runGit(['checkout', '--quiet', '--orphan', branch], { cwd: repoDir, pat })
 }
 
-function selectFiles(files, existingPaths, mode) {
+async function selectFiles(files, repoDir, existingPaths, mode) {
   const collisions = files.filter(file => existingPaths.has(file.path))
   if (mode === 'fail' && collisions.length) {
     throw new Error(`Target repository already contains ${collisions.length} migration path(s): ${collisions.slice(0, 5).map(file => file.path).join(', ')}`)
   }
-  const forcedOverwrites = mode === 'preserve' ? collisions.filter(file => file.forceOverwrite === true) : []
-  return {
-    files: mode === 'preserve' ? files.filter(file => !existingPaths.has(file.path) || file.forceOverwrite === true) : files,
-    collisions,
-    forcedOverwrites,
+  if (mode !== 'preserve') {
+    return { files, collisions, forcedOverwrites: [], safeUpdates: [], preservedCollisions: [] }
   }
+
+  const forcedOverwrites = collisions.filter(file => file.forceOverwrite === true)
+  const safeUpdates = []
+  for (const file of collisions) {
+    if (file.forceOverwrite === true || !file.previousContentSha256) continue
+    const currentContent = await readFile(safeOutputPath(repoDir, file.path), 'utf8')
+    if (contentFingerprint(currentContent) === file.previousContentSha256) safeUpdates.push(file)
+  }
+
+  const selectedCollisionPaths = new Set([...forcedOverwrites, ...safeUpdates].map(file => file.path))
+  const selected = files.filter(file => !existingPaths.has(file.path) || selectedCollisionPaths.has(file.path))
+  const preservedCollisions = collisions.filter(file => !selectedCollisionPaths.has(file.path))
+  return { files: selected, collisions, forcedOverwrites, safeUpdates, preservedCollisions }
 }
 
 async function writeSelectedFiles(repoDir, files) {
@@ -121,7 +136,8 @@ async function writeSelectedFiles(repoDir, files) {
 /**
  * Apply one staged repository tree with native git. The remote is cloned into an isolated
  * migration-output directory, the selected files are committed once, then pushed non-force.
- * A rerun with preserve mode is naturally idempotent if an earlier push actually succeeded.
+ * In preserve mode a changed Azure record is updated automatically only when the current
+ * target still matches the previous staged content hash. Diverged target files stay preserved.
  */
 export async function writeFilesWithGit({
   repository,
@@ -153,11 +169,13 @@ export async function writeFilesWithGit({
 
     const listed = await runGit(['ls-files', '-z'], { cwd: repoDir, pat })
     const existingPaths = new Set(listed.stdout.split('\0').filter(Boolean))
-    const selection = selectFiles(files, existingPaths, mode)
+    const selection = await selectFiles(files, repoDir, existingPaths, mode)
     onProgress?.({
       type: 'selection', repository, branch,
       total: files.length, selected: selection.files.length, collisions: selection.collisions.length,
       forcedOverwrites: selection.forcedOverwrites.length,
+      safeUpdates: selection.safeUpdates.length,
+      preservedCollisions: selection.preservedCollisions.length,
     })
 
     await writeSelectedFiles(repoDir, selection.files)
@@ -174,6 +192,8 @@ export async function writeFilesWithGit({
         written: 0,
         collisions: selection.collisions.map(file => file.path),
         forcedOverwrites: selection.forcedOverwrites.map(file => file.path),
+        safeUpdates: selection.safeUpdates.map(file => file.path),
+        preservedCollisions: selection.preservedCollisions.map(file => file.path),
         commit: null,
       }
     }
@@ -193,6 +213,8 @@ export async function writeFilesWithGit({
       written: changed.length,
       collisions: selection.collisions.map(file => file.path),
       forcedOverwrites: selection.forcedOverwrites.map(file => file.path),
+      safeUpdates: selection.safeUpdates.map(file => file.path),
+      preservedCollisions: selection.preservedCollisions.map(file => file.path),
       commit,
     }
   } finally {
