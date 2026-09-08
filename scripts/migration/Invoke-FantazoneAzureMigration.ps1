@@ -41,6 +41,31 @@ function Read-SecretPlainText([string]$Prompt) {
     finally { [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($ptr) }
 }
 
+function Invoke-NodeMigration([string[]]$Arguments) {
+    # Windows PowerShell 5.1 promotes stderr from native processes to ErrorRecord objects.
+    # With the wrapper-wide ErrorActionPreference=Stop, a harmless console.warn from Node would
+    # otherwise terminate the script before LASTEXITCODE can be inspected. Treat the native
+    # process exit code as the source of truth and merge stderr into the live console stream.
+    $previousErrorActionPreference = $ErrorActionPreference
+    $nodeExitCode = 1
+    try {
+        $ErrorActionPreference = "Continue"
+        & node @Arguments 2>&1 | ForEach-Object {
+            if ($_ -is [System.Management.Automation.ErrorRecord]) {
+                Write-Host $_.Exception.Message
+            }
+            else {
+                Write-Host $_
+            }
+        }
+        $nodeExitCode = $LASTEXITCODE
+    }
+    finally {
+        $ErrorActionPreference = $previousErrorActionPreference
+    }
+    return $nodeExitCode
+}
+
 if ([string]::IsNullOrWhiteSpace($ConnectionString)) { $ConnectionString = Read-SecretPlainText "Azure Storage connection string" }
 if ([string]::IsNullOrWhiteSpace($GroupPat)) { $GroupPat = Read-SecretPlainText "GitHub PAT for $GroupRepository" }
 if ([string]::IsNullOrWhiteSpace($PlatformPat)) { $PlatformPat = Read-SecretPlainText "GitHub PAT for $PlatformRepository" }
@@ -69,8 +94,8 @@ try {
     if ($PreserveExisting) { $arguments += "--preserve-existing" }
     if ($RepairImportedCalendars) { $arguments += "--repair-imported-calendars" }
 
-    & node @arguments
-    if ($LASTEXITCODE -ne 0) { throw "Migration process failed with exit code $LASTEXITCODE." }
+    $nodeExitCode = Invoke-NodeMigration $arguments
+    if ($nodeExitCode -ne 0) { throw "Migration process failed with exit code $nodeExitCode." }
 }
 finally {
     $env:FANTAZONE_AZURE_CONNECTION_STRING = $oldAzure
