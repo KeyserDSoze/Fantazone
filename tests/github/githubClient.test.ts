@@ -77,3 +77,52 @@ test('public workflow-run reads do not require a token', async () => {
     globalThis.fetch = previousFetch
   }
 })
+
+test('reads recursive trees and blobs entirely through api.github.com', async () => {
+  const previousFetch = globalThis.fetch
+  const requestedUrls: string[] = []
+  const authorizations: Array<string | null> = []
+  globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
+    const url = String(input)
+    requestedUrls.push(url)
+    authorizations.push(new Headers(init?.headers).get('Authorization'))
+
+    if (url.endsWith('/git/trees/main?recursive=1')) {
+      return new Response(JSON.stringify({
+        sha: 'tree-sha',
+        truncated: false,
+        tree: [
+          { path: 'config/group.json', mode: '100644', type: 'blob', sha: 'blob-sha', size: 11 },
+        ],
+      }), { status: 200, headers: { 'Content-Type': 'application/json' } })
+    }
+
+    if (url.endsWith('/git/blobs/blob-sha')) {
+      return new Response(JSON.stringify({
+        sha: 'blob-sha',
+        content: btoa('{"ok":true}'),
+        encoding: 'base64',
+        size: 11,
+      }), { status: 200, headers: { 'Content-Type': 'application/json' } })
+    }
+
+    return new Response('not found', { status: 404 })
+  }) as typeof fetch
+
+  try {
+    const client = new GitHubClient('secret')
+    const tree = await client.getTree('KeyserDSoze', 'Fantazone.Ayrtev', 'main', true)
+    const blob = await client.getBlob('KeyserDSoze', 'Fantazone.Ayrtev', tree.tree[0].sha)
+
+    assert.equal(tree.truncated, false)
+    assert.equal(tree.tree[0].path, 'config/group.json')
+    assert.equal(blob.content, '{"ok":true}')
+    assert.equal(blob.size, 11)
+    assert.deepEqual(authorizations, ['Bearer secret', 'Bearer secret'])
+    assert.equal(requestedUrls.every(url => url.startsWith('https://api.github.com/')), true)
+    assert.equal(requestedUrls.some(url => url.includes('codeload.github.com')), false)
+    assert.equal(requestedUrls.some(url => url.includes('/zipball/')), false)
+  } finally {
+    globalThis.fetch = previousFetch
+  }
+})

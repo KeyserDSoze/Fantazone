@@ -1,4 +1,5 @@
-import { gunzipSync, strFromU8, unzipSync } from 'fflate'
+import { gunzipSync, strFromU8 } from 'fflate'
+import { GitHubClient, type GitHubTreeEntry } from '@fantazone/github'
 import type { GroupConnection } from './groupSessionRuntime'
 import { repositoryPersistentCache } from './repositoryPersistentCache'
 
@@ -28,18 +29,31 @@ type PlatformPackCacheMetadata = {
   paths: string[]
 }
 
+type SnapshotEntry = {
+  path: string
+  value: unknown
+  bytes: number
+  sha: string
+}
+
+type JsonBlobDescriptor = GitHubTreeEntry & {
+  type: 'blob'
+}
+
 const PLATFORM_OWNER = 'KeyserDSoze'
 const PLATFORM_REPO = 'Fantazone'
 const PLATFORM_REF = 'main'
 const PLATFORM_PACK_INDEX = '/offline/serie-a/index.json'
 const PLATFORM_PACK_METADATA_PREFIX = '__offline__/serie-a-pack.v1/'
+const SNAPSHOT_BATCH_SIZE = 16
 
 /**
  * Materializes every JSON document from the selected group branch into the same
- * durable cache used by GitHubJsonStore. The group repository is downloaded once
- * as a ZIP archive instead of issuing one Contents API request per file. After the
- * group is stored, only the compressed Serie A season packs referenced by that
- * group are hydrated from fanta.plus.
+ * durable cache used by GitHubJsonStore. Browser clients deliberately stay on
+ * api.github.com: GitHub's archive endpoint redirects private repositories to
+ * codeload.github.com, whose signed download does not allow cross-origin browser
+ * requests from fanta.plus. A recursive Git tree gives us all JSON blob SHAs in one
+ * request; only changed blobs are then fetched and decoded through the Git Data API.
  */
 export async function hydrateRepositoryOfflineSnapshot(
   connection: GroupConnection,
@@ -48,50 +62,59 @@ export async function hydrateRepositoryOfflineSnapshot(
   const owner = connection.repository.owner.login
   const repo = connection.repository.name
   const ref = connection.repository.default_branch
-  onProgress?.('Scaricamento di una copia compatta del gruppo…')
+  const client = new GitHubClient(connection.token)
+  const prefix = repositoryCachePrefix(owner, repo)
 
-  const response = await fetch(
-    `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/zipball/${encodeURIComponent(ref)}`,
-    {
-      headers: {
-        Accept: 'application/vnd.github+json',
-        Authorization: `Bearer ${connection.token}`,
-        'X-GitHub-Api-Version': '2022-11-28',
-      },
-    },
-  )
-  if (!response.ok) throw new Error(`Impossibile preparare la copia offline del gruppo (HTTP ${response.status}).`)
+  onProgress?.('Indicizzazione dei dati del gruppo per la copia offline…')
+  const blobs = await listJsonBlobs(client, owner, repo, ref, onProgress)
+  const entries: SnapshotEntry[] = []
+  let totalBytes = 0
 
-  const archive = new Uint8Array(await response.arrayBuffer())
-  onProgress?.('Preparazione dei dati del gruppo per l’uso senza rete…')
-  const files = unzipSync(archive)
-  const entries: Array<{ path: string; value: unknown; bytes: number }> = []
+  for (let index = 0; index < blobs.length; index += SNAPSHOT_BATCH_SIZE) {
+    const chunk = blobs.slice(index, index + SNAPSHOT_BATCH_SIZE)
+    const loaded = await Promise.all(chunk.map(async descriptor => {
+      const key = `${prefix}${descriptor.path}@${ref}`
+      const cached = await repositoryPersistentCache.get(key)
+      if (cached?.sha === descriptor.sha) {
+        return {
+          path: descriptor.path,
+          value: cached.value,
+          bytes: descriptor.size ?? 0,
+          sha: descriptor.sha,
+        } satisfies SnapshotEntry
+      }
 
-  for (const [archivePath, bytes] of Object.entries(files)) {
-    if (archivePath.endsWith('/')) continue
-    const slash = archivePath.indexOf('/')
-    const path = slash >= 0 ? archivePath.slice(slash + 1) : archivePath
-    if (!path || !path.toLowerCase().endsWith('.json')) continue
-    try {
-      entries.push({ path, value: JSON.parse(strFromU8(bytes)), bytes: bytes.byteLength })
-    } catch {
-      // Non-canonical malformed JSON must not poison the offline repository cache.
+      const blob = await client.getBlob(owner, repo, descriptor.sha)
+      try {
+        return {
+          path: descriptor.path,
+          value: JSON.parse(blob.content),
+          bytes: blob.size,
+          sha: blob.sha,
+        } satisfies SnapshotEntry
+      } catch {
+        // Non-canonical malformed JSON must not poison the offline repository cache.
+        return null
+      }
+    }))
+
+    const validEntries = loaded.filter((entry): entry is SnapshotEntry => entry !== null)
+    entries.push(...validEntries)
+    totalBytes += validEntries.reduce((sum, entry) => sum + entry.bytes, 0)
+    await Promise.all(validEntries.map(entry => repositoryPersistentCache.set(
+      `${prefix}${entry.path}@${ref}`,
+      { value: entry.value, sha: entry.sha },
+    )))
+
+    if (blobs.length > SNAPSHOT_BATCH_SIZE) {
+      onProgress?.(`Preparazione copia offline ${Math.min(index + chunk.length, blobs.length)}/${blobs.length}…`)
     }
   }
 
-  const prefix = repositoryCachePrefix(owner, repo)
-  await repositoryPersistentCache.deleteByPrefix(prefix)
-  let storedBytes = 0
-  for (let index = 0; index < entries.length; index += 32) {
-    const chunk = entries.slice(index, index + 32)
-    await Promise.all(chunk.map(async entry => {
-      await repositoryPersistentCache.set(
-        `${prefix}${entry.path}@${ref}`,
-        { value: entry.value, sha: '' },
-      )
-      storedBytes += entry.bytes
-    }))
-  }
+  // Remove JSON documents deleted from the branch, plus malformed documents that
+  // must not leave a previously valid but now stale value in the local cache.
+  const preserveKeys = entries.map(entry => `${prefix}${entry.path}@${ref}`)
+  await repositoryPersistentCache.deleteByPrefix(prefix, preserveKeys)
 
   const seasonIds = groupSeasonIds(entries.find(entry => entry.path === 'config/group.json')?.value)
   if (seasonIds.length > 0) {
@@ -99,7 +122,49 @@ export async function hydrateRepositoryOfflineSnapshot(
   }
 
   onProgress?.(`${entries.length} documenti del gruppo disponibili offline.`)
-  return { documents: entries.length, bytes: storedBytes }
+  return { documents: entries.length, bytes: totalBytes }
+}
+
+async function listJsonBlobs(
+  client: GitHubClient,
+  owner: string,
+  repo: string,
+  ref: string,
+  onProgress?: (detail: string) => void,
+): Promise<JsonBlobDescriptor[]> {
+  const recursive = await client.getTree(owner, repo, ref, true)
+  if (!recursive.truncated) return recursive.tree.filter(isJsonBlob)
+
+  // GitHub truncates very large recursive trees. Fall back to walking subtrees so
+  // large migrated repositories still get a complete offline index.
+  onProgress?.('Repository molto grande: scansione completa delle cartelle…')
+  const root = await client.getTree(owner, repo, ref, false)
+  const blobs: JsonBlobDescriptor[] = []
+  const queue: Array<{ prefix: string; sha: string }> = []
+
+  for (const entry of root.tree) {
+    if (entry.type === 'tree') queue.push({ prefix: entry.path, sha: entry.sha })
+    else if (isJsonBlob(entry)) blobs.push(entry)
+  }
+
+  for (let index = 0; index < queue.length; index += 1) {
+    const current = queue[index]
+    const tree = await client.getTree(owner, repo, current.sha, false)
+    for (const entry of tree.tree) {
+      const path = `${current.prefix}/${entry.path}`
+      if (entry.type === 'tree') {
+        queue.push({ prefix: path, sha: entry.sha })
+      } else if (entry.type === 'blob' && path.toLowerCase().endsWith('.json')) {
+        blobs.push({ ...entry, path, type: 'blob' })
+      }
+    }
+  }
+
+  return blobs
+}
+
+function isJsonBlob(entry: GitHubTreeEntry): entry is JsonBlobDescriptor {
+  return entry.type === 'blob' && entry.path.toLowerCase().endsWith('.json')
 }
 
 async function hydratePlatformSeasonPacks(
