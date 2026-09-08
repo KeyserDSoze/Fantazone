@@ -16,7 +16,8 @@ param(
     [switch]$ResetWork,
     [switch]$Apply,
     [switch]$Overwrite,
-    [switch]$PreserveExisting
+    [switch]$PreserveExisting,
+    [switch]$RepairImportedCalendars
 )
 
 Set-StrictMode -Version Latest
@@ -24,6 +25,9 @@ $ErrorActionPreference = "Stop"
 
 if ($Overwrite -and $PreserveExisting) {
     throw "-Overwrite and -PreserveExisting are mutually exclusive."
+}
+if ($RepairImportedCalendars -and -not $PreserveExisting) {
+    throw "-RepairImportedCalendars requires -PreserveExisting."
 }
 $cacheModes = @($RefreshCache, $ReuseCache, $NoCache) | Where-Object { $_ }
 if ($cacheModes.Count -gt 1) {
@@ -63,10 +67,10 @@ try {
     if ($Apply) { $arguments += "--apply" }
     if ($Overwrite) { $arguments += "--overwrite" }
     if ($PreserveExisting) { $arguments += "--preserve-existing" }
+    if ($RepairImportedCalendars) { $arguments += "--repair-imported-calendars" }
 
     & node @arguments
-    if ($LASTEXITCODE -ne 0) { throw "Migration process failed with exit code $LASTEXITCODE."
-    }
+    if ($LASTEXITCODE -ne 0) { throw "Migration process failed with exit code $LASTEXITCODE." }
 }
 finally {
     $env:FANTAZONE_AZURE_CONNECTION_STRING = $oldAzure
