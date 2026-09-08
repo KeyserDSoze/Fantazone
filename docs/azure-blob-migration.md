@@ -96,6 +96,38 @@ This is the **add-only incremental sync** mode: old GitHub files remain untouche
 
 If an existing Azure entity changed and the corresponding canonical GitHub file must also be replaced, use `-Overwrite` instead of `-PreserveExisting`. The two switches are mutually exclusive.
 
+## One-time repair of already-imported calendars
+
+To repair the bad `RealCalendar` files produced by the earlier migration without opening every existing path to overwrite, add `-RepairImportedCalendars` together with `-PreserveExisting`:
+
+```powershell
+./scripts/migration/Invoke-FantazoneAzureMigration.ps1 `
+  -GroupRepository 'KeyserDSoze/Fantazone.MyLeague' `
+  -PlatformRepository 'KeyserDSoze/Fantazone' `
+  -PreserveExisting `
+  -RepairImportedCalendars
+```
+
+Review the dry-run report first. A path is allowed to bypass preservation only when the scanner has **proved** it is a repair candidate:
+
+- the Azure/Rystem season key is valid and a zero payload/day year was normalized after date validation; or
+- the current blob was invalid and a valid older Azure blob version was recovered.
+
+Every other GitHub collision remains preserved. The report lists the exceptions under `repair.targetedPaths` and the writer result under `forcedOverwrites`.
+
+Then apply the reviewed repair:
+
+```powershell
+./scripts/migration/Invoke-FantazoneAzureMigration.ps1 `
+  -GroupRepository 'KeyserDSoze/Fantazone.MyLeague' `
+  -PlatformRepository 'KeyserDSoze/Fantazone' `
+  -PreserveExisting `
+  -RepairImportedCalendars `
+  -Apply
+```
+
+If a corrupted historical calendar has no valid Azure version, it appears in `source.issues` with its `targetPath` and **is not overwritten or fabricated**. That season needs a separate historical backfill/recovery source.
+
 ## Azure scan cache modes
 
 Default cache path:
@@ -185,9 +217,10 @@ A custom staging directory can be selected with:
 
 - no switch: fail closed if any destination migration path already exists;
 - `-PreserveExisting`: keep existing GitHub files and add only missing paths; recommended for recurring incremental imports;
-- `-Overwrite`: replace existing canonical paths with converted Azure values.
+- `-PreserveExisting -RepairImportedCalendars`: preserve every collision except proven `RealCalendar` repair candidates;
+- `-Overwrite`: replace all existing canonical paths present in the migration plan.
 
-`-Overwrite` and `-PreserveExisting` are mutually exclusive.
+`-Overwrite` and `-PreserveExisting` are mutually exclusive. `-RepairImportedCalendars` requires `-PreserveExisting`.
 
 ## Report
 
@@ -201,13 +234,14 @@ It contains:
 
 - current Azure inventory (container/blob name, size, date and ETag when available);
 - incremental source statistics: downloaded, reused and recovered-version counts;
-- quarantined source issues;
+- quarantined source issues and their target paths;
 - historical Azure-version recoveries;
 - cache mode/baseline information;
 - staging/checkpoint paths and resume counts;
 - selected legacy group;
 - Azure blob → canonical GitHub path mappings;
-- GitHub collisions/skips and planned/written counts.
+- targeted calendar repair paths;
+- GitHub collisions, forced repairs and planned/written counts.
 
 It never contains the connection string or PAT values.
 
@@ -242,7 +276,8 @@ Recommended post-migration checks:
 5. old Serie A players/teams/calendar and official/live votes are readable;
 6. `source.issues` is reviewed, especially `invalid-realcalendar-season`;
 7. `source.recoveries` is reviewed for any versioned calendar recovery;
-8. rerunning with `-PreserveExisting` produces mostly cache/staging reuse and no duplicate GitHub writes.
+8. `repair.targetedPaths` and `forcedOverwrites` are reviewed before applying a repair;
+9. rerunning with `-PreserveExisting` produces mostly cache/staging reuse and no duplicate GitHub writes.
 
 ## Direct Node CLI
 
@@ -253,4 +288,4 @@ node scripts/migration/migrate-azure-to-github.mjs `
   --preserve-existing
 ```
 
-Cache switches are `--refresh-cache`, `--reuse-cache`, `--no-cache` and `--cache <path>`. Staging switches are `--work-dir <path>` and `--reset-work`. Add `--apply` for writes. Use `--help` for the complete option list.
+Cache switches are `--refresh-cache`, `--reuse-cache`, `--no-cache` and `--cache <path>`. Staging switches are `--work-dir <path>` and `--reset-work`. Targeted repair is `--repair-imported-calendars` and requires `--preserve-existing`. Add `--apply` for writes. Use `--help` for the complete option list.
