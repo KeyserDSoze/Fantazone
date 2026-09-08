@@ -78,6 +78,26 @@ test('reconnect preflights the exact repository and trims the shared PAT', async
   ])
 })
 
+test('accepts a migrated group when manifest.json is still missing', async () => {
+  const client = new FakeReconnectClient()
+  client.manifest = null
+
+  const connection = await reconnectStoredGroup('github_pat_test', storedGroup, client)
+
+  assert.equal(connection.repository, client.repo)
+  assert.equal(connection.groupName, storedGroup.name)
+})
+
+test('still rejects a repository without config/group.json', async () => {
+  const client = new FakeReconnectClient()
+  client.group = null
+
+  await assert.rejects(
+    reconnectStoredGroup('github_pat_test', storedGroup, client),
+    error => error instanceof StoredGroupRepositoryContractError && error.message.includes(`manca ${GROUP_DOCUMENT_PATH}`),
+  )
+})
+
 test('does not accept a different repository returned by GitHub', async () => {
   const client = new FakeReconnectClient()
   client.repo = repository('KeyserDSoze/Fantazone.Altro')
