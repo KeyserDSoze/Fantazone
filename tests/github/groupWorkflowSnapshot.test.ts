@@ -6,11 +6,15 @@ import {
   GROUP_RUNTIME_ENGINE_REF,
 } from '../../src/github/src/index'
 
-test('group runtime v8 serializes formation, market, auction and Hall of Fame maintenance without transfer sync', () => {
-  assert.equal(GROUP_REPOSITORY_RUNTIME_VERSION, 8)
+test('group runtime v9 serializes maintenance and publishes one compact offline snapshot', () => {
+  assert.equal(GROUP_REPOSITORY_RUNTIME_VERSION, 9)
   assert.equal(GROUP_RUNTIME_ENGINE_REF, 'main')
   assert.match(GROUP_RECALCULATION_WORKFLOW, /push:/)
   assert.match(GROUP_RECALCULATION_WORKFLOW, /manifest\.json/)
+  assert.match(GROUP_RECALCULATION_WORKFLOW, /config\/group\.json/)
+  assert.match(GROUP_RECALCULATION_WORKFLOW, /settings\.json/)
+  assert.match(GROUP_RECALCULATION_WORKFLOW, /fantazone\.json/)
+  assert.match(GROUP_RECALCULATION_WORKFLOW, /\.github\/workflows\/fantazone-group\.yml/)
   assert.match(GROUP_RECALCULATION_WORKFLOW, /data\/groups\/seasons\/\*\/teams\/\*\/\*\.json/)
   assert.match(GROUP_RECALCULATION_WORKFLOW, /data\/groups\/seasons\/\*\/markets\/\*\/commands\/\*\.json/)
   assert.match(GROUP_RECALCULATION_WORKFLOW, /data\/groups\/seasons\/\*\/auctions\/\*\/outcomes\/\*\.json/)
@@ -28,5 +32,9 @@ test('group runtime v8 serializes formation, market, auction and Hall of Fame ma
   assert.match(GROUP_RECALCULATION_WORKFLOW, /git checkout -B "\$GITHUB_REF_NAME" "origin\/\$GITHUB_REF_NAME"/)
   assert.match(GROUP_RECALCULATION_WORKFLOW, /git stash push -u -m fantazone-action -- data/)
   assert.match(GROUP_RECALCULATION_WORKFLOW, /git reset --hard "origin\/\$GITHUB_REF_NAME"/)
+  assert.match(GROUP_RECALCULATION_WORKFLOW, /build-group-offline-pack\.mjs/)
+  assert.match(GROUP_RECALCULATION_WORKFLOW, /\.fantazone\/offline\/group-snapshot\.json\.gz/)
+  assert.match(GROUP_RECALCULATION_WORKFLOW, /offline: refresh group snapshot/)
+  assert.match(GROUP_RECALCULATION_WORKFLOW, /Unable to publish the compact offline snapshot after 3 attempts/)
   assert.match(GROUP_RECALCULATION_WORKFLOW, /Unable to persist Fantazone data after 3 attempts/)
 })

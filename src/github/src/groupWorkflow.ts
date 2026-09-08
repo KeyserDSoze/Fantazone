@@ -1,4 +1,4 @@
-export const GROUP_REPOSITORY_RUNTIME_VERSION = 8
+export const GROUP_REPOSITORY_RUNTIME_VERSION = 9
 /** Runtime schema/workflow version. Engine code now follows the single supported main branch. */
 export const GROUP_RUNTIME_ENGINE_REF = 'main'
 export const GROUP_GLOBAL_DATA_REF = 'main'
@@ -7,10 +7,10 @@ export const GROUP_RECALCULATION_WORKFLOW_PATH = '.github/workflows/fantazone-gr
 /**
  * Managed Fantazone group workflow installed into every Fantazone.<group> repository.
  *
- * Runtime v8 stores mutable season Teams as player references resolved from the
- * global Serie A master, while immutable TeamDay snapshots remain fully hydrated.
- * This removes per-group player-transfer propagation entirely. Group mutations
- * execute under one repository-scoped Actions concurrency lock.
+ * Runtime v9 keeps the v8 canonical maintenance model and additionally commits one
+ * deterministic compressed offline snapshot. Browser clients can fetch that single
+ * private file through api.github.com instead of exhausting the REST rate limit by
+ * downloading one Git blob per JSON document.
  */
 export const GROUP_RECALCULATION_WORKFLOW = [
   '# Managed by Fantazone. Local edits to this file are overwritten by runtime upgrades.',
@@ -21,6 +21,10 @@ export const GROUP_RECALCULATION_WORKFLOW = [
   '  push:',
   '    paths:',
   "      - 'manifest.json'",
+  "      - 'config/group.json'",
+  "      - 'settings.json'",
+  "      - 'fantazone.json'",
+  "      - '.github/workflows/fantazone-group.yml'",
   "      - 'data/groups/seasons/*/teams/*/*.json'",
   "      - 'data/groups/seasons/*/markets/*/commands/*.json'",
   "      - 'data/groups/seasons/*/auctions/*/outcomes/*.json'",
@@ -153,6 +157,36 @@ export const GROUP_RECALCULATION_WORKFLOW = [
   '          done',
   '',
   '          echo "Unable to persist Fantazone data after 3 attempts" >&2',
+  '          exit 1',
+  '',
+  '      - name: Refresh compact offline snapshot',
+  '        working-directory: group',
+  '        shell: bash',
+  '        run: |',
+  '          git config user.name "fantazone-actions[bot]"',
+  '          git config user.email "fantazone-actions[bot]@users.noreply.github.com"',
+  '',
+  '          for attempt in 1 2 3; do',
+  '            echo "Refreshing compact offline snapshot (attempt $attempt/3)"',
+  '            git fetch origin "$GITHUB_REF_NAME"',
+  '            git reset --hard "origin/$GITHUB_REF_NAME"',
+  '            node ../engine/scripts/build-group-offline-pack.mjs "$PWD"',
+  '',
+  '            if [ -z "$(git status --porcelain -- .fantazone/offline/group-snapshot.json.gz)" ]; then',
+  '              echo "Offline snapshot already current"',
+  '              exit 0',
+  '            fi',
+  '',
+  '            git add -- .fantazone/offline/group-snapshot.json.gz',
+  '            git commit -m "offline: refresh group snapshot"',
+  '            if git push origin "HEAD:$GITHUB_REF_NAME"; then',
+  '              exit 0',
+  '            fi',
+  '',
+  '            echo "Group branch moved while publishing the offline snapshot; retrying"',
+  '          done',
+  '',
+  '          echo "Unable to publish the compact offline snapshot after 3 attempts" >&2',
   '          exit 1',
   '',
 ].join('\n')
