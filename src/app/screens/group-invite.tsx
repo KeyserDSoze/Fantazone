@@ -1,7 +1,9 @@
 import React, { useMemo, useState } from 'react'
-import { Button, Card, H2, Input, Paragraph, ScrollView, Spinner, Text, XStack, YStack } from 'tamagui'
+import { Github, LockKeyhole, LogIn } from '@tamagui/lucide-icons-2'
+import { Button, Input, Paragraph, Spinner, Text, XStack, YStack } from 'tamagui'
 import { GitHubApiError } from '@fantazone/github'
 import type { GroupInvitePayload } from '@fantazone/domain'
+import { AppScreen, PageIntro, PrimaryAction, StatusPill, Surface } from '../components/design-system'
 import { connectKnownGroup } from '../services/groupReconnect'
 import type { GroupConnection } from '../services/groupSessionRuntime'
 
@@ -36,54 +38,74 @@ export function GroupInviteScreen({ invite, identityEmail, onConnected, onCancel
   }
 
   return (
-    <ScrollView flex={1} contentContainerStyle={{ flexGrow: 1 }}>
-      <YStack flex={1} justifyContent="center" alignItems="center" padding="$4" gap="$4">
-        <Card borderWidth={1} borderColor="$blue8" padding="$5" width="100%" maxWidth={560}>
-          <YStack gap="$4">
-            <YStack gap="$2">
-              <Text fontWeight="800" color="$blue10">INVITO FANTAZONE</Text>
-              <H2>Unisciti a {invite.group}</H2>
-              <Paragraph color="$color10">
-                {invite.v === 3
-                  ? 'L’invito contiene la credenziale GitHub condivisa del gruppo. fanta.plus la verifica e la salva nelle impostazioni private OneDrive del tuo account.'
-                  : 'Questo è un invito precedente: identifica gruppo ed email, ma richiede di inserire una volta la credenziale GitHub condivisa del gruppo.'}
-              </Paragraph>
-            </YStack>
+    <AppScreen maxWidth={1040}>
+      <PageIntro
+        eyebrow="Invito Fantazone"
+        title={`Unisciti a ${invite.group}`}
+        description={invite.v === 3
+          ? 'Verifica l’identità Microsoft e collega in modo sicuro questo dispositivo al repository GitHub condiviso del gruppo.'
+          : 'Questo invito usa il formato precedente e richiede una sola volta la credenziale GitHub condivisa del gruppo.'}
+      />
 
-            <Card borderWidth={1} borderColor="$borderColor" padding="$3">
-              <YStack gap="$1">
-                <Text fontWeight="700">Repository</Text>
-                <Text>{invite.repository}</Text>
-                <Text fontWeight="700" marginTop="$2">Email invitata</Text>
-                <Text>{invite.email}</Text>
-              </YStack>
-            </Card>
-
-            {!emailMatches ? (
-              <Card borderWidth={1} borderColor="$red8" padding="$3">
-                <YStack gap="$2">
-                  <Paragraph>
-                    Hai effettuato l’accesso come {identityEmail}, ma questo invito è destinato a {invite.email}.
-                  </Paragraph>
-                  <Button onPress={onUseAnotherAccount}>Usa un altro account Microsoft</Button>
+      <XStack gap="$4" flexWrap="wrap" alignItems="stretch">
+        <YStack flexGrow={1} flexBasis={420} minWidth={280} gap="$4">
+          <Surface accent="blue" padding="$5">
+            <YStack gap="$4">
+              <XStack alignItems="center" gap="$3">
+                <YStack width={44} height={44} borderRadius="$4" backgroundColor="$blue3" borderWidth={1} borderColor="$blue5" alignItems="center" justifyContent="center">
+                  <Github size="$1.2" color="$blue10" />
                 </YStack>
-              </Card>
-            ) : invite.v === 3 ? (
-              <Card borderWidth={1} borderColor="$yellow8" padding="$3">
-                <Paragraph size="$2">
-                  Il link è una credenziale di accesso al gruppo: condividilo solo con l’utente invitato. Il frammento con il PAT viene rimosso dalla barra degli indirizzi appena fanta.plus lo acquisisce.
+                <YStack flex={1} gap="$1">
+                  <Text color="$color12" fontSize="$6" fontWeight="900">Gruppo invitato</Text>
+                  <StatusPill tone="blue">Repository verificato al collegamento</StatusPill>
+                </YStack>
+              </XStack>
+              <InviteMeta label="Gruppo" value={invite.group} />
+              <InviteMeta label="Repository" value={invite.repository} />
+              <InviteMeta label="Email invitata" value={invite.email} />
+            </YStack>
+          </Surface>
+
+          <Surface accent="yellow" padding="$4">
+            <XStack gap="$3" alignItems="flex-start">
+              <LockKeyhole size="$1.2" color="$yellow10" />
+              <YStack flex={1} gap="$1">
+                <Text color="$color12" fontWeight="900">Tratta l’invito come una credenziale</Text>
+                <Paragraph color="$color10" fontSize="$2" lineHeight="$5">
+                  {invite.v === 3
+                    ? 'Il link contiene il PAT condiviso del gruppo. Fantazone lo acquisisce dal frammento URL e lo salva nelle impostazioni private OneDrive; non va inoltrato ad altre persone.'
+                    : 'Il PAT verrà salvato nelle impostazioni private OneDrive e nella cache credenziali del dispositivo dopo la verifica.'}
                 </Paragraph>
-              </Card>
-            ) : (
-              <>
-                <Card borderWidth={1} borderColor="$yellow8" padding="$3">
-                  <Paragraph size="$2">
-                    Inserisci il PAT condiviso del gruppo. Dopo la verifica verrà salvato sia nelle impostazioni OneDrive dell’app sia nella cache credenziali del dispositivo.
-                  </Paragraph>
-                </Card>
+              </YStack>
+            </XStack>
+          </Surface>
+        </YStack>
+
+        <YStack flexGrow={1} flexBasis={420} minWidth={280}>
+          <Surface padding="$6">
+            <YStack gap="$5">
+              <YStack gap="$2">
+                <Text color="$color12" fontSize="$7" fontWeight="900">Conferma il tuo accesso</Text>
+                <Paragraph color="$color10">Fantazone accetta l’invito solo per l’account Microsoft a cui è stato intestato.</Paragraph>
+              </YStack>
+
+              <YStack gap="$2" padding="$3" borderRadius="$4" backgroundColor={emailMatches ? '$green2' : '$red2'} borderWidth={1} borderColor={emailMatches ? '$green5' : '$red5'}>
+                <Text color="$color8" fontSize="$1" fontWeight="900" textTransform="uppercase">Account corrente</Text>
+                <Text color="$color12" fontSize="$5" fontWeight="900">{identityEmail}</Text>
+                <StatusPill tone={emailMatches ? 'green' : 'red'}>{emailMatches ? 'Corrisponde all’invito' : 'Account diverso'}</StatusPill>
+              </YStack>
+
+              {!emailMatches ? (
+                <YStack gap="$3">
+                  <Paragraph color="$red11">Questo invito è destinato a {invite.email}. Accedi con l’account Microsoft corretto per continuare.</Paragraph>
+                  <PrimaryAction onPress={() => { void onUseAnotherAccount() }} icon={<LogIn size="$1" color="white" />}>Usa un altro account Microsoft</PrimaryAction>
+                </YStack>
+              ) : invite.v !== 3 ? (
                 <YStack gap="$2">
-                  <Text fontWeight="700">Personal Access Token del gruppo</Text>
+                  <Text color="$color9" fontSize="$2" fontWeight="800">PERSONAL ACCESS TOKEN DEL GRUPPO</Text>
                   <Input
+                    size="$4"
+                    borderRadius="$4"
                     value={legacyPat}
                     onChangeText={setLegacyPat}
                     secureTextEntry
@@ -94,23 +116,34 @@ export function GroupInviteScreen({ invite, identityEmail, onConnected, onCancel
                     onSubmitEditing={() => { void join() }}
                   />
                 </YStack>
-              </>
-            )}
-
-            {error ? <Card borderWidth={1} borderColor="$red8" padding="$3"><Text>{error}</Text></Card> : null}
-
-            <XStack gap="$3" flexWrap="wrap">
-              <Button disabled={loading} onPress={onCancel} flex={1} minWidth={160}>Annulla invito</Button>
-              {emailMatches ? (
-                <Button disabled={!canSubmit} onPress={join} flex={1} minWidth={220} theme="accent">
-                  {loading ? <Spinner /> : invite.v === 3 ? 'Verifica e unisciti' : 'Salva PAT e unisciti'}
-                </Button>
               ) : null}
-            </XStack>
-          </YStack>
-        </Card>
-      </YStack>
-    </ScrollView>
+
+              {error ? <Surface accent="red" padding="$3"><Paragraph color="$red11">{error}</Paragraph></Surface> : null}
+
+              <XStack gap="$3" flexWrap="wrap">
+                <Button variant="outlined" borderRadius="$4" disabled={loading} onPress={onCancel} flexGrow={1} flexBasis={160}>Annulla invito</Button>
+                {emailMatches ? (
+                  <YStack flexGrow={1} flexBasis={220}>
+                    <PrimaryAction disabled={!canSubmit} onPress={() => { void join() }} icon={loading ? <Spinner color="white" /> : <LogIn size="$1" color="white" />}>
+                      {loading ? 'Verifica in corso…' : invite.v === 3 ? 'Verifica e unisciti' : 'Salva PAT e unisciti'}
+                    </PrimaryAction>
+                  </YStack>
+                ) : null}
+              </XStack>
+            </YStack>
+          </Surface>
+        </YStack>
+      </XStack>
+    </AppScreen>
+  )
+}
+
+function InviteMeta({ label, value }: { label: string; value: string }) {
+  return (
+    <YStack gap="$1" padding="$3" borderRadius="$4" backgroundColor="$color3">
+      <Text color="$color8" fontSize="$1" fontWeight="900" textTransform="uppercase">{label}</Text>
+      <Text color="$color12" fontWeight="800" numberOfLines={2}>{value}</Text>
+    </YStack>
   )
 }
 
