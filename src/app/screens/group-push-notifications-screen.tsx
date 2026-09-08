@@ -1,6 +1,15 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { Linking, Platform } from 'react-native'
-import { Button, Card, H1, H2, Paragraph, ScrollView, Spinner, Text, XStack, YStack } from 'tamagui'
+import {
+  Bell,
+  BellRing,
+  ExternalLink,
+  RefreshCw,
+  Send,
+  ShieldCheck,
+  Wrench,
+} from '@tamagui/lucide-icons-2'
+import { Button, Paragraph, Spinner, Text, XStack, YStack } from 'tamagui'
 import {
   GroupHelper,
   IdentityRole,
@@ -8,6 +17,7 @@ import {
   type PushNotificationPreferences,
   type PushNotificationSettings,
 } from '@fantazone/domain'
+import { AppScreen, PageIntro, PrimaryAction, StatusPill, Surface } from '../components/design-system'
 import { GroupPushNotificationService, type PushTransportStatus } from '../services/groupPushNotificationService'
 import type { GroupSessionRuntime } from '../services/groupSessionRuntime'
 import {
@@ -138,92 +148,211 @@ export function GroupPushNotificationsScreen({ runtime, session }: Props) {
   const secretsUrl = `https://github.com/${runtime.target.owner}/${runtime.target.repo}/settings/secrets/actions`
 
   return (
-    <ScrollView flex={1} contentContainerStyle={{ flexGrow: 1 }}>
-      <YStack width="100%" maxWidth={900} alignSelf="center" padding="$4" paddingBottom="$8" gap="$4">
-        <XStack justifyContent="space-between" alignItems="flex-start" gap="$3" flexWrap="wrap" paddingTop="$2">
-          <YStack gap="$1" flex={1} minWidth={260}>
-            <H1>Notifiche push</H1>
-            <Paragraph color="$color10">Preferenze e dispositivi sono salvati nel repository del gruppo. L’invio avviene con GitHub Actions: nessun backend Fantazone.</Paragraph>
-          </YStack>
-          <Button onPress={() => { void load() }} disabled={busy}>{busy ? <Spinner /> : 'Aggiorna'}</Button>
-        </XStack>
+    <AppScreen maxWidth={1100}>
+      <PageIntro
+        eyebrow="Web Push"
+        title="Notifiche"
+        description="Scegli cosa ricevere e su quali dispositivi. Preferenze e subscription vivono nel repository del gruppo, mentre l’invio passa da GitHub Actions."
+        action={(
+          <Button
+            variant="outlined"
+            borderRadius="$4"
+            disabled={busy}
+            icon={busy ? undefined : RefreshCw}
+            onPress={() => { void load() }}
+          >
+            {busy ? <Spinner /> : 'Aggiorna'}
+          </Button>
+        )}
+      />
 
-        {error ? <Card borderWidth={1} borderColor="$red8" padding="$3"><Paragraph color="$red10">{error}</Paragraph></Card> : null}
-        {message ? <Card borderWidth={1} borderColor="$green8" padding="$3"><Paragraph color="$green10">{message}</Paragraph></Card> : null}
+      {error ? (
+        <Surface accent="red" padding="$3">
+          <Paragraph color="$red11">{error}</Paragraph>
+        </Surface>
+      ) : null}
+      {message ? (
+        <Surface accent="green" padding="$3">
+          <Paragraph color="$green11">{message}</Paragraph>
+        </Surface>
+      ) : null}
 
-        <Card borderWidth={1} borderColor="$borderColor" padding="$4">
-          <YStack gap="$3">
-            <H2 size="$6">Dispositivo corrente</H2>
-            {Platform.OS !== 'web' ? (
-              <Paragraph color="$color10">Le notifiche native iOS/Android richiedono il successivo blocco Expo/APNs/FCM. Questa versione abilita Web Push reali su browser.</Paragraph>
-            ) : support?.supported === false ? (
-              <Paragraph color="$orange10">{support.reason}</Paragraph>
-            ) : (
-              <>
-                <Text>Permesso browser: {support?.supported ? support.permission : '—'}</Text>
-                <Text>Registrazione nel gruppo: {registeredHere ? 'attiva' : 'non attiva'}</Text>
-                <XStack gap="$2" flexWrap="wrap">
-                  <Button onPress={() => { void subscribe() }} disabled={busy || registeredHere}>Abilita in questo gruppo</Button>
-                  <Button variant="outlined" onPress={() => { void disableForGroup() }} disabled={busy || !registeredHere}>Disabilita in questo gruppo</Button>
-                  <Button variant="outlined" onPress={() => { void sendTest() }} disabled={busy || !registeredHere || !transport?.current}>Invia notifica di prova</Button>
-                </XStack>
-              </>
-            )}
-          </YStack>
-        </Card>
+      <Surface accent={registeredHere ? 'green' : 'neutral'} padding="$5">
+        <YStack gap="$4">
+          <XStack gap="$3" justifyContent="space-between" alignItems="center" flexWrap="wrap">
+            <XStack gap="$3" alignItems="center" flex={1} minWidth={250}>
+              <YStack width={48} height={48} borderRadius="$5" backgroundColor={registeredHere ? '$green4' : '$color4'} alignItems="center" justifyContent="center">
+                {registeredHere ? <BellRing size="$1.25" color="$green10" /> : <Bell size="$1.25" color="$color10" />}
+              </YStack>
+              <YStack gap="$1" flex={1}>
+                <Text color="$color8" fontSize="$1" fontWeight="900" textTransform="uppercase">Dispositivo corrente</Text>
+                <Text color="$color12" fontSize="$6" fontWeight="900">{registeredHere ? 'Notifiche abilitate' : 'Notifiche non abilitate'}</Text>
+              </YStack>
+            </XStack>
+            <XStack gap="$2" flexWrap="wrap">
+              {Platform.OS === 'web' ? <StatusPill tone={support?.supported === false ? 'yellow' : 'blue'}>Web Push</StatusPill> : <StatusPill tone="neutral">Native in arrivo</StatusPill>}
+              <StatusPill tone={registeredHere ? 'green' : 'neutral'}>{registeredHere ? 'Registrato' : 'Non registrato'}</StatusPill>
+            </XStack>
+          </XStack>
 
-        <Card borderWidth={1} borderColor="$borderColor" padding="$4">
-          <YStack gap="$3">
-            <H2 size="$6">Preferenze</H2>
-            {settings ? PREFERENCES.map(item => (
-              <Card key={item.key} borderWidth={1} borderColor="$borderColor" padding="$3">
-                <XStack justifyContent="space-between" gap="$3" alignItems="center" flexWrap="wrap">
-                  <YStack gap="$1" flex={1} minWidth={220}>
-                    <Text fontWeight="800">{item.label}</Text>
-                    <Paragraph color="$color10" size="$2">{item.description}</Paragraph>
-                  </YStack>
-                  <Button size="$3" variant="outlined" backgroundColor={settings[item.key] ? '$green4' : 'transparent'} onPress={() => toggle(item.key)}>
-                    {settings[item.key] ? 'Attiva' : 'Disattiva'}
-                  </Button>
-                </XStack>
-              </Card>
-            )) : <Spinner />}
-            <Button alignSelf="flex-start" onPress={() => { void savePreferences() }} disabled={busy || !settings}>Salva preferenze</Button>
-          </YStack>
-        </Card>
-
-        <Card borderWidth={1} borderColor={transport?.current ? '$green8' : '$orange8'} padding="$4">
-          <YStack gap="$3">
-            <H2 size="$6">Trasporto GitHub Actions</H2>
-            <Paragraph color="$color10">
-              {transport?.current
-                ? `Installato e aggiornato (v${transport.version}).`
-                : transport?.installed
-                  ? 'Installato ma da aggiornare.'
-                  : 'Non ancora installato nel repository del gruppo.'}
-            </Paragraph>
-            {isSuperAdmin ? (
-              <>
-                <Button alignSelf="flex-start" onPress={() => { void installTransport() }} disabled={busy || transport?.current}>
-                  {transport?.installed ? 'Aggiorna trasporto push' : 'Installa trasporto push'}
+          {Platform.OS !== 'web' ? (
+            <Paragraph color="$color9">Le notifiche native iOS/Android richiedono il successivo blocco Expo/APNs/FCM. Questa versione abilita Web Push reali su browser.</Paragraph>
+          ) : support?.supported === false ? (
+            <Paragraph color="$yellow11">{support.reason}</Paragraph>
+          ) : (
+            <>
+              <XStack gap="$3" flexWrap="wrap">
+                <DeviceMetric label="Permesso browser" value={support?.supported ? support.permission : '—'} />
+                <DeviceMetric label="Gruppo" value={registeredHere ? 'Attivo' : 'Non attivo'} />
+                <DeviceMetric label="Trasporto" value={transport?.current ? 'Pronto' : 'Da configurare'} />
+              </XStack>
+              <XStack gap="$2" flexWrap="wrap">
+                <Button
+                  borderRadius="$4"
+                  backgroundColor={registeredHere ? '$color3' : '$blue4'}
+                  borderColor={registeredHere ? '$color5' : '$blue7'}
+                  disabled={busy || registeredHere}
+                  onPress={() => { void subscribe() }}
+                >
+                  Abilita in questo gruppo
                 </Button>
-                <Paragraph color="$color10">Nel repository del gruppo deve esistere il Secret Actions <Text fontWeight="900">FANTAZONE_VAPID_PRIVATE_KEY</Text>. Usa la chiave privata VAPID già impiegata dal legacy: la nuova app conserva la stessa chiave pubblica globale e non salva mai la privata nel client o nei JSON.</Paragraph>
-                <Button alignSelf="flex-start" variant="outlined" onPress={() => { void Linking.openURL(secretsUrl) }}>Apri GitHub Actions Secrets</Button>
-              </>
-            ) : (
-              <Paragraph color="$color10">Solo un SuperAdmin può installare/aggiornare il trasporto e configurare il Secret del repository.</Paragraph>
-            )}
-          </YStack>
-        </Card>
+                <Button variant="outlined" borderRadius="$4" onPress={() => { void disableForGroup() }} disabled={busy || !registeredHere}>
+                  Disabilita qui
+                </Button>
+                <Button
+                  variant="outlined"
+                  borderRadius="$4"
+                  icon={Send}
+                  onPress={() => { void sendTest() }}
+                  disabled={busy || !registeredHere || !transport?.current}
+                >
+                  Invia prova
+                </Button>
+              </XStack>
+            </>
+          )}
+        </YStack>
+      </Surface>
 
-        <Card borderWidth={1} borderColor="$yellow8" padding="$4">
-          <YStack gap="$2">
-            <Text fontWeight="900">Automazioni non ancora attive</Text>
-            <Paragraph color="$color10">Le preferenze legacy sono già persistite, ma gli invii automatici per eventi live, reminder, fine giornata e mercato restano disabilitati finché il test reale del trasporto non è stato validato. Questo evita duplicati o spam durante la migrazione.</Paragraph>
+      <Surface padding="$5">
+        <YStack gap="$4">
+          <YStack gap="$1">
+            <Text color="$color8" fontSize="$1" fontWeight="900" textTransform="uppercase">Contenuti</Text>
+            <Text color="$color12" fontSize="$6" fontWeight="900">Cosa vuoi ricevere</Text>
+            <Paragraph color="$color9" size="$2">Le preferenze valgono per questo account nel gruppo corrente.</Paragraph>
           </YStack>
-        </Card>
-      </YStack>
-    </ScrollView>
+
+          {settings ? (
+            <XStack gap="$3" flexWrap="wrap" alignItems="stretch">
+              {PREFERENCES.map(item => (
+                <YStack
+                  key={item.key}
+                  flexGrow={1}
+                  flexBasis={420}
+                  minWidth={270}
+                  padding="$4"
+                  borderRadius="$5"
+                  borderWidth={1}
+                  borderColor={settings[item.key] ? '$green6' : '$color5'}
+                  backgroundColor={settings[item.key] ? '$green2' : '$color2'}
+                  gap="$3"
+                >
+                  <XStack justifyContent="space-between" alignItems="flex-start" gap="$3">
+                    <YStack gap="$1" flex={1} minWidth={0}>
+                      <Text color="$color12" fontWeight="900">{item.label}</Text>
+                      <Paragraph color="$color9" size="$2">{item.description}</Paragraph>
+                    </YStack>
+                    <StatusPill tone={settings[item.key] ? 'green' : 'neutral'}>{settings[item.key] ? 'Attiva' : 'Spenta'}</StatusPill>
+                  </XStack>
+                  <Button
+                    size="$3"
+                    alignSelf="flex-start"
+                    borderRadius="$10"
+                    backgroundColor={settings[item.key] ? '$green4' : '$color3'}
+                    borderColor={settings[item.key] ? '$green7' : '$color5'}
+                    onPress={() => toggle(item.key)}
+                  >
+                    {settings[item.key] ? 'Disattiva' : 'Attiva'}
+                  </Button>
+                </YStack>
+              ))}
+            </XStack>
+          ) : (
+            <YStack minHeight={120} alignItems="center" justifyContent="center"><Spinner /></YStack>
+          )}
+
+          <XStack justifyContent="flex-end">
+            <PrimaryAction disabled={busy || !settings} onPress={() => { void savePreferences() }}>
+              Salva preferenze
+            </PrimaryAction>
+          </XStack>
+        </YStack>
+      </Surface>
+
+      <Surface accent={transport?.current ? 'green' : 'yellow'} padding="$5">
+        <YStack gap="$4">
+          <XStack gap="$3" justifyContent="space-between" alignItems="center" flexWrap="wrap">
+            <XStack gap="$3" alignItems="center" flex={1} minWidth={250}>
+              <YStack width={46} height={46} borderRadius="$4" backgroundColor={transport?.current ? '$green4' : '$yellow4'} alignItems="center" justifyContent="center">
+                {transport?.current ? <ShieldCheck size="$1.2" color="$green10" /> : <Wrench size="$1.2" color="$yellow10" />}
+              </YStack>
+              <YStack gap="$1" flex={1}>
+                <Text color="$color8" fontSize="$1" fontWeight="900" textTransform="uppercase">GitHub Actions</Text>
+                <Text color="$color12" fontSize="$6" fontWeight="900">Trasporto push</Text>
+              </YStack>
+            </XStack>
+            <StatusPill tone={transport?.current ? 'green' : 'yellow'}>
+              {transport?.current ? `v${transport.version} pronta` : transport?.installed ? 'Da aggiornare' : 'Non installata'}
+            </StatusPill>
+          </XStack>
+
+          {isSuperAdmin ? (
+            <>
+              <Paragraph color="$color9">
+                Nel repository deve esistere il Secret Actions <Text fontWeight="900">FANTAZONE_VAPID_PRIVATE_KEY</Text>. La chiave privata non viene mai salvata nel client o nei JSON.
+              </Paragraph>
+              <XStack gap="$2" flexWrap="wrap">
+                <Button
+                  borderRadius="$4"
+                  disabled={busy || transport?.current}
+                  onPress={() => { void installTransport() }}
+                >
+                  {transport?.installed ? 'Aggiorna trasporto' : 'Installa trasporto'}
+                </Button>
+                <Button
+                  variant="outlined"
+                  borderRadius="$4"
+                  icon={ExternalLink}
+                  onPress={() => { void Linking.openURL(secretsUrl) }}
+                >
+                  GitHub Actions Secrets
+                </Button>
+              </XStack>
+            </>
+          ) : (
+            <Paragraph color="$color9">Solo un SuperAdmin può installare/aggiornare il trasporto e configurare il Secret del repository.</Paragraph>
+          )}
+        </YStack>
+      </Surface>
+
+      <Surface accent="yellow" padding="$4">
+        <YStack gap="$2">
+          <Text color="$yellow11" fontWeight="900">Automazioni ancora protette</Text>
+          <Paragraph color="$yellow11" size="$2">
+            Le preferenze legacy sono già persistite, ma gli invii automatici per eventi live, reminder, fine giornata e mercato restano disabilitati finché il test reale del trasporto non è stato validato. Questo evita duplicati o spam durante la migrazione.
+          </Paragraph>
+        </YStack>
+      </Surface>
+    </AppScreen>
+  )
+}
+
+function DeviceMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <YStack flexGrow={1} flexBasis={150} minWidth={130} padding="$3" borderRadius="$4" backgroundColor="$color3" borderWidth={1} borderColor="$color4" gap="$1">
+      <Text color="$color8" fontSize="$1" fontWeight="900" textTransform="uppercase">{label}</Text>
+      <Text color="$color12" fontWeight="900">{value}</Text>
+    </YStack>
   )
 }
 
