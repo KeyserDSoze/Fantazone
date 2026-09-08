@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { Button, Card, H1, H2, Input, Paragraph, ScrollView, Spinner, Text, XStack, YStack } from 'tamagui'
+import { Copy, Plus, RefreshCw, Trash2, Users } from '@tamagui/lucide-icons-2'
+import { Button, Input, Paragraph, Spinner, Text, XStack, YStack } from 'tamagui'
 import {
   getCurrentSeasonYear,
   formatSeasonFromYear,
@@ -8,6 +9,7 @@ import {
   type AuthenticatedGroupSession,
   type Group,
 } from '@fantazone/domain'
+import { AppScreen, PageIntro, PrimaryAction, StatusPill, Surface } from '../components/design-system'
 import type { GroupNavigationSelection } from '../services/groupNavigation'
 import {
   addAnnualTeam,
@@ -124,87 +126,146 @@ export function GroupBasketsAdminScreen({ runtime, session, selection }: Props) 
   }
 
   return (
-    <ScrollView flex={1} contentContainerStyle={{ flexGrow: 1 }}>
-      <YStack width="100%" maxWidth={1040} alignSelf="center" padding="$4" paddingBottom="$8" gap="$4">
-        <XStack justifyContent="space-between" alignItems="flex-start" gap="$3" flexWrap="wrap" paddingTop="$2">
-          <YStack gap="$1">
-            <H1>Basket e squadre</H1>
-            <Paragraph color="$color10">Anagrafica canonica · {formatSeasonFromYear(year)}. Un account può appartenere a una sola squadra per stagione.</Paragraph>
-          </YStack>
-          <Button variant="outlined" disabled={loading} onPress={() => { void refresh() }}>{loading ? <Spinner /> : 'Aggiorna'}</Button>
-        </XStack>
+    <AppScreen maxWidth={1180}>
+      <PageIntro
+        eyebrow="Amministrazione"
+        title="Basket e squadre"
+        description={`Anagrafica canonica ${formatSeasonFromYear(year)}. Un account può appartenere a una sola squadra per stagione e ogni modifica viene controllata prima della scrittura.`}
+        action={(
+          <Button variant="outlined" borderRadius="$4" icon={loading ? undefined : RefreshCw} disabled={loading} onPress={() => { void refresh() }}>
+            {loading ? <Spinner /> : 'Aggiorna'}
+          </Button>
+        )}
+      />
 
-        {error ? <Card borderWidth={1} borderColor="$red8" padding="$3"><Paragraph color="$red10">{error}</Paragraph></Card> : null}
-        {status ? <Card borderWidth={1} borderColor="$green8" padding="$3"><Paragraph color="$green10">{status}</Paragraph></Card> : null}
+      {error ? <Surface accent="red" padding="$3"><Paragraph color="$red11">{error}</Paragraph></Surface> : null}
+      {status ? <Surface accent="green" padding="$3"><Paragraph color="$green11">{status}</Paragraph></Surface> : null}
 
-        <Card borderWidth={1} borderColor="$borderColor" padding="$4">
-          <YStack gap="$3">
-            <H2 size="$6">Basket</H2>
-            <XStack gap="$2" flexWrap="wrap">
-              {group.baskets.map(item => (
-                <Button key={item.id} size="$3" variant="outlined" backgroundColor={item.id === selectedBasketId ? '$color4' : 'transparent'} borderColor={item.id === selectedBasketId ? '$purple8' : '$borderColor'} onPress={() => setSelectedBasketId(item.id)}>
-                  {item.name}
-                </Button>
-              ))}
-              {group.baskets.length === 0 ? <Text color="$color10">Nessun basket configurato.</Text> : null}
-            </XStack>
-            <XStack gap="$2" flexWrap="wrap">
-              <Input flex={1} minWidth={260} value={basketName} onChangeText={setBasketName} placeholder="Nuovo basket" />
-              <Button disabled={loading || !basketName.trim()} onPress={() => { void createBasket() }}>Crea basket</Button>
-            </XStack>
-          </YStack>
-        </Card>
-
-        {basket ? (
-          <Card borderWidth={1} borderColor="$purple8" padding="$4">
-            <YStack gap="$3">
-              <XStack justifyContent="space-between" alignItems="flex-start" gap="$3" flexWrap="wrap">
-                <YStack flex={1} minWidth={240}>
-                  <H2 size="$6">{basket.name}</H2>
-                  <Paragraph color="$color10">ID: {basket.id}</Paragraph>
-                  <Paragraph color="$color10">Leghe collegate: {linkedLeagues.length ? linkedLeagues.map(league => league.name).join(', ') : 'nessuna'}</Paragraph>
-                </YStack>
-                <Button variant="outlined" disabled={loading} borderColor="$red8" color="$red10" onPress={() => { void deleteBasket() }}>Elimina basket</Button>
-              </XStack>
-              <Paragraph color="$color9">La cancellazione è consentita solo quando il basket non è collegato a leghe e non contiene squadre in nessuna stagione.</Paragraph>
+      <Surface padding="$4">
+        <YStack gap="$4">
+          <XStack justifyContent="space-between" alignItems="center" gap="$3" flexWrap="wrap">
+            <YStack gap="$1">
+              <Text color="$color12" fontSize="$6" fontWeight="900">Struttura del gruppo</Text>
+              <Paragraph color="$color10">Scegli il basket da amministrare oppure creane uno nuovo.</Paragraph>
             </YStack>
-          </Card>
-        ) : null}
+            <StatusPill tone="purple">{group.baskets.length} basket</StatusPill>
+          </XStack>
 
-        {basket ? (
-          <Card borderWidth={1} borderColor="$blue8" padding="$4">
-            <YStack gap="$3">
-              <XStack justifyContent="space-between" alignItems="center" gap="$3" flexWrap="wrap">
-                <YStack><H2 size="$6">Squadre · {formatSeasonFromYear(year)}</H2><Paragraph color="$color10">{teams.length} squadre configurate.</Paragraph></YStack>
-                <Button variant="outlined" disabled={loading} onPress={() => { void copyPrevious() }}>Copia dal {formatSeasonFromYear(year - 1)}</Button>
-              </XStack>
-              <XStack gap="$2" flexWrap="wrap">
-                <Input flex={1} minWidth={220} value={teamName} onChangeText={setTeamName} placeholder="Nome squadra" />
-                <Input flex={1} minWidth={260} value={teamOwner} onChangeText={setTeamOwner} autoCapitalize="none" autoCorrect={false} placeholder="owner@email.it" />
-                <Button disabled={loading || !teamName.trim() || !teamOwner.trim()} onPress={() => { void addTeam() }}>Aggiungi squadra</Button>
-              </XStack>
-              <Paragraph color="$color9">Owner e co-owner devono essere utenti attivi del gruppo. Il service impedisce assegnazioni multiple nella stessa stagione.</Paragraph>
-            </YStack>
-          </Card>
-        ) : null}
-
-        {basket ? (
-          <YStack gap="$3">
-            {teams.map(team => (
-              <TeamCard
-                key={team.owner}
-                team={team}
-                activeEmails={activeUsers.map(user => user.email)}
-                loading={loading}
-                onRemove={() => { void removeTeam(team) }}
-                onToggleCoOwner={email => { void toggleCoOwner(team, email) }}
-              />
+          <XStack gap="$2" flexWrap="wrap">
+            {group.baskets.map(item => (
+              <Button
+                key={item.id}
+                size="$3"
+                borderRadius="$10"
+                backgroundColor={item.id === selectedBasketId ? '$purple4' : '$color3'}
+                borderColor={item.id === selectedBasketId ? '$purple7' : '$color5'}
+                onPress={() => setSelectedBasketId(item.id)}
+              >
+                <Text color={item.id === selectedBasketId ? '$purple11' : '$color10'} fontWeight="800">{item.name}</Text>
+              </Button>
             ))}
-            {teams.length === 0 ? <Card borderWidth={1} borderColor="$borderColor" padding="$4"><Paragraph color="$color10">Nessuna squadra per questa stagione.</Paragraph></Card> : null}
+            {group.baskets.length === 0 ? <Text color="$color9">Nessun basket configurato.</Text> : null}
+          </XStack>
+
+          <XStack gap="$3" flexWrap="wrap" alignItems="flex-end">
+            <YStack flex={1} minWidth={260} gap="$1.5">
+              <Text color="$color9" fontSize="$2" fontWeight="800">NUOVO BASKET</Text>
+              <Input value={basketName} onChangeText={setBasketName} placeholder="Nome basket" />
+            </YStack>
+            <PrimaryAction disabled={loading || !basketName.trim()} onPress={() => { void createBasket() }} icon={<Plus size="$1" color="white" />}>
+              Crea basket
+            </PrimaryAction>
+          </XStack>
+        </YStack>
+      </Surface>
+
+      {basket ? (
+        <Surface accent="purple" padding="$5">
+          <YStack gap="$4">
+            <XStack justifyContent="space-between" alignItems="flex-start" gap="$4" flexWrap="wrap">
+              <YStack flex={1} minWidth={260} gap="$2">
+                <XStack alignItems="center" gap="$2" flexWrap="wrap">
+                  <Text color="$color12" fontSize="$7" fontWeight="900">{basket.name}</Text>
+                  <StatusPill tone={linkedLeagues.length > 0 ? 'blue' : 'neutral'}>{linkedLeagues.length} leghe collegate</StatusPill>
+                </XStack>
+                <Text color="$color9" fontSize="$2">ID tecnico · {basket.id}</Text>
+                <Paragraph color="$color10">{linkedLeagues.length ? linkedLeagues.map(league => league.name).join(' · ') : 'Nessuna lega usa ancora questo basket.'}</Paragraph>
+              </YStack>
+              <Button
+                variant="outlined"
+                borderRadius="$4"
+                icon={Trash2}
+                disabled={loading}
+                borderColor="$red7"
+                color="$red10"
+                onPress={() => { void deleteBasket() }}
+              >
+                Elimina basket
+              </Button>
+            </XStack>
+            <Paragraph color="$color9" fontSize="$2">La cancellazione resta bloccata se il basket è collegato a una lega o contiene squadre in qualunque stagione.</Paragraph>
           </YStack>
-        ) : null}
-      </YStack>
-    </ScrollView>
+        </Surface>
+      ) : null}
+
+      {basket ? (
+        <Surface accent="blue" padding="$5">
+          <YStack gap="$4">
+            <XStack justifyContent="space-between" alignItems="flex-start" gap="$4" flexWrap="wrap">
+              <YStack gap="$1">
+                <XStack alignItems="center" gap="$2">
+                  <Users size="$1.1" color="$blue10" />
+                  <Text color="$color12" fontSize="$6" fontWeight="900">Squadre · {formatSeasonFromYear(year)}</Text>
+                </XStack>
+                <Paragraph color="$color10">{teams.length} squadre configurate in questo basket.</Paragraph>
+              </YStack>
+              <Button variant="outlined" borderRadius="$4" icon={Copy} disabled={loading} onPress={() => { void copyPrevious() }}>
+                Copia dal {formatSeasonFromYear(year - 1)}
+              </Button>
+            </XStack>
+
+            <XStack gap="$3" flexWrap="wrap" alignItems="flex-end">
+              <YStack flexGrow={1} flexBasis={230} gap="$1.5">
+                <Text color="$color9" fontSize="$2" fontWeight="800">NOME SQUADRA</Text>
+                <Input value={teamName} onChangeText={setTeamName} placeholder="Nome squadra" />
+              </YStack>
+              <YStack flexGrow={1} flexBasis={280} gap="$1.5">
+                <Text color="$color9" fontSize="$2" fontWeight="800">OWNER</Text>
+                <Input value={teamOwner} onChangeText={setTeamOwner} autoCapitalize="none" autoCorrect={false} placeholder="owner@email.it" />
+              </YStack>
+              <PrimaryAction disabled={loading || !teamName.trim() || !teamOwner.trim()} onPress={() => { void addTeam() }} icon={<Plus size="$1" color="white" />}>
+                Aggiungi squadra
+              </PrimaryAction>
+            </XStack>
+            <Paragraph color="$color9" fontSize="$2">Owner e co-owner devono essere utenti attivi. Il service impedisce assegnazioni multiple nella stessa stagione.</Paragraph>
+          </YStack>
+        </Surface>
+      ) : null}
+
+      {basket ? (
+        <XStack gap="$3" flexWrap="wrap" alignItems="stretch">
+          {teams.map(team => (
+            <TeamCard
+              key={team.owner}
+              team={team}
+              activeEmails={activeUsers.map(user => user.email)}
+              loading={loading}
+              onRemove={() => { void removeTeam(team) }}
+              onToggleCoOwner={email => { void toggleCoOwner(team, email) }}
+            />
+          ))}
+          {teams.length === 0 ? (
+            <Surface padding="$5">
+              <YStack minHeight={140} alignItems="center" justifyContent="center" gap="$2">
+                <Users size="$2" color="$color8" />
+                <Text color="$color12" fontWeight="900">Nessuna squadra</Text>
+                <Paragraph color="$color10" textAlign="center">Aggiungi la prima squadra oppure copia le assegnazioni della stagione precedente.</Paragraph>
+              </YStack>
+            </Surface>
+          ) : null}
+        </XStack>
+      ) : null}
+    </AppScreen>
   )
 }
 
@@ -217,30 +278,53 @@ function TeamCard({ team, activeEmails, loading, onRemove, onToggleCoOwner }: {
 }) {
   const [coOwner, setCoOwner] = useState('')
   return (
-    <Card borderWidth={1} borderColor="$borderColor" padding="$4">
-      <YStack gap="$3">
-        <XStack justifyContent="space-between" alignItems="flex-start" gap="$3" flexWrap="wrap">
-          <YStack flex={1} minWidth={240}>
-            <Text fontWeight="900" fontSize="$5">{team.name}</Text>
-            <Text color="$color10">Owner · {team.owner}</Text>
-          </YStack>
-          <Button size="$3" variant="outlined" borderColor="$red8" color="$red10" disabled={loading} onPress={onRemove}>Rimuovi</Button>
-        </XStack>
-        <YStack gap="$2">
-          <Text fontWeight="700">Co-owner</Text>
-          <XStack gap="$2" flexWrap="wrap">
-            {team.additionalOwners.map(email => (
-              <Button key={email} size="$2" variant="outlined" disabled={loading} onPress={() => onToggleCoOwner(email)}>{email} ×</Button>
-            ))}
-            {team.additionalOwners.length === 0 ? <Text color="$color10">Nessuno</Text> : null}
-          </XStack>
-          <XStack gap="$2" flexWrap="wrap">
-            <Input flex={1} minWidth={260} value={coOwner} onChangeText={setCoOwner} autoCapitalize="none" autoCorrect={false} placeholder="co-owner@email.it" />
-            <Button size="$3" disabled={loading || !coOwner.trim() || !activeEmails.some(email => same(email, coOwner))} onPress={() => { onToggleCoOwner(coOwner); setCoOwner('') }}>Aggiungi co-owner</Button>
-          </XStack>
+    <YStack
+      flexGrow={1}
+      flexBasis={420}
+      minWidth={300}
+      maxWidth={570}
+      padding="$4"
+      gap="$4"
+      borderWidth={1}
+      borderColor="$color5"
+      backgroundColor="$color2"
+      borderRadius="$5"
+    >
+      <XStack justifyContent="space-between" alignItems="flex-start" gap="$3">
+        <YStack flex={1} minWidth={0} gap="$1">
+          <Text color="$color12" fontWeight="900" fontSize="$5" numberOfLines={1}>{team.name}</Text>
+          <Text color="$color9" fontSize="$2" numberOfLines={1}>Owner · {team.owner}</Text>
         </YStack>
+        <Button size="$3" variant="outlined" borderRadius="$4" borderColor="$red7" color="$red10" disabled={loading} onPress={onRemove}>Rimuovi</Button>
+      </XStack>
+
+      <YStack gap="$2">
+        <XStack alignItems="center" justifyContent="space-between" gap="$2">
+          <Text color="$color8" fontSize="$1" fontWeight="900" textTransform="uppercase">Co-owner</Text>
+          <StatusPill tone={team.additionalOwners.length ? 'blue' : 'neutral'}>{team.additionalOwners.length}</StatusPill>
+        </XStack>
+        <XStack gap="$2" flexWrap="wrap">
+          {team.additionalOwners.map(email => (
+            <Button key={email} size="$2" borderRadius="$10" backgroundColor="$blue3" borderColor="$blue5" disabled={loading} onPress={() => onToggleCoOwner(email)}>
+              <Text color="$blue11" fontWeight="800">{email} ×</Text>
+            </Button>
+          ))}
+          {team.additionalOwners.length === 0 ? <Text color="$color9">Nessun co-owner assegnato.</Text> : null}
+        </XStack>
       </YStack>
-    </Card>
+
+      <XStack gap="$2" flexWrap="wrap" alignItems="center">
+        <Input flex={1} minWidth={240} value={coOwner} onChangeText={setCoOwner} autoCapitalize="none" autoCorrect={false} placeholder="co-owner@email.it" />
+        <Button
+          size="$3"
+          borderRadius="$4"
+          disabled={loading || !coOwner.trim() || !activeEmails.some(email => same(email, coOwner))}
+          onPress={() => { onToggleCoOwner(coOwner); setCoOwner('') }}
+        >
+          Aggiungi
+        </Button>
+      </XStack>
+    </YStack>
   )
 }
 
