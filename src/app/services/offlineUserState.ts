@@ -1,6 +1,6 @@
 import type { ExternalIdentity } from '@fantazone/domain'
 import { repositoryPersistentCache } from './repositoryPersistentCache'
-import type { UserSettings } from './userSettingsOneDrive'
+import { decodeUserSettings, type UserSettings } from './userSettingsOneDrive'
 
 const IDENTITY_KEY = '__local__/microsoft-identity.v1'
 const SETTINGS_PREFIX = '__local__/user-settings.v1/'
@@ -31,9 +31,9 @@ export async function loadCachedUserSettings(identity: ExternalIdentity): Promis
   const entry = await repositoryPersistentCache.get(settingsKey(identity))
   const value = entry?.value
   if (!value || typeof value !== 'object') return null
-  const candidate = value as Partial<UserSettings>
-  if (candidate.version !== 2 || !Array.isArray(candidate.groups)) return null
-  return candidate as UserSettings
+  const candidate = value as { version?: unknown; groups?: unknown }
+  if ((candidate.version !== 1 && candidate.version !== 2 && candidate.version !== 3) || !Array.isArray(candidate.groups)) return null
+  return decodeUserSettings(value)
 }
 
 function settingsKey(identity: ExternalIdentity): string {
