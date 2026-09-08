@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { isNewerVersion } from '../../src/app/components/VersionUpdateBanner'
+import { isNewerVersion } from '../../src/app/services/appUpdateVersion'
 
 test('detects newer semantic application versions', () => {
   assert.equal(isNewerVersion('0.2.1', '0.2.0'), true)

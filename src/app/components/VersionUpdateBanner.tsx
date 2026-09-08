@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Button, Card, Paragraph, Spinner, Text, XStack, YStack } from 'tamagui'
 import { APP_VERSION } from '../config/version'
+import { isNewerVersion } from '../services/appUpdateVersion'
 
 const VERSION_URL = '/version.json'
 const CHECK_INTERVAL_MS = 5 * 60 * 1000
@@ -100,22 +101,6 @@ export function VersionUpdateBanner() {
       </YStack>
     </Card>
   )
-}
-
-export function isNewerVersion(candidate: string, current: string): boolean {
-  const next = parseVersion(candidate)
-  const installed = parseVersion(current)
-  if (!next || !installed) return candidate.trim() !== current.trim()
-  for (let index = 0; index < 3; index += 1) {
-    if (next[index] !== installed[index]) return next[index] > installed[index]
-  }
-  return false
-}
-
-function parseVersion(value: string): [number, number, number] | null {
-  const match = value.trim().match(/^(\d+)\.(\d+)\.(\d+)$/)
-  if (!match) return null
-  return [Number(match[1]), Number(match[2]), Number(match[3])]
 }
 
 function wasDeferredForThisSession(version: string): boolean {
