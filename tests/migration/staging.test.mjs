@@ -75,6 +75,27 @@ test('second run resumes every completed source record without reconverting it',
   })
 })
 
+test('changed source record carries the previous staged content hash for safe target updates', async () => {
+  await fixture(async workDir => {
+    const first = await stageMigrationRecords(records, options(workDir))
+    const originalTeam = first.groupFiles.find(file => file.source === 'team/t')
+    assert.ok(originalTeam)
+
+    const changedRecords = records.map(record => record.container === 'team'
+      ? { ...record, value: { ...teamRaw, m: 25 } }
+      : record)
+    const second = await stageMigrationRecords(changedRecords, options(workDir))
+    assert.equal(second.staging.convertedThisRun, 1)
+    assert.equal(second.staging.resumed, 3)
+
+    const changedTeam = second.groupFiles.find(file => file.source === 'team/t')
+    assert.ok(changedTeam)
+    assert.equal(typeof changedTeam.previousContentSha256, 'string')
+    assert.equal(changedTeam.previousContentSha256.length, 64)
+    assert.notEqual(changedTeam.content, originalTeam.content)
+  })
+})
+
 test('missing staged output is rebuilt without discarding other checkpoints', async () => {
   await fixture(async workDir => {
     await stageMigrationRecords(records, options(workDir))
