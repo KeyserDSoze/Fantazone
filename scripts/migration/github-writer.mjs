@@ -73,7 +73,12 @@ async function cleanupBootstrap(api, info) {
 export function selectFilesForCollisionMode(files, existingPaths, mode = 'fail') {
   const collisions = files.filter(file => existingPaths.has(file.path))
   if (mode === 'fail' && collisions.length) throw new Error(`Target repository already contains ${collisions.length} migration path(s): ${collisions.slice(0, 5).map(x => x.path).join(', ')}`)
-  return { files: mode === 'preserve' ? files.filter(file => !existingPaths.has(file.path)) : files, collisions }
+  const forcedOverwrites = mode === 'preserve' ? collisions.filter(file => file.forceOverwrite === true) : []
+  return {
+    files: mode === 'preserve' ? files.filter(file => !existingPaths.has(file.path) || file.forceOverwrite === true) : files,
+    collisions,
+    forcedOverwrites,
+  }
 }
 
 export async function writeFilesAtomically({ api, repository, branch, files, message, mode = 'fail', apply = false }) {
@@ -82,7 +87,7 @@ export async function writeFilesAtomically({ api, repository, branch, files, mes
   let bootstrapped = false
   if (info.empty) {
     if (info.branch !== info.defaultBranch) throw new Error(`Empty repository '${info.owner}/${info.repo}' cannot be bootstrapped directly on custom branch '${info.branch}'. Use '${info.defaultBranch}' first.`)
-    if (!apply) return { repository, branch: info.branch, empty: true, planned: files.length, written: 0, collisions: [] }
+    if (!apply) return { repository, branch: info.branch, empty: true, planned: files.length, written: 0, collisions: [], forcedOverwrites: [] }
     info = await bootstrapEmptyRepository(api, info)
     bootstrapped = true
   }
@@ -90,7 +95,10 @@ export async function writeFilesAtomically({ api, repository, branch, files, mes
   try {
     const base = await currentTree(api, info)
     const selection = selectFilesForCollisionMode(files, base.paths, mode)
-    if (!apply) return { repository, branch: info.branch, empty: false, planned: selection.files.length, written: 0, collisions: selection.collisions.map(x => x.path) }
+    if (!apply) return {
+      repository, branch: info.branch, empty: false, planned: selection.files.length, written: 0,
+      collisions: selection.collisions.map(x => x.path), forcedOverwrites: selection.forcedOverwrites.map(x => x.path),
+    }
 
     const treeEntries = []
     for (const file of selection.files) {
@@ -100,12 +108,18 @@ export async function writeFilesAtomically({ api, repository, branch, files, mes
     if (base.paths.has(BOOTSTRAP_PATH)) treeEntries.push({ path: BOOTSTRAP_PATH, mode: '100644', type: 'blob', sha: null })
     if (!treeEntries.length) {
       if (base.paths.has(BOOTSTRAP_PATH)) await cleanupBootstrap(api, info)
-      return { repository, branch: info.branch, planned: 0, written: 0, collisions: selection.collisions.map(x => x.path), commit: null }
+      return {
+        repository, branch: info.branch, planned: 0, written: 0,
+        collisions: selection.collisions.map(x => x.path), forcedOverwrites: selection.forcedOverwrites.map(x => x.path), commit: null,
+      }
     }
     const tree = await api.request('POST', `/repos/${info.owner}/${info.repo}/git/trees`, { base_tree: base.treeSha, tree: treeEntries })
     const commit = await api.request('POST', `/repos/${info.owner}/${info.repo}/git/commits`, { message, tree: tree.sha, parents: [base.headSha] })
     await api.request('PATCH', `/repos/${info.owner}/${info.repo}/git/refs/heads/${branchPath(info.branch)}`, { sha: commit.sha, force: false })
-    return { repository, branch: info.branch, planned: selection.files.length, written: selection.files.length, collisions: selection.collisions.map(x => x.path), commit: commit.sha }
+    return {
+      repository, branch: info.branch, planned: selection.files.length, written: selection.files.length,
+      collisions: selection.collisions.map(x => x.path), forcedOverwrites: selection.forcedOverwrites.map(x => x.path), commit: commit.sha,
+    }
   } catch (error) {
     if (bootstrapped) {
       try { await cleanupBootstrap(api, info) } catch { /* preserve original migration error */ }

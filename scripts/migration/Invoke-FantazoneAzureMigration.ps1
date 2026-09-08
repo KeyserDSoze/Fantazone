@@ -11,11 +11,13 @@ param(
     [string]$CachePath,
     [string]$WorkDir,
     [switch]$RefreshCache,
+    [switch]$ReuseCache,
     [switch]$NoCache,
     [switch]$ResetWork,
     [switch]$Apply,
     [switch]$Overwrite,
-    [switch]$PreserveExisting
+    [switch]$PreserveExisting,
+    [switch]$RepairImportedCalendars
 )
 
 Set-StrictMode -Version Latest
@@ -24,8 +26,12 @@ $ErrorActionPreference = "Stop"
 if ($Overwrite -and $PreserveExisting) {
     throw "-Overwrite and -PreserveExisting are mutually exclusive."
 }
-if ($RefreshCache -and $NoCache) {
-    throw "-RefreshCache and -NoCache are mutually exclusive."
+if ($RepairImportedCalendars -and -not $PreserveExisting) {
+    throw "-RepairImportedCalendars requires -PreserveExisting."
+}
+$cacheModes = @($RefreshCache, $ReuseCache, $NoCache) | Where-Object { $_ }
+if ($cacheModes.Count -gt 1) {
+    throw "-RefreshCache, -ReuseCache and -NoCache are mutually exclusive."
 }
 
 function Read-SecretPlainText([string]$Prompt) {
@@ -55,11 +61,13 @@ try {
     if ($CachePath) { $arguments += @("--cache", $CachePath) }
     if ($WorkDir) { $arguments += @("--work-dir", $WorkDir) }
     if ($RefreshCache) { $arguments += "--refresh-cache" }
+    if ($ReuseCache) { $arguments += "--reuse-cache" }
     if ($NoCache) { $arguments += "--no-cache" }
     if ($ResetWork) { $arguments += "--reset-work" }
     if ($Apply) { $arguments += "--apply" }
     if ($Overwrite) { $arguments += "--overwrite" }
     if ($PreserveExisting) { $arguments += "--preserve-existing" }
+    if ($RepairImportedCalendars) { $arguments += "--repair-imported-calendars" }
 
     & node @arguments
     if ($LASTEXITCODE -ne 0) { throw "Migration process failed with exit code $LASTEXITCODE." }

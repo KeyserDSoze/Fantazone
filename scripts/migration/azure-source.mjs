@@ -1,9 +1,11 @@
 import { BlobServiceClient, StorageSharedKeyCredential } from '@azure/storage-blob'
 import { shouldDownloadContainer } from './migration-plan.mjs'
 import { unwrapRystemEntity } from './legacy-mappers.mjs'
+import { normalizeLegacyRealCalendarRecord } from './real-calendar-source.mjs'
 
 const PROGRESS_BLOB_INTERVAL = 100
 const PROGRESS_TIME_INTERVAL_MS = 5_000
+const PRIMITIVE_KEY_CONTAINERS = new Set(['realcalendar', 'realteamwrapper', 'realplayerswrapper', 'statplayerswrapper'])
 
 function parseConnectionString(connectionString) {
   const parts = new Map()
@@ -39,12 +41,106 @@ async function streamToString(readable) {
   return Buffer.concat(chunks).toString('utf8')
 }
 
+function blobMetadata(blob) {
+  return {
+    name: blob.name,
+    size: blob.properties.contentLength ?? null,
+    lastModified: blob.properties.lastModified?.toISOString?.() ?? null,
+    etag: blob.properties.etag ?? null,
+  }
+}
+
+function recordId(container, blobName) {
+  return `${norm(container)}/${blobName}`
+}
+
+function previousScanIndexes(previousScan) {
+  const blobs = new Map()
+  const records = new Map()
+  for (const container of previousScan?.inventory ?? []) {
+    for (const blob of container?.blobs ?? []) blobs.set(recordId(container.name, blob.name), blob)
+  }
+  for (const record of previousScan?.records ?? []) records.set(recordId(record.container, record.blobName), record)
+  return { blobs, records }
+}
+
+function sameBlob(previous, current) {
+  if (!previous || !current) return false
+  if (previous.etag && current.etag) return previous.etag === current.etag
+  return previous.lastModified != null && current.lastModified != null &&
+    previous.lastModified === current.lastModified && previous.size === current.size
+}
+
+function recordFromText(container, blobName, text) {
+  const entity = unwrapRystemEntity(text, `${container}/${blobName}`)
+  if (!entity.enveloped && entity.key == null && PRIMITIVE_KEY_CONTAINERS.has(container)) {
+    entity.key = Number.parseInt(blobName, 10)
+  }
+  return { container, blobName, key: entity.key, value: entity.value }
+}
+
+function normalizeCanonicalRecord(record) {
+  if (record.container !== 'realcalendar') return { ok: true, record }
+  return normalizeLegacyRealCalendarRecord(record)
+}
+
+async function downloadText(blobClient) {
+  const response = await blobClient.download()
+  const text = await streamToString(response.readableStreamBody)
+  return { text, bytes: Buffer.byteLength(text) }
+}
+
+async function recoverRealCalendarVersion(containerClient, blobName, expectedSeason) {
+  const versions = []
+  for await (const item of containerClient.listBlobsFlat({ prefix: blobName, includeVersions: true })) {
+    if (item.name !== blobName || !item.versionId) continue
+    versions.push(item)
+  }
+  versions.sort((left, right) => {
+    const leftTime = left.properties.lastModified?.getTime?.() ?? 0
+    const rightTime = right.properties.lastModified?.getTime?.() ?? 0
+    return rightTime - leftTime
+  })
+
+  let downloadedCount = 0
+  let downloadedBytes = 0
+  const baseClient = containerClient.getBlobClient(blobName)
+  if (typeof baseClient.withVersion !== 'function') return { record: null, downloadedCount, downloadedBytes }
+
+  for (const version of versions) {
+    const versionClient = baseClient.withVersion(version.versionId)
+    const downloaded = await downloadText(versionClient)
+    downloadedCount += 1
+    downloadedBytes += downloaded.bytes
+    const candidate = recordFromText('realcalendar', blobName, downloaded.text)
+    candidate.key = expectedSeason
+    const normalized = normalizeLegacyRealCalendarRecord(candidate)
+    if (!normalized.ok) continue
+    return {
+      record: { ...normalized.record, sourceVersionId: version.versionId },
+      versionId: version.versionId,
+      lastModified: version.properties.lastModified?.toISOString?.() ?? null,
+      downloadedCount,
+      downloadedBytes,
+    }
+  }
+
+  return { record: null, downloadedCount, downloadedBytes }
+}
+
 export async function scanAzureStorage(connectionString, options = {}) {
   const client = options.client ?? createBlobServiceClient(connectionString)
   const onProgress = typeof options.onProgress === 'function' ? options.onProgress : () => {}
+  const previous = previousScanIndexes(options.previousScan)
   const inventory = []
   const records = []
+  const issues = []
+  const recoveries = []
   let containerNumber = 0
+  let totalDownloadedCount = 0
+  let totalDownloadedBytes = 0
+  let totalReusedCount = 0
+  let totalRecoveredCount = 0
 
   for await (const container of client.listContainers()) {
     containerNumber += 1
@@ -57,6 +153,8 @@ export async function scanAzureStorage(connectionString, options = {}) {
     let blobCount = 0
     let downloadedCount = 0
     let downloadedBytes = 0
+    let reusedCount = 0
+    let recoveredCount = 0
     let lastProgressAt = Date.now()
     const startedAt = lastProgressAt
 
@@ -69,18 +167,58 @@ export async function scanAzureStorage(connectionString, options = {}) {
 
     for await (const blob of containerClient.listBlobsFlat()) {
       blobCount += 1
-      item.blobs.push({ name: blob.name, size: blob.properties.contentLength ?? null, lastModified: blob.properties.lastModified?.toISOString?.() ?? null })
+      const metadata = blobMetadata(blob)
+      item.blobs.push(metadata)
+
       if (download) {
-        const response = await containerClient.getBlobClient(blob.name).download()
-        const text = await streamToString(response.readableStreamBody)
-        downloadedCount += 1
-        downloadedBytes += Buffer.byteLength(text)
-        const entity = unwrapRystemEntity(text, `${name}/${blob.name}`)
-        if (!entity.enveloped && entity.key == null) {
-          // Primitive keys can be recovered from the blob name only as a fallback. Composite-key canonical containers must remain enveloped.
-          if (['realcalendar', 'realteamwrapper', 'realplayerswrapper', 'statplayerswrapper'].includes(name)) entity.key = Number.parseInt(blob.name, 10)
+        const id = recordId(name, blob.name)
+        const cachedMetadata = previous.blobs.get(id)
+        const cachedRecord = previous.records.get(id)
+        let normalized = null
+        let initialIssue = null
+
+        if (cachedRecord && sameBlob(cachedMetadata, metadata)) {
+          normalized = normalizeCanonicalRecord(cachedRecord)
+          if (normalized.ok) reusedCount += 1
+          else initialIssue = normalized.issue
+        } else {
+          const downloaded = await downloadText(containerClient.getBlobClient(blob.name))
+          downloadedCount += 1
+          downloadedBytes += downloaded.bytes
+          normalized = normalizeCanonicalRecord(recordFromText(name, blob.name, downloaded.text))
+          if (!normalized.ok) initialIssue = normalized.issue
         }
-        records.push({ container: name, blobName: blob.name, key: entity.key, value: entity.value })
+
+        if (normalized?.ok) {
+          records.push(normalized.record)
+        } else if (name === 'realcalendar') {
+          const expectedSeason = Number(cachedRecord?.key ?? Number.parseInt(blob.name, 10))
+          const recovered = await recoverRealCalendarVersion(containerClient, blob.name, expectedSeason)
+          downloadedCount += recovered.downloadedCount
+          downloadedBytes += recovered.downloadedBytes
+          if (recovered.record) {
+            recoveredCount += 1
+            records.push(recovered.record)
+            recoveries.push({
+              container: name,
+              blobName: blob.name,
+              key: expectedSeason,
+              versionId: recovered.versionId,
+              lastModified: recovered.lastModified,
+              reason: initialIssue?.detail ?? 'Current RealCalendar payload is not valid for its Azure/Rystem season key.',
+            })
+          } else {
+            issues.push(initialIssue ?? {
+              container: name,
+              blobName: blob.name,
+              key: expectedSeason,
+              reason: 'invalid-realcalendar-season',
+              detail: 'Current RealCalendar payload is invalid and no valid Azure blob version could be recovered.',
+            })
+          }
+        } else if (initialIssue) {
+          issues.push(initialIssue)
+        }
       }
 
       const now = Date.now()
@@ -93,6 +231,8 @@ export async function scanAzureStorage(connectionString, options = {}) {
           blobCount,
           downloadedCount,
           downloadedBytes,
+          reusedCount,
+          recoveredCount,
           currentBlob: blob.name,
           elapsedMs: now - startedAt,
         })
@@ -100,6 +240,10 @@ export async function scanAzureStorage(connectionString, options = {}) {
       }
     }
 
+    totalDownloadedCount += downloadedCount
+    totalDownloadedBytes += downloadedBytes
+    totalReusedCount += reusedCount
+    totalRecoveredCount += recoveredCount
     onProgress({
       type: 'container-complete',
       container: name,
@@ -108,15 +252,25 @@ export async function scanAzureStorage(connectionString, options = {}) {
       blobCount,
       downloadedCount,
       downloadedBytes,
+      reusedCount,
+      recoveredCount,
       elapsedMs: Date.now() - startedAt,
     })
   }
 
+  const stats = {
+    downloadedCount: totalDownloadedCount,
+    downloadedBytes: totalDownloadedBytes,
+    reusedCount: totalReusedCount,
+    recoveredVersionCount: totalRecoveredCount,
+  }
   onProgress({
     type: 'scan-complete',
     containerCount: inventory.length,
     blobCount: inventory.reduce((sum, item) => sum + item.blobs.length, 0),
-    downloadedCount: records.length,
+    canonicalRecordCount: records.length,
+    issueCount: issues.length,
+    ...stats,
   })
-  return { inventory, records }
+  return { inventory, records, issues, recoveries, stats }
 }
