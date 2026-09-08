@@ -32,13 +32,8 @@ for (const absolutePath of walk(root)) {
   }
 }
 
-const sourceCommit = execFileSync('git', ['rev-parse', 'HEAD'], {
-  cwd: root,
-  encoding: 'utf8',
-}).trim()
-
 const orderedFiles = Object.fromEntries(Object.entries(files).sort(([left], [right]) => left.localeCompare(right)))
-const payload = Buffer.from(JSON.stringify({ version: 1, sourceCommit, files: orderedFiles }))
+const payload = Buffer.from(JSON.stringify({ version: 1, files: orderedFiles }))
 mkdirSync(dirname(outputPath), { recursive: true })
 writeFileSync(outputPath, gzipSync(payload, { level: 9, mtime: 0 }))
 console.log(`Offline group pack: ${Object.keys(orderedFiles).length} JSON documents, ${payload.byteLength} bytes before gzip.`)
