@@ -30,8 +30,8 @@ async function showRemoteFile(remote, path) {
   return git([`--git-dir=${remote}`, 'show', `main:${path}`])
 }
 
-function file(path, value) {
-  return { path, content: `${JSON.stringify(value, null, 2)}\n`, source: `test/${path}` }
+function file(path, value, extra = {}) {
+  return { path, content: `${JSON.stringify(value, null, 2)}\n`, source: `test/${path}`, ...extra }
 }
 
 test('native git writer creates one commit and pushes staged files directly to main', async () => {
@@ -71,7 +71,38 @@ test('preserve mode makes reruns idempotent and only commits paths still missing
     assert.equal(second.planned, 1)
     assert.equal(second.written, 1)
     assert.deepEqual(second.collisions, ['existing.json'])
+    assert.deepEqual(second.forcedOverwrites, [])
     assert.equal(JSON.parse(await showRemoteFile(remote, 'existing.json')).value, 1)
+    assert.equal(JSON.parse(await showRemoteFile(remote, 'new.json')).value, 2)
+  })
+})
+
+test('preserve mode can explicitly overwrite one proven repair without opening every collision', async () => {
+  await fixture(async root => {
+    const remote = await createBareRemote(root)
+    const common = {
+      repository: 'owner/group', branch: 'main', remoteUrl: remote,
+      gitRoot: join(root, 'transport'), mode: 'preserve', message: 'fix: repair imported calendar',
+    }
+
+    await writeFilesWithGit({
+      ...common,
+      files: [file('calendar.json', { year: 0 }), file('untouched.json', { value: 1 })],
+    })
+    const repaired = await writeFilesWithGit({
+      ...common,
+      files: [
+        file('calendar.json', { year: 13 }, { forceOverwrite: true }),
+        file('untouched.json', { value: 999 }),
+        file('new.json', { value: 2 }),
+      ],
+    })
+
+    assert.equal(repaired.planned, 2)
+    assert.equal(repaired.written, 2)
+    assert.deepEqual(repaired.forcedOverwrites, ['calendar.json'])
+    assert.equal(JSON.parse(await showRemoteFile(remote, 'calendar.json')).year, 13)
+    assert.equal(JSON.parse(await showRemoteFile(remote, 'untouched.json')).value, 1)
     assert.equal(JSON.parse(await showRemoteFile(remote, 'new.json')).value, 2)
   })
 })
