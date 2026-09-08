@@ -15,11 +15,12 @@ const releases: Release[] = [
   {
     version: APP_VERSION,
     date: RELEASE_DATE,
-    title: 'Apertura automatica e gruppo predefinito',
+    title: 'Apertura automatica e aggiornamenti applicativi',
     items: [
       { category: 'Miglioria', text: 'Se l’account ha un solo gruppo, Fantazone lo apre automaticamente senza mostrare ogni volta il selettore.' },
       { category: 'Nuovo', text: 'Con più gruppi puoi scegliere un gruppo predefinito: la preferenza viene salvata nei settings privati OneDrive e si apre automaticamente agli avvii successivi.' },
       { category: 'Miglioria', text: 'Il comando Cambia gruppo nel menu interno apre intenzionalmente il selettore senza essere subito rimandato al gruppo predefinito.' },
+      { category: 'Nuovo', text: 'Quando viene pubblicata una nuova versione, un banner propone Aggiorna ora o Più tardi; l’aggiornamento svuota solo la cache dell’App Shell e conserva replica offline, gruppi e outbox.' },
       { category: 'Architettura', text: 'I settings utente passano allo schema v3 mantenendo migrazione automatica dai formati v1/v2 e una sola preferenza predefinita valida.' },
     ],
   },
