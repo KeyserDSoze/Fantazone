@@ -157,7 +157,7 @@ async function recoverRealCalendarHistory(containerClient, blobName, expectedSea
       ? { sourceVersionId: candidate.id }
       : { sourceSnapshot: candidate.id }
     return {
-      record: { ...normalized.record, ...sourceMetadata },
+      record: { ...normalized.record, migrationRepair: true, ...sourceMetadata },
       sourceKind: candidate.kind,
       versionId: candidate.kind === 'version' ? candidate.id : null,
       snapshot: candidate.kind === 'snapshot' ? candidate.id : null,
