@@ -1,5 +1,11 @@
 import { gunzipSync, strFromU8 } from 'fflate'
+import { decodeRepositoryRevisionManifest } from '@fantazone/github'
 import type { GroupConnection } from './groupSessionRuntime'
+import {
+  decodeGroupOfflineSnapshotState,
+  shouldRefreshGroupOfflineSnapshot,
+  type GroupOfflineSnapshotState,
+} from './groupOfflineSnapshotState'
 import { repositoryPersistentCache } from './repositoryPersistentCache'
 
 export type OfflineSnapshotResult = {
@@ -43,6 +49,7 @@ const PLATFORM_REF = 'main'
 const PLATFORM_PACK_INDEX = '/offline/serie-a/index.json'
 const PLATFORM_PACK_METADATA_PREFIX = '__offline__/serie-a-pack.v1/'
 const GROUP_OFFLINE_PACK_PATH = '.fantazone/offline/group-snapshot.json.gz'
+const GROUP_OFFLINE_PACK_METADATA_PREFIX = '__offline__/group-pack.v1/'
 const CACHE_WRITE_BATCH_SIZE = 32
 
 /**
@@ -52,6 +59,10 @@ const CACHE_WRITE_BATCH_SIZE = 32
  * fetched cross-origin from fanta.plus. The Contents API raw media type streams the
  * single private pack directly from api.github.com and therefore costs one API read
  * instead of one request per JSON blob.
+ *
+ * The last successfully installed snapshot revision is tracked separately from the
+ * normal repository manifest cache. That distinction matters: checking a fresh
+ * manifest must not make an older offline pack look current if its download failed.
  *
  * Offline hydration is an optimization. A missing/stale pack, rate limit or local
  * storage failure must never prevent an otherwise valid online group from opening.
@@ -77,12 +88,28 @@ async function hydrateRepositoryOfflineSnapshotInternal(
   const repo = connection.repository.name
   const ref = connection.repository.default_branch
   const prefix = repositoryCachePrefix(owner, repo)
+  const stateKey = groupOfflinePackStateKey(owner, repo, ref)
+  const previousState = decodeGroupOfflineSnapshotState((await repositoryPersistentCache.get(stateKey))?.value)
 
-  onProgress?.('Scaricamento della copia compatta del gruppo…')
+  onProgress?.('Controllo se la copia offline del gruppo è aggiornata…')
+  const remoteRevision = await fetchGroupRepositoryRevision(connection)
+  if (!shouldRefreshGroupOfflineSnapshot(previousState, remoteRevision)) {
+    await hydratePlatformPacksFromCachedGroup(prefix, ref, onProgress)
+    onProgress?.('Copia offline del gruppo già aggiornata.')
+    return snapshotResult(previousState)
+  }
+
+  onProgress?.('Aggiornamento della copia compatta del gruppo…')
   const pack = await fetchGroupOfflinePack(connection)
   if (!pack) {
-    onProgress?.('Copia offline in preparazione; il gruppo resta disponibile online.')
-    return { documents: 0, bytes: 0 }
+    onProgress?.('Copia offline in preparazione; mantengo la versione locale disponibile.')
+    return snapshotResult(previousState)
+  }
+
+  const packRevision = groupOfflinePackRevision(pack)
+  if (packRevision !== remoteRevision) {
+    onProgress?.('La nuova copia offline è ancora in preparazione; mantengo quella locale e riproverò più tardi.')
+    return snapshotResult(previousState)
   }
 
   const entries = Object.entries(pack.files)
@@ -107,8 +134,32 @@ async function hydrateRepositoryOfflineSnapshotInternal(
   }
 
   const storedBytes = entries.reduce((sum, [, entry]) => sum + entry.bytes, 0)
-  onProgress?.(`${entries.length} documenti del gruppo disponibili offline.`)
+  const state: GroupOfflineSnapshotState = {
+    version: 1,
+    revision: packRevision,
+    documents: entries.length,
+    bytes: storedBytes,
+  }
+  await repositoryPersistentCache.set(stateKey, { value: state, sha: 'local-v1' })
+
+  onProgress?.(`${entries.length} documenti del gruppo aggiornati nella copia offline.`)
   return { documents: entries.length, bytes: storedBytes }
+}
+
+async function fetchGroupRepositoryRevision(connection: GroupConnection): Promise<number> {
+  const owner = encodeURIComponent(connection.repository.owner.login)
+  const repo = encodeURIComponent(connection.repository.name)
+  const ref = encodeURIComponent(connection.repository.default_branch)
+  const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/manifest.json?ref=${ref}`, {
+    headers: githubRawHeaders(connection.token),
+    cache: 'no-store',
+  })
+  if (!response.ok) {
+    const detail = await response.text().catch(() => '')
+    throw new Error(`Impossibile controllare la revisione del gruppo (HTTP ${response.status})${detail ? `: ${detail}` : '.'}`)
+  }
+  const manifest = decodeRepositoryRevisionManifest(JSON.parse(await response.text()))
+  return manifest.revision
 }
 
 async function fetchGroupOfflinePack(connection: GroupConnection): Promise<GroupOfflinePack | null> {
@@ -117,11 +168,7 @@ async function fetchGroupOfflinePack(connection: GroupConnection): Promise<Group
   const ref = encodeURIComponent(connection.repository.default_branch)
   const path = GROUP_OFFLINE_PACK_PATH.split('/').map(encodeURIComponent).join('/')
   const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${ref}`, {
-    headers: {
-      Accept: 'application/vnd.github.raw+json',
-      Authorization: `Bearer ${connection.token}`,
-      'X-GitHub-Api-Version': '2022-11-28',
-    },
+    headers: githubRawHeaders(connection.token),
     cache: 'no-store',
   })
 
@@ -135,6 +182,20 @@ async function fetchGroupOfflinePack(connection: GroupConnection): Promise<Group
   const decoded = JSON.parse(strFromU8(gunzipSync(compressed))) as GroupOfflinePack
   if (!isValidGroupOfflinePack(decoded)) throw new Error('Copia offline del gruppo non valida.')
   return decoded
+}
+
+function githubRawHeaders(token: string): Record<string, string> {
+  return {
+    Accept: 'application/vnd.github.raw+json',
+    Authorization: `Bearer ${token}`,
+    'X-GitHub-Api-Version': '2022-11-28',
+  }
+}
+
+function groupOfflinePackRevision(pack: GroupOfflinePack): number {
+  const manifest = pack.files['manifest.json']?.value
+  if (!manifest) throw new Error('Copia offline del gruppo senza manifest.json.')
+  return decodeRepositoryRevisionManifest(manifest).revision
 }
 
 function isValidGroupOfflinePack(value: unknown): value is GroupOfflinePack {
@@ -151,6 +212,16 @@ function isValidGroupPackEntry(path: string, value: unknown): value is { sha: st
   return typeof candidate.sha === 'string' && candidate.sha.length > 0 &&
     typeof candidate.bytes === 'number' && Number.isFinite(candidate.bytes) && candidate.bytes >= 0 &&
     'value' in value
+}
+
+async function hydratePlatformPacksFromCachedGroup(
+  prefix: string,
+  ref: string,
+  onProgress?: (detail: string) => void,
+): Promise<void> {
+  const cachedGroup = await repositoryPersistentCache.get(`${prefix}config/group.json@${ref}`)
+  const seasonIds = groupSeasonIds(cachedGroup?.value)
+  if (seasonIds.length > 0) await hydratePlatformSeasonPacks(seasonIds, onProgress)
 }
 
 async function hydratePlatformSeasonPacks(
@@ -224,6 +295,14 @@ function decodePackMetadata(value: unknown): PlatformPackCacheMetadata | null {
   if (typeof candidate.hash !== 'string' || !Array.isArray(candidate.paths) ||
     candidate.paths.some(path => typeof path !== 'string')) return null
   return { hash: candidate.hash, paths: [...candidate.paths] }
+}
+
+function snapshotResult(state: GroupOfflineSnapshotState | null): OfflineSnapshotResult {
+  return state ? { documents: state.documents, bytes: state.bytes } : { documents: 0, bytes: 0 }
+}
+
+function groupOfflinePackStateKey(owner: string, repo: string, ref: string): string {
+  return `${GROUP_OFFLINE_PACK_METADATA_PREFIX}${owner.toLowerCase()}/${repo.toLowerCase()}@${ref}`
 }
 
 function platformCacheKey(path: string): string {
