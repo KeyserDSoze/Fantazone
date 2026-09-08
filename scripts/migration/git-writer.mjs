@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
 import { execFile as execFileCallback } from 'node:child_process'
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
+import { mkdir, rm, writeFile } from 'node:fs/promises'
 import { dirname, resolve, sep } from 'node:path'
 import { promisify } from 'node:util'
 
@@ -102,7 +102,7 @@ async function checkoutTargetBranch(repoDir, branch, pat) {
   await runGit(['checkout', '--quiet', '--orphan', branch], { cwd: repoDir, pat })
 }
 
-async function selectFiles(files, repoDir, existingPaths, mode) {
+async function selectFiles(files, repoDir, existingPaths, mode, pat) {
   const collisions = files.filter(file => existingPaths.has(file.path))
   if (mode === 'fail' && collisions.length) {
     throw new Error(`Target repository already contains ${collisions.length} migration path(s): ${collisions.slice(0, 5).map(file => file.path).join(', ')}`)
@@ -115,8 +115,10 @@ async function selectFiles(files, repoDir, existingPaths, mode) {
   const safeUpdates = []
   for (const file of collisions) {
     if (file.forceOverwrite === true || !file.previousContentSha256) continue
-    const currentContent = await readFile(safeOutputPath(repoDir, file.path), 'utf8')
-    if (contentFingerprint(currentContent) === file.previousContentSha256) safeUpdates.push(file)
+    // Read the committed blob instead of the checked-out working tree. Git for Windows may
+    // apply core.autocrlf during checkout, which must not turn an untouched file into a false conflict.
+    const current = await runGit(['show', `HEAD:${file.path}`], { cwd: repoDir, pat, allowFailure: true })
+    if (current.ok && contentFingerprint(current.stdout) === file.previousContentSha256) safeUpdates.push(file)
   }
 
   const selectedCollisionPaths = new Set([...forcedOverwrites, ...safeUpdates].map(file => file.path))
@@ -169,7 +171,7 @@ export async function writeFilesWithGit({
 
     const listed = await runGit(['ls-files', '-z'], { cwd: repoDir, pat })
     const existingPaths = new Set(listed.stdout.split('\0').filter(Boolean))
-    const selection = await selectFiles(files, repoDir, existingPaths, mode)
+    const selection = await selectFiles(files, repoDir, existingPaths, mode, pat)
     onProgress?.({
       type: 'selection', repository, branch,
       total: files.length, selected: selection.files.length, collisions: selection.collisions.length,
