@@ -29,6 +29,44 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: 22
+      - name: Smoke-test PowerShell migration wrapper
+        shell: pwsh
+        run: |
+          $fakeBin = Join-Path $env:RUNNER_TEMP 'fantazone-fake-node'
+          New-Item -ItemType Directory -Path $fakeBin -Force | Out-Null
+          $fakeNode = Join-Path $fakeBin 'node'
+          @'
+          #!/usr/bin/env bash
+          echo "[fake-node] stdout"
+          echo "[fake-node] warning on stderr" >&2
+          exit "${FANTAZONE_FAKE_NODE_EXIT:-0}"
+          '@ | Set-Content -Path $fakeNode -NoNewline
+          & chmod +x $fakeNode
+
+          $env:PATH = "$fakeBin$([IO.Path]::PathSeparator)$env:PATH"
+          $env:FANTAZONE_AZURE_CONNECTION_STRING = 'UseDevelopmentStorage=true'
+          $env:FANTAZONE_GROUP_PAT = 'test-group-pat'
+          $env:FANTAZONE_PLATFORM_PAT = 'test-platform-pat'
+
+          ./scripts/migration/Invoke-FantazoneAzureMigration.ps1 `
+            -GroupRepository 'owner/group' `
+            -PlatformRepository 'owner/platform' `
+            -PreserveExisting `
+            -RepairImportedCalendars `
+            -Apply
+
+          $env:FANTAZONE_FAKE_NODE_EXIT = '7'
+          try {
+            ./scripts/migration/Invoke-FantazoneAzureMigration.ps1 `
+              -GroupRepository 'owner/group' `
+              -PlatformRepository 'owner/platform' `
+              -PreserveExisting
+            throw 'Expected the wrapper to fail for native exit code 7.'
+          }
+          catch {
+            if ($_.Exception.Message -notmatch 'Migration process failed with exit code 7') { throw }
+            $global:LASTEXITCODE = 0
+          }
       - name: Install workspace dependencies
         run: npm ci
       - name: Typecheck application
