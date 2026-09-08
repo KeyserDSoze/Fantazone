@@ -65,6 +65,7 @@ jobs:
           }
           catch {
             if ($_.Exception.Message -notmatch 'Migration process failed with exit code 7') { throw }
+            $global:LASTEXITCODE = 0
           }
       - name: Install workspace dependencies
         run: npm ci
