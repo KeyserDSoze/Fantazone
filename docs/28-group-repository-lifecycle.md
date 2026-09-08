@@ -31,6 +31,8 @@ Group Actions write with the repository's short-lived `GITHUB_TOKEN`. The platfo
 6. The runtime opens the group and prepares its local offline replica.
 7. Repository/PAT are persisted in the user's private OneDrive App Folder settings and locally according to the current shared-credential model.
 
+A migrated repository may already contain `config/group.json` and `data/**` while still missing bootstrap/runtime files such as `manifest.json`, `settings.json`, `fantazone.json` or the managed workflow. In that state the existing readable `config/group.json` is sufficient to identify the repository as an existing Fantazone group: connection is allowed and `ensureGroupInitialized()` completes the missing contract without replacing migrated group data. A repository with no `config/group.json` is still rejected by the existing-group flow so Fantazone never invents an empty group over unclassified data.
+
 ## Bootstrap rules
 
 `ensureGroupInitialized()` is idempotent.

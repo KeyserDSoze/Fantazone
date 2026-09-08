@@ -54,10 +54,11 @@ export class StoredGroupRepositoryContractError extends Error {
  * settings or an invitation). The shared PAT is checked against the exact repo;
  * no repository listing/fallback is used.
  *
- * This preflight proves the token, exact repository, read/write repository flags,
- * readable manifest and readable schema-v2 Group document. Runtime/workflow write
- * permission is then exercised only when needed by `ensureGroupInitialized()`
- * before the connection is persisted by App.tsx.
+ * This preflight proves the token, exact repository, read/write repository flags
+ * and a readable schema-v2 Group document. A missing revision manifest is accepted
+ * for migrated/partially bootstrapped repositories: `ensureGroupInitialized()`
+ * creates it (and any other missing managed runtime files) before the connection is
+ * persisted by App.tsx. An existing manifest must still be valid.
  */
 export async function connectKnownGroup(
   token: string,
@@ -115,15 +116,13 @@ async function validateCanonicalDocuments(client: StoredGroupReconnectClient, re
   const ref = repository.default_branch
   try {
     const [manifestSnapshot, groupSnapshot] = await Promise.all([
-      client.getContent(owner, repo, REPOSITORY_MANIFEST_PATH, ref),
-      client.getContent(owner, repo, GROUP_DOCUMENT_PATH, ref),
+      readOptionalManifest(client, repository),
+      readRequiredGroupDocument(client, repository),
     ])
-    decodeRepositoryRevisionManifest(JSON.parse(manifestSnapshot.content))
+
     decodeStoredGroup(JSON.parse(groupSnapshot.content), { owner, repo, ref })
+    if (manifestSnapshot) decodeRepositoryRevisionManifest(JSON.parse(manifestSnapshot.content))
   } catch (error) {
-    if (error instanceof GitHubApiError && error.status === 404) {
-      throw new StoredGroupRepositoryContractError(repository.full_name, 'mancano manifest.json o config/group.json')
-    }
     if (error instanceof SyntaxError) {
       throw new StoredGroupRepositoryContractError(repository.full_name, 'JSON canonico non valido')
     }
@@ -133,6 +132,42 @@ async function validateCanonicalDocuments(client: StoredGroupReconnectClient, re
       repository.full_name,
       error instanceof Error ? error.message : 'documenti canonici non validi',
     )
+  }
+}
+
+async function readOptionalManifest(
+  client: StoredGroupReconnectClient,
+  repository: GitHubRepo,
+): Promise<{ sha: string; content: string } | null> {
+  try {
+    return await client.getContent(
+      repository.owner.login,
+      repository.name,
+      REPOSITORY_MANIFEST_PATH,
+      repository.default_branch,
+    )
+  } catch (error) {
+    if (error instanceof GitHubApiError && error.status === 404) return null
+    throw error
+  }
+}
+
+async function readRequiredGroupDocument(
+  client: StoredGroupReconnectClient,
+  repository: GitHubRepo,
+): Promise<{ sha: string; content: string }> {
+  try {
+    return await client.getContent(
+      repository.owner.login,
+      repository.name,
+      GROUP_DOCUMENT_PATH,
+      repository.default_branch,
+    )
+  } catch (error) {
+    if (error instanceof GitHubApiError && error.status === 404) {
+      throw new StoredGroupRepositoryContractError(repository.full_name, `manca ${GROUP_DOCUMENT_PATH}`)
+    }
+    throw error
   }
 }
 
