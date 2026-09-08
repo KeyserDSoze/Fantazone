@@ -34,12 +34,22 @@ import { SerieAAdminScreen } from './serie-a-admin-screen'
 type Props = {
   runtime: GroupSessionRuntime
   session: AuthenticatedGroupSession
+  theme: 'light' | 'dark'
+  onToggleTheme: () => void
   onLogout: () => void | Promise<void>
   onDisconnect: () => void | Promise<void>
   onExploreArchitecture: () => void
 }
 
-export function GroupDashboardScreen({ runtime, session, onLogout, onDisconnect, onExploreArchitecture }: Props) {
+export function GroupDashboardScreen({
+  runtime,
+  session,
+  theme,
+  onToggleTheme,
+  onLogout,
+  onDisconnect,
+  onExploreArchitecture,
+}: Props) {
   void onLogout
   const [route, setRoute] = useState<GroupProductRoute>('home')
   const [selection, setSelection] = useState<GroupNavigationSelection>(() => getDefaultGroupSelection(runtime.group))
@@ -64,6 +74,8 @@ export function GroupDashboardScreen({ runtime, session, onLogout, onDisconnect,
       identityEmail={session.identity.email}
       route={route}
       selection={selection}
+      theme={theme}
+      onToggleTheme={onToggleTheme}
       onRouteChange={navigate}
       onLeagueChange={selectLeague}
       onYearChange={selectYear}

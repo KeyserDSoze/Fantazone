@@ -567,19 +567,6 @@ export default function App() {
       <Theme name={theme}>
         <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
         <YStack flex={1} backgroundColor="$background">
-          {microsoftSession ? (
-            <XStack padding="$3" justifyContent="flex-end" gap="$2">
-              {view === 'architecture' ? (
-                <Button size="$3" onPress={() => setView('groups')}>Gruppi</Button>
-              ) : (
-                <Button size="$3" onPress={() => setView('architecture')}>Come funziona</Button>
-              )}
-              <Button size="$3" onPress={() => setTheme(current => current === 'dark' ? 'light' : 'dark')}>
-                Tema {theme === 'dark' ? 'chiaro' : 'scuro'}
-              </Button>
-            </XStack>
-          ) : null}
-
           <OperationStatusBanner />
 
           {loading ? (
@@ -603,6 +590,8 @@ export default function App() {
             <GroupDashboardScreen
               runtime={runtime}
               session={authenticatedSession}
+              theme={theme}
+              onToggleTheme={() => setTheme(current => current === 'dark' ? 'light' : 'dark')}
               onLogout={closeGroup}
               onDisconnect={closeGroup}
               onExploreArchitecture={() => setView('architecture')}

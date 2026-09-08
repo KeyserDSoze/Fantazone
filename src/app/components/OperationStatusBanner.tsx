@@ -10,26 +10,55 @@ export function OperationStatusBanner() {
   const pendingWrites = useOperationStatus(state => state.pendingWrites)
   const lastSyncedAt = useOperationStatus(state => state.lastSyncedAt)
 
-  if (!busy && connectivity !== 'offline' && pendingWrites === 0) return null
+  if (!busy && connectivity !== 'offline' && pendingWrites === 0 && !lastSyncedAt) return null
+
+  if (!busy) {
+    const label = connectivity === 'offline'
+      ? `Offline · copia locale${pendingWrites > 0 ? ` · ${pendingWrites} modifica${pendingWrites === 1 ? '' : 'he'} in attesa` : ''}`
+      : pendingWrites > 0
+        ? `Sincronizzazione · ${pendingWrites} modifica${pendingWrites === 1 ? '' : 'he'} in attesa`
+        : `Sincronizzato${lastSyncedAt ? ` · ${new Date(lastSyncedAt).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}` : ''}`
+
+    return (
+      <Card
+        position="absolute"
+        left="$3"
+        bottom="$3"
+        zIndex={1000}
+        maxWidth="92%"
+        paddingHorizontal="$3"
+        paddingVertical="$2"
+        borderWidth={1}
+        borderColor={connectivity === 'offline' ? '$yellow8' : pendingWrites > 0 ? '$blue8' : '$green8'}
+        backgroundColor={connectivity === 'offline' ? '$yellow2' : pendingWrites > 0 ? '$blue2' : '$green2'}
+        elevation={8}
+      >
+        <Text fontSize="$2" fontWeight="700" numberOfLines={1}>{label}</Text>
+      </Card>
+    )
+  }
 
   return (
-    <Card marginHorizontal="$3" marginBottom="$2" padding="$3" borderWidth={1} borderColor={busy ? '$blue8' : '$yellow8'}>
+    <Card
+      position="absolute"
+      left="$3"
+      bottom="$3"
+      zIndex={1000}
+      width={420}
+      maxWidth="92%"
+      padding="$3"
+      borderWidth={1}
+      borderColor="$blue8"
+      backgroundColor="$color2"
+      elevation={10}
+    >
       <XStack gap="$3" alignItems="center">
-        {busy ? <Spinner /> : null}
+        <Spinner />
         <YStack flex={1} gap="$1">
-          <Text fontWeight="800">
-            {busy ? (title ?? 'Operazione in corso') : connectivity === 'offline' ? 'Modalità offline' : 'Modifiche da sincronizzare'}
-          </Text>
+          <Text fontWeight="800">{title ?? 'Operazione in corso'}</Text>
           <Paragraph size="$2" color="$color10">
-            {busy
-              ? (detail ?? 'Fantazone sta completando l’operazione richiesta.')
-              : connectivity === 'offline'
-                ? `Stai usando la copia locale${pendingWrites > 0 ? ` · ${pendingWrites} modifica${pendingWrites === 1 ? '' : 'he'} in attesa` : ''}.`
-                : `${pendingWrites} modifica${pendingWrites === 1 ? '' : 'he'} in attesa di sincronizzazione.`}
+            {detail ?? 'Fantazone sta completando l’operazione richiesta.'}
           </Paragraph>
-          {!busy && lastSyncedAt ? (
-            <Text fontSize="$1" color="$color9">Ultima sincronizzazione: {new Date(lastSyncedAt).toLocaleTimeString()}</Text>
-          ) : null}
         </YStack>
       </XStack>
     </Card>
