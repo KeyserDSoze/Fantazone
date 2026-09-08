@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { Button, Card, H1, H2, Input, Paragraph, ScrollView, Text, XStack, YStack } from 'tamagui'
+import { Calculator, Plus, RefreshCw, Star, Trash2 } from '@tamagui/lucide-icons-2'
+import { Button, Input, Paragraph, Spinner, Text, XStack, YStack } from 'tamagui'
 import {
   LeagueType,
   MarketType,
@@ -9,6 +10,7 @@ import {
   type Group,
   type LeagueSetting,
 } from '@fantazone/domain'
+import { AppScreen, PageIntro, PrimaryAction, StatusPill, Surface } from '../components/design-system'
 import type { GroupNavigationSelection } from '../services/groupNavigation'
 import {
   copyLeagueYearFromPrevious,
@@ -93,20 +95,15 @@ export function GroupLeagueAdminScreen({ runtime, session, selection }: Props) {
   const league = group.leagues.find(item => item.id === leagueId) ?? null
   const annual = year != null ? league?.years.find(item => item.year === year) ?? null : null
 
-  useEffect(() => {
-    void refresh()
-  }, [runtime])
-
+  useEffect(() => { void refresh() }, [runtime])
   useEffect(() => {
     if (selection.leagueId && group.leagues.some(item => item.id === selection.leagueId)) setLeagueId(selection.leagueId)
   }, [selection.leagueId, group])
-
-  useEffect(() => {
-    setDraft(annual ? cloneLeagueSetting(annual.settings) : null)
-  }, [leagueId, year, annual?.year, annual?.settings])
+  useEffect(() => { setDraft(annual ? cloneLeagueSetting(annual.settings) : null) }, [leagueId, year, annual?.year, annual?.settings])
 
   async function refresh() {
-    setLoading(true); setError(null)
+    setLoading(true)
+    setError(null)
     try {
       const fresh = await runtime.refreshGroup()
       setGroup(fresh)
@@ -116,18 +113,26 @@ export function GroupLeagueAdminScreen({ runtime, session, selection }: Props) {
   }
 
   async function perform(operation: () => Promise<Group>, success: string) {
-    setLoading(true); setError(null); setStatus(null)
-    try { setGroup(await operation()); setStatus(success) }
-    catch (caught) { setError(message(caught)) }
+    setLoading(true)
+    setError(null)
+    setStatus(null)
+    try {
+      setGroup(await operation())
+      setStatus(success)
+    } catch (caught) { setError(message(caught)) }
     finally { setLoading(false) }
   }
 
   async function createLeague() {
     if (year == null) return
-    setLoading(true); setError(null); setStatus(null)
+    setLoading(true)
+    setError(null)
+    setStatus(null)
     try {
       const result = await createGroupLeague(runtime, session.member, { name: newLeagueName, year })
-      setGroup(result.group); setLeagueId(result.league.id); setNewLeagueName('')
+      setGroup(result.group)
+      setLeagueId(result.league.id)
+      setNewLeagueName('')
       setStatus(`Lega “${result.league.name}” creata.`)
     } catch (caught) { setError(message(caught)) }
     finally { setLoading(false) }
@@ -135,7 +140,9 @@ export function GroupLeagueAdminScreen({ runtime, session, selection }: Props) {
 
   async function initializeCalendar() {
     if (!league || year == null) return
-    setLoading(true); setError(null); setStatus(null)
+    setLoading(true)
+    setError(null)
+    setStatus(null)
     try {
       const result = await initializeLeagueCalendarAndRank(runtime, session.member, league.id, year)
       setGroup(result.group)
@@ -150,7 +157,9 @@ export function GroupLeagueAdminScreen({ runtime, session, selection }: Props) {
 
   async function recalculate(specificDay?: number) {
     if (year == null) return
-    setLoading(true); setError(null); setStatus(null)
+    setLoading(true)
+    setError(null)
+    setStatus(null)
     try {
       await dispatchGroupRecalculation(runtime, session.member, { season: year, ...(specificDay != null ? { day: specificDay } : {}) })
       setStatus(specificDay == null
@@ -167,147 +176,262 @@ export function GroupLeagueAdminScreen({ runtime, session, selection }: Props) {
   )
 
   return (
-    <ScrollView flex={1} contentContainerStyle={{ flexGrow: 1 }}>
-      <YStack width="100%" maxWidth={1080} alignSelf="center" padding="$4" paddingBottom="$8" gap="$4">
-        <XStack justifyContent="space-between" alignItems="flex-start" gap="$3" flexWrap="wrap" paddingTop="$2">
-          <YStack gap="$1">
-            <H1>Leghe e calcoli</H1>
-            <Paragraph color="$color10">Configurazione SuperAdmin{year != null ? ` · ${formatSeasonFromYear(year)}` : ''}. Calendar e Rank materializzati non vengono mai sovrascritti implicitamente.</Paragraph>
-          </YStack>
-          <Button variant="outlined" disabled={loading} onPress={() => { void refresh() }}>Aggiorna</Button>
-        </XStack>
+    <AppScreen maxWidth={1240}>
+      <PageIntro
+        eyebrow="SuperAdmin"
+        title="Leghe e calcoli"
+        description={`Configura struttura e regole${year != null ? ` per ${formatSeasonFromYear(year)}` : ''}. Calendar e Rank materializzati non vengono sovrascritti implicitamente.`}
+        action={(
+          <Button variant="outlined" borderRadius="$4" icon={loading ? undefined : RefreshCw} disabled={loading} onPress={() => { void refresh() }}>
+            {loading ? <Spinner /> : 'Aggiorna'}
+          </Button>
+        )}
+      />
 
-        {error ? <Card borderWidth={1} borderColor="$red8" padding="$3"><Paragraph color="$red10">{error}</Paragraph></Card> : null}
-        {status ? <Card borderWidth={1} borderColor="$green8" padding="$3"><Paragraph color="$green10">{status}</Paragraph></Card> : null}
+      {error ? <Surface accent="red" padding="$3"><Paragraph color="$red11">{error}</Paragraph></Surface> : null}
+      {status ? <Surface accent="green" padding="$3"><Paragraph color="$green11">{status}</Paragraph></Surface> : null}
 
-        <Card borderWidth={1} borderColor="$borderColor" padding="$4">
-          <YStack gap="$3">
-            <H2 size="$6">Seleziona o crea una lega</H2>
-            <XStack gap="$2" flexWrap="wrap">
-              {group.leagues.map(item => (
-                <Button key={item.id} size="$3" variant="outlined" backgroundColor={item.id === leagueId ? '$color4' : 'transparent'} borderColor={item.id === leagueId ? '$blue8' : '$borderColor'} onPress={() => setLeagueId(item.id)}>
-                  {item.isMain ? '★ ' : ''}{item.name}
-                </Button>
-              ))}
-            </XStack>
-            <XStack gap="$2" flexWrap="wrap">
-              <Input flex={1} minWidth={260} value={newLeagueName} onChangeText={setNewLeagueName} placeholder="Nuova lega" />
-              <Button disabled={loading || year == null || !newLeagueName.trim()} onPress={() => { void createLeague() }}>Crea lega</Button>
-            </XStack>
-          </YStack>
-        </Card>
-
-        {league ? (
-          <Card borderWidth={1} borderColor="$blue8" padding="$4">
-            <YStack gap="$3">
-              <XStack justifyContent="space-between" gap="$3" alignItems="flex-start" flexWrap="wrap">
-                <YStack flex={1} minWidth={240}>
-                  <H2 size="$6">{league.name}</H2>
-                  <Paragraph color="$color10">{league.isMain ? 'Lega principale' : 'Lega secondaria'} · {league.basketsId.length} basket collegati</Paragraph>
-                </YStack>
-                {!league.isMain ? <Button variant="outlined" disabled={loading} onPress={() => { void perform(() => setMainGroupLeague(runtime, session.member, league.id), `${league.name} è ora la lega principale.`) }}>Imposta principale</Button> : null}
-                <Button variant="outlined" borderColor="$red8" color="$red10" disabled={loading} onPress={() => { void perform(() => deleteGroupLeague(runtime, session.member, league.id), `${league.name} eliminata.`) }}>Elimina lega</Button>
-              </XStack>
+      <Surface padding="$5">
+        <YStack gap="$4">
+          <XStack justifyContent="space-between" alignItems="center" gap="$3" flexWrap="wrap">
+            <YStack gap="$1">
+              <Text color="$color12" fontSize="$6" fontWeight="900">Seleziona la lega</Text>
+              <Paragraph color="$color10">La lega scelta determina basket, stagione, regole e operazioni di ricalcolo.</Paragraph>
             </YStack>
-          </Card>
-        ) : null}
+            <StatusPill tone="blue">{group.leagues.length} leghe</StatusPill>
+          </XStack>
 
-        {league ? (
-          <Card borderWidth={1} borderColor="$purple8" padding="$4">
-            <YStack gap="$3">
-              <H2 size="$6">Basket partecipanti</H2>
-              <Paragraph color="$color10">Il collegamento è globale alla lega e viene bloccato quando una qualunque stagione ha già Calendar o Rank.</Paragraph>
-              <XStack gap="$2" flexWrap="wrap">
-                {group.baskets.map(basket => {
-                  const linked = league.basketsId.includes(basket.id)
-                  return <Button key={basket.id} size="$3" variant="outlined" backgroundColor={linked ? '$purple4' : 'transparent'} borderColor={linked ? '$purple8' : '$borderColor'} disabled={loading} onPress={() => { void perform(() => toggleLeagueBasket(runtime, session.member, league.id, basket.id), `${basket.name}: ${linked ? 'rimosso dalla' : 'aggiunto alla'} lega.`) }}>{linked ? '✓ ' : ''}{basket.name}</Button>
-                })}
-              </XStack>
-              {group.baskets.length === 0 ? <Paragraph color="$color10">Crea prima almeno un basket.</Paragraph> : null}
+          <XStack gap="$2" flexWrap="wrap">
+            {group.leagues.map(item => (
+              <Button
+                key={item.id}
+                size="$3"
+                borderRadius="$10"
+                backgroundColor={item.id === leagueId ? '$blue4' : '$color3'}
+                borderColor={item.id === leagueId ? '$blue7' : '$color5'}
+                onPress={() => setLeagueId(item.id)}
+              >
+                <Text color={item.id === leagueId ? '$blue11' : '$color10'} fontWeight="800">{item.isMain ? '★ ' : ''}{item.name}</Text>
+              </Button>
+            ))}
+          </XStack>
+
+          <XStack gap="$3" alignItems="flex-end" flexWrap="wrap">
+            <YStack flex={1} minWidth={260} gap="$1.5">
+              <Text color="$color9" fontSize="$2" fontWeight="800">NUOVA LEGA</Text>
+              <Input value={newLeagueName} onChangeText={setNewLeagueName} placeholder="Nome della lega" />
             </YStack>
-          </Card>
-        ) : null}
+            <PrimaryAction disabled={loading || year == null || !newLeagueName.trim()} onPress={() => { void createLeague() }} icon={<Plus size="$1" color="white" />}>
+              Crea lega
+            </PrimaryAction>
+          </XStack>
+        </YStack>
+      </Surface>
 
-        {league && year != null && !annual ? (
-          <Card borderWidth={1} borderColor="$orange8" padding="$4">
-            <YStack gap="$3">
-              <H2 size="$6">Stagione non configurata</H2>
-              <Paragraph color="$color10">Crea le impostazioni di {formatSeasonFromYear(year)} dai default oppure copia l’ultima stagione precedente.</Paragraph>
-              <XStack gap="$2" flexWrap="wrap">
-                <Button disabled={loading} onPress={() => { void perform(() => initializeLeagueYearDefaults(runtime, session.member, league.id, year), 'Stagione inizializzata con i valori di default.') }}>Usa default</Button>
-                <Button variant="outlined" disabled={loading} onPress={() => { void perform(() => copyLeagueYearFromPrevious(runtime, session.member, league.id, year), 'Impostazioni copiate dalla stagione precedente.') }}>Copia stagione precedente</Button>
-              </XStack>
-            </YStack>
-          </Card>
-        ) : null}
-
-        {league && annual && draft && year != null ? (
-          <>
-            <Card borderWidth={1} borderColor="$borderColor" padding="$4">
-              <YStack gap="$3">
-                <H2 size="$6">Tipo · {formatSeasonFromYear(year)}</H2>
-                <XStack gap="$2" flexWrap="wrap">
-                  {leagueTypes.map(([type, label]) => (
-                    <Button key={type} size="$3" variant="outlined" backgroundColor={currentType === type ? '$color4' : 'transparent'} borderColor={currentType === type ? '$blue8' : '$borderColor'} disabled={loading || currentType === type} onPress={() => { void perform(() => setAnnualLeagueType(runtime, session.member, league.id, year, type), `Tipo stagione aggiornato a ${label}.`) }}>{label}</Button>
-                  ))}
+      {league ? (
+        <Surface accent="blue" padding="$5">
+          <YStack gap="$4">
+            <XStack justifyContent="space-between" alignItems="flex-start" gap="$4" flexWrap="wrap">
+              <YStack flex={1} minWidth={260} gap="$2">
+                <XStack alignItems="center" gap="$2" flexWrap="wrap">
+                  <Text color="$color12" fontSize="$7" fontWeight="900">{league.name}</Text>
+                  <StatusPill tone={league.isMain ? 'green' : 'neutral'}>{league.isMain ? 'Principale' : 'Secondaria'}</StatusPill>
                 </XStack>
+                <Paragraph color="$color10">{league.basketsId.length} basket collegati · {league.years.length} stagioni configurate</Paragraph>
               </YStack>
-            </Card>
+              <XStack gap="$2" flexWrap="wrap">
+                {!league.isMain ? (
+                  <Button variant="outlined" borderRadius="$4" icon={Star} disabled={loading} onPress={() => { void perform(() => setMainGroupLeague(runtime, session.member, league.id), `${league.name} è ora la lega principale.`) }}>
+                    Imposta principale
+                  </Button>
+                ) : null}
+                <Button
+                  variant="outlined"
+                  borderRadius="$4"
+                  icon={Trash2}
+                  borderColor="$red7"
+                  color="$red10"
+                  disabled={loading}
+                  onPress={() => { void perform(() => deleteGroupLeague(runtime, session.member, league.id), `${league.name} eliminata.`) }}
+                >
+                  Elimina lega
+                </Button>
+              </XStack>
+            </XStack>
+          </YStack>
+        </Surface>
+      ) : null}
 
-            <Card borderWidth={1} borderColor="$borderColor" padding="$4">
-              <YStack gap="$3">
-                <XStack justifyContent="space-between" alignItems="center" gap="$2" flexWrap="wrap">
-                  <H2 size="$6">Regole di punteggio</H2>
-                  <Button disabled={loading || !settingsDirty} onPress={() => { void perform(() => saveAnnualLeagueSettings(runtime, session.member, league.id, year, draft), 'Impostazioni della lega salvate.'); }}>Salva impostazioni</Button>
-                </XStack>
-                <XStack gap="$3" flexWrap="wrap">
-                  {numericFields.map(([key, label]) => (
-                    <YStack key={key} width={220} gap="$1">
-                      <Text fontSize="$2" color="$color10">{label}</Text>
-                      <Input value={String(draft[key])} keyboardType="numeric" onChangeText={value => {
+      {league ? (
+        <Surface accent="purple" padding="$5">
+          <YStack gap="$4">
+            <YStack gap="$1">
+              <Text color="$color12" fontSize="$6" fontWeight="900">Basket partecipanti</Text>
+              <Paragraph color="$color10">Il collegamento è globale alla lega e viene bloccato quando una stagione ha già Calendar o Rank.</Paragraph>
+            </YStack>
+            <XStack gap="$2" flexWrap="wrap">
+              {group.baskets.map(basket => {
+                const linked = league.basketsId.includes(basket.id)
+                return (
+                  <Button
+                    key={basket.id}
+                    size="$3"
+                    borderRadius="$10"
+                    backgroundColor={linked ? '$purple4' : '$color3'}
+                    borderColor={linked ? '$purple7' : '$color5'}
+                    disabled={loading}
+                    onPress={() => { void perform(() => toggleLeagueBasket(runtime, session.member, league.id, basket.id), `${basket.name}: ${linked ? 'rimosso dalla' : 'aggiunto alla'} lega.`) }}
+                  >
+                    <Text color={linked ? '$purple11' : '$color10'} fontWeight="800">{linked ? '✓ ' : ''}{basket.name}</Text>
+                  </Button>
+                )
+              })}
+              {group.baskets.length === 0 ? <Paragraph color="$color9">Crea prima almeno un basket.</Paragraph> : null}
+            </XStack>
+          </YStack>
+        </Surface>
+      ) : null}
+
+      {league && year != null && !annual ? (
+        <Surface accent="yellow" padding="$5">
+          <YStack gap="$4">
+            <YStack gap="$1">
+              <Text color="$color12" fontSize="$6" fontWeight="900">Stagione non configurata</Text>
+              <Paragraph color="$color10">Inizializza {formatSeasonFromYear(year)} dai default oppure replica l’ultima stagione precedente.</Paragraph>
+            </YStack>
+            <XStack gap="$2" flexWrap="wrap">
+              <PrimaryAction disabled={loading} onPress={() => { void perform(() => initializeLeagueYearDefaults(runtime, session.member, league.id, year), 'Stagione inizializzata con i valori di default.') }}>
+                Usa default
+              </PrimaryAction>
+              <Button variant="outlined" borderRadius="$4" disabled={loading} onPress={() => { void perform(() => copyLeagueYearFromPrevious(runtime, session.member, league.id, year), 'Impostazioni copiate dalla stagione precedente.') }}>
+                Copia stagione precedente
+              </Button>
+            </XStack>
+          </YStack>
+        </Surface>
+      ) : null}
+
+      {league && annual && draft && year != null ? (
+        <>
+          <Surface padding="$5">
+            <YStack gap="$4">
+              <XStack justifyContent="space-between" alignItems="center" gap="$3" flexWrap="wrap">
+                <YStack gap="$1">
+                  <Text color="$color12" fontSize="$6" fontWeight="900">Formato · {formatSeasonFromYear(year)}</Text>
+                  <Paragraph color="$color10">Tipo competitivo della stagione selezionata.</Paragraph>
+                </YStack>
+                <StatusPill tone="blue">{leagueTypeLabel(currentType)}</StatusPill>
+              </XStack>
+              <XStack gap="$2" flexWrap="wrap">
+                {leagueTypes.map(([type, label]) => (
+                  <Button
+                    key={type}
+                    size="$3"
+                    borderRadius="$10"
+                    backgroundColor={currentType === type ? '$blue4' : '$color3'}
+                    borderColor={currentType === type ? '$blue7' : '$color5'}
+                    disabled={loading || currentType === type}
+                    onPress={() => { void perform(() => setAnnualLeagueType(runtime, session.member, league.id, year, type), `Tipo stagione aggiornato a ${label}.`) }}
+                  >
+                    <Text color={currentType === type ? '$blue11' : '$color10'} fontWeight="800">{label}</Text>
+                  </Button>
+                ))}
+              </XStack>
+            </YStack>
+          </Surface>
+
+          <Surface padding="$5">
+            <YStack gap="$5">
+              <XStack justifyContent="space-between" alignItems="flex-start" gap="$4" flexWrap="wrap">
+                <YStack gap="$1">
+                  <Text color="$color12" fontSize="$6" fontWeight="900">Regole di punteggio</Text>
+                  <Paragraph color="$color10">Modifica i parametri annuali. Il salvataggio è esplicito e non tocca la matrice bonus/malus dei voti.</Paragraph>
+                </YStack>
+                <StatusPill tone={settingsDirty ? 'yellow' : 'green'}>{settingsDirty ? 'Modifiche da salvare' : 'Salvato'}</StatusPill>
+              </XStack>
+
+              <XStack gap="$3" flexWrap="wrap" alignItems="stretch">
+                {numericFields.map(([key, label]) => (
+                  <YStack key={key} flexGrow={1} flexBasis={205} minWidth={180} maxWidth={280} gap="$1.5">
+                    <Text color="$color9" fontSize="$2" fontWeight="800">{label}</Text>
+                    <Input
+                      value={String(draft[key])}
+                      keyboardType="numeric"
+                      borderRadius="$4"
+                      onChangeText={value => {
                         const parsed = Number(value.replace(',', '.'))
                         if (Number.isFinite(parsed)) setDraft(current => current ? { ...current, [key]: parsed } : current)
-                      }} />
-                    </YStack>
+                      }}
+                    />
+                  </YStack>
+                ))}
+              </XStack>
+
+              <YStack gap="$2">
+                <Text color="$color8" fontSize="$1" fontWeight="900" textTransform="uppercase">Mercato</Text>
+                <XStack gap="$2" flexWrap="wrap">
+                  {([[MarketType.WithVote, 'Con voto'], [MarketType.WithoutVote, 'Senza voto'], [MarketType.Denied, 'Disabilitato']] as const).map(([value, label]) => (
+                    <Button key={value} size="$3" borderRadius="$10" backgroundColor={draft.market === value ? '$blue4' : '$color3'} borderColor={draft.market === value ? '$blue7' : '$color5'} onPress={() => setDraft(current => current ? { ...current, market: value } : current)}>
+                      <Text color={draft.market === value ? '$blue11' : '$color10'} fontWeight="800">{label}</Text>
+                    </Button>
                   ))}
                 </XStack>
-                <YStack gap="$2">
-                  <Text fontWeight="700">Mercato</Text>
-                  <XStack gap="$2" flexWrap="wrap">
-                    {([[MarketType.WithVote, 'Con voto'], [MarketType.WithoutVote, 'Senza voto'], [MarketType.Denied, 'Disabilitato']] as const).map(([value, label]) => (
-                      <Button key={value} size="$3" variant="outlined" backgroundColor={draft.market === value ? '$color4' : 'transparent'} onPress={() => setDraft(current => current ? { ...current, market: value } : current)}>{label}</Button>
-                    ))}
-                  </XStack>
-                </YStack>
-                <XStack gap="$2" flexWrap="wrap">
-                  <Button size="$3" variant="outlined" backgroundColor={draft.randomAuction ? '$color4' : 'transparent'} onPress={() => setDraft(current => current ? { ...current, randomAuction: !current.randomAuction } : current)}>Asta random {draft.randomAuction ? '✓' : ''}</Button>
-                  <Button size="$3" variant="outlined" backgroundColor={draft.rankWithValuePoints ? '$color4' : 'transparent'} onPress={() => setDraft(current => current ? { ...current, rankWithValuePoints: !current.rankWithValuePoints } : current)}>Classifica con fantapunti {draft.rankWithValuePoints ? '✓' : ''}</Button>
-                </XStack>
-                <Paragraph color="$color9">La matrice bonus/malus voto resta nel documento settings e non viene alterata da questi campi.</Paragraph>
               </YStack>
-            </Card>
 
-            <Card borderWidth={1} borderColor="$green8" padding="$4">
-              <YStack gap="$3">
-                <H2 size="$6">Calendar, Rank e ricalcoli</H2>
-                <Paragraph color="$color10">La creazione iniziale scrive Calendar e Rank canonici. I ricalcoli successivi partono dal workflow GitHub del gruppo e usano i voti ufficiali globali.</Paragraph>
-                <XStack gap="$2" flexWrap="wrap">
-                  <Button disabled={loading || settingsDirty} onPress={() => { void initializeCalendar() }}>Crea / ripara Calendar e Rank</Button>
-                  <Button variant="outlined" disabled={loading || settingsDirty} onPress={() => { void recalculate() }}>Ricalcola stagione</Button>
-                </XStack>
-                <XStack gap="$2" flexWrap="wrap">
-                  <Input width={140} value={day} onChangeText={setDay} keyboardType="numeric" placeholder="Giornata 1-38" />
-                  <Button variant="outlined" disabled={loading || settingsDirty || !validDay(day)} onPress={() => { void recalculate(Number(day)) }}>Ricalcola giornata Serie A</Button>
-                </XStack>
-                {settingsDirty ? <Paragraph color="$orange10">Salva prima le modifiche alle impostazioni.</Paragraph> : null}
-              </YStack>
-            </Card>
-          </>
-        ) : null}
-      </YStack>
-    </ScrollView>
+              <XStack gap="$2" flexWrap="wrap">
+                <ToggleButton active={draft.randomAuction} label="Asta random" onPress={() => setDraft(current => current ? { ...current, randomAuction: !current.randomAuction } : current)} />
+                <ToggleButton active={draft.rankWithValuePoints} label="Classifica con fantapunti" onPress={() => setDraft(current => current ? { ...current, rankWithValuePoints: !current.rankWithValuePoints } : current)} />
+              </XStack>
+
+              <PrimaryAction disabled={loading || !settingsDirty} onPress={() => { void perform(() => saveAnnualLeagueSettings(runtime, session.member, league.id, year, draft), 'Impostazioni della lega salvate.') }}>
+                Salva impostazioni
+              </PrimaryAction>
+            </YStack>
+          </Surface>
+
+          <Surface accent="green" padding="$5">
+            <YStack gap="$4">
+              <XStack alignItems="center" gap="$2">
+                <Calculator size="$1.2" color="$green10" />
+                <YStack flex={1} gap="$1">
+                  <Text color="$color12" fontSize="$6" fontWeight="900">Calendar, Rank e ricalcoli</Text>
+                  <Paragraph color="$color10">La creazione iniziale scrive i documenti canonici. I ricalcoli partono invece dal workflow GitHub del gruppo.</Paragraph>
+                </YStack>
+              </XStack>
+
+              <XStack gap="$2" flexWrap="wrap">
+                <PrimaryAction disabled={loading || settingsDirty} onPress={() => { void initializeCalendar() }}>
+                  Crea / ripara Calendar e Rank
+                </PrimaryAction>
+                <Button variant="outlined" borderRadius="$4" disabled={loading || settingsDirty} onPress={() => { void recalculate() }}>Ricalcola stagione</Button>
+              </XStack>
+
+              <XStack gap="$2" flexWrap="wrap" alignItems="center">
+                <Input width={150} value={day} onChangeText={setDay} keyboardType="numeric" placeholder="Giornata 1-38" />
+                <Button variant="outlined" borderRadius="$4" disabled={loading || settingsDirty || !validDay(day)} onPress={() => { void recalculate(Number(day)) }}>
+                  Ricalcola giornata Serie A
+                </Button>
+              </XStack>
+              {settingsDirty ? <Paragraph color="$yellow11">Salva prima le modifiche alle impostazioni.</Paragraph> : null}
+            </YStack>
+          </Surface>
+        </>
+      ) : null}
+    </AppScreen>
   )
 }
 
-function validDay(value: string): boolean { const day = Number(value); return Number.isInteger(day) && day >= 1 && day <= 38 }
+function ToggleButton({ active, label, onPress }: { active: boolean; label: string; onPress: () => void }) {
+  return (
+    <Button size="$3" borderRadius="$10" backgroundColor={active ? '$green4' : '$color3'} borderColor={active ? '$green7' : '$color5'} onPress={onPress}>
+      <Text color={active ? '$green11' : '$color10'} fontWeight="800">{active ? '✓ ' : ''}{label}</Text>
+    </Button>
+  )
+}
+
+function leagueTypeLabel(type: LeagueType): string {
+  return leagueTypes.find(([value]) => value === type)?.[1] ?? 'Non configurato'
+}
+
+function validDay(value: string): boolean { const parsed = Number(value); return Number.isInteger(parsed) && parsed >= 1 && parsed <= 38 }
 function message(error: unknown): string { return error instanceof Error ? error.message : 'Operazione non riuscita.' }
