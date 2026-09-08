@@ -212,7 +212,7 @@ export function StatusPill({
   tone = 'neutral',
 }: {
   children: ReactNode
-  tone?: 'neutral' | 'blue' | 'green' | 'yellow' | 'red'
+  tone?: 'neutral' | 'blue' | 'green' | 'yellow' | 'red' | 'purple'
 }) {
   const color = tone === 'blue'
     ? '$blue10'
@@ -222,7 +222,9 @@ export function StatusPill({
         ? '$yellow10'
         : tone === 'red'
           ? '$red10'
-          : '$color10'
+          : tone === 'purple'
+            ? '$purple10'
+            : '$color10'
   const backgroundColor = tone === 'blue'
     ? '$blue3'
     : tone === 'green'
@@ -231,7 +233,9 @@ export function StatusPill({
         ? '$yellow3'
         : tone === 'red'
           ? '$red3'
-          : '$color4'
+          : tone === 'purple'
+            ? '$purple3'
+            : '$color4'
 
   return (
     <XStack
