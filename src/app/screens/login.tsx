@@ -1,7 +1,7 @@
 import React from 'react'
 import { Image } from 'react-native'
 import { Cloud, Github, LockKeyhole, LogIn } from '@tamagui/lucide-icons-2'
-import { Paragraph, Spinner, Text, XStack, YStack, useMedia } from 'tamagui'
+import { H1, Paragraph, Spinner, Text, XStack, YStack, useMedia } from 'tamagui'
 import { PrimaryAction, StatusPill, Surface } from '../components/design-system'
 
 export function LoginScreen({ loading, error, onMicrosoftLogin }: {
@@ -37,15 +37,16 @@ export function LoginScreen({ loading, error, onMicrosoftLogin }: {
 
           <YStack gap="$3">
             <StatusPill tone="blue">Zero backend · offline first</StatusPill>
-            <Text
+            <H1
               color="$color12"
               fontSize={compact ? '$9' : '$11'}
               lineHeight={compact ? '$9' : '$11'}
               fontWeight="900"
               letterSpacing={-1}
+              margin={0}
             >
               Il fantacalcio che resta tuo.
-            </Text>
+            </H1>
             <Paragraph color="$color10" fontSize="$5" lineHeight="$7" maxWidth={650}>
               I dati del gruppo vivono su GitHub, le tue impostazioni personali su OneDrive e l’app continua a funzionare anche quando la rete non collabora.
             </Paragraph>
