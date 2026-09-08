@@ -15,6 +15,19 @@ const releases: Release[] = [
   {
     version: APP_VERSION,
     date: RELEASE_DATE,
+    title: 'Sync Azure sicura e recovery storico più profondo',
+    items: [
+      { category: 'Miglioria', text: 'PreserveExisting ora aggiorna automaticamente un file già importato quando Azure cambia e il file GitHub è ancora identico all’ultima versione prodotta dalla migrazione.' },
+      { category: 'Fix', text: 'Se il file GitHub è stato modificato dopo l’import, la migrazione non lo sovrascrive: il path resta preservato e viene riportato come conflitto invece di perdere modifiche native di Fantazone.' },
+      { category: 'Architettura', text: 'Lo staging conserva l’hash del contenuto importato precedente e ricostruisce la stessa provenienza anche dai journal 0.3.1 già esistenti, così i rerun attuali possono beneficiare della sync sicura senza ResetWork.' },
+      { category: 'Nuovo', text: 'Il recovery dei RealCalendar corrotti cerca ora sia le versioni Azure Blob sia gli snapshot, inclusi quelli visibili tramite soft-delete quando lo Storage li conserva.' },
+      { category: 'Fix', text: 'Un calendario recuperato da version o snapshot viene marcato come repair dimostrato e può essere sostituito con RepairImportedCalendars senza aprire un overwrite globale.' },
+      { category: 'Miglioria', text: 'Il comportamento incrementale diventa quindi: blob nuovo → aggiunta; blob modificato + target intatto → aggiornamento; blob modificato + target divergente → preservazione e conflitto.' },
+    ],
+  },
+  {
+    version: '0.3.1',
+    date: '9 settembre 2026',
     title: 'Migrazione Azure incrementale e dati storici più sicuri',
     items: [
       { category: 'Fix', text: 'I calendari Serie A legacy non vengono più accettati soltanto perché il nome del blob corrisponde alla stagione: chiave Rystem, year interni e date delle partite vengono validati insieme.' },
