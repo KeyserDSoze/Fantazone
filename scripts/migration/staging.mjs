@@ -138,7 +138,12 @@ async function loadStagedFiles(workDir, completed, currentRecordIds, target) {
     const path = safeOutputPath(targetRoot(workDir, target), event.path)
     const content = await readFile(path, 'utf8')
     if (contentFingerprint(content) !== event.contentSha256) throw new Error(`Staged file changed unexpectedly: ${event.path}. Use -ResetWork or restore the staged file.`)
-    files.push({ path: event.path, content, source: event.source })
+    files.push({
+      path: event.path,
+      content,
+      source: event.source,
+      previousContentSha256: event.previousContentSha256 ?? null,
+    })
   }
   files.sort((a, b) => a.path.localeCompare(b.path))
   return files
@@ -255,9 +260,12 @@ export async function stageMigrationRecords(records, options) {
             }
           }
           await writeAtomic(outputPath, file.content)
+          const previousContentSha256 = previousFile?.target === planned.target && previousFile?.path === file.path
+            ? previousFile.contentSha256
+            : null
           const event = {
             type: 'file', recordId: id, sourceSha256, target: planned.target,
-            path: file.path, source: file.source, contentSha256, at: now(),
+            path: file.path, source: file.source, contentSha256, previousContentSha256, at: now(),
           }
           await appendJournal(workspace.journalPath, event)
           completed.set(id, event)
