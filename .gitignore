@@ -1,3 +1,4 @@
 # Local Azure migration cache, staged repository trees and resumable checkpoints.
 # These files can contain legacy fantasy data and must never be committed.
 migration-output/
+node_modules/
