@@ -44,6 +44,7 @@ function issue(record, expectedSeason, detail) {
       blobName: record.blobName,
       key: expectedSeason,
       reason: 'invalid-realcalendar-season',
+      targetPath: expectedSeason ? `data/serie-a/calendars/${expectedSeason}.json` : null,
       detail,
     },
   }
@@ -71,6 +72,7 @@ export function normalizeLegacyRealCalendarRecord(record) {
 
   const bounds = seasonBounds(expectedSeason)
   const normalizedDays = []
+  let repaired = Boolean(record.migrationRepair) || rawYear === 0
   for (let dayIndex = 0; dayIndex < raw.d.length; dayIndex++) {
     const day = raw.d[dayIndex]
     if (!isObject(day)) return issue(record, expectedSeason, `Day at index ${dayIndex} is not an object.`)
@@ -79,6 +81,7 @@ export function normalizeLegacyRealCalendarRecord(record) {
     if (dayYear !== 0 && dayYear !== expectedSeason) {
       return issue(record, expectedSeason, `Day ${day.a ?? dayIndex + 1} declares season ${dayYear}, expected ${expectedSeason} (${seasonLabel(expectedSeason)}).`)
     }
+    if (dayYear === 0) repaired = true
     if (!Array.isArray(day.g)) return issue(record, expectedSeason, `Day ${day.a ?? dayIndex + 1} has no readable games array.`)
 
     for (let gameIndex = 0; gameIndex < day.g.length; gameIndex++) {
@@ -103,9 +106,11 @@ export function normalizeLegacyRealCalendarRecord(record) {
 
   return {
     ok: true,
+    repaired,
     record: {
       ...record,
       key: expectedSeason,
+      migrationRepair: repaired,
       value: { ...raw, y: expectedSeason, d: normalizedDays },
     },
   }
