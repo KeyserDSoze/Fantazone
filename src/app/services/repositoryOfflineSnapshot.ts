@@ -9,7 +9,6 @@ export type OfflineSnapshotResult = {
 
 type GroupOfflinePack = {
   version: 1
-  sourceCommit: string
   files: Record<string, {
     sha: string
     value: unknown
@@ -141,7 +140,7 @@ async function fetchGroupOfflinePack(connection: GroupConnection): Promise<Group
 function isValidGroupOfflinePack(value: unknown): value is GroupOfflinePack {
   if (!value || typeof value !== 'object') return false
   const candidate = value as Partial<GroupOfflinePack>
-  if (candidate.version !== 1 || typeof candidate.sourceCommit !== 'string') return false
+  if (candidate.version !== 1) return false
   if (!candidate.files || typeof candidate.files !== 'object' || Array.isArray(candidate.files)) return false
   return Object.entries(candidate.files).every(([path, entry]) => isValidGroupPackEntry(path, entry))
 }
