@@ -38,9 +38,6 @@ export function OperationStatusBanner() {
         backgroundColor={backgroundColor}
         borderRadius="$10"
         elevation={8}
-        animation="quick"
-        enterStyle={{ opacity: 0, y: 8, scale: 0.98 }}
-        exitStyle={{ opacity: 0, y: 6, scale: 0.98 }}
       >
         <XStack alignItems="center" gap="$2">
           <YStack width={7} height={7} borderRadius="$10" backgroundColor={dotColor} />
@@ -63,9 +60,6 @@ export function OperationStatusBanner() {
         backgroundColor="$color2"
         borderRadius="$5"
         elevation={12}
-        animation="quick"
-        enterStyle={{ opacity: 0, y: 10, scale: 0.98 }}
-        exitStyle={{ opacity: 0, y: 8, scale: 0.98 }}
       >
         <XStack gap="$3" alignItems="center">
           <YStack
