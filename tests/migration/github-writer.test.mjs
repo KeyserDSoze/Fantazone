@@ -13,6 +13,14 @@ test('preserve-existing skips only collisions', () => {
   const result = selectFilesForCollisionMode(files, existing, 'preserve')
   assert.deepEqual(result.files.map(x => x.path), ['b.json'])
   assert.deepEqual(result.collisions.map(x => x.path), ['a.json'])
+  assert.deepEqual(result.forcedOverwrites, [])
+})
+
+test('preserve-existing can select an explicitly proven repair collision', () => {
+  const repairFiles = [{ path: 'a.json', content: '{"year":13}', forceOverwrite: true }, { path: 'b.json', content: '{}' }]
+  const result = selectFilesForCollisionMode(repairFiles, existing, 'preserve')
+  assert.deepEqual(result.files.map(x => x.path), ['a.json', 'b.json'])
+  assert.deepEqual(result.forcedOverwrites.map(x => x.path), ['a.json'])
 })
 
 test('overwrite retains colliding paths', () => {
