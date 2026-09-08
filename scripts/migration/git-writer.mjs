@@ -1,5 +1,5 @@
 import { execFile as execFileCallback } from 'node:child_process'
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
+import { mkdir, rm, writeFile } from 'node:fs/promises'
 import { dirname, resolve, sep } from 'node:path'
 import { promisify } from 'node:util'
 
@@ -36,8 +36,6 @@ function gitEnvironment(pat) {
     GIT_TRACE_CURL: '0',
     GIT_CURL_VERBOSE: '0',
   }
-  // Do not put the PAT in the remote URL or command line. Runtime git config is inherited by
-  // child processes through the environment only and is never persisted in .git/config.
   if (pat) {
     env.GIT_CONFIG_COUNT = '1'
     env.GIT_CONFIG_KEY_0 = 'http.https://github.com/.extraHeader'
@@ -104,9 +102,11 @@ function selectFiles(files, existingPaths, mode) {
   if (mode === 'fail' && collisions.length) {
     throw new Error(`Target repository already contains ${collisions.length} migration path(s): ${collisions.slice(0, 5).map(file => file.path).join(', ')}`)
   }
+  const forcedOverwrites = mode === 'preserve' ? collisions.filter(file => file.forceOverwrite === true) : []
   return {
-    files: mode === 'preserve' ? files.filter(file => !existingPaths.has(file.path)) : files,
+    files: mode === 'preserve' ? files.filter(file => !existingPaths.has(file.path) || file.forceOverwrite === true) : files,
     collisions,
+    forcedOverwrites,
   }
 }
 
@@ -157,6 +157,7 @@ export async function writeFilesWithGit({
     onProgress?.({
       type: 'selection', repository, branch,
       total: files.length, selected: selection.files.length, collisions: selection.collisions.length,
+      forcedOverwrites: selection.forcedOverwrites.length,
     })
 
     await writeSelectedFiles(repoDir, selection.files)
@@ -172,6 +173,7 @@ export async function writeFilesWithGit({
         planned: selection.files.length,
         written: 0,
         collisions: selection.collisions.map(file => file.path),
+        forcedOverwrites: selection.forcedOverwrites.map(file => file.path),
         commit: null,
       }
     }
@@ -190,10 +192,10 @@ export async function writeFilesWithGit({
       planned: selection.files.length,
       written: changed.length,
       collisions: selection.collisions.map(file => file.path),
+      forcedOverwrites: selection.forcedOverwrites.map(file => file.path),
       commit,
     }
   } finally {
-    // The canonical resumable artifacts live in staging; the clone is only a transport workspace.
     await rm(repoDir, { recursive: true, force: true }).catch(() => {})
   }
 }
