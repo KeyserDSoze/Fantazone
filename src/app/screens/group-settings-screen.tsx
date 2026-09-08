@@ -1,8 +1,17 @@
 import React, { useMemo, useState } from 'react'
 import { Linking, Platform, Share } from 'react-native'
-import { Button, Card, H1, H2, Input, Paragraph, ScrollView, Spinner, Text, XStack, YStack } from 'tamagui'
+import {
+  ExternalLink,
+  Github,
+  Pencil,
+  ShieldAlert,
+  UserPlus,
+  UserRound,
+} from '@tamagui/lucide-icons-2'
+import { Button, Input, Paragraph, Spinner, Text, XStack, YStack } from 'tamagui'
 import { createInviteFragment } from '@fantazone/github'
 import { GroupHelper, IdentityRole, type AuthenticatedGroupSession } from '@fantazone/domain'
+import { AppScreen, PageIntro, PrimaryAction, StatusPill, Surface } from '../components/design-system'
 import { publicWebUrl } from '../config/publicOrigin'
 import type { GroupSessionRuntime } from '../services/groupSessionRuntime'
 
@@ -19,9 +28,9 @@ export function GroupSettingsScreen({ runtime, session }: { runtime: GroupSessio
   )
   const [displayStatus, setDisplayStatus] = useState<string | null>(null)
   const [savingDisplay, setSavingDisplay] = useState(false)
-  const canManage = useMemo(() =>
-    GroupHelper.hasRole(session.member, IdentityRole.Admin) ||
-    GroupHelper.hasRole(session.member, IdentityRole.SuperAdmin), [session.member])
+  const isSuperAdmin = useMemo(() => GroupHelper.hasRole(session.member, IdentityRole.SuperAdmin), [session.member])
+  const isAdmin = useMemo(() => GroupHelper.hasRole(session.member, IdentityRole.Admin), [session.member])
+  const canManage = isAdmin || isSuperAdmin
 
   async function saveDisplaySettings() {
     setSavingDisplay(true)
@@ -81,86 +90,272 @@ export function GroupSettingsScreen({ runtime, session }: { runtime: GroupSessio
   const repositoryUrl = connection.repository.html_url ?? `https://github.com/${connection.repository.full_name}`
 
   return (
-    <ScrollView flex={1} contentContainerStyle={{ flexGrow: 1 }}>
-      <YStack width="100%" maxWidth={980} alignSelf="center" padding="$4" paddingBottom="$8" gap="$4">
-        <YStack gap="$1" paddingTop="$2">
-          <H1>Impostazioni</H1>
-          <Paragraph color="$color10">Account, nomi visualizzati e collegamento zero-backend.</Paragraph>
-        </YStack>
+    <AppScreen maxWidth={1160}>
+      <PageIntro
+        eyebrow="Gruppo e account"
+        title="Impostazioni"
+        description="Gestisci identità, repository, nomi visualizzati e accessi al gruppo mantenendo l’architettura zero-backend di Fantazone."
+      />
 
-        <XStack gap="$3" flexWrap="wrap">
-          <Card borderWidth={1} borderColor="$borderColor" padding="$4" flexGrow={1} flexBasis={360}>
-            <YStack gap="$2">
-              <H2 size="$6">Gruppo</H2>
-              <Text fontWeight="700">{runtime.group.name}</Text>
-              <Text color="$color10">{connection.repository.full_name}</Text>
-              <Text color="$color10">Branch: {connection.repository.default_branch}</Text>
-              <Paragraph size="$2" color="$color9">Il nome GitHub della repository è tecnico e può essere diverso dal nome del gruppo.</Paragraph>
-              <Button marginTop="$2" variant="outlined" onPress={() => Linking.openURL(repositoryUrl)}>Apri repository</Button>
-            </YStack>
-          </Card>
-
-          <Card borderWidth={1} borderColor="$borderColor" padding="$4" flexGrow={1} flexBasis={360}>
-            <YStack gap="$2">
-              <H2 size="$6">Account</H2>
-              <Text>{session.identity.displayName || session.member.username}</Text>
-              <Text color="$color10">{session.identity.email}</Text>
-              <Text color="$color10">Ruolo flags: {session.member.role}</Text>
-              <Paragraph size="$2" color="$color9">La membership viene riletta dal repository quando il gruppo si sincronizza.</Paragraph>
-            </YStack>
-          </Card>
-        </XStack>
-
-        {canManage ? (
-          <Card borderWidth={1} borderColor="$green8" padding="$4">
-            <YStack gap="$3">
-              <H2 size="$6">Nomi visualizzati</H2>
-              <Paragraph>
-                Questi valori vivono in <Text fontWeight="700">settings.json</Text> nella root della repository. Puoi rinominare gruppo e leghe senza cambiare gli ID stabili, i path Git, il calendario o lo storico.
-              </Paragraph>
-              <YStack gap="$2">
-                <Text fontWeight="700">Nome del gruppo</Text>
-                <Input value={displayGroupName} onChangeText={setDisplayGroupName} placeholder="Amici del Bar" />
+      <XStack gap="$3" flexWrap="wrap" alignItems="stretch">
+        <Surface padding="$5">
+          <YStack width={420} maxWidth="100%" minHeight={220} gap="$4">
+            <XStack gap="$3" alignItems="center">
+              <YStack
+                width={46}
+                height={46}
+                borderRadius="$4"
+                alignItems="center"
+                justifyContent="center"
+                backgroundColor="$color4"
+              >
+                <Github size="$1.2" color="$color11" />
               </YStack>
+              <YStack flex={1} minWidth={0}>
+                <Text color="$color8" fontSize="$1" fontWeight="900" textTransform="uppercase">Repository del gruppo</Text>
+                <Text color="$color12" fontSize="$6" fontWeight="900" numberOfLines={1}>{runtime.group.name}</Text>
+              </YStack>
+            </XStack>
+
+            <YStack gap="$2">
+              <SettingLine label="Repository" value={connection.repository.full_name} />
+              <SettingLine label="Branch" value={connection.repository.default_branch} />
+              <SettingLine label="Architettura" value="GitHub + OneDrive" />
+            </YStack>
+
+            <Paragraph size="$2" color="$color9">
+              Il nome tecnico della repository può essere diverso dal nome mostrato nell’app. Dati e storico restano nel repository del gruppo.
+            </Paragraph>
+
+            <Button
+              alignSelf="flex-start"
+              variant="outlined"
+              borderRadius="$4"
+              icon={ExternalLink}
+              onPress={() => { void Linking.openURL(repositoryUrl) }}
+            >
+              Apri repository
+            </Button>
+          </YStack>
+        </Surface>
+
+        <Surface accent="blue" padding="$5">
+          <YStack width={420} maxWidth="100%" minHeight={220} gap="$4">
+            <XStack gap="$3" alignItems="center">
+              <YStack
+                width={46}
+                height={46}
+                borderRadius="$4"
+                alignItems="center"
+                justifyContent="center"
+                backgroundColor="$blue4"
+              >
+                <UserRound size="$1.2" color="$blue10" />
+              </YStack>
+              <YStack flex={1} minWidth={0}>
+                <Text color="$blue10" fontSize="$1" fontWeight="900" textTransform="uppercase">Account Microsoft</Text>
+                <Text color="$color12" fontSize="$6" fontWeight="900" numberOfLines={1}>
+                  {session.identity.displayName || session.member.username}
+                </Text>
+              </YStack>
+            </XStack>
+
+            <YStack gap="$2">
+              <SettingLine label="Email" value={session.identity.email} />
+              <SettingLine label="Membership" value="Sincronizzata dal gruppo" />
+            </YStack>
+
+            <XStack gap="$2" flexWrap="wrap">
+              <StatusPill tone={isSuperAdmin ? 'blue' : isAdmin ? 'green' : 'neutral'}>
+                {isSuperAdmin ? 'SuperAdmin' : isAdmin ? 'Admin' : 'Partecipante'}
+              </StatusPill>
+              <StatusPill tone="neutral">OneDrive privato</StatusPill>
+            </XStack>
+
+            <Paragraph size="$2" color="$color9">
+              Ruoli e abilitazioni vengono riletti dal repository del gruppo durante la sincronizzazione.
+            </Paragraph>
+          </YStack>
+        </Surface>
+      </XStack>
+
+      {canManage ? (
+        <Surface accent="green" padding="$5">
+          <YStack gap="$5">
+            <XStack gap="$3" justifyContent="space-between" alignItems="flex-start" flexWrap="wrap">
+              <XStack gap="$3" alignItems="center" flex={1} minWidth={260}>
+                <YStack
+                  width={46}
+                  height={46}
+                  borderRadius="$4"
+                  alignItems="center"
+                  justifyContent="center"
+                  backgroundColor="$green4"
+                >
+                  <Pencil size="$1.2" color="$green10" />
+                </YStack>
+                <YStack gap="$1" flex={1}>
+                  <Text color="$green10" fontSize="$1" fontWeight="900" textTransform="uppercase">Presentazione</Text>
+                  <Text color="$color12" fontSize="$6" fontWeight="900">Nomi visualizzati</Text>
+                  <Paragraph size="$2" color="$color9">
+                    Rinomina gruppo e leghe senza modificare ID stabili, path Git, calendario o storico.
+                  </Paragraph>
+                </YStack>
+              </XStack>
+              <StatusPill tone="green">settings.json</StatusPill>
+            </XStack>
+
+            <YStack gap="$2">
+              <FieldLabel>Nome del gruppo</FieldLabel>
+              <Input
+                size="$4"
+                borderRadius="$4"
+                value={displayGroupName}
+                onChangeText={setDisplayGroupName}
+                placeholder="Amici del Bar"
+              />
+            </YStack>
+
+            <XStack gap="$3" flexWrap="wrap" alignItems="stretch">
               {group.leagues.map(league => (
-                <YStack key={league.id} gap="$1">
-                  <Text fontWeight="700">Lega · {league.id}</Text>
+                <YStack key={league.id} gap="$2" flexGrow={1} flexBasis={300} minWidth={260}>
+                  <FieldLabel>Lega · {league.id}</FieldLabel>
                   <Input
+                    size="$4"
+                    borderRadius="$4"
                     value={leagueNames[league.id] ?? league.name ?? league.id}
                     onChangeText={value => setLeagueNames(current => ({ ...current, [league.id]: value }))}
                     placeholder={league.id}
                   />
                 </YStack>
               ))}
-              <Button theme="accent" disabled={savingDisplay} onPress={saveDisplaySettings}>
-                {savingDisplay ? <Spinner /> : 'Salva nomi visualizzati'}
-              </Button>
-              {displayStatus ? <Paragraph size="$2" color="$color10">{displayStatus}</Paragraph> : null}
-            </YStack>
-          </Card>
-        ) : null}
+            </XStack>
 
-        {canManage ? (
-          <Card borderWidth={1} borderColor="$blue8" padding="$4">
-            <YStack gap="$3">
-              <H2 size="$6">Invita nel gruppo</H2>
-              <Paragraph>
-                L’email viene salvata in <Text fontWeight="700">config/group.json</Text>; il link trasferisce la credenziale GitHub condivisa del gruppo e l’app la sincronizza nello spazio privato OneDrive dell’invitato.
+            <XStack gap="$3" justifyContent="space-between" alignItems="center" flexWrap="wrap">
+              <Paragraph size="$2" color="$color9" flex={1} minWidth={240}>
+                Queste modifiche cambiano solo ciò che le persone vedono nell’app.
               </Paragraph>
-              <Card borderWidth={1} borderColor="$yellow8" padding="$3">
-                <Paragraph size="$2">Tratta il link come una password del gruppo: chi lo possiede può usare il PAT finché non viene ruotato.</Paragraph>
-              </Card>
-              <XStack gap="$3" flexWrap="wrap">
-                <Input flex={1} minWidth={240} value={inviteEmail} onChangeText={setInviteEmail} autoCapitalize="none" autoCorrect={false} placeholder="email@esempio.it" />
-                <Input flex={1} minWidth={200} value={inviteUsername} onChangeText={setInviteUsername} placeholder="Nome visualizzato (opzionale)" />
+              <PrimaryAction
+                disabled={savingDisplay}
+                onPress={() => { void saveDisplaySettings() }}
+                icon={savingDisplay ? <Spinner color="white" /> : undefined}
+              >
+                {savingDisplay ? 'Salvataggio…' : 'Salva nomi'}
+              </PrimaryAction>
+            </XStack>
+
+            {displayStatus ? (
+              <YStack padding="$3" borderRadius="$4" backgroundColor="$color3">
+                <Paragraph size="$2" color="$color10">{displayStatus}</Paragraph>
+              </YStack>
+            ) : null}
+          </YStack>
+        </Surface>
+      ) : null}
+
+      {canManage ? (
+        <Surface accent="blue" padding="$5">
+          <YStack gap="$5">
+            <XStack gap="$3" justifyContent="space-between" alignItems="flex-start" flexWrap="wrap">
+              <XStack gap="$3" alignItems="center" flex={1} minWidth={260}>
+                <YStack
+                  width={46}
+                  height={46}
+                  borderRadius="$4"
+                  alignItems="center"
+                  justifyContent="center"
+                  backgroundColor="$blue4"
+                >
+                  <UserPlus size="$1.2" color="$blue10" />
+                </YStack>
+                <YStack gap="$1" flex={1}>
+                  <Text color="$blue10" fontSize="$1" fontWeight="900" textTransform="uppercase">Accesso al gruppo</Text>
+                  <Text color="$color12" fontSize="$6" fontWeight="900">Invita un partecipante</Text>
+                  <Paragraph size="$2" color="$color9">
+                    Censisci l’identità Microsoft nel gruppo e genera il link che trasferisce la credenziale GitHub condivisa.
+                  </Paragraph>
+                </YStack>
               </XStack>
-              <Button theme="accent" disabled={sharing} onPress={inviteAndShare}>{sharing ? <Spinner /> : 'Censisci utente e copia invito'}</Button>
-              <Paragraph size="$2" color="$color9">L’invitato accede con l’email Microsoft indicata. fanta.plus verifica il PAT condiviso e lo salva in OneDrive e sul dispositivo.</Paragraph>
-              {shareStatus ? <Paragraph size="$2" color="$color10">{shareStatus}</Paragraph> : null}
+              <StatusPill tone="blue">config/group.json</StatusPill>
+            </XStack>
+
+            <YStack
+              padding="$4"
+              borderRadius="$5"
+              borderWidth={1}
+              borderColor="$yellow6"
+              backgroundColor="$yellow2"
+              gap="$2"
+            >
+              <XStack gap="$2" alignItems="center">
+                <ShieldAlert size="$1" color="$yellow10" />
+                <Text color="$yellow11" fontWeight="900">Link sensibile</Text>
+              </XStack>
+              <Paragraph size="$2" color="$yellow11">
+                Tratta il link come una password del gruppo: contiene il PAT condiviso e resta valido finché quella credenziale non viene ruotata.
+              </Paragraph>
             </YStack>
-          </Card>
-        ) : null}
-      </YStack>
-    </ScrollView>
+
+            <XStack gap="$3" flexWrap="wrap">
+              <YStack gap="$2" flex={1} minWidth={260}>
+                <FieldLabel>Email Microsoft</FieldLabel>
+                <Input
+                  size="$4"
+                  borderRadius="$4"
+                  value={inviteEmail}
+                  onChangeText={setInviteEmail}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  keyboardType="email-address"
+                  placeholder="email@esempio.it"
+                />
+              </YStack>
+              <YStack gap="$2" flex={1} minWidth={240}>
+                <FieldLabel>Nome visualizzato</FieldLabel>
+                <Input
+                  size="$4"
+                  borderRadius="$4"
+                  value={inviteUsername}
+                  onChangeText={setInviteUsername}
+                  placeholder="Opzionale"
+                />
+              </YStack>
+            </XStack>
+
+            <XStack gap="$3" justifyContent="space-between" alignItems="center" flexWrap="wrap">
+              <Paragraph size="$2" color="$color9" flex={1} minWidth={240}>
+                L’invitato dovrà accedere con l’email indicata; Fantazone verificherà il PAT e lo salverà nel suo spazio OneDrive e sul dispositivo.
+              </Paragraph>
+              <PrimaryAction
+                disabled={sharing}
+                onPress={() => { void inviteAndShare() }}
+                icon={sharing ? <Spinner color="white" /> : <UserPlus size="$1" color="white" />}
+              >
+                {sharing ? 'Creo invito…' : 'Censisci e crea invito'}
+              </PrimaryAction>
+            </XStack>
+
+            {shareStatus ? (
+              <YStack padding="$3" borderRadius="$4" backgroundColor="$color3">
+                <Paragraph size="$2" color="$color10">{shareStatus}</Paragraph>
+              </YStack>
+            ) : null}
+          </YStack>
+        </Surface>
+      ) : null}
+    </AppScreen>
+  )
+}
+
+function FieldLabel({ children }: { children: React.ReactNode }) {
+  return <Text color="$color10" fontSize="$2" fontWeight="900">{children}</Text>
+}
+
+function SettingLine({ label, value }: { label: string; value: string }) {
+  return (
+    <XStack gap="$3" justifyContent="space-between" alignItems="center">
+      <Text color="$color9" fontSize="$2">{label}</Text>
+      <Text color="$color12" fontSize="$2" fontWeight="800" textAlign="right" numberOfLines={1}>{value}</Text>
+    </XStack>
   )
 }
