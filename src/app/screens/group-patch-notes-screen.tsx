@@ -15,6 +15,21 @@ const releases: Release[] = [
   {
     version: APP_VERSION,
     date: RELEASE_DATE,
+    title: 'Migrazione Azure incrementale e dati storici più sicuri',
+    items: [
+      { category: 'Fix', text: 'I calendari Serie A legacy non vengono più accettati soltanto perché il nome del blob corrisponde alla stagione: chiave Rystem, year interni e date delle partite vengono validati insieme.' },
+      { category: 'Fix', text: 'I RealCalendar con year 0 vengono normalizzati solo quando le date dimostrano che il contenuto appartiene davvero alla stagione; un calendario sovrascritto dalla stagione successiva viene invece messo in quarantena.' },
+      { category: 'Nuovo', text: 'Se Azure Blob Storage conserva la cronologia versioni, la migrazione prova automaticamente le versioni precedenti del RealCalendar e recupera la più recente coerente con la stagione.' },
+      { category: 'Miglioria', text: 'Un normale rerun della migrazione è ora incrementale: enumera i blob correnti, riusa dalla cache quelli invariati tramite ETag e scarica soltanto i blob nuovi o modificati.' },
+      { category: 'Miglioria', text: 'Con PreserveExisting i nuovi blob Azure diventano nuovi file GitHub senza toccare i path già presenti; gli stessi checkpoint locali vengono riutilizzati invece di riconvertire tutto.' },
+      { category: 'Nuovo', text: 'ReuseCache permette di rieseguire esclusivamente mapper e staging sulla cache esistente senza contattare Azure, mentre RefreshCache resta disponibile per una risincronizzazione completa.' },
+      { category: 'Fix', text: 'RepairImportedCalendars consente, insieme a PreserveExisting, di sovrascrivere soltanto i calendari che la migrazione ha dimostrato essere riparazioni sicure, senza aprire tutti gli altri file a un overwrite globale.' },
+      { category: 'Architettura', text: 'Il report di migrazione espone ora statistiche di riuso/download, calendari recuperati da version history, sorgenti in quarantena e path autorizzati alla riparazione mirata.' },
+    ],
+  },
+  {
+    version: '0.3.0',
+    date: '8 settembre 2026',
     title: 'Fantazone, ridisegnato con Tamagui',
     items: [
       { category: 'Nuovo', text: 'Introdotto un design system Tamagui condiviso con AppScreen, PageIntro, Surface, FeatureCard, StatusPill e azioni primarie coerenti su web, tablet e mobile.' },
