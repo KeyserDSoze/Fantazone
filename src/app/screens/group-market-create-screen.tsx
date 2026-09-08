@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { Button, Card, H1, H2, Input, Paragraph, ScrollView, Spinner, Text, XStack, YStack } from 'tamagui'
+import { ArrowRightLeft, CheckCircle2, RefreshCw, WalletCards } from '@tamagui/lucide-icons-2'
+import { Button, Input, Paragraph, Spinner, Text, XStack, YStack } from 'tamagui'
 import {
   MarketType,
   PlayerInTeamStatus,
@@ -11,6 +12,7 @@ import {
   type EnhancedTeam,
   type Player,
 } from '@fantazone/domain'
+import { AppScreen, PageIntro, PrimaryAction, StatusPill, Surface } from '../components/design-system'
 import type { GroupNavigationSelection } from '../services/groupNavigation'
 import type { GroupSessionRuntime } from '../services/groupSessionRuntime'
 
@@ -118,96 +120,181 @@ export function GroupMarketCreateScreen({ runtime, session, selection }: Props) 
   }
 
   return (
-    <ScrollView flex={1} contentContainerStyle={{ flexGrow: 1 }}>
-      <YStack width="100%" maxWidth={1160} alignSelf="center" padding="$4" paddingBottom="$8" gap="$4">
-        <YStack gap="$1" paddingTop="$2">
-          <H1>Crea scambio</H1>
-          <Paragraph color="$color10">{league?.name ?? 'Lega'}{selection.year != null ? ` · ${formatSeasonFromYear(selection.year)}` : ''}</Paragraph>
+    <AppScreen maxWidth={1180}>
+      <PageIntro
+        eyebrow={league?.name ?? 'Mercato'}
+        title="Crea uno scambio"
+        description={`${selection.year != null ? `${formatSeasonFromYear(selection.year)} · ` : ''}costruisci una proposta bilanciata e inviala alla lega.`}
+        action={(
+          <Button
+            variant="outlined"
+            borderRadius="$4"
+            disabled={loading}
+            icon={loading ? undefined : RefreshCw}
+            onPress={() => { void loadTeams() }}
+          >
+            {loading ? <Spinner /> : 'Aggiorna rose'}
+          </Button>
+        )}
+      />
+
+      {!isCurrentSeason ? (
+        <Surface accent="yellow" padding="$3">
+          <Paragraph color="$yellow11">Il mercato può modificare le rose solo nella stagione corrente.</Paragraph>
+        </Surface>
+      ) : null}
+      {!marketEnabled ? (
+        <Surface accent="yellow" padding="$3">
+          <Paragraph color="$yellow11">Il mercato è disabilitato nelle impostazioni di questa lega.</Paragraph>
+        </Surface>
+      ) : null}
+      {error ? (
+        <Surface accent="red" padding="$3"><Paragraph color="$red11">{error}</Paragraph></Surface>
+      ) : null}
+      {status ? (
+        <Surface accent="green" padding="$3"><Paragraph color="$green11">{status}</Paragraph></Surface>
+      ) : null}
+
+      {loading ? (
+        <YStack minHeight={180} alignItems="center" justifyContent="center" gap="$3">
+          <Spinner size="large" />
+          <Text color="$color9">Caricamento rose…</Text>
         </YStack>
+      ) : null}
 
-        {!isCurrentSeason ? <Card borderWidth={1} borderColor="$yellow8" padding="$4"><Paragraph>Il mercato può modificare le rose solo nella stagione corrente.</Paragraph></Card> : null}
-        {!marketEnabled ? <Card borderWidth={1} borderColor="$yellow8" padding="$4"><Paragraph>Il mercato è disabilitato nelle impostazioni di questa lega.</Paragraph></Card> : null}
-        {error ? <Card borderWidth={1} borderColor="$red8" padding="$4"><Paragraph color="$red10">{error}</Paragraph></Card> : null}
-        {status ? <Card borderWidth={1} borderColor="$green8" padding="$4"><Paragraph color="$green10">{status}</Paragraph></Card> : null}
-        {loading ? <Spinner size="large" /> : null}
+      {!loading && isCurrentSeason && marketEnabled && !myEntry ? (
+        <Surface padding="$4">
+          <Paragraph color="$color10">Non risulti owner di una squadra in questa lega. I co-owner non possono creare scambi a nome dell’owner canonico.</Paragraph>
+        </Surface>
+      ) : null}
 
-        {!loading && isCurrentSeason && marketEnabled && !myEntry ? (
-          <Card borderWidth={1} borderColor="$borderColor" padding="$4"><Paragraph color="$color10">Non risulti owner di una squadra in questa lega. I co-owner non possono creare scambi a nome dell’owner canonico.</Paragraph></Card>
-        ) : null}
-
-        {!loading && myEntry && isCurrentSeason && marketEnabled ? (
-          <>
-            <Card borderWidth={1} borderColor="$blue8" padding="$4">
-              <YStack gap="$2">
-                <H2 size="$6">La tua squadra · {myEntry.team.name}</H2>
-                <Text color="$color10">Budget teorico disponibile: {money((annual?.settings.startingMoney ?? 0) - myEntry.team.cost)}</Text>
+      {!loading && myEntry && isCurrentSeason && marketEnabled ? (
+        <YStack gap="$4">
+          <Surface accent="blue" padding="$4">
+            <XStack justifyContent="space-between" alignItems="center" gap="$3" flexWrap="wrap">
+              <YStack gap="$1">
+                <StatusPill tone="blue">La tua squadra</StatusPill>
+                <Text color="$color12" fontSize="$6" fontWeight="900">{myEntry.team.name}</Text>
               </YStack>
-            </Card>
+              <XStack alignItems="center" gap="$2">
+                <WalletCards size="$1.2" color="$blue10" />
+                <YStack alignItems="flex-end">
+                  <Text color="$color8" fontSize="$1" fontWeight="900">BUDGET TEORICO</Text>
+                  <Text color="$color12" fontSize="$6" fontWeight="900">{money((annual?.settings.startingMoney ?? 0) - myEntry.team.cost)}</Text>
+                </YStack>
+              </XStack>
+            </XStack>
+          </Surface>
 
-            <Card borderWidth={1} borderColor="$borderColor" padding="$4">
-              <YStack gap="$3">
-                <H2 size="$6">1. Scegli la controparte</H2>
-                <XStack gap="$2" flexWrap="wrap">
-                  {availableTargets.map(item => (
-                    <Button key={item.team.owner} variant="outlined" backgroundColor={same(targetOwner ?? '', item.team.owner) ? '$color4' : 'transparent'} borderColor={same(targetOwner ?? '', item.team.owner) ? '$blue8' : '$borderColor'} onPress={() => {
-                      setTargetOwner(item.team.owner)
-                      setTargetPlayers([])
-                    }}>{item.team.name}</Button>
-                  ))}
-                </XStack>
-              </YStack>
-            </Card>
+          <Surface padding="$4">
+            <YStack gap="$3">
+              <Text color="$color12" fontSize="$6" fontWeight="900">1. Scegli la controparte</Text>
+              <Paragraph color="$color9">Seleziona la squadra con cui vuoi costruire la proposta.</Paragraph>
+              <XStack gap="$2" flexWrap="wrap">
+                {availableTargets.map(item => {
+                  const active = same(targetOwner ?? '', item.team.owner)
+                  return (
+                    <Button
+                      key={item.team.owner}
+                      borderRadius="$10"
+                      backgroundColor={active ? '$blue4' : '$color3'}
+                      borderColor={active ? '$blue7' : '$color5'}
+                      onPress={() => {
+                        setTargetOwner(item.team.owner)
+                        setTargetPlayers([])
+                      }}
+                    >
+                      <Text color={active ? '$blue11' : '$color10'} fontWeight="800">{item.team.name}</Text>
+                    </Button>
+                  )
+                })}
+              </XStack>
+            </YStack>
+          </Surface>
 
-            {targetEntry ? (
-              <>
-                <XStack gap="$4" flexWrap="wrap" alignItems="flex-start">
-                  <YStack flexGrow={1} flexBasis={500} minWidth={0}>
-                    <PlayerSelector title={`${myEntry.team.name} cede`} players={myEntry.team.players} selected={myPlayers} onToggle={key => toggleKey(myPlayers, setMyPlayers, key)} />
-                  </YStack>
-                  <YStack flexGrow={1} flexBasis={500} minWidth={0}>
-                    <PlayerSelector title={`${targetEntry.team.name} cede`} players={targetEntry.team.players} selected={targetPlayers} onToggle={key => toggleKey(targetPlayers, setTargetPlayers, key)} />
-                  </YStack>
-                </XStack>
+          {targetEntry ? (
+            <>
+              <XStack gap="$4" flexWrap="wrap" alignItems="flex-start">
+                <YStack flexGrow={1} flexBasis={500} minWidth={0}>
+                  <PlayerSelector title={`${myEntry.team.name} cede`} players={myEntry.team.players} selected={myPlayers} onToggle={key => toggleKey(myPlayers, setMyPlayers, key)} />
+                </YStack>
+                <YStack flexGrow={1} flexBasis={500} minWidth={0}>
+                  <PlayerSelector title={`${targetEntry.team.name} cede`} players={targetEntry.team.players} selected={targetPlayers} onToggle={key => toggleKey(targetPlayers, setTargetPlayers, key)} />
+                </YStack>
+              </XStack>
 
-                <Card borderWidth={1} borderColor={roleBalanced ? '$green8' : '$yellow8'} padding="$4">
-                  <YStack gap="$3">
-                    <H2 size="$6">2. Conguaglio</H2>
-                    <Paragraph color="$color10">Lo scambio deve contenere lo stesso numero di giocatori per ogni ruolo. La Action ricontrollerà anche disponibilità e budget.</Paragraph>
-                    <XStack gap="$3" flexWrap="wrap">
-                      <YStack flex={1} minWidth={220} gap="$1"><Text>{myEntry.team.name} aggiunge</Text><Input value={myMoney} onChangeText={setMyMoney} keyboardType="numeric" placeholder="0" /></YStack>
-                      <YStack flex={1} minWidth={220} gap="$1"><Text>{targetEntry.team.name} aggiunge</Text><Input value={targetMoney} onChangeText={setTargetMoney} keyboardType="numeric" placeholder="0" /></YStack>
-                    </XStack>
-                    <Text color={roleBalanced ? '$green10' : '$yellow10'} fontWeight="800">{roleBalanced ? 'Ruoli bilanciati' : 'Ruoli non bilanciati'}</Text>
-                    <Button theme="accent" disabled={!canSubmit || submitting} onPress={() => { void submitTrade() }}>{submitting ? <Spinner /> : 'Invia proposta'}</Button>
-                  </YStack>
-                </Card>
-              </>
-            ) : null}
-          </>
-        ) : null}
-      </YStack>
-    </ScrollView>
+              <Surface accent={roleBalanced ? 'green' : 'yellow'} padding="$4">
+                <YStack gap="$4">
+                  <XStack justifyContent="space-between" alignItems="center" gap="$3" flexWrap="wrap">
+                    <YStack gap="$1">
+                      <Text color="$color12" fontSize="$6" fontWeight="900">2. Conguaglio</Text>
+                      <Paragraph color="$color10">Lo scambio deve avere lo stesso numero di giocatori per ogni ruolo.</Paragraph>
+                    </YStack>
+                    <StatusPill tone={roleBalanced ? 'green' : 'yellow'}>
+                      {roleBalanced ? 'Ruoli bilanciati' : 'Da bilanciare'}
+                    </StatusPill>
+                  </XStack>
+
+                  <XStack gap="$3" flexWrap="wrap">
+                    <YStack flex={1} minWidth={220} gap="$2">
+                      <Text color="$color12" fontWeight="800">{myEntry.team.name} aggiunge</Text>
+                      <Input size="$4" borderRadius="$4" value={myMoney} onChangeText={setMyMoney} keyboardType="numeric" placeholder="0" />
+                    </YStack>
+                    <YStack flex={1} minWidth={220} gap="$2">
+                      <Text color="$color12" fontWeight="800">{targetEntry.team.name} aggiunge</Text>
+                      <Input size="$4" borderRadius="$4" value={targetMoney} onChangeText={setTargetMoney} keyboardType="numeric" placeholder="0" />
+                    </YStack>
+                  </XStack>
+
+                  <PrimaryAction
+                    disabled={!canSubmit || submitting}
+                    onPress={() => { void submitTrade() }}
+                    icon={submitting ? <Spinner color="white" /> : <ArrowRightLeft size="$1" color="white" />}
+                  >
+                    {submitting ? 'Invio proposta…' : 'Invia proposta'}
+                  </PrimaryAction>
+                </YStack>
+              </Surface>
+            </>
+          ) : null}
+        </YStack>
+      ) : null}
+    </AppScreen>
   )
 }
 
 function PlayerSelector({ title, players, selected, onToggle }: { title: string; players: Player[]; selected: string[]; onToggle: (key: string) => void }) {
   const active = players.filter(player => player.status === PlayerInTeamStatus.Active).sort((a, b) => a.role - b.role || b.price - a.price)
   return (
-    <Card borderWidth={1} borderColor="$borderColor" padding="$4">
+    <Surface padding="$4">
       <YStack gap="$3">
-        <H2 size="$6">{title}</H2>
+        <XStack justifyContent="space-between" alignItems="center">
+          <Text color="$color12" fontSize="$6" fontWeight="900">{title}</Text>
+          <StatusPill tone={selected.length > 0 ? 'blue' : 'neutral'}>{selected.length} scelti</StatusPill>
+        </XStack>
         {active.map(player => {
           const key = getPlayerKey(player.name)
           const checked = selected.includes(key)
           return (
-            <Button key={key} variant="outlined" backgroundColor={checked ? '$color4' : 'transparent'} borderColor={checked ? '$blue8' : '$borderColor'} justifyContent="space-between" onPress={() => onToggle(key)}>
-              <Text flex={1} textAlign="left" numberOfLines={1}>{roleShort(player.role)} · {player.name}</Text>
-              <Text>{money(player.price)}</Text>
+            <Button
+              key={key}
+              minHeight={52}
+              borderRadius="$4"
+              backgroundColor={checked ? '$blue3' : '$color3'}
+              borderColor={checked ? '$blue7' : '$color5'}
+              justifyContent="space-between"
+              icon={checked ? CheckCircle2 : undefined}
+              onPress={() => onToggle(key)}
+            >
+              <Text flex={1} textAlign="left" color={checked ? '$blue11' : '$color11'} fontWeight="800" numberOfLines={1}>
+                {roleShort(player.role)} · {player.name}
+              </Text>
+              <Text color="$color9" fontWeight="800">{money(player.price)}</Text>
             </Button>
           )
         })}
       </YStack>
-    </Card>
+    </Surface>
   )
 }
 

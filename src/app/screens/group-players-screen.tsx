@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { Button, Card, H1, Input, Paragraph, ScrollView, Spinner, Text, XStack, YStack } from 'tamagui'
+import { RefreshCw, Search, Users } from '@tamagui/lucide-icons-2'
+import { Button, Input, Paragraph, Spinner, Text, XStack, YStack } from 'tamagui'
 import {
   Role,
   StatPlayerHelper,
@@ -9,6 +10,7 @@ import {
   type StatPlayer,
 } from '@fantazone/domain'
 import { GitHubStatPlayersRepository } from '@fantazone/github'
+import { AppScreen, PageIntro, StatusPill, Surface } from '../components/design-system'
 import type { GroupNavigationSelection } from '../services/groupNavigation'
 import type { GroupSessionRuntime } from '../services/groupSessionRuntime'
 
@@ -80,29 +82,53 @@ export function GroupPlayersScreen({ runtime, selection }: Props) {
   }, [players, query, role, activeOnly, sortMode])
 
   return (
-    <ScrollView flex={1} contentContainerStyle={{ flexGrow: 1 }}>
-      <YStack width="100%" maxWidth={1120} alignSelf="center" padding="$4" paddingBottom="$8" gap="$4">
-        <XStack justifyContent="space-between" alignItems="flex-start" gap="$3" flexWrap="wrap" paddingTop="$2">
-          <YStack gap="$1">
-            <H1>Tutti i giocatori</H1>
-            <Paragraph color="$color10">
-              Serie A{selection.year != null ? ` · ${formatSeasonFromYear(selection.year)}` : ''}{untilDay ? ` · statistiche fino alla ${untilDay}ª` : ' · statistiche non ancora disponibili'}
-            </Paragraph>
-          </YStack>
-          <Button variant="outlined" disabled={loading} onPress={() => { void loadPlayers() }}>{loading ? <Spinner /> : 'Aggiorna'}</Button>
-        </XStack>
+    <AppScreen maxWidth={1180}>
+      <PageIntro
+        eyebrow="Serie A"
+        title="Tutti i giocatori"
+        description={`${selection.year != null ? `${formatSeasonFromYear(selection.year)} · ` : ''}${untilDay ? `statistiche aggiornate fino alla ${untilDay}ª giornata.` : 'esplora il master giocatori e le statistiche disponibili.'}`}
+        action={(
+          <Button
+            variant="outlined"
+            borderRadius="$4"
+            disabled={loading}
+            icon={loading ? undefined : RefreshCw}
+            onPress={() => { void loadPlayers() }}
+          >
+            {loading ? <Spinner /> : 'Aggiorna'}
+          </Button>
+        )}
+      />
 
-        <Card borderWidth={1} borderColor="$borderColor" padding="$4">
-          <YStack gap="$3">
-            <Input value={query} onChangeText={setQuery} placeholder="Cerca giocatore o squadra Serie A" autoCorrect={false} />
+      <Surface padding="$4">
+        <YStack gap="$4">
+          <XStack alignItems="center" gap="$2">
+            <Search size="$1" color="$color9" />
+            <Text color="$color12" fontWeight="900">Trova e confronta</Text>
+          </XStack>
+          <Input
+            size="$4"
+            borderRadius="$4"
+            value={query}
+            onChangeText={setQuery}
+            placeholder="Cerca giocatore o squadra Serie A"
+            autoCorrect={false}
+          />
+
+          <YStack gap="$2">
+            <Text color="$color8" fontSize="$1" fontWeight="900" textTransform="uppercase">Ruolo e stato</Text>
             <XStack gap="$2" flexWrap="wrap">
-              <FilterButton label="Tutti i ruoli" active={role == null} onPress={() => setRole(null)} />
-              <FilterButton label="P" active={role === Role.GoalKeeper} onPress={() => setRole(Role.GoalKeeper)} />
-              <FilterButton label="D" active={role === Role.Defensor} onPress={() => setRole(Role.Defensor)} />
-              <FilterButton label="C" active={role === Role.Midfielder} onPress={() => setRole(Role.Midfielder)} />
-              <FilterButton label="A" active={role === Role.Forward} onPress={() => setRole(Role.Forward)} />
+              <FilterButton label="Tutti" active={role == null} onPress={() => setRole(null)} />
+              <FilterButton label="Portieri" active={role === Role.GoalKeeper} onPress={() => setRole(Role.GoalKeeper)} />
+              <FilterButton label="Difensori" active={role === Role.Defensor} onPress={() => setRole(Role.Defensor)} />
+              <FilterButton label="Centrocampisti" active={role === Role.Midfielder} onPress={() => setRole(Role.Midfielder)} />
+              <FilterButton label="Attaccanti" active={role === Role.Forward} onPress={() => setRole(Role.Forward)} />
               <FilterButton label={activeOnly ? 'Solo attivi' : 'Anche inattivi'} active={activeOnly} onPress={() => setActiveOnly(value => !value)} />
             </XStack>
+          </YStack>
+
+          <YStack gap="$2">
+            <Text color="$color8" fontSize="$1" fontWeight="900" textTransform="uppercase">Ordina per</Text>
             <XStack gap="$2" flexWrap="wrap">
               <FilterButton label="Fantamedia" active={sortMode === 'fanta'} onPress={() => setSortMode('fanta')} />
               <FilterButton label="Media voto" active={sortMode === 'average'} onPress={() => setSortMode('average')} />
@@ -110,39 +136,110 @@ export function GroupPlayersScreen({ runtime, selection }: Props) {
               <FilterButton label="Nome" active={sortMode === 'name'} onPress={() => setSortMode('name')} />
             </XStack>
           </YStack>
-        </Card>
+        </YStack>
+      </Surface>
 
-        {error ? <Card borderWidth={1} borderColor="$red8" padding="$4"><Paragraph color="$red10">{error}</Paragraph></Card> : null}
-        {!error && loading && players.length === 0 ? <Spinner size="large" /> : null}
-        {!error && !loading ? <Text color="$color9">{visiblePlayers.length} giocatori</Text> : null}
+      {error ? (
+        <Surface accent="red" padding="$3">
+          <Paragraph color="$red11">{error}</Paragraph>
+        </Surface>
+      ) : null}
 
-        {!error ? visiblePlayers.map(player => (
-          <Card key={getPlayerKey(player.name)} borderWidth={1} borderColor="$borderColor" padding="$3" opacity={player.isActive ? 1 : 0.55}>
-            <XStack gap="$3" alignItems="center" flexWrap="wrap">
-              <YStack flex={1} minWidth={220}>
-                <Text fontWeight="900" fontSize="$5" numberOfLines={1}>{player.name}</Text>
-                <Text color="$color10" numberOfLines={1}>{roleLabel(player.role)} · {player.team.name}{player.isActive ? '' : ' · inattivo'}</Text>
-              </YStack>
-              <PlayerMetric label="MV" value={StatPlayerHelper.average(player).toFixed(2)} />
-              <PlayerMetric label="FM" value={StatPlayerHelper.fantaAverage(player).toFixed(2)} />
-              <PlayerMetric label="Voti" value={String(player.withVote)} />
-              <PlayerMetric label="Gol" value={String(player.goals + player.penalties)} />
-              <PlayerMetric label="Assist" value={String(player.assists)} />
-              {player.role === Role.GoalKeeper ? <PlayerMetric label="Gol subiti" value={String(player.sufferedGoals)} /> : null}
-            </XStack>
-          </Card>
-        )) : null}
-      </YStack>
-    </ScrollView>
+      {!error && loading && players.length === 0 ? (
+        <YStack minHeight={220} alignItems="center" justifyContent="center" gap="$3">
+          <Spinner size="large" />
+          <Text color="$color9">Caricamento giocatori…</Text>
+        </YStack>
+      ) : null}
+
+      {!error && !loading ? (
+        <XStack justifyContent="space-between" alignItems="center" gap="$3">
+          <StatusPill tone="blue">{visiblePlayers.length} giocatori</StatusPill>
+          <Text color="$color8" fontSize="$2">{activeOnly ? 'Solo attivi' : 'Attivi e inattivi'}</Text>
+        </XStack>
+      ) : null}
+
+      {!error && !loading && visiblePlayers.length === 0 ? (
+        <Surface padding="$4">
+          <YStack minHeight={140} alignItems="center" justifyContent="center" gap="$3">
+            <Users size="$2" color="$color8" />
+            <Paragraph color="$color10" textAlign="center">Nessun giocatore corrisponde ai filtri selezionati.</Paragraph>
+          </YStack>
+        </Surface>
+      ) : null}
+
+      {!error ? (
+        <XStack gap="$3" flexWrap="wrap" alignItems="stretch">
+          {visiblePlayers.map(player => (
+            <YStack
+              key={getPlayerKey(player.name)}
+              flexGrow={1}
+              flexBasis={340}
+              minWidth={290}
+              maxWidth={560}
+              padding="$4"
+              borderWidth={1}
+              borderColor="$color5"
+              backgroundColor="$color2"
+              borderRadius="$5"
+              opacity={player.isActive ? 1 : 0.52}
+              gap="$4"
+            >
+              <XStack justifyContent="space-between" alignItems="flex-start" gap="$3">
+                <YStack flex={1} minWidth={0} gap="$1">
+                  <Text color="$color12" fontWeight="900" fontSize="$5" numberOfLines={1}>{player.name}</Text>
+                  <Text color="$color9" numberOfLines={1}>{roleLabel(player.role)} · {player.team.name}</Text>
+                </YStack>
+                <StatusPill tone={player.isActive ? 'green' : 'neutral'}>{player.isActive ? 'Attivo' : 'Inattivo'}</StatusPill>
+              </XStack>
+
+              <XStack gap="$2" flexWrap="wrap">
+                <PlayerMetric label="MV" value={StatPlayerHelper.average(player).toFixed(2)} emphasized={false} />
+                <PlayerMetric label="FM" value={StatPlayerHelper.fantaAverage(player).toFixed(2)} emphasized />
+                <PlayerMetric label="Voti" value={String(player.withVote)} emphasized={false} />
+                <PlayerMetric label="Gol" value={String(player.goals + player.penalties)} emphasized={false} />
+                <PlayerMetric label="Assist" value={String(player.assists)} emphasized={false} />
+                {player.role === Role.GoalKeeper ? <PlayerMetric label="Gol subiti" value={String(player.sufferedGoals)} emphasized={false} /> : null}
+              </XStack>
+            </YStack>
+          ))}
+        </XStack>
+      ) : null}
+    </AppScreen>
   )
 }
 
 function FilterButton({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
-  return <Button size="$3" variant="outlined" backgroundColor={active ? '$color4' : 'transparent'} borderColor={active ? '$blue8' : '$borderColor'} onPress={onPress}>{label}</Button>
+  return (
+    <Button
+      size="$3"
+      borderRadius="$10"
+      backgroundColor={active ? '$blue4' : '$color3'}
+      borderColor={active ? '$blue7' : '$color5'}
+      onPress={onPress}
+    >
+      <Text color={active ? '$blue11' : '$color10'} fontWeight="800">{label}</Text>
+    </Button>
+  )
 }
 
-function PlayerMetric({ label, value }: { label: string; value: string }) {
-  return <YStack minWidth={55} alignItems="flex-end"><Text color="$color9" fontSize="$2">{label}</Text><Text fontWeight="900">{value}</Text></YStack>
+function PlayerMetric({ label, value, emphasized }: { label: string; value: string; emphasized: boolean }) {
+  return (
+    <YStack
+      flexGrow={1}
+      flexBasis={66}
+      minWidth={62}
+      padding="$2.5"
+      borderRadius="$3"
+      backgroundColor={emphasized ? '$blue3' : '$color3'}
+      borderWidth={1}
+      borderColor={emphasized ? '$blue5' : '$color4'}
+      gap="$1"
+    >
+      <Text color={emphasized ? '$blue10' : '$color8'} fontSize="$1" fontWeight="900">{label}</Text>
+      <Text color="$color12" fontSize="$4" fontWeight="900">{value}</Text>
+    </YStack>
+  )
 }
 
 function roleLabel(role: Role): string {

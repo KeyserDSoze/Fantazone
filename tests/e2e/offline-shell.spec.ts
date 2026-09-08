@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 
 test('web app shell reopens after connectivity is removed', async ({ page, context }) => {
   await page.goto('/')
-  await expect(page.getByRole('button', { name: 'Accedi con Microsoft' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Continua con Microsoft' })).toBeVisible()
 
   const hasServiceWorker = await page.evaluate(async () => {
     if (!('serviceWorker' in navigator)) return false
@@ -14,6 +14,6 @@ test('web app shell reopens after connectivity is removed', async ({ page, conte
   await context.setOffline(true)
   await page.reload({ waitUntil: 'domcontentloaded' })
 
-  await expect(page.getByRole('heading', { name: 'Il tuo fantacalcio, senza backend.' })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Accedi con Microsoft' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Il fantacalcio che resta tuo.' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Continua con Microsoft' })).toBeVisible()
 })

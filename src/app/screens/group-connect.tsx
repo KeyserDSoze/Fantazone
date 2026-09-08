@@ -1,16 +1,24 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { Linking } from 'react-native'
 import {
+  ArrowUpRight,
+  CheckCircle2,
+  Github,
+  KeyRound,
+  Layers3,
+  PlayCircle,
+  PlusCircle,
+  ShieldCheck,
+} from '@tamagui/lucide-icons-2'
+import {
   Button,
-  Card,
-  H2,
   Input,
   Paragraph,
-  ScrollView,
   Spinner,
   Text,
   XStack,
   YStack,
+  useMedia,
 } from 'tamagui'
 import {
   ensureGroupInitialized,
@@ -19,6 +27,7 @@ import {
   normalizeGroupName,
   type GitHubRepo,
 } from '@fantazone/github'
+import { AppScreen, PageIntro, PrimaryAction, StatusPill, Surface } from '../components/design-system'
 import { connectKnownGroup } from '../services/groupReconnect'
 import type { GroupConnection } from '../services/groupSessionRuntime'
 
@@ -40,6 +49,8 @@ export function GroupConnectScreen({ onConnected, onExploreDemo, defaultCreatorE
   const [creatorEmail, setCreatorEmail] = useState(defaultCreatorEmail?.trim().toLowerCase() ?? '')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const media = useMedia()
+  const stackColumns = media.md ?? false
 
   const canSubmit = useMemo(() => pat.trim().length > 0 && !loading, [pat, loading])
   const suggestedRepositoryName = useMemo(() => {
@@ -112,109 +123,238 @@ export function GroupConnectScreen({ onConnected, onExploreDemo, defaultCreatorE
   }
 
   return (
-    <ScrollView flex={1} contentContainerStyle={{ flexGrow: 1 }}>
-      <YStack flex={1} alignItems="center" paddingHorizontal="$4" paddingTop="$3" paddingBottom="$7">
-        <YStack width="100%" maxWidth={760} gap="$4">
-          <Card borderWidth={1} borderColor="$blue8" padding="$4" width="100%">
-            <YStack gap="$2">
-              <Text fontWeight="800" color="$blue10">SEI QUI PER VEDERE IL PROGETTO?</Text>
-              <Paragraph>La modalità didattica mostra l’architettura zero-server senza chiedere credenziali GitHub.</Paragraph>
-              <Button onPress={onExploreDemo}>Esplora l’architettura senza PAT</Button>
-            </YStack>
-          </Card>
+    <AppScreen maxWidth={1180}>
+      <PageIntro
+        eyebrow="Configura il tuo spazio"
+        title="Collega Fantazone a una repository GitHub."
+        description="Una sola configurazione iniziale: poi il gruppo si apre come una normale app, con cache locale e sincronizzazione progressiva."
+      />
 
-          <YStack width="100%" paddingHorizontal="$2" paddingVertical="$4">
-            <YStack gap="$4">
+      <XStack gap="$4" flexDirection={stackColumns ? 'column' : 'row'} alignItems="flex-start">
+        <YStack flex={0.9} width={stackColumns ? '100%' : undefined} gap="$4">
+          <Surface accent="blue" padding="$4">
+            <YStack gap="$3">
+              <StatusPill tone="blue">Setup consigliato</StatusPill>
+              <Text color="$color12" fontSize="$6" fontWeight="900">Tre passaggi, permessi minimi.</Text>
+              <SetupStep
+                number="1"
+                icon={<Github size="$1" color="$blue10" />}
+                title="Crea la repository"
+                description={`Privata è consigliato. Il nome può essere qualsiasi cosa, ad esempio ${suggestedRepositoryName}.`}
+              />
+              <SetupStep
+                number="2"
+                icon={<KeyRound size="$1" color="$blue10" />}
+                title="Crea un Fine-grained PAT"
+                description="Limita Repository access alla sola repository del gruppo."
+              />
+              <SetupStep
+                number="3"
+                icon={<ShieldCheck size="$1" color="$blue10" />}
+                title="Concedi solo ciò che serve"
+                description="Contents, Workflows e Actions in Read and write. Metadata resta in lettura."
+              />
+              <XStack gap="$2" flexWrap="wrap" paddingTop="$1">
+                <Button
+                  flex={1}
+                  minWidth={180}
+                  variant="outlined"
+                  icon={PlusCircle}
+                  iconAfter={ArrowUpRight}
+                  onPress={() => { void Linking.openURL(GITHUB_NEW_REPOSITORY_URL) }}
+                >
+                  Crea repository
+                </Button>
+                <Button
+                  flex={1}
+                  minWidth={180}
+                  variant="outlined"
+                  icon={KeyRound}
+                  iconAfter={ArrowUpRight}
+                  onPress={() => { void Linking.openURL(GITHUB_FINE_GRAINED_PAT_URL) }}
+                >
+                  Crea PAT
+                </Button>
+              </XStack>
+            </YStack>
+          </Surface>
+
+          <Surface accent="yellow" padding="$4">
+            <YStack gap="$2">
+              <Text color="$color12" fontWeight="900">Il PAT è una credenziale del gruppo</Text>
+              <Paragraph size="$2" color="$color10" lineHeight="$5">
+                Nello schema zero-backend viene salvato nei settings privati OneDrive dell’app e sul dispositivo. Trattalo come una password e limita sempre l’accesso alla singola repository.
+              </Paragraph>
+            </YStack>
+          </Surface>
+
+          <Button
+            variant="outlined"
+            borderRadius="$4"
+            minHeight={56}
+            icon={PlayCircle}
+            justifyContent="flex-start"
+            onPress={onExploreDemo}
+          >
+            Esplora l’architettura senza usare un PAT
+          </Button>
+        </YStack>
+
+        <YStack flex={1.1} width={stackColumns ? '100%' : undefined}>
+          <Surface padding="$5">
+            <YStack gap="$5">
               <YStack gap="$2">
-                <H2>Collega o inizializza un gruppo</H2>
+                <Text color="$color12" fontSize="$7" fontWeight="900">Dati del gruppo</Text>
                 <Paragraph color="$color10">
-                  Microsoft identifica l’utente; una repository GitHub privata contiene i dati e le Actions del gruppo. Il nome GitHub della repository e il nome visualizzato del gruppo sono indipendenti.
+                  Puoi collegare un gruppo già inizializzato oppure completare una repository che contiene già dati ma non ancora il contratto Fantazone.
                 </Paragraph>
               </YStack>
 
-              <Card borderWidth={1} borderColor="$green8" padding="$4">
-                <YStack gap="$2">
-                  <Text fontWeight="800">Guida consigliata · prima configurazione</Text>
-                  <Paragraph size="$2">1. Crea prima una repository GitHub, preferibilmente privata. Può chiamarsi come vuoi. Per esempio: <Text fontWeight="700">{suggestedRepositoryName}</Text>.</Paragraph>
-                  <Paragraph size="$2">2. Dopo che la repository esiste, crea un <Text fontWeight="700">Fine-grained personal access token</Text> e limita “Repository access” solo a quella repository.</Paragraph>
-                  <Paragraph size="$2">3. In “Repository permissions” imposta <Text fontWeight="700">Contents: Read and write</Text>, <Text fontWeight="700">Workflows: Read and write</Text> e <Text fontWeight="700">Actions: Read and write</Text>. Metadata resta in lettura automaticamente.</Paragraph>
-                  <Paragraph size="$2">4. Incolla qui sotto il PAT e il nome completo <Text fontWeight="700">owner/repository</Text>. Fantazone creerà i JSON canonici e i workflow gestiti senza rinominare la repository.</Paragraph>
-                  <Paragraph size="$2" color="$color9">Creare prima la repository è importante: così il PAT può essere ristretto esattamente a quella repo invece di ricevere accesso più ampio del necessario.</Paragraph>
-                  <XStack gap="$2" flexWrap="wrap">
-                    <Button size="$3" variant="outlined" onPress={() => { void Linking.openURL(GITHUB_NEW_REPOSITORY_URL) }}>1 · Crea repository GitHub</Button>
-                    <Button size="$3" variant="outlined" onPress={() => { void Linking.openURL(GITHUB_FINE_GRAINED_PAT_URL) }}>2 · Crea Fine-grained PAT</Button>
-                  </XStack>
-                </YStack>
-              </Card>
-
-              <Card borderWidth={1} borderColor="$yellow8" padding="$3">
-                <Paragraph size="$2">
-                  Il PAT è la credenziale condivisa del gruppo nello schema zero-backend. Viene salvato nei settings privati OneDrive dell’app e sul dispositivo; gli invitati non hanno bisogno di un account GitHub. Trattalo come una password del gruppo.
-                </Paragraph>
-              </Card>
-
-              <YStack gap="$2">
-                <Text fontWeight="700">Repository GitHub</Text>
+              <Field
+                label="Repository GitHub"
+                helper="Formato owner/repository. Il nome GitHub è indipendente dal nome visualizzato del gruppo."
+              >
                 <Input
+                  size="$4"
+                  borderRadius="$4"
                   value={repositoryFullName}
                   onChangeText={setRepositoryFullName}
                   autoCapitalize="none"
                   autoCorrect={false}
                   placeholder="tuo-account/fantazone-amici-del-bar"
                 />
-                <Paragraph size="$2" color="$color9">
-                  Può avere qualsiasi nome GitHub valido. Non è l’identità del gruppo e non deve cambiare quando rinomini il gruppo o una lega.
-                </Paragraph>
-              </YStack>
+              </Field>
 
-              <YStack gap="$2">
-                <Text fontWeight="700">Personal Access Token del gruppo</Text>
-                <Input value={pat} onChangeText={setPat} secureTextEntry autoCapitalize="none" autoCorrect={false} placeholder="github_pat_..." />
-              </YStack>
+              <Field
+                label="Personal Access Token"
+                helper="Fine-grained PAT con accesso alla sola repository del gruppo."
+              >
+                <Input
+                  size="$4"
+                  borderRadius="$4"
+                  value={pat}
+                  onChangeText={setPat}
+                  secureTextEntry
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  placeholder="github_pat_..."
+                />
+              </Field>
 
-              <YStack gap="$2">
-                <Text fontWeight="700">Nome visualizzato del gruppo</Text>
-                <Input value={groupName} onChangeText={setGroupName} autoCapitalize="words" placeholder="Amici del Bar" />
-                <Paragraph size="$2" color="$color9">
-                  Questo nome finisce in <Text fontWeight="700">settings.json</Text> e può essere cambiato in seguito senza toccare repository, ID o storico.
-                </Paragraph>
-              </YStack>
+              <Field
+                label="Nome visualizzato del gruppo"
+                helper="Puoi cambiarlo in seguito senza rinominare repository, ID o storico."
+              >
+                <Input
+                  size="$4"
+                  borderRadius="$4"
+                  value={groupName}
+                  onChangeText={setGroupName}
+                  autoCapitalize="words"
+                  placeholder="Amici del Bar"
+                />
+              </Field>
 
-              <Card borderWidth={1} borderColor="$borderColor" padding="$3">
-                <YStack gap="$2">
-                  <Text fontWeight="700">Primo amministratore</Text>
-                  <Paragraph size="$2" color="$color9">
-                    Per un gruppo nuovo usiamo di default l’email Microsoft con cui hai appena effettuato l’accesso.
-                  </Paragraph>
-                  <Input value={creatorEmail} onChangeText={setCreatorEmail} autoCapitalize="none" autoCorrect={false} placeholder="admin@esempio.it" />
-                </YStack>
-              </Card>
+              <Field
+                label="Primo amministratore"
+                helper="Per un gruppo nuovo proponiamo l’email Microsoft con cui hai effettuato l’accesso."
+              >
+                <Input
+                  size="$4"
+                  borderRadius="$4"
+                  value={creatorEmail}
+                  onChangeText={setCreatorEmail}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  placeholder="admin@esempio.it"
+                />
+              </Field>
 
-              {error ? <Card borderWidth={1} borderColor="$red8" padding="$3"><Text>{error}</Text></Card> : null}
+              {error ? (
+                <Surface accent="red" padding="$3">
+                  <Paragraph color="$red11">{error}</Paragraph>
+                </Surface>
+              ) : null}
 
-              <XStack gap="$3" flexWrap="wrap">
-                <Button disabled={!canSubmit || !repositoryFullName.trim()} onPress={connectExistingGroup} flex={1} minWidth={220}>
-                  {loading ? <Spinner /> : 'Collega gruppo esistente'}
-                </Button>
-                <Button
+              <YStack gap="$2.5">
+                <PrimaryAction
                   disabled={!canSubmit || !repositoryFullName.trim() || !groupName.trim() || !creatorEmail.trim()}
                   onPress={initializeGroup}
-                  flex={1}
-                  minWidth={220}
-                  theme="accent"
+                  icon={loading ? <Spinner color="white" /> : <Layers3 size="$1" color="white" />}
                 >
-                  {loading ? <Spinner /> : 'Inizializza questa repository'}
+                  {loading ? 'Configurazione in corso…' : 'Inizializza o completa la repository'}
+                </PrimaryAction>
+                <Button
+                  size="$4"
+                  borderRadius="$4"
+                  variant="outlined"
+                  disabled={!canSubmit || !repositoryFullName.trim()}
+                  icon={CheckCircle2}
+                  onPress={connectExistingGroup}
+                >
+                  Collega gruppo già inizializzato
                 </Button>
-              </XStack>
-
-              <Paragraph size="$2" color="$color9">
-                “Inizializza” non cancella file esistenti: aggiunge solo il contratto Fantazone mancante e aggiorna esclusivamente i workflow gestiti da Fantazone.
-              </Paragraph>
+                <Paragraph size="$2" color="$color9" textAlign="center">
+                  L’inizializzazione non cancella i file esistenti: aggiunge il contratto Fantazone mancante e aggiorna soltanto i workflow gestiti dall’app.
+                </Paragraph>
+              </YStack>
             </YStack>
-          </YStack>
+          </Surface>
         </YStack>
+      </XStack>
+    </AppScreen>
+  )
+}
+
+function SetupStep({
+  number,
+  icon,
+  title,
+  description,
+}: {
+  number: string
+  icon: React.ReactNode
+  title: string
+  description: string
+}) {
+  return (
+    <XStack gap="$3" alignItems="flex-start">
+      <YStack
+        width={38}
+        height={38}
+        borderRadius="$10"
+        backgroundColor="$blue4"
+        borderWidth={1}
+        borderColor="$blue6"
+        alignItems="center"
+        justifyContent="center"
+      >
+        {icon}
       </YStack>
-    </ScrollView>
+      <YStack flex={1} gap="$1">
+        <Text color="$blue10" fontSize="$1" fontWeight="900">PASSAGGIO {number}</Text>
+        <Text color="$color12" fontWeight="800">{title}</Text>
+        <Paragraph size="$2" color="$color10" lineHeight="$5">{description}</Paragraph>
+      </YStack>
+    </XStack>
+  )
+}
+
+function Field({
+  label,
+  helper,
+  children,
+}: {
+  label: string
+  helper: string
+  children: React.ReactNode
+}) {
+  return (
+    <YStack gap="$2">
+      <Text color="$color12" fontWeight="800">{label}</Text>
+      {children}
+      <Paragraph size="$2" color="$color9" lineHeight="$4">{helper}</Paragraph>
+    </YStack>
   )
 }
 

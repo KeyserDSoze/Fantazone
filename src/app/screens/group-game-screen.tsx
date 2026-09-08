@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { Button, Card, H1, H2, H3, Paragraph, ScrollView, Spinner, Text, XStack, YStack } from 'tamagui'
+import { Image } from 'react-native'
+import { ArrowLeft, Clock3, Radio, RefreshCw, ShieldCheck } from '@tamagui/lucide-icons-2'
+import { Button, Paragraph, Spinner, Text, XStack, YStack } from 'tamagui'
 import {
   Behaviour,
   DefaultLeagueSetting,
@@ -8,7 +10,6 @@ import {
   GroupHelper,
   LeagueType,
   RealCalendarHelper,
-  Role,
   calculateTeamPoint,
   formatSeasonFromYear,
   type EnrichedTeamPlayer,
@@ -19,8 +20,10 @@ import {
   type Vote,
   type VotedRealPlayers,
 } from '@fantazone/domain'
+import { AppScreen, PageIntro, StatusPill, Surface } from '../components/design-system'
 import type { GroupNavigationSelection } from '../services/groupNavigation'
 import type { GroupSessionRuntime } from '../services/groupSessionRuntime'
+import { getPlayerImageUrlFromName } from '../utils/playerImage'
 
 const GAME_REFRESH_MS = 30_000
 
@@ -140,121 +143,193 @@ export function GroupGameScreen({ runtime, selection, gameId, onBack }: Props) {
   const showScore = Boolean(wrapper?.game.result && GameResultHelper.hasValue(wrapper.game.result)) || projection.hasAnyVote
 
   return (
-    <ScrollView flex={1} contentContainerStyle={{ flexGrow: 1 }}>
-      <YStack width="100%" maxWidth={1160} alignSelf="center" padding="$4" paddingBottom="$8" gap="$4">
-        <XStack justifyContent="space-between" alignItems="flex-start" gap="$3" flexWrap="wrap" paddingTop="$2">
-          <YStack gap="$1">
-            <Button size="$3" variant="outlined" alignSelf="flex-start" onPress={onBack}>← Indietro</Button>
-            <H1>Partita</H1>
-            <Paragraph color="$color10">
-              {league?.name ?? 'Lega'}{selection.year != null ? ` · ${formatSeasonFromYear(selection.year)}` : ''}
-            </Paragraph>
-          </YStack>
-          <YStack gap="$1" alignItems="flex-end">
-            <Button variant="outlined" disabled={loading} onPress={() => { void loadGame() }}>
+    <AppScreen maxWidth={1220}>
+      <PageIntro
+        eyebrow={isLiveWindow ? 'Live match' : 'Dettaglio partita'}
+        title="Partita"
+        description={`${league?.name ?? 'Lega'}${selection.year != null ? ` · ${formatSeasonFromYear(selection.year)}` : ''}. Formazioni, voti e proiezione sono calcolati localmente dai documenti canonici disponibili.`}
+        action={(
+          <XStack gap="$2" flexWrap="wrap">
+            <Button variant="outlined" borderRadius="$4" icon={ArrowLeft} onPress={onBack}>Indietro</Button>
+            <Button
+              variant="outlined"
+              borderRadius="$4"
+              disabled={loading}
+              icon={loading ? undefined : RefreshCw}
+              onPress={() => { void loadGame() }}
+            >
               {loading ? <Spinner /> : 'Aggiorna'}
             </Button>
-            {lastUpdated ? (
-              <Text color="$color9" fontSize="$2">{lastUpdated.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}</Text>
-            ) : null}
-          </YStack>
-        </XStack>
+          </XStack>
+        )}
+      />
 
-        {error ? <Card borderWidth={1} borderColor="$red8" padding="$4"><Paragraph color="$red10">{error}</Paragraph></Card> : null}
-        {!error && loading && !wrapper ? <Spinner size="large" /> : null}
+      {error ? (
+        <Surface accent="red" padding="$3">
+          <Paragraph color="$red11">{error}</Paragraph>
+        </Surface>
+      ) : null}
 
-        {wrapper ? (
-          <>
-            <Card borderWidth={1} borderColor={isLiveWindow ? '$red8' : '$borderColor'} padding="$4">
-              <YStack gap="$3">
-                <XStack justifyContent="space-between" alignItems="center" gap="$3" flexWrap="wrap">
-                  <YStack gap="$1">
-                    <H2 size="$6">{wrapper.game.home} vs {wrapper.game.away}</H2>
-                    <Text color="$color10">Fanta {wrapper.fantasyDay} · Serie A {wrapper.serieADay}ª</Text>
-                  </YStack>
-                  <Text color={isLiveWindow ? '$red10' : wrapper.canEdit ? '$green10' : '$color10'} fontWeight="900">
-                    {isLiveWindow ? 'LIVE' : wrapper.canEdit ? 'Turno futuro' : 'Turno chiuso'}
+      {!error && loading && !wrapper ? (
+        <YStack minHeight={240} alignItems="center" justifyContent="center" gap="$3">
+          <Spinner size="large" />
+          <Text color="$color9">Caricamento partita…</Text>
+        </YStack>
+      ) : null}
+
+      {wrapper ? (
+        <>
+          <Surface accent={isLiveWindow ? 'red' : 'blue'} padding="$5">
+            <YStack gap="$4">
+              <XStack justifyContent="space-between" alignItems="center" gap="$3" flexWrap="wrap">
+                <XStack gap="$2" alignItems="center">
+                  {isLiveWindow ? <Radio size="$1" color="$red10" /> : <Clock3 size="$1" color="$blue10" />}
+                  <Text color={isLiveWindow ? '$red10' : '$blue10'} fontSize="$2" fontWeight="900" textTransform="uppercase">
+                    Fanta {wrapper.fantasyDay} · Serie A {wrapper.serieADay}ª
                   </Text>
                 </XStack>
+                <XStack gap="$2" alignItems="center" flexWrap="wrap">
+                  <StatusPill tone={isLiveWindow ? 'red' : wrapper.canEdit ? 'green' : 'neutral'}>
+                    {isLiveWindow ? 'LIVE' : wrapper.canEdit ? 'Turno futuro' : 'Turno chiuso'}
+                  </StatusPill>
+                  {lastUpdated ? (
+                    <Text color="$color8" fontSize="$2">Agg. {lastUpdated.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}</Text>
+                  ) : null}
+                </XStack>
+              </XStack>
 
-                <XStack justifyContent="center" alignItems="center" gap="$4" paddingVertical="$3">
-                  <YStack flex={1} alignItems="flex-end" minWidth={0}>
-                    <Text fontSize="$6" fontWeight="900" numberOfLines={1}>{wrapper.game.home}</Text>
-                    <Text color="$color10">{projection.result?.home.value.toFixed(1) ?? '—'} pt</Text>
-                  </YStack>
-                  <Text fontSize="$8" fontWeight="900" minWidth={110} textAlign="center">
+              <XStack alignItems="center" justifyContent="center" gap="$3" paddingVertical="$4">
+                <ScoreTeam name={wrapper.game.home} points={projection.result?.home.value ?? null} align="right" />
+                <YStack alignItems="center" justifyContent="center" minWidth={110} gap="$1">
+                  <Text color="$color8" fontSize="$1" fontWeight="900" textTransform="uppercase">Risultato</Text>
+                  <Text color="$color12" fontSize="$10" lineHeight="$10" fontWeight="900" textAlign="center">
                     {showScore && projection.result ? `${projection.result.homeGoals} - ${projection.result.awayGoals}` : 'vs'}
                   </Text>
-                  <YStack flex={1} minWidth={0}>
-                    <Text fontSize="$6" fontWeight="900" numberOfLines={1}>{wrapper.game.away}</Text>
-                    <Text color="$color10">{projection.result?.away.value.toFixed(1) ?? '—'} pt</Text>
-                  </YStack>
+                </YStack>
+                <ScoreTeam name={wrapper.game.away} points={projection.result?.away.value ?? null} align="left" />
+              </XStack>
+
+              {isLiveWindow ? (
+                <XStack gap="$2" alignItems="flex-start">
+                  <Radio size="$0.9" color="$red10" />
+                  <Paragraph size="$2" color="$red11" flex={1}>
+                    Voti live aggiornati automaticamente ogni 30 secondi. I voti ufficiali hanno sempre precedenza quando disponibili.
+                  </Paragraph>
                 </XStack>
+              ) : null}
+              {wrapper.requiresScoreCalculation && !isLiveWindow ? (
+                <Paragraph size="$2" color="$yellow11">
+                  Il risultato definitivo non è ancora materializzato nel calendario; questa vista usa i documenti voto disponibili senza scrivere nulla.
+                </Paragraph>
+              ) : null}
+            </YStack>
+          </Surface>
 
-                {isLiveWindow ? (
-                  <Paragraph size="$2" color="$red10">Voti live aggiornati automaticamente ogni 30 secondi. I voti ufficiali hanno sempre precedenza quando disponibili.</Paragraph>
-                ) : null}
-                {wrapper.requiresScoreCalculation && !isLiveWindow ? (
-                  <Paragraph size="$2" color="$yellow10">Il risultato definitivo non è ancora stato materializzato nel calendario; questa vista usa i documenti voto disponibili senza scrivere nulla.</Paragraph>
-                ) : null}
-              </YStack>
-            </Card>
+          <XStack gap="$3" alignItems="flex-start" flexWrap="wrap">
+            <YStack flexGrow={1} flexBasis={520} minWidth={280}>
+              <TeamPanel title={wrapper.game.home} calculation={projection.home} point={projection.result?.home ?? null} />
+            </YStack>
+            <YStack flexGrow={1} flexBasis={520} minWidth={280}>
+              <TeamPanel title={wrapper.game.away} calculation={projection.away} point={projection.result?.away ?? null} />
+            </YStack>
+          </XStack>
+        </>
+      ) : null}
+    </AppScreen>
+  )
+}
 
-            <XStack gap="$4" alignItems="flex-start" flexWrap="wrap">
-              <YStack flexGrow={1} flexBasis={500} minWidth={0}>
-                <TeamPanel title={wrapper.game.home} calculation={projection.home} point={projection.result?.home ?? null} />
-              </YStack>
-              <YStack flexGrow={1} flexBasis={500} minWidth={0}>
-                <TeamPanel title={wrapper.game.away} calculation={projection.away} point={projection.result?.away ?? null} />
-              </YStack>
-            </XStack>
-          </>
-        ) : null}
-      </YStack>
-    </ScrollView>
+function ScoreTeam({ name, points, align }: { name: string; points: number | null; align: 'left' | 'right' }) {
+  return (
+    <YStack flex={1} minWidth={0} alignItems={align === 'right' ? 'flex-end' : 'flex-start'} gap="$1">
+      <Text color="$color12" fontSize="$6" fontWeight="900" numberOfLines={2} textAlign={align}>{name}</Text>
+      <Text color="$color9" fontSize="$3" fontWeight="800">{points != null ? `${points.toFixed(1)} pt` : '— pt'}</Text>
+    </YStack>
   )
 }
 
 function TeamPanel({ title, calculation, point }: { title: string; calculation: TeamPointCalculation | null; point: Point | null }) {
   if (!calculation) {
-    return <Card borderWidth={1} borderColor="$borderColor" padding="$4"><Paragraph color="$color10">Formazione non disponibile per {title}.</Paragraph></Card>
+    return (
+      <Surface padding="$4">
+        <Paragraph color="$color10">Formazione non disponibile per {title}.</Paragraph>
+      </Surface>
+    )
   }
   const players = [...calculation.formation].sort((a, b) => a.currentPosition - b.currentPosition || a.current.name.localeCompare(b.current.name))
   return (
-    <Card borderWidth={1} borderColor="$borderColor" padding="$4">
-      <YStack gap="$3">
+    <Surface padding="$4">
+      <YStack gap="$4">
         <XStack justifyContent="space-between" alignItems="center" gap="$3">
-          <H2 size="$6">{title}</H2>
-          <Text fontWeight="900">{point?.value.toFixed(1) ?? calculation.point.value.toFixed(1)} pt</Text>
+          <YStack gap="$1" flex={1} minWidth={0}>
+            <Text color="$color12" fontSize="$6" fontWeight="900" numberOfLines={1}>{title}</Text>
+            <Text color="$color8" fontSize="$2">{players.length} giocatori in formazione</Text>
+          </YStack>
+          <Text color="$color12" fontSize="$7" fontWeight="900">{point?.value.toFixed(1) ?? calculation.point.value.toFixed(1)}</Text>
         </XStack>
-        {point?.defensiveBonus ? <Text color="$green10" fontSize="$2">Bonus difesa attivo</Text> : null}
-        {point?.goodPeople ? <Text color="$green10" fontSize="$2">Bonus fair play attivo</Text> : null}
+
+        {(point?.defensiveBonus || point?.goodPeople) ? (
+          <XStack gap="$2" flexWrap="wrap">
+            {point?.defensiveBonus ? <StatusPill tone="green">Bonus difesa</StatusPill> : null}
+            {point?.goodPeople ? <StatusPill tone="green">Fair play</StatusPill> : null}
+          </XStack>
+        ) : null}
+
         <YStack gap="$2">
           {players.map((player, index) => <PlayerVoteRow key={`${player.current.name}-${index}`} player={player} />)}
         </YStack>
       </YStack>
-    </Card>
+    </Surface>
   )
 }
 
 function PlayerVoteRow({ player }: { player: EnrichedTeamPlayer }) {
   const changed = player.currentPosition !== player.current.position
   return (
-    <Card backgroundColor="$color2" padding="$3">
-      <XStack gap="$3" alignItems="center">
-        <YStack flex={1} minWidth={0}>
-          <Text fontWeight="800" numberOfLines={1}>{player.current.name}</Text>
-          <Text color="$color9" fontSize="$2" numberOfLines={1}>
-            {player.current.team.name} · {formationLabel(player.currentPosition)}{changed ? ' · sostituzione' : ''}
-          </Text>
-          {player.vote ? <Text color="$color10" fontSize="$2">{voteEvents(player.vote)}</Text> : null}
-        </YStack>
-        <YStack alignItems="flex-end" minWidth={72}>
-          <Text fontWeight="900">{player.vote?.hasVote ? player.vote.value.toFixed(1) : 'SV'}</Text>
-          <Text color="$color10" fontSize="$2">{player.finalValue ? player.finalValue.value.toFixed(1) : '—'}</Text>
-        </YStack>
-      </XStack>
-    </Card>
+    <XStack
+      gap="$3"
+      alignItems="center"
+      padding="$3"
+      borderRadius="$4"
+      backgroundColor="$color3"
+      borderWidth={1}
+      borderColor={changed ? '$yellow6' : '$color4'}
+    >
+      <PlayerAvatar name={player.current.name} />
+      <YStack flex={1} minWidth={0} gap="$1">
+        <Text color="$color12" fontWeight="900" numberOfLines={1}>{player.current.name}</Text>
+        <Text color="$color9" fontSize="$2" numberOfLines={1}>
+          {player.current.team.name} · {formationLabel(player.currentPosition)}
+        </Text>
+        {changed ? <Text color="$yellow10" fontSize="$1" fontWeight="900">SOSTITUZIONE</Text> : null}
+        {player.vote ? <Text color="$color9" fontSize="$2" numberOfLines={2}>{voteEvents(player.vote)}</Text> : null}
+      </YStack>
+      <YStack alignItems="flex-end" minWidth={66} gap="$1">
+        <Text color="$color8" fontSize="$1" fontWeight="900">VOTO</Text>
+        <Text color="$color12" fontWeight="900" fontSize="$5">{player.vote?.hasVote ? player.vote.value.toFixed(1) : 'SV'}</Text>
+        <Text color="$blue10" fontWeight="900" fontSize="$3">{player.finalValue ? player.finalValue.value.toFixed(1) : '—'}</Text>
+      </YStack>
+    </XStack>
+  )
+}
+
+function PlayerAvatar({ name }: { name: string }) {
+  const urls = getPlayerImageUrlFromName(name)
+  const [source, setSource] = useState(urls.src)
+
+  useEffect(() => {
+    setSource(urls.src)
+  }, [urls.src])
+
+  return (
+    <YStack width={48} height={48} borderRadius="$10" overflow="hidden" backgroundColor="$color4" borderWidth={1} borderColor="$color5">
+      <Image
+        source={{ uri: source }}
+        accessibilityLabel={name}
+        onError={() => setSource(urls.fallback)}
+        style={{ width: 48, height: 48 }}
+      />
+    </YStack>
   )
 }
 

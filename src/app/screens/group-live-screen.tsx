@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { Button, Card, H1, H2, Paragraph, ScrollView, Spinner, Text, XStack, YStack } from 'tamagui'
+import { RefreshCw, Zap } from '@tamagui/lucide-icons-2'
+import { Button, Paragraph, Spinner, Text, XStack, YStack } from 'tamagui'
 import {
   Behaviour,
   GameResultHelper,
@@ -12,6 +13,7 @@ import {
   type Vote,
   type VotedRealPlayer,
 } from '@fantazone/domain'
+import { AppScreen, PageIntro, StatusPill, Surface } from '../components/design-system'
 import type { GroupNavigationSelection } from '../services/groupNavigation'
 import type { GroupSessionRuntime } from '../services/groupSessionRuntime'
 
@@ -81,104 +83,198 @@ export function GroupLiveScreen({ runtime, selection, onOpenGame }: Props) {
   const roundKeys = league ? Object.keys(league.rounds).sort((a, b) => a.localeCompare(b, undefined, { numeric: true })) : []
 
   return (
-    <ScrollView flex={1} contentContainerStyle={{ flexGrow: 1 }}>
-      <YStack width="100%" maxWidth={1080} alignSelf="center" padding="$4" paddingBottom="$8" gap="$4">
-        <XStack justifyContent="space-between" alignItems="flex-start" gap="$3" flexWrap="wrap" paddingTop="$2">
-          <YStack gap="$1">
-            <H1>Live</H1>
-            <Paragraph color="$color10">{leagueName}{selection.year != null ? ` · ${formatSeasonFromYear(selection.year)}` : ''}</Paragraph>
-            <Text color={isDuringSerieADay ? '$red10' : '$color9'} fontWeight="700">
-              {isDuringSerieADay ? 'Aggiornamento automatico attivo' : 'Nessuna giornata Serie A in corso'}
-            </Text>
-          </YStack>
-          <YStack gap="$1" alignItems="flex-end">
-            <Button variant="outlined" disabled={loading} onPress={() => { void loadLive() }}>{loading ? <Spinner /> : 'Aggiorna'}</Button>
-            {lastUpdated ? <Text color="$color9" fontSize="$2">{lastUpdated.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}</Text> : null}
-          </YStack>
-        </XStack>
-
-        {error ? <Card borderWidth={1} borderColor="$red8" padding="$4"><Paragraph color="$red10">{error}</Paragraph></Card> : null}
-        {!error && loading && !liveGroup ? <Spinner size="large" /> : null}
-        {!error && !loading && !liveGroup ? <Card borderWidth={1} borderColor="$borderColor" padding="$4"><Paragraph color="$color10">Il live non è disponibile per questa stagione.</Paragraph></Card> : null}
-        {!error && liveGroup && !league ? <Card borderWidth={1} borderColor="$borderColor" padding="$4"><Paragraph color="$color10">La lega selezionata non ha dati live per questa giornata.</Paragraph></Card> : null}
-
-        {events.length > 0 ? (
-          <Card borderWidth={1} borderColor="$red8" padding="$4">
-            <YStack gap="$3">
-              <H2 size="$6">Eventi Serie A</H2>
-              <XStack gap="$2" flexWrap="wrap">
-                {events.map((player, index) => (
-                  <Card key={`${player.name}-${index}`} backgroundColor="$color2" padding="$3" flexGrow={1} flexBasis={240}>
-                    <YStack gap="$1">
-                      <Text fontWeight="900">{player.name}</Text>
-                      <Text color="$color9" fontSize="$2">{player.team.name}</Text>
-                      <Text color="$color11">{player.vote ? liveEventLabel(player.vote) : ''}</Text>
-                    </YStack>
-                  </Card>
-                ))}
-              </XStack>
-            </YStack>
-          </Card>
-        ) : null}
-
-        {league ? (
-          <>
-            {roundKeys.map(roundKey => {
-              const day = league.rounds[roundKey]
-              return (
-                <Card key={roundKey} borderWidth={1} borderColor="$borderColor" padding="$4">
-                  <YStack gap="$3">
-                    <XStack justifyContent="space-between" alignItems="center" gap="$3" flexWrap="wrap">
-                      <H2 size="$6">{roundKey}</H2>
-                      <Text color="$color10">Fanta {day.number} · Serie A {day.serieADay}ª</Text>
-                    </XStack>
-                    <YStack gap="$2">
-                      {day.games.map(game => {
-                        const hasPoints = GameResultHelper.hasValue(game.result)
-                        return (
-                          <Card key={game.id} backgroundColor="$color2" padding="$3">
-                            <YStack gap="$2">
-                              <XStack alignItems="center" justifyContent="space-between" gap="$2">
-                                <Text flex={1} textAlign="right" fontWeight="800" numberOfLines={1}>{game.home}</Text>
-                                <Text minWidth={72} textAlign="center" fontWeight="900" fontSize="$5">{game.result ? `${game.result.homeGoals} - ${game.result.awayGoals}` : 'vs'}</Text>
-                                <Text flex={1} fontWeight="800" numberOfLines={1}>{game.away}</Text>
-                              </XStack>
-                              <Text textAlign="center" color="$color10" fontSize="$2">
-                                {game.result ? `${game.result.home.value.toFixed(1)} · ${game.result.away.value.toFixed(1)} punti${hasPoints ? '' : ' · in attesa voti'}` : 'Formazioni o voti non ancora disponibili'}
-                              </Text>
-                              {onOpenGame ? <Button size="$2" variant="outlined" alignSelf="center" onPress={() => onOpenGame(game.id)}>Dettaglio partita</Button> : null}
-                            </YStack>
-                          </Card>
-                        )
-                      })}
-                    </YStack>
-                  </YStack>
-                </Card>
-              )
-            })}
-
-            {league.rank && roundKeys.length > 0 ? (
-              <Card borderWidth={1} borderColor="$borderColor" padding="$4">
-                <YStack gap="$3">
-                  <H2 size="$6">Classifica live</H2>
-                  {RankHelper.getTeamsSortedByPoints(league.rank, roundKeys[0]).map((team, index) => (
-                    <XStack key={team.owner} gap="$3" alignItems="center" paddingVertical="$2">
-                      <Text width={28} textAlign="center" fontWeight="800">{index + 1}</Text>
-                      <YStack flex={1} minWidth={0}>
-                        <Text fontWeight="800" numberOfLines={1}>{team.name}</Text>
-                        <Text color="$color9" fontSize="$2">{team.owner}</Text>
-                      </YStack>
-                      <Text fontWeight="900">{team.point} pt</Text>
-                      <Text color="$color10" minWidth={70} textAlign="right">{team.valuePoint.toFixed(1)}</Text>
-                    </XStack>
-                  ))}
-                </YStack>
-              </Card>
+    <AppScreen maxWidth={1180}>
+      <PageIntro
+        eyebrow={leagueName}
+        title="Live"
+        description={`${selection.year != null ? `${formatSeasonFromYear(selection.year)} · ` : ''}${isDuringSerieADay ? 'la giornata è in corso e si aggiorna automaticamente.' : 'risultati, voti ed eventi della giornata.'}`}
+        action={(
+          <YStack alignItems="flex-end" gap="$1">
+            <Button
+              variant="outlined"
+              borderRadius="$4"
+              disabled={loading}
+              icon={loading ? undefined : RefreshCw}
+              onPress={() => { void loadLive() }}
+            >
+              {loading ? <Spinner /> : 'Aggiorna'}
+            </Button>
+            {lastUpdated ? (
+              <Text color="$color8" fontSize="$1">Aggiornato {lastUpdated.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}</Text>
             ) : null}
-          </>
-        ) : null}
-      </YStack>
-    </ScrollView>
+          </YStack>
+        )}
+      />
+
+      <Surface accent={isDuringSerieADay ? 'red' : 'neutral'} padding="$4">
+        <XStack alignItems="center" justifyContent="space-between" gap="$4" flexWrap="wrap">
+          <XStack alignItems="center" gap="$3">
+            <YStack
+              width={46}
+              height={46}
+              borderRadius="$10"
+              alignItems="center"
+              justifyContent="center"
+              backgroundColor={isDuringSerieADay ? '$red4' : '$color4'}
+            >
+              <Zap size="$1.2" color={isDuringSerieADay ? '$red10' : '$color9'} />
+            </YStack>
+            <YStack gap="$1">
+              <Text color="$color12" fontSize="$5" fontWeight="900">
+                {isDuringSerieADay ? 'Aggiornamento automatico attivo' : 'Nessuna giornata Serie A in corso'}
+              </Text>
+              <Text color="$color9" fontSize="$2">
+                {isDuringSerieADay ? `Refresh ogni ${LIVE_REFRESH_MS / 1000} secondi` : 'Puoi comunque consultare l’ultimo stato disponibile.'}
+              </Text>
+            </YStack>
+          </XStack>
+          <StatusPill tone={isDuringSerieADay ? 'red' : 'neutral'}>{isDuringSerieADay ? 'LIVE' : 'Stand-by'}</StatusPill>
+        </XStack>
+      </Surface>
+
+      {error ? (
+        <Surface accent="red" padding="$3">
+          <Paragraph color="$red11">{error}</Paragraph>
+        </Surface>
+      ) : null}
+
+      {!error && loading && !liveGroup ? (
+        <YStack minHeight={220} justifyContent="center" alignItems="center" gap="$3">
+          <Spinner size="large" />
+          <Text color="$color9">Preparazione del live…</Text>
+        </YStack>
+      ) : null}
+
+      {!error && !loading && !liveGroup ? (
+        <Surface padding="$4"><Paragraph color="$color10">Il live non è disponibile per questa stagione.</Paragraph></Surface>
+      ) : null}
+      {!error && liveGroup && !league ? (
+        <Surface padding="$4"><Paragraph color="$color10">La lega selezionata non ha dati live per questa giornata.</Paragraph></Surface>
+      ) : null}
+
+      {events.length > 0 ? (
+        <YStack gap="$3">
+          <XStack alignItems="center" gap="$2">
+            <StatusPill tone="red">Eventi Serie A</StatusPill>
+            <Text color="$color9" fontSize="$2">{events.length} aggiornamenti rilevanti</Text>
+          </XStack>
+          <XStack gap="$3" flexWrap="wrap">
+            {events.map((player, index) => (
+              <YStack
+                key={`${player.name}-${index}`}
+                flexGrow={1}
+                flexBasis={245}
+                minWidth={220}
+                backgroundColor="$red2"
+                borderWidth={1}
+                borderColor="$red5"
+                borderRadius="$4"
+                padding="$3"
+                gap="$1.5"
+              >
+                <Text color="$color12" fontWeight="900">{player.name}</Text>
+                <Text color="$color9" fontSize="$2">{player.team.name}</Text>
+                <Text color="$red11" fontSize="$3" fontWeight="700">{player.vote ? liveEventLabel(player.vote) : ''}</Text>
+              </YStack>
+            ))}
+          </XStack>
+        </YStack>
+      ) : null}
+
+      {league ? (
+        <YStack gap="$4">
+          {roundKeys.map(roundKey => {
+            const day = league.rounds[roundKey]
+            return (
+              <Surface key={roundKey} padding="$4">
+                <YStack gap="$4">
+                  <XStack justifyContent="space-between" alignItems="center" gap="$3" flexWrap="wrap">
+                    <YStack gap="$1">
+                      <StatusPill tone={isDuringSerieADay ? 'red' : 'blue'}>Serie A {day.serieADay}ª</StatusPill>
+                      <Text color="$color12" fontSize="$7" fontWeight="900">{roundKey}</Text>
+                    </YStack>
+                    <Text color="$color9" fontSize="$2">Fanta giornata {day.number}</Text>
+                  </XStack>
+
+                  <XStack gap="$3" flexWrap="wrap">
+                    {day.games.map(game => {
+                      const hasPoints = GameResultHelper.hasValue(game.result)
+                      return (
+                        <YStack
+                          key={game.id}
+                          flexGrow={1}
+                          flexBasis={330}
+                          minWidth={270}
+                          backgroundColor="$color3"
+                          borderWidth={1}
+                          borderColor="$color5"
+                          borderRadius="$4"
+                          padding="$3.5"
+                          gap="$3"
+                        >
+                          <XStack alignItems="center" justifyContent="space-between" gap="$2">
+                            <Text flex={1} textAlign="left" color="$color12" fontWeight="900" numberOfLines={1}>{game.home}</Text>
+                            <YStack minWidth={72} height={40} borderRadius="$3" backgroundColor="$color4" alignItems="center" justifyContent="center">
+                              <Text color="$color12" fontWeight="900" fontSize="$5">
+                                {game.result ? `${game.result.homeGoals}–${game.result.awayGoals}` : 'VS'}
+                              </Text>
+                            </YStack>
+                            <Text flex={1} textAlign="right" color="$color12" fontWeight="900" numberOfLines={1}>{game.away}</Text>
+                          </XStack>
+                          <Text textAlign="center" color="$color9" fontSize="$2">
+                            {game.result
+                              ? `${game.result.home.value.toFixed(1)} · ${game.result.away.value.toFixed(1)} punti${hasPoints ? '' : ' · in attesa voti'}`
+                              : 'Formazioni o voti non ancora disponibili'}
+                          </Text>
+                          {onOpenGame ? (
+                            <Button size="$2.5" variant="outlined" alignSelf="center" onPress={() => onOpenGame(game.id)}>
+                              Dettaglio partita
+                            </Button>
+                          ) : null}
+                        </YStack>
+                      )
+                    })}
+                  </XStack>
+                </YStack>
+              </Surface>
+            )
+          })}
+
+          {league.rank && roundKeys.length > 0 ? (
+            <Surface accent="blue" padding="$4">
+              <YStack gap="$3">
+                <XStack justifyContent="space-between" alignItems="center">
+                  <Text color="$color12" fontSize="$6" fontWeight="900">Classifica live</Text>
+                  <StatusPill tone="blue">Proiezione</StatusPill>
+                </XStack>
+                {RankHelper.getTeamsSortedByPoints(league.rank, roundKeys[0]).map((team, index) => (
+                  <XStack
+                    key={team.owner}
+                    gap="$3"
+                    alignItems="center"
+                    padding="$3"
+                    borderRadius="$4"
+                    backgroundColor={index < 3 ? '$blue3' : '$color2'}
+                    borderWidth={1}
+                    borderColor={index < 3 ? '$blue5' : '$color4'}
+                  >
+                    <YStack width={34} height={34} borderRadius="$10" alignItems="center" justifyContent="center" backgroundColor="$color4">
+                      <Text fontWeight="900">{index + 1}</Text>
+                    </YStack>
+                    <YStack flex={1} minWidth={0}>
+                      <Text color="$color12" fontWeight="900" numberOfLines={1}>{team.name}</Text>
+                      <Text color="$color9" fontSize="$2">{team.owner}</Text>
+                    </YStack>
+                    <Text color="$color12" fontWeight="900">{team.point} pt</Text>
+                    <Text color="$color9" minWidth={70} textAlign="right">{team.valuePoint.toFixed(1)}</Text>
+                  </XStack>
+                ))}
+              </YStack>
+            </Surface>
+          ) : null}
+        </YStack>
+      ) : null}
+    </AppScreen>
   )
 }
 
