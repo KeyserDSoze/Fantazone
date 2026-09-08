@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { Button, Card, H1, H2, H3, Paragraph, ScrollView, Spinner, Text, XStack, YStack } from 'tamagui'
+import { CalendarDays, RefreshCw, ShieldCheck } from '@tamagui/lucide-icons-2'
+import { Button, Paragraph, Spinner, Text, XStack, YStack } from 'tamagui'
 import { RealGameHelper, type AuthenticatedGroupSession, type RealCalendar } from '@fantazone/domain'
+import { AppScreen, PageIntro, PrimaryAction, StatusPill, Surface } from '../components/design-system'
 import type { GroupNavigationSelection } from '../services/groupNavigation'
 import type { GroupSessionRuntime } from '../services/groupSessionRuntime'
 import {
@@ -147,154 +149,194 @@ export function SerieAAdminScreen({ runtime, session, selection }: Props) {
 
   if (!season) {
     return (
-      <YStack padding="$4"><Card padding="$4"><Paragraph>Seleziona una stagione per amministrare la Serie A.</Paragraph></Card></YStack>
+      <AppScreen maxWidth={900}>
+        <PageIntro eyebrow="SuperAdmin" title="Gestione Serie A" description="Seleziona una stagione per amministrare i dati globali della piattaforma." />
+        <Surface accent="yellow" padding="$5"><Paragraph color="$color10">Nessuna stagione selezionata.</Paragraph></Surface>
+      </AppScreen>
     )
   }
 
   const canWrite = access?.canWrite === true
 
   return (
-    <ScrollView flex={1} contentContainerStyle={{ flexGrow: 1 }}>
-      <YStack width="100%" maxWidth={1100} alignSelf="center" padding="$4" paddingBottom="$8" gap="$4">
-        <YStack gap="$1" paddingTop="$2">
-          <H1>Gestione Serie A</H1>
-          <Paragraph color="$color10">Calendario globale {season}: rinvii manuali e producer piattaforma, senza endpoint backend.</Paragraph>
-        </YStack>
-
-        <Card borderWidth={1} borderColor={canWrite ? '$green8' : '$orange8'} padding="$4">
-          <YStack gap="$2">
-            <H2 size="$5">Accesso piattaforma</H2>
-            <Text fontWeight="700">{access?.repository ?? `${runtime.platformTarget.owner}/${runtime.platformTarget.repo}`}</Text>
-            <Paragraph color="$color10">
-              {access == null
-                ? 'Verifica permessi in corso…'
-                : canWrite
-                  ? `Scrittura abilitata sul branch ${access.branch}. Ogni operazione rivalida ruolo SuperAdmin e permesso push.`
-                  : access.reason}
-            </Paragraph>
-          </YStack>
-        </Card>
-
-        {error ? <Card borderWidth={1} borderColor="$red8" padding="$3"><Paragraph color="$red10">{error}</Paragraph></Card> : null}
-        {notice ? <Card borderWidth={1} borderColor="$green8" padding="$3"><Paragraph color="$green10">{notice}</Paragraph></Card> : null}
-
-        <XStack gap="$3" flexWrap="wrap">
-          <StatCard label="Partite" value={stats.total} />
-          <StatCard label="Rinviate" value={stats.delayed} />
-          <StatCard label="Giocate" value={stats.played} />
-          <StatCard label="Da giocare" value={stats.upcoming} />
-        </XStack>
-
-        <Card borderWidth={1} borderColor="$borderColor" padding="$4">
-          <YStack gap="$3">
-            <XStack justifyContent="space-between" alignItems="center" gap="$3" flexWrap="wrap">
-              <YStack gap="$1">
-                <H2 size="$5">Producer globali</H2>
-                <Paragraph color="$color10">Il browser invia solo il workflow_dispatch; la Action esegue il producer e committa i dati canonici.</Paragraph>
-              </YStack>
-              <Button onPress={() => void load()} disabled={loading || busy != null}>{loading ? <Spinner /> : 'Ricarica dati'}</Button>
-            </XStack>
-            <XStack gap="$2" flexWrap="wrap">
-              <JobButton label="Aggiorna calendario" job="ingest-serie-a" busy={busy} disabled={!canWrite} onRun={runJob} />
-              <JobButton label="Aggiorna giocatori/squadre" job="ingest-master-data" busy={busy} disabled={!canWrite} onRun={runJob} />
-              <JobButton label="Ricalcola statistiche" job="rebuild-player-stats" busy={busy} disabled={!canWrite} onRun={runJob} />
-              <JobButton label="Aggiorna probabilità" job="ingest-player-odds" busy={busy} disabled={!canWrite} onRun={runJob} />
-              <JobButton label="Aggiorna immagini" job="ingest-player-images" busy={busy} disabled={!canWrite} onRun={runJob} />
-            </XStack>
-          </YStack>
-        </Card>
-
-        {changes.size > 0 ? (
-          <Card borderWidth={1} borderColor="$orange8" padding="$3">
-            <XStack justifyContent="space-between" alignItems="center" gap="$3" flexWrap="wrap">
-              <Paragraph color="$orange10" fontWeight="700">{changes.size} modifica/e ai rinvii non ancora salvata/e.</Paragraph>
-              <XStack gap="$2">
-                <Button onPress={() => void load()} disabled={busy != null}>Annulla e ricarica</Button>
-                <Button onPress={() => void saveChanges()} disabled={!canWrite || busy != null}>{busy === 'save' ? <Spinner /> : 'Salva modifiche'}</Button>
-              </XStack>
-            </XStack>
-          </Card>
-        ) : null}
-
-        {loading ? (
-          <Card padding="$6" alignItems="center"><Spinner /><Paragraph marginTop="$2">Caricamento calendario…</Paragraph></Card>
-        ) : !calendar ? (
-          <Card padding="$5">
-            <YStack gap="$3">
-              <H2 size="$5">Calendario non disponibile</H2>
-              <Paragraph color="$color10">Puoi avviare “Aggiorna calendario” per creare o aggiornare la stagione supportata dal provider.</Paragraph>
-            </YStack>
-          </Card>
-        ) : (
-          <YStack gap="$3">
-            {calendar.days.slice().sort((a, b) => a.serieADay - b.serieADay).map(day => {
-              const isExpanded = expandedDays.has(day.serieADay)
-              const delayed = day.games.filter(game => game.delayed).length
-              const played = day.games.filter(game => RealGameHelper.isPlayed(game)).length
-              return (
-                <Card key={day.serieADay} borderWidth={1} borderColor="$borderColor" padding="$0">
-                  <YStack>
-                    <XStack padding="$3" justifyContent="space-between" alignItems="center" gap="$3" flexWrap="wrap">
-                      <YStack gap="$1">
-                        <H3>Giornata {day.serieADay}</H3>
-                        <Text color="$color10">{day.games.length} partite · {played} giocate · {delayed} rinviate</Text>
-                      </YStack>
-                      <XStack gap="$2" flexWrap="wrap">
-                        <Button size="$3" onPress={() => void runJob('ingest-serie-a', day.serieADay)} disabled={!canWrite || busy != null}>
-                          {busy === `ingest-serie-a-${day.serieADay}` ? <Spinner /> : 'Aggiorna giornata'}
-                        </Button>
-                        <Button size="$3" onPress={() => void runJob('ingest-final-votes', day.serieADay)} disabled={!canWrite || busy != null}>
-                          {busy === `ingest-final-votes-${day.serieADay}` ? <Spinner /> : 'Importa voti finali'}
-                        </Button>
-                        <Button size="$3" onPress={() => toggleDay(day.serieADay)}>{isExpanded ? 'Chiudi' : 'Partite'}</Button>
-                      </XStack>
-                    </XStack>
-                    {isExpanded ? (
-                      <YStack borderTopWidth={1} borderTopColor="$borderColor">
-                        {day.games.map((game, gameIndex) => {
-                          const changeKey = delayedChangeKey({ serieADay: day.serieADay, home: game.home.name, away: game.away.name })
-                          const modified = changes.has(changeKey)
-                          return (
-                            <XStack key={`${game.home.name}-${game.away.name}`} padding="$3" gap="$3" justifyContent="space-between" alignItems="center" flexWrap="wrap" borderBottomWidth={gameIndex < day.games.length - 1 ? 1 : 0} borderBottomColor="$borderColor">
-                              <YStack flex={1} minWidth={250} gap="$1">
-                                <Text fontWeight="800">{game.home.name} – {game.away.name}</Text>
-                                <Text color="$color10">{formatGame(game.date, game.homeGoals, game.awayGoals)}</Text>
-                                {modified ? <Text color="$orange10" fontWeight="700">Modifica locale non salvata</Text> : null}
-                              </YStack>
-                              <Button size="$3" onPress={() => toggleDelayed(day.serieADay, gameIndex)} disabled={!canWrite || busy != null}>
-                                {game.delayed ? 'Segna non rinviata' : 'Segna rinviata'}
-                              </Button>
-                            </XStack>
-                          )
-                        })}
-                      </YStack>
-                    ) : null}
-                  </YStack>
-                </Card>
-              )
-            })}
-          </YStack>
+    <AppScreen maxWidth={1240}>
+      <PageIntro
+        eyebrow="Piattaforma"
+        title="Gestione Serie A"
+        description={`Calendario globale ${season}: rinvii manuali e producer piattaforma gestiti tramite GitHub Actions, senza endpoint backend.`}
+        action={(
+          <Button variant="outlined" borderRadius="$4" icon={loading ? undefined : RefreshCw} onPress={() => { void load() }} disabled={loading || busy != null}>
+            {loading ? <Spinner /> : 'Ricarica dati'}
+          </Button>
         )}
-      </YStack>
-    </ScrollView>
+      />
+
+      <Surface accent={canWrite ? 'green' : 'yellow'} padding="$5">
+        <XStack justifyContent="space-between" alignItems="flex-start" gap="$4" flexWrap="wrap">
+          <XStack alignItems="flex-start" gap="$3" flex={1} minWidth={280}>
+            <YStack width={44} height={44} borderRadius="$4" backgroundColor={canWrite ? '$green3' : '$yellow3'} borderWidth={1} borderColor={canWrite ? '$green5' : '$yellow5'} alignItems="center" justifyContent="center">
+              <ShieldCheck size="$1.2" color={canWrite ? '$green10' : '$yellow10'} />
+            </YStack>
+            <YStack flex={1} gap="$1">
+              <Text color="$color12" fontSize="$6" fontWeight="900">Accesso piattaforma</Text>
+              <Text color="$color9" fontSize="$2">{access?.repository ?? `${runtime.platformTarget.owner}/${runtime.platformTarget.repo}`}</Text>
+              <Paragraph color="$color10">
+                {access == null
+                  ? 'Verifica permessi in corso…'
+                  : canWrite
+                    ? `Scrittura abilitata sul branch ${access.branch}. Ogni operazione rivalida ruolo SuperAdmin e permesso push.`
+                    : access.reason}
+              </Paragraph>
+            </YStack>
+          </XStack>
+          <StatusPill tone={access == null ? 'neutral' : canWrite ? 'green' : 'yellow'}>
+            {access == null ? 'Verifica…' : canWrite ? 'Scrittura abilitata' : 'Solo lettura'}
+          </StatusPill>
+        </XStack>
+      </Surface>
+
+      {error ? <Surface accent="red" padding="$3"><Paragraph color="$red11">{error}</Paragraph></Surface> : null}
+      {notice ? <Surface accent="green" padding="$3"><Paragraph color="$green11">{notice}</Paragraph></Surface> : null}
+
+      <XStack gap="$3" flexWrap="wrap">
+        <Stat label="Partite" value={stats.total} tone="blue" />
+        <Stat label="Giocate" value={stats.played} tone="green" />
+        <Stat label="Da giocare" value={stats.upcoming} tone="neutral" />
+        <Stat label="Rinviate" value={stats.delayed} tone="yellow" />
+      </XStack>
+
+      <Surface padding="$5">
+        <YStack gap="$4">
+          <XStack alignItems="center" gap="$2">
+            <CalendarDays size="$1.2" color="$blue10" />
+            <YStack flex={1} gap="$1">
+              <Text color="$color12" fontSize="$6" fontWeight="900">Producer globali</Text>
+              <Paragraph color="$color10">Il browser invia soltanto il workflow_dispatch; la Action esegue il producer e committa i dati canonici.</Paragraph>
+            </YStack>
+          </XStack>
+          <XStack gap="$2" flexWrap="wrap">
+            <JobButton label="Aggiorna calendario" job="ingest-serie-a" busy={busy} disabled={!canWrite} onRun={runJob} />
+            <JobButton label="Aggiorna giocatori/squadre" job="ingest-master-data" busy={busy} disabled={!canWrite} onRun={runJob} />
+            <JobButton label="Ricalcola statistiche" job="rebuild-player-stats" busy={busy} disabled={!canWrite} onRun={runJob} />
+            <JobButton label="Aggiorna probabilità" job="ingest-player-odds" busy={busy} disabled={!canWrite} onRun={runJob} />
+            <JobButton label="Aggiorna immagini" job="ingest-player-images" busy={busy} disabled={!canWrite} onRun={runJob} />
+          </XStack>
+        </YStack>
+      </Surface>
+
+      {changes.size > 0 ? (
+        <Surface accent="yellow" padding="$4">
+          <XStack justifyContent="space-between" alignItems="center" gap="$4" flexWrap="wrap">
+            <YStack gap="$1">
+              <Text color="$color12" fontWeight="900">Modifiche locali non salvate</Text>
+              <Paragraph color="$yellow11">{changes.size} partita/e hanno uno stato rinvio diverso dal documento canonico.</Paragraph>
+            </YStack>
+            <XStack gap="$2" flexWrap="wrap">
+              <Button variant="outlined" borderRadius="$4" onPress={() => { void load() }} disabled={busy != null}>Annulla e ricarica</Button>
+              <PrimaryAction onPress={() => { void saveChanges() }} disabled={!canWrite || busy != null}>
+                {busy === 'save' ? <Spinner color="white" /> : 'Salva modifiche'}
+              </PrimaryAction>
+            </XStack>
+          </XStack>
+        </Surface>
+      ) : null}
+
+      {loading && !calendar ? (
+        <YStack minHeight={220} alignItems="center" justifyContent="center" gap="$3"><Spinner size="large" /><Text color="$color9">Caricamento calendario…</Text></YStack>
+      ) : !calendar ? (
+        <Surface padding="$5">
+          <YStack gap="$2">
+            <Text color="$color12" fontSize="$6" fontWeight="900">Calendario non disponibile</Text>
+            <Paragraph color="$color10">Avvia “Aggiorna calendario” per creare o aggiornare la stagione supportata dal provider.</Paragraph>
+          </YStack>
+        </Surface>
+      ) : (
+        <YStack gap="$3">
+          <XStack justifyContent="space-between" alignItems="center" gap="$3" flexWrap="wrap">
+            <Text color="$color12" fontSize="$6" fontWeight="900">Calendario canonico</Text>
+            <StatusPill tone="blue">38 giornate</StatusPill>
+          </XStack>
+          {calendar.days.slice().sort((a, b) => a.serieADay - b.serieADay).map(day => {
+            const isExpanded = expandedDays.has(day.serieADay)
+            const delayed = day.games.filter(game => game.delayed).length
+            const played = day.games.filter(game => RealGameHelper.isPlayed(game)).length
+            return (
+              <YStack key={day.serieADay} borderWidth={1} borderColor="$color5" backgroundColor="$color2" borderRadius="$5" overflow="hidden">
+                <XStack padding="$4" justifyContent="space-between" alignItems="center" gap="$4" flexWrap="wrap">
+                  <YStack gap="$1">
+                    <XStack alignItems="center" gap="$2">
+                      <Text color="$color12" fontSize="$5" fontWeight="900">Giornata {day.serieADay}</Text>
+                      {delayed > 0 ? <StatusPill tone="yellow">{delayed} rinviate</StatusPill> : null}
+                    </XStack>
+                    <Text color="$color9" fontSize="$2">{day.games.length} partite · {played} giocate</Text>
+                  </YStack>
+                  <XStack gap="$2" flexWrap="wrap">
+                    <Button size="$3" borderRadius="$4" onPress={() => { void runJob('ingest-serie-a', day.serieADay) }} disabled={!canWrite || busy != null}>
+                      {busy === `ingest-serie-a-${day.serieADay}` ? <Spinner /> : 'Aggiorna giornata'}
+                    </Button>
+                    <Button size="$3" variant="outlined" borderRadius="$4" onPress={() => { void runJob('ingest-final-votes', day.serieADay) }} disabled={!canWrite || busy != null}>
+                      {busy === `ingest-final-votes-${day.serieADay}` ? <Spinner /> : 'Importa voti finali'}
+                    </Button>
+                    <Button size="$3" chromeless onPress={() => toggleDay(day.serieADay)}>{isExpanded ? 'Chiudi' : 'Mostra partite'}</Button>
+                  </XStack>
+                </XStack>
+
+                {isExpanded ? (
+                  <YStack borderTopWidth={1} borderTopColor="$color5">
+                    {day.games.map((game, gameIndex) => {
+                      const changeKey = delayedChangeKey({ serieADay: day.serieADay, home: game.home.name, away: game.away.name })
+                      const modified = changes.has(changeKey)
+                      return (
+                        <XStack
+                          key={`${game.home.name}-${game.away.name}`}
+                          padding="$4"
+                          gap="$4"
+                          justifyContent="space-between"
+                          alignItems="center"
+                          flexWrap="wrap"
+                          borderBottomWidth={gameIndex < day.games.length - 1 ? 1 : 0}
+                          borderBottomColor="$color4"
+                          backgroundColor={modified ? '$yellow2' : 'transparent'}
+                        >
+                          <YStack flex={1} minWidth={250} gap="$1">
+                            <Text color="$color12" fontWeight="900">{game.home.name} – {game.away.name}</Text>
+                            <Text color="$color9" fontSize="$2">{formatGame(game.date, game.homeGoals, game.awayGoals)}</Text>
+                            {modified ? <Text color="$yellow11" fontSize="$2" fontWeight="800">Modifica locale non salvata</Text> : null}
+                          </YStack>
+                          <XStack alignItems="center" gap="$2">
+                            <StatusPill tone={game.delayed ? 'yellow' : RealGameHelper.isPlayed(game) ? 'green' : 'neutral'}>
+                              {game.delayed ? 'Rinviata' : RealGameHelper.isPlayed(game) ? 'Giocata' : 'Da giocare'}
+                            </StatusPill>
+                            <Button size="$3" variant="outlined" borderRadius="$4" onPress={() => toggleDelayed(day.serieADay, gameIndex)} disabled={!canWrite || busy != null}>
+                              {game.delayed ? 'Segna regolare' : 'Segna rinviata'}
+                            </Button>
+                          </XStack>
+                        </XStack>
+                      )
+                    })}
+                  </YStack>
+                ) : null}
+              </YStack>
+            )
+          })}
+        </YStack>
+      )}
+    </AppScreen>
   )
 }
 
-function StatCard({ label, value }: { label: string; value: number }) {
+function Stat({ label, value, tone }: { label: string; value: number; tone: 'neutral' | 'blue' | 'green' | 'yellow' }) {
+  const background = tone === 'blue' ? '$blue2' : tone === 'green' ? '$green2' : tone === 'yellow' ? '$yellow2' : '$color2'
+  const border = tone === 'blue' ? '$blue5' : tone === 'green' ? '$green5' : tone === 'yellow' ? '$yellow5' : '$color5'
   return (
-    <Card flex={1} minWidth={140} borderWidth={1} borderColor="$borderColor" padding="$3">
-      <YStack gap="$1"><Text color="$color10">{label}</Text><Text fontSize="$7" fontWeight="900">{value}</Text></YStack>
-    </Card>
+    <YStack flexGrow={1} flexBasis={180} minWidth={150} padding="$4" gap="$1" borderWidth={1} borderColor={border} backgroundColor={background} borderRadius="$5">
+      <Text color="$color9" fontSize="$2" fontWeight="800">{label}</Text>
+      <Text color="$color12" fontSize="$8" lineHeight="$8" fontWeight="900">{value}</Text>
+    </YStack>
   )
 }
 
-function JobButton({
-  label,
-  job,
-  busy,
-  disabled,
-  onRun,
-}: {
+function JobButton({ label, job, busy, disabled, onRun }: {
   label: string
   job: SerieAPlatformJob
   busy: string | null
@@ -302,7 +344,7 @@ function JobButton({
   onRun: (job: SerieAPlatformJob) => Promise<void>
 }) {
   return (
-    <Button onPress={() => void onRun(job)} disabled={disabled || busy != null}>
+    <Button borderRadius="$4" onPress={() => { void onRun(job) }} disabled={disabled || busy != null}>
       {busy === `${job}-season` ? <Spinner /> : label}
     </Button>
   )
