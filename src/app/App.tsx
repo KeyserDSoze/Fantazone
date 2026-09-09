@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { AppState } from 'react-native'
 import { StatusBar } from 'expo-status-bar'
 import { Button, Card, Paragraph, Spinner, TamaguiProvider, Text, Theme, XStack, YStack } from 'tamagui'
@@ -13,6 +13,14 @@ import { GroupPickerScreen } from './screens/group-picker'
 import { GroupReconnectScreen } from './screens/group-reconnect'
 import { LoginScreen } from './screens/login'
 import { PlatformOverviewScreen } from './screens/platform-overview'
+import {
+  navigateBrowser,
+  readBrowserLocation,
+  subscribeBrowserNavigation,
+  type AppBrowserLocation,
+  type BrowserNavigationMode,
+  type GroupBrowserPage,
+} from './services/appRouting'
 import {
   credentialOwnerKey,
   loadRepositoryToken,
@@ -68,25 +76,33 @@ const SESSION_REFRESH_RETRY_MS = 30 * 1000
 const GROUP_SYNC_INTERVAL_MS = 60 * 1000
 
 export default function App() {
+  const [browserLocation, setBrowserLocation] = useState<AppBrowserLocation>(() => readBrowserLocation())
   const [theme, setTheme] = useState<ThemeName>('dark')
   const [microsoftSession, setMicrosoftSession] = useState<MicrosoftAppSession | null>(null)
   const [settings, setSettings] = useState<UserSettings | null>(null)
   const [runtime, setRuntime] = useState<GroupSessionRuntime | null>(null)
   const [authenticatedSession, setAuthenticatedSession] = useState<AuthenticatedGroupSession | null>(null)
+  const [activeStoredGroupId, setActiveStoredGroupId] = useState<string | null>(null)
   const [pendingInvite, setPendingInvite] = useState<GroupInvitePayload | null>(null)
-  const [view, setView] = useState<ViewName>('groups')
+  const [view, setView] = useState<ViewName>(() => readBrowserLocation().kind === 'architecture' ? 'architecture' : 'groups')
   const [addingGroup, setAddingGroup] = useState(false)
   const [reconnectingGroup, setReconnectingGroup] = useState<StoredGroup | null>(null)
   const [loading, setLoading] = useState(true)
   const [loginLoading, setLoginLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const routedGroupOpenAttempt = useRef<string | null>(null)
+
+  useEffect(() => subscribeBrowserNavigation(location => {
+    setBrowserLocation(location)
+    setView(location.kind === 'architecture' ? 'architecture' : 'groups')
+  }), [])
 
   useEffect(() => {
     let active = true
     async function restoreMicrosoftSession() {
       beginOperation('Apertura Fantazone', 'Ripristino della sessione e dei dati salvati sul dispositivo…')
       try {
-        const invite = loadPendingGroupInvite()
+        const invite = await loadPendingGroupInvite()
         if (active) setPendingInvite(invite)
 
         let completed = await completePendingMicrosoftAppLogin()
@@ -116,6 +132,7 @@ export default function App() {
           if (!active) return
           setMicrosoftSession(completed)
           setSettings(nextSettings)
+          setBrowserLocation(readBrowserLocation())
           return
         }
 
@@ -126,6 +143,7 @@ export default function App() {
           if (!active) return
           setMicrosoftSession(localMicrosoftSession(identity))
           setSettings(cachedSettings)
+          setBrowserLocation(readBrowserLocation())
           markConnectivity(browserConnectivity())
           return
         }
@@ -214,7 +232,9 @@ export default function App() {
             if (!active) return
             setRuntime(null)
             setAuthenticatedSession(null)
+            setActiveStoredGroupId(null)
             setError(`Il gruppo è stato aggiornato e l’accesso deve essere verificato di nuovo: ${toMessage(caught)}`)
+            setAppBrowserLocation({ kind: 'groups' }, 'replace')
             return
           }
         }
@@ -256,6 +276,38 @@ export default function App() {
     }
   }, [runtime, authenticatedSession, microsoftSession?.identity.subject])
 
+  useEffect(() => {
+    if (!runtime) return
+    if (browserLocation.kind === 'architecture') return
+    if (browserLocation.kind === 'group' && browserLocation.groupId === activeStoredGroupId) return
+    closeGroup(false)
+  }, [browserLocation, runtime, activeStoredGroupId])
+
+  useEffect(() => {
+    if (browserLocation.kind !== 'group') {
+      routedGroupOpenAttempt.current = null
+      return
+    }
+    if (loading || !microsoftSession || !settings || runtime || pendingInvite || addingGroup || reconnectingGroup) return
+    if (routedGroupOpenAttempt.current === browserLocation.groupId) return
+
+    const target = settings.groups.find(group => group.id === browserLocation.groupId)
+    if (!target) {
+      routedGroupOpenAttempt.current = browserLocation.groupId
+      setError('Il gruppo indicato nell’indirizzo non è presente nei tuoi settings OneDrive.')
+      setAppBrowserLocation({ kind: 'groups' }, 'replace')
+      return
+    }
+
+    routedGroupOpenAttempt.current = browserLocation.groupId
+    void openStoredGroup(target)
+  }, [browserLocation, loading, microsoftSession, settings, runtime, pendingInvite, addingGroup, reconnectingGroup])
+
+  useEffect(() => {
+    if (loading || pendingInvite || browserLocation.kind !== 'join') return
+    setAppBrowserLocation({ kind: 'groups' }, 'replace')
+  }, [loading, pendingInvite, browserLocation.kind])
+
   async function loginWithMicrosoft() {
     setLoginLoading(true)
     setError(null)
@@ -291,18 +343,21 @@ export default function App() {
       updateOperation('Verifica della tua appartenenza al gruppo…')
       await authorizeIdentity(opened, session.identity)
       await saveGroupConnection(connection, credentialOwnerKey(session.identity))
-      const next = upsertStoredGroup(settings ?? emptyUserSettings(), createStoredGroup({
+      const stored = createStoredGroup({
         name: opened.group.name,
         repository: connection.repository.full_name,
         pat: connection.token,
-      }))
+      })
+      const next = upsertStoredGroup(settings ?? emptyUserSettings(), stored)
       updateOperation('Salvataggio del gruppo nelle impostazioni private OneDrive…')
       await saveSettingsRemoteAndLocal(session, next)
       setSettings(next)
       setRuntime(opened)
+      setActiveStoredGroupId(stored.id)
       setAddingGroup(false)
       setReconnectingGroup(null)
       setView('groups')
+      activateGroupBrowserRoute(stored.id, 'push')
       markSynced()
     } catch (caught) {
       setError(toMessage(caught))
@@ -340,12 +395,14 @@ export default function App() {
 
       setSettings(next)
       setRuntime(opened)
+      setActiveStoredGroupId(stored.id)
       setPendingInvite(null)
       setAddingGroup(false)
       setReconnectingGroup(null)
       clearPendingGroupInvite()
       setError(null)
       setView('groups')
+      activateGroupBrowserRoute(stored.id, 'replace')
       markSynced()
     } finally {
       endOperation()
@@ -386,7 +443,9 @@ export default function App() {
         }
 
         setRuntime(opened)
+        setActiveStoredGroupId(group.id)
         setReconnectingGroup(null)
+        activateGroupBrowserRoute(group.id, 'push')
         markConnectivity('online')
         setPendingWrites(await countPendingMutations(connection.repository.full_name))
       } catch (caught) {
@@ -398,7 +457,9 @@ export default function App() {
           })
           await authorizeIdentity(opened, session.identity, false)
           setRuntime(opened)
+          setActiveStoredGroupId(group.id)
           setReconnectingGroup(null)
+          activateGroupBrowserRoute(group.id, 'push')
           markConnectivity('offline')
           setPendingWrites(await countPendingMutations(connection.repository.full_name))
           return
@@ -430,20 +491,23 @@ export default function App() {
       const opened = await openGroupConnection(connection)
       await authorizeIdentity(opened, session.identity)
       await saveGroupConnection(connection, credentialOwnerKey(session.identity))
-      const next = upsertStoredGroup(settings ?? emptyUserSettings(), {
+      const stored = {
         ...reconnectingGroup,
         name: opened.group.name,
         repository: connection.repository.full_name,
         pat: connection.token,
-      })
+      }
+      const next = upsertStoredGroup(settings ?? emptyUserSettings(), stored)
       updateOperation('Aggiornamento delle impostazioni private OneDrive…')
       await saveSettingsRemoteAndLocal(session, next)
       setSettings(next)
       setRuntime(opened)
+      setActiveStoredGroupId(stored.id)
       setReconnectingGroup(null)
       setAddingGroup(false)
       setError(null)
       setView('groups')
+      activateGroupBrowserRoute(stored.id, 'push')
       markSynced()
     } finally {
       endOperation()
@@ -529,28 +593,53 @@ export default function App() {
     throw new Error(`L’email ${identity.email} non è censita nel gruppo ${opened.group.name}.`)
   }
 
+  function setAppBrowserLocation(location: AppBrowserLocation, mode: BrowserNavigationMode = 'push') {
+    navigateBrowser(location, mode)
+    setBrowserLocation(location)
+    setView(location.kind === 'architecture' ? 'architecture' : 'groups')
+  }
+
+  function activateGroupBrowserRoute(groupId: string, mode: BrowserNavigationMode) {
+    const current = readBrowserLocation()
+    if (current.kind === 'group' && current.groupId === groupId) {
+      setBrowserLocation(current)
+      setView('groups')
+      return
+    }
+    setAppBrowserLocation({ kind: 'group', groupId, route: 'home', gameId: null }, mode)
+  }
+
+  function navigateOpenGroupPage(page: GroupBrowserPage, mode: BrowserNavigationMode = 'push') {
+    if (!activeStoredGroupId) return
+    setAppBrowserLocation({ kind: 'group', groupId: activeStoredGroupId, ...page }, mode)
+  }
+
   function cancelPendingInvite() {
     clearPendingGroupInvite()
     setPendingInvite(null)
     setError(null)
+    setAppBrowserLocation({ kind: 'groups' }, 'replace')
   }
 
-  function closeGroup() {
+  function closeGroup(navigate = true) {
     setRuntime(null)
     setAuthenticatedSession(null)
+    setActiveStoredGroupId(null)
     setPendingWrites(0)
     setError(null)
+    if (navigate) setAppBrowserLocation({ kind: 'groups' }, 'push')
   }
 
   function clearMicrosoftUi() {
     setRuntime(null)
     setAuthenticatedSession(null)
+    setActiveStoredGroupId(null)
     setMicrosoftSession(null)
     setSettings(null)
     setAddingGroup(false)
     setReconnectingGroup(null)
     setPendingWrites(0)
-    setView('groups')
+    setView(browserLocation.kind === 'architecture' ? 'architecture' : 'groups')
   }
 
   async function logoutMicrosoft() {
@@ -561,6 +650,10 @@ export default function App() {
       clearMicrosoftUi()
     }
   }
+
+  const activeBrowserPage = browserLocation.kind === 'group' && browserLocation.groupId === activeStoredGroupId
+    ? { route: browserLocation.route, gameId: browserLocation.gameId }
+    : null
 
   return (
     <TamaguiProvider config={config} defaultTheme="dark">
@@ -585,16 +678,18 @@ export default function App() {
               onUseAnotherAccount={logoutMicrosoft}
             />
           ) : view === 'architecture' ? (
-            <PlatformOverviewScreen onConnectGroup={() => setView('groups')} />
+            <PlatformOverviewScreen onConnectGroup={() => setAppBrowserLocation({ kind: 'groups' }, 'push')} />
           ) : runtime && authenticatedSession ? (
             <GroupDashboardScreen
               runtime={runtime}
               session={authenticatedSession}
               theme={theme}
+              browserPage={activeBrowserPage}
+              onBrowserNavigate={navigateOpenGroupPage}
               onToggleTheme={() => setTheme(current => current === 'dark' ? 'light' : 'dark')}
-              onLogout={closeGroup}
-              onDisconnect={closeGroup}
-              onExploreArchitecture={() => setView('architecture')}
+              onLogout={() => closeGroup(true)}
+              onDisconnect={() => closeGroup(true)}
+              onExploreArchitecture={() => setAppBrowserLocation({ kind: 'architecture' }, 'push')}
             />
           ) : reconnectingGroup ? (
             <GroupReconnectScreen
@@ -615,7 +710,7 @@ export default function App() {
               {error ? <Card margin="$4" padding="$3" borderWidth={1} borderColor="$red8"><Text>{error}</Text></Card> : null}
               <GroupConnectScreen
                 onConnected={connectAndRemember}
-                onExploreDemo={() => setView('architecture')}
+                onExploreDemo={() => setAppBrowserLocation({ kind: 'architecture' }, 'push')}
                 defaultCreatorEmail={microsoftSession.identity.email}
               />
             </YStack>
@@ -624,6 +719,7 @@ export default function App() {
               groups={settings.groups}
               userEmail={microsoftSession.identity.email}
               error={error}
+              autoOpen={browserLocation.kind !== 'group'}
               onOpen={openStoredGroup}
               onAdd={() => { setAddingGroup(true); setError(null) }}
               onRemove={removeRememberedGroup}
