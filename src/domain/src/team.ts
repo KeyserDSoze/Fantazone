@@ -27,7 +27,6 @@ export enum FantaSoccerRole {
   Tribune = 11,
 }
 
-/** Hydrated player used by domain reducers and immutable TeamDay snapshots. */
 export interface Player extends RealPlayer {
   price: number
   revenue: number
@@ -35,7 +34,6 @@ export interface Player extends RealPlayer {
   position: FantaSoccerRole
 }
 
-/** The only player data persisted in a mutable season Team. */
 export interface SeasonTeamPlayerReference {
   playerKey: string
   price: number
@@ -44,7 +42,6 @@ export interface SeasonTeamPlayerReference {
   position: FantaSoccerRole
 }
 
-/** Schema v3 for mutable season Team documents. TeamDay deliberately does not use it. */
 export interface SeasonTeamDocument {
   version: 3
   name: string
@@ -52,6 +49,8 @@ export interface SeasonTeamDocument {
   additionalOwners: string[]
   players: SeasonTeamPlayerReference[]
   moneyFromRank: number
+  openingCompetitionPrize?: number
+  formationChanges?: number
   lastUpdate: string | null
 }
 
@@ -66,17 +65,14 @@ export interface TeamDayKey extends TeamKey {
   day: number
 }
 
-/**
- * Hydrated Team used in memory. Mutable season Team JSON is encoded through
- * `encodeSeasonTeamDocument`; immutable TeamDay JSON keeps this full snapshot.
- */
 export interface Team {
   name: string
   owner: string
   additionalOwners: string[]
   players: Player[]
   moneyFromRank: number
-  /** ISO-8601 timestamp. */
+  openingCompetitionPrize?: number
+  formationChanges?: number
   lastUpdate: string | null
 }
 
@@ -200,6 +196,7 @@ export class TeamHelper {
     return TeamHelper.getTotalCostForPlayers(team)
       - TeamHelper.getRevenueMoney(team)
       - team.moneyFromRank
+      - (team.openingCompetitionPrize ?? 0)
       - TeamHelper.getMoneyFromSoldWithOneHalfReturnedPrice(team)
   }
 
@@ -228,6 +225,8 @@ export class TeamHelper {
     const cost = TeamHelper.getCost(team)
     return {
       ...team,
+      openingCompetitionPrize: team.openingCompetitionPrize ?? 0,
+      formationChanges: team.formationChanges ?? 0,
       totalPlayers: team.players.length,
       activePlayers: TeamHelper.getActivePlayers(team),
       totalCost,
@@ -240,7 +239,6 @@ export class TeamHelper {
   }
 }
 
-/** Strip duplicated Serie A master fields before persisting the mutable season Team. */
 export function encodeSeasonTeamDocument(team: Team): SeasonTeamDocument {
   return {
     version: 3,
@@ -255,14 +253,12 @@ export function encodeSeasonTeamDocument(team: Team): SeasonTeamDocument {
       position: player.position,
     })),
     moneyFromRank: team.moneyFromRank,
+    openingCompetitionPrize: team.openingCompetitionPrize ?? 0,
+    formationChanges: team.formationChanges ?? 0,
     lastUpdate: team.lastUpdate,
   }
 }
 
-/**
- * Hydrate either a normalized v3 season Team or a legacy full Team document.
- * Legacy support lets existing group repositories migrate lazily on their next write.
- */
 export function hydrateSeasonTeamDocument(value: unknown, master?: RealPlayers | null): Team {
   if (!value || typeof value !== 'object') throw new Error('Invalid season Team document')
   const document = value as Partial<SeasonTeamDocument> & Partial<Team>
@@ -292,16 +288,13 @@ export function hydrateSeasonTeamDocument(value: unknown, master?: RealPlayers |
   }
 }
 
-/**
- * Refresh only the RealPlayer portion of a full Team snapshot. Used when creating
- * a new TeamDay from an older TeamDay so transfers/role/activity changes are
- * captured for the new day without mutating fantasy-owned price/status/position.
- */
 export function refreshTeamRealPlayerSnapshots(team: Team, master: RealPlayers): Team {
   const masterByKey = new Map(master.players.map(player => [requirePlayerKey(player.name), player] as const))
   return {
     ...team,
     additionalOwners: [...team.additionalOwners],
+    openingCompetitionPrize: team.openingCompetitionPrize ?? 0,
+    formationChanges: team.formationChanges ?? 0,
     players: team.players.map(player => {
       const canonical = masterByKey.get(requirePlayerKey(player.name))
       if (!canonical) return { ...player, team: { ...player.team } }
@@ -325,6 +318,8 @@ function decodeTeamBase(document: Partial<SeasonTeamDocument> & Partial<Team>): 
     !Array.isArray(document.additionalOwners) ||
     !document.additionalOwners.every(value => typeof value === 'string') ||
     typeof document.moneyFromRank !== 'number' ||
+    (document.openingCompetitionPrize != null && typeof document.openingCompetitionPrize !== 'number') ||
+    (document.formationChanges != null && typeof document.formationChanges !== 'number') ||
     (document.lastUpdate !== null && typeof document.lastUpdate !== 'string')
   ) throw new Error('Invalid season Team document')
   return {
@@ -332,6 +327,8 @@ function decodeTeamBase(document: Partial<SeasonTeamDocument> & Partial<Team>): 
     owner: document.owner,
     additionalOwners: [...document.additionalOwners],
     moneyFromRank: document.moneyFromRank,
+    openingCompetitionPrize: document.openingCompetitionPrize ?? 0,
+    formationChanges: document.formationChanges ?? 0,
     lastUpdate: document.lastUpdate,
   }
 }
