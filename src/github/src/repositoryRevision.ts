@@ -10,6 +10,11 @@ import type { GroupRepositoryTarget } from './repositoryTarget'
 export const REPOSITORY_MANIFEST_PATH = 'manifest.json'
 export const REPOSITORY_REALTIME_PREFIX = 'realtime/'
 
+const REVISION_BEGIN_ATTEMPTS = 6
+const REVISION_CLOSE_ATTEMPTS = 8
+const REVISION_RETRY_BASE_MS = 80
+const REVISION_RETRY_MAX_MS = 400
+
 export type RepositoryRevisionManifest = {
   schemaVersion: number
   revision: number
@@ -77,7 +82,7 @@ export class RepositoryRevisionContentClient implements RepositoryContentClient 
     }
 
     const ref = branch ?? this.target.ref
-    const startedRevision = await this.transitionRevision(ref, true)
+    const startedRevision = await this.transitionRevision(ref, true, REVISION_BEGIN_ATTEMPTS)
 
     let result: GitHubContentWriteResult
     try {
@@ -87,7 +92,7 @@ export class RepositoryRevisionContentClient implements RepositoryContentClient 
       // transient conflict does not leave the repository permanently marked busy.
       if (startedRevision !== null) {
         try {
-          await this.transitionRevision(ref, false)
+          await this.transitionRevision(ref, false, REVISION_CLOSE_ATTEMPTS)
         } catch {
           // Leaving `updating: true` is conservative and therefore still sync-safe.
         }
@@ -95,7 +100,17 @@ export class RepositoryRevisionContentClient implements RepositoryContentClient 
       throw error
     }
 
-    if (startedRevision !== null) await this.transitionRevision(ref, false)
+    if (startedRevision !== null) {
+      try {
+        await this.transitionRevision(ref, false, REVISION_CLOSE_ATTEMPTS)
+      } catch {
+        // The canonical document write has already been committed. Reporting the
+        // manifest-close race as a failure makes the UI claim that group.json was
+        // not written even though GitHub contains the new data. Keep the committed
+        // result and leave `updating: true`; pollers will refresh conservatively and
+        // a later successful revision transition will close the marker.
+      }
+    }
     return result
   }
 
@@ -106,8 +121,12 @@ export class RepositoryRevisionContentClient implements RepositoryContentClient 
       !path.startsWith(REPOSITORY_REALTIME_PREFIX)
   }
 
-  private async transitionRevision(ref: string | undefined, updating: boolean): Promise<number | null> {
-    for (let attempt = 0; attempt < 4; attempt += 1) {
+  private async transitionRevision(
+    ref: string | undefined,
+    updating: boolean,
+    maxAttempts: number,
+  ): Promise<number | null> {
+    for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
       const current = await this.client.tryGetContent(
         this.target.owner,
         this.target.repo,
@@ -142,7 +161,8 @@ export class RepositoryRevisionContentClient implements RepositoryContentClient 
         return next.revision
       } catch (error) {
         const retryable = error instanceof GitHubApiError && (error.status === 409 || error.status === 422)
-        if (!retryable || attempt === 3) throw error
+        if (!retryable || attempt === maxAttempts - 1) throw error
+        await sleep(Math.min(REVISION_RETRY_BASE_MS * (attempt + 1), REVISION_RETRY_MAX_MS))
       }
     }
     return null
@@ -175,4 +195,8 @@ function decodeRepositoryRevisionManifestText(content: string): RepositoryRevisi
     throw new Error('manifest.json non contiene JSON valido.', { cause: error })
   }
   return decodeRepositoryRevisionManifest(parsed)
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms))
 }
