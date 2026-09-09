@@ -12,6 +12,7 @@ export function GroupShareScreen({ runtime, session }: { runtime: GroupSessionRu
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteUsername, setInviteUsername] = useState('')
   const [inviteUrl, setInviteUrl] = useState('')
+  const [unlockCode, setUnlockCode] = useState('')
   const [status, setStatus] = useState<string | null>(null)
   const [sharing, setSharing] = useState(false)
   const isSuperAdmin = useMemo(() => GroupHelper.hasRole(session.member, IdentityRole.SuperAdmin), [session.member])
@@ -29,27 +30,28 @@ export function GroupShareScreen({ runtime, session }: { runtime: GroupSessionRu
     setSharing(true)
     setStatus(null)
     setInviteUrl('')
+    setUnlockCode('')
     try {
       const invited = await runtime.inviteMember(session.member, { email, username: inviteUsername })
-      const fragment = await createEncryptedInviteFragment({
-        v: 3,
+      const encrypted = await createEncryptedInviteFragment({
         group: runtime.group.name,
         repository: runtime.connection.repository.full_name,
         email: invited.email,
         pat: runtime.connection.token,
       })
-      const nextUrl = publicWebUrl(`/join${fragment}`)
+      const nextUrl = publicWebUrl(`/join${encrypted.fragment}`)
       setInviteUrl(nextUrl)
+      setUnlockCode(encrypted.unlockCode)
 
       if (Platform.OS === 'web' && typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(nextUrl)
-        setStatus(`Utente ${invited.email} censito nel gruppo. Link cifrato copiato negli appunti.`)
+        setStatus(`Utente ${invited.email} censito. Ho copiato solo il link: invia il codice di sblocco separatamente.`)
       } else {
         await Share.share({
           title: `Invito Fantazone · ${runtime.group.name}`,
           message: `Unisciti al gruppo Fantazone ${runtime.group.name} con ${invited.email}: ${nextUrl}`,
         })
-        setStatus(`Utente ${invited.email} censito nel gruppo. Link cifrato pronto per la condivisione.`)
+        setStatus(`Utente ${invited.email} censito. Condividi il codice di sblocco con un messaggio separato.`)
       }
       setInviteEmail('')
       setInviteUsername('')
@@ -60,17 +62,22 @@ export function GroupShareScreen({ runtime, session }: { runtime: GroupSessionRu
     }
   }
 
-  async function copyInviteAgain() {
-    if (!inviteUrl) return
+  async function shareValue(value: string, kind: 'link' | 'code') {
+    if (!value) return
     try {
       if (Platform.OS === 'web' && typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(inviteUrl)
-        setStatus('Link cifrato copiato negli appunti.')
+        await navigator.clipboard.writeText(value)
+        setStatus(kind === 'link'
+          ? 'Link cifrato copiato. Il codice di sblocco va inviato separatamente.'
+          : 'Codice di sblocco copiato. Non inviarlo nello stesso messaggio del link.')
       } else {
-        await Share.share({ message: inviteUrl })
+        await Share.share({
+          title: kind === 'link' ? `Invito Fantazone · ${runtime.group.name}` : 'Codice di sblocco Fantazone',
+          message: value,
+        })
       }
     } catch {
-      setStatus('Non riesco a copiare automaticamente il link: puoi selezionarlo manualmente qui sotto.')
+      setStatus('Non riesco a condividere automaticamente questo dato. Puoi copiarlo manualmente dalla schermata.')
     }
   }
 
@@ -80,7 +87,7 @@ export function GroupShareScreen({ runtime, session }: { runtime: GroupSessionRu
         <PageIntro
           eyebrow="Condivisione gruppo"
           title="Accesso riservato agli amministratori"
-          description="Solo Admin e SuperAdmin possono censire nuovi partecipanti e generare link che trasferiscono la credenziale GitHub del gruppo."
+          description="Solo Admin e SuperAdmin possono censire nuovi partecipanti e generare inviti per il repository condiviso del gruppo."
         />
       </AppScreen>
     )
@@ -91,7 +98,7 @@ export function GroupShareScreen({ runtime, session }: { runtime: GroupSessionRu
       <PageIntro
         eyebrow="Condivisione gruppo"
         title={`Invita qualcuno in ${runtime.group.name}`}
-        description="Censisci l’account Microsoft del partecipante e genera un link self-contained con il PAT del gruppo cifrato tramite AES-256-GCM."
+        description="Censisci l’account Microsoft e genera due elementi separati: un link con il PAT cifrato AES-256-GCM e un codice casuale necessario per sbloccarlo."
       />
 
       <XStack gap="$4" flexWrap="wrap" alignItems="stretch">
@@ -138,22 +145,42 @@ export function GroupShareScreen({ runtime, session }: { runtime: GroupSessionRu
                 onPress={() => { void createAndShareInvite() }}
                 icon={sharing ? <Spinner color="white" /> : <UserPlus size="$1" color="white" />}
               >
-                {sharing ? 'Cifro e preparo il link…' : 'Censisci e crea link cifrato'}
+                {sharing ? 'Cifro e genero il codice…' : 'Censisci e crea invito protetto'}
               </PrimaryAction>
             </YStack>
           </Surface>
 
-          {inviteUrl ? (
+          {inviteUrl && unlockCode ? (
             <Surface accent="green" padding="$4">
-              <YStack gap="$3">
+              <YStack gap="$4">
                 <XStack gap="$2" alignItems="center">
                   <ShieldCheck size="$1.1" color="$green10" />
                   <Text color="$color12" fontWeight="900">Invito pronto</Text>
                 </XStack>
-                <Input value={inviteUrl} selectTextOnFocus autoCapitalize="none" />
-                <Button variant="outlined" icon={Copy} onPress={() => { void copyInviteAgain() }}>
-                  Copia di nuovo
-                </Button>
+
+                <YStack gap="$2">
+                  <FieldLabel>1 · Link cifrato</FieldLabel>
+                  <Input value={inviteUrl} selectTextOnFocus autoCapitalize="none" />
+                  <Button variant="outlined" icon={Copy} onPress={() => { void shareValue(inviteUrl, 'link') }}>
+                    Copia / condividi link
+                  </Button>
+                </YStack>
+
+                <YStack gap="$2" padding="$4" borderRadius="$5" backgroundColor="$yellow2" borderWidth={1} borderColor="$yellow6">
+                  <XStack gap="$2" alignItems="center">
+                    <KeyRound size="$1" color="$yellow10" />
+                    <FieldLabel>2 · Codice di sblocco</FieldLabel>
+                  </XStack>
+                  <Text color="$color12" fontSize="$5" fontWeight="900" letterSpacing={1}>
+                    {unlockCode}
+                  </Text>
+                  <Paragraph color="$yellow11" size="$2">
+                    Questo codice viene generato casualmente per il singolo invito e non è contenuto nel link. Inoltralo con un messaggio o canale separato.
+                  </Paragraph>
+                  <Button variant="outlined" icon={Copy} onPress={() => { void shareValue(unlockCode, 'code') }}>
+                    Copia / condividi codice
+                  </Button>
+                </YStack>
               </YStack>
             </Surface>
           ) : null}
@@ -167,19 +194,19 @@ export function GroupShareScreen({ runtime, session }: { runtime: GroupSessionRu
                   <LockKeyhole size="$1.2" color="$yellow10" />
                 </YStack>
                 <YStack flex={1} gap="$1">
-                  <Text color="$color12" fontSize="$6" fontWeight="900">PAT cifrato nel link</Text>
-                  <StatusPill tone="green">AES-256-GCM</StatusPill>
+                  <Text color="$color12" fontSize="$6" fontWeight="900">Due fattori separati</Text>
+                  <StatusPill tone="green">AES-256-GCM · codice 160 bit</StatusPill>
                 </YStack>
               </XStack>
 
               <Paragraph color="$color10" lineHeight="$6">
-                Il PAT non compare in chiaro nel link. Fantazone cifra la credenziale e autentica anche gruppo, repository ed email invitata: se il payload viene alterato, la decifratura fallisce.
+                Il PAT non compare in chiaro nel link. Gruppo, repository ed email sono autenticati insieme al ciphertext: se il payload viene modificato, la decifratura fallisce.
               </Paragraph>
 
               <XStack gap="$3" alignItems="flex-start">
                 <KeyRound size="$1" color="$yellow10" />
                 <Paragraph color="$yellow11" size="$2" flex={1} lineHeight="$5">
-                  Fantazone resta zero-backend: per rendere il link autosufficiente anche la chiave di decifratura viaggia nel frammento URL. Chi possiede il link completo può quindi entrare in possesso del PAT; trattalo sempre come una password e invialo solo alla persona destinataria.
+                  Il link non contiene più la chiave. Fantazone deriva la chiave AES dal codice casuale generato sul dispositivo dell’amministratore. Chi intercetta soltanto il link oppure soltanto il codice non può recuperare il PAT.
                 </Paragraph>
               </XStack>
 
