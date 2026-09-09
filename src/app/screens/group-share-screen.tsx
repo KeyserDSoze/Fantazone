@@ -150,7 +150,7 @@ export function GroupShareScreen({ runtime, session }: { runtime: GroupSessionRu
                   <ShieldCheck size="$1.1" color="$green10" />
                   <Text color="$color12" fontWeight="900">Invito pronto</Text>
                 </XStack>
-                <Input value={inviteUrl} editable={false} selectTextOnFocus autoCapitalize="none" />
+                <Input value={inviteUrl} selectTextOnFocus autoCapitalize="none" />
                 <Button variant="outlined" icon={Copy} onPress={() => { void copyInviteAgain() }}>
                   Copia di nuovo
                 </Button>
