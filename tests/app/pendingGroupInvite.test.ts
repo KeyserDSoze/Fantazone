@@ -2,43 +2,36 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { decodePendingInvite } from '../../src/app/services/pendingGroupInvite'
 
-test('restores a v3 pending invite with the shared group PAT', () => {
+test('restores only the current encrypted pending invite envelope', () => {
   assert.deepEqual(decodePendingInvite(JSON.stringify({
-    v: 3,
     group: ' Amici del Bar ',
     repository: ' KeyserDSoze/Fantazone.Amici-del-Bar ',
     email: ' Invitato@Example.com ',
-    pat: ' github_pat_shared ',
+    sealed: ' aes-gcm-base64 ',
   })), {
-    v: 3,
     group: 'Amici del Bar',
     repository: 'KeyserDSoze/Fantazone.Amici-del-Bar',
     email: 'invitato@example.com',
-    pat: 'github_pat_shared',
+    sealed: 'aes-gcm-base64',
   })
 })
 
-test('keeps legacy secret-free v2 pending invites readable', () => {
-  assert.deepEqual(decodePendingInvite(JSON.stringify({
-    v: 2,
-    group: 'Amici',
-    repository: 'KeyserDSoze/Fantazone.Amici',
-    email: 'Invite@Example.com',
-  })), {
-    v: 2,
-    group: 'Amici',
-    repository: 'KeyserDSoze/Fantazone.Amici',
-    email: 'invite@example.com',
-  })
-})
-
-test('rejects malformed or incomplete shared-credential payloads', () => {
+test('rejects obsolete versioned pending invitations', () => {
   assert.equal(decodePendingInvite(JSON.stringify({
     v: 3,
     group: 'Amici',
     repository: 'KeyserDSoze/Fantazone.Amici',
     email: 'invite@example.com',
+    pat: 'github_pat_old',
   })), null)
-  assert.equal(decodePendingInvite('{"v":2,"group":"Amici"}'), null)
+})
+
+test('rejects malformed or incomplete encrypted payloads', () => {
+  assert.equal(decodePendingInvite(JSON.stringify({
+    group: 'Amici',
+    repository: 'KeyserDSoze/Fantazone.Amici',
+    email: 'invite@example.com',
+  })), null)
+  assert.equal(decodePendingInvite('{"group":"Amici"}'), null)
   assert.equal(decodePendingInvite('not-json'), null)
 })
