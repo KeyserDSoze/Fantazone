@@ -108,11 +108,12 @@ async function deriveEncryptionKey(Crypto: CryptoModule, unlockCode: string) {
   const normalized = normalizeInviteUnlockCode(unlockCode)
   if (!isValidUnlockCode(normalized)) throw new Error('Codice di sblocco Fantazone non valido.')
 
-  const digest = await Crypto.digest(
+  const digestBase64 = await Crypto.digestStringAsync(
     Crypto.CryptoDigestAlgorithm.SHA256,
-    utf8(`${KEY_DERIVATION_CONTEXT}${normalized}`),
+    `${KEY_DERIVATION_CONTEXT}${normalized}`,
+    { encoding: Crypto.CryptoEncoding.BASE64 },
   )
-  return Crypto.AESEncryptionKey.import(bytesToBase64(new Uint8Array(digest)), 'base64')
+  return Crypto.AESEncryptionKey.import(digestBase64, 'base64')
 }
 
 function isValidUnlockCode(value: string): boolean {
@@ -153,22 +154,6 @@ function utf8(value: string): Uint8Array {
 
 function text(value: Uint8Array): string {
   return new TextDecoder().decode(value)
-}
-
-function bytesToBase64(bytes: Uint8Array): string {
-  let output = ''
-  for (let index = 0; index < bytes.length; index += 3) {
-    const a = bytes[index]
-    const hasB = index + 1 < bytes.length
-    const hasC = index + 2 < bytes.length
-    const b = hasB ? bytes[index + 1] : 0
-    const c = hasC ? bytes[index + 2] : 0
-    output += BASE64[a >> 2]
-    output += BASE64[((a & 0x03) << 4) | (b >> 4)]
-    output += hasB ? BASE64[((b & 0x0f) << 2) | (c >> 6)] : '='
-    output += hasC ? BASE64[c & 0x3f] : '='
-  }
-  return output
 }
 
 function base64ToBytes(value: string): Uint8Array {
