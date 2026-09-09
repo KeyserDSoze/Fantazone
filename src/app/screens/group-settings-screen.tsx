@@ -9,10 +9,10 @@ import {
   UserRound,
 } from '@tamagui/lucide-icons-2'
 import { Button, Input, Paragraph, Spinner, Text, XStack, YStack } from 'tamagui'
-import { createInviteFragment } from '@fantazone/github'
 import { GroupHelper, IdentityRole, type AuthenticatedGroupSession } from '@fantazone/domain'
 import { AppScreen, PageIntro, PrimaryAction, StatusPill, Surface } from '../components/design-system'
 import { publicWebUrl } from '../config/publicOrigin'
+import { createEncryptedInviteFragment } from '../services/groupInviteLink'
 import type { GroupSessionRuntime } from '../services/groupSessionRuntime'
 
 export function GroupSettingsScreen({ runtime, session }: { runtime: GroupSessionRuntime; session: AuthenticatedGroupSession }) {
@@ -60,23 +60,23 @@ export function GroupSettingsScreen({ runtime, session }: { runtime: GroupSessio
     setShareStatus(null)
     try {
       const invited = await runtime.inviteMember(session.member, { email, username: inviteUsername })
-      const fragment = createInviteFragment({
+      const fragment = await createEncryptedInviteFragment({
         v: 3,
         group: runtime.group.name,
         repository: connection.repository.full_name,
         email: invited.email,
         pat: connection.token,
       })
-      const inviteUrl = publicWebUrl(`/${fragment}`)
+      const inviteUrl = publicWebUrl(`/join${fragment}`)
       if (Platform.OS === 'web' && typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(inviteUrl)
-        setShareStatus(`Utente ${invited.email} censito nel gruppo e invito copiato.`)
+        setShareStatus(`Utente ${invited.email} censito nel gruppo e invito cifrato copiato.`)
       } else {
         await Share.share({
           title: `Invito Fantazone · ${runtime.group.name}`,
           message: `Unisciti al gruppo Fantazone ${runtime.group.name} con ${invited.email}: ${inviteUrl}`,
         })
-        setShareStatus(`Utente ${invited.email} censito nel gruppo e invito pronto.`)
+        setShareStatus(`Utente ${invited.email} censito nel gruppo e invito cifrato pronto.`)
       }
       setInviteEmail('')
       setInviteUsername('')
@@ -272,11 +272,11 @@ export function GroupSettingsScreen({ runtime, session }: { runtime: GroupSessio
                   <Text color="$blue10" fontSize="$1" fontWeight="900" textTransform="uppercase">Accesso al gruppo</Text>
                   <Text color="$color12" fontSize="$6" fontWeight="900">Invita un partecipante</Text>
                   <Paragraph size="$2" color="$color9">
-                    Censisci l’identità Microsoft nel gruppo e genera il link che trasferisce la credenziale GitHub condivisa.
+                    Censisci l’identità Microsoft nel gruppo e genera il link cifrato che trasferisce la credenziale GitHub condivisa.
                   </Paragraph>
                 </YStack>
               </XStack>
-              <StatusPill tone="blue">config/group.json</StatusPill>
+              <StatusPill tone="blue">AES-256-GCM</StatusPill>
             </XStack>
 
             <YStack
@@ -289,10 +289,10 @@ export function GroupSettingsScreen({ runtime, session }: { runtime: GroupSessio
             >
               <XStack gap="$2" alignItems="center">
                 <ShieldAlert size="$1" color="$yellow10" />
-                <Text color="$yellow11" fontWeight="900">Link sensibile</Text>
+                <Text color="$yellow11" fontWeight="900">Link sensibile anche se cifrato</Text>
               </XStack>
               <Paragraph size="$2" color="$yellow11">
-                Tratta il link come una password del gruppo: contiene il PAT condiviso e resta valido finché quella credenziale non viene ruotata.
+                Il PAT è cifrato nel frammento URL, ma il link resta una credenziale bearer: essendo Fantazone zero-backend, contiene anche il materiale necessario alla decifratura e va condiviso solo privatamente.
               </Paragraph>
             </YStack>
 
@@ -324,14 +324,14 @@ export function GroupSettingsScreen({ runtime, session }: { runtime: GroupSessio
 
             <XStack gap="$3" justifyContent="space-between" alignItems="center" flexWrap="wrap">
               <Paragraph size="$2" color="$color9" flex={1} minWidth={240}>
-                L’invitato dovrà accedere con l’email indicata; Fantazone verificherà il PAT e lo salverà nel suo spazio OneDrive e sul dispositivo.
+                L’invitato dovrà accedere con l’email indicata; Fantazone decifrerà e verificherà il PAT, poi lo salverà nel suo spazio OneDrive e sul dispositivo.
               </Paragraph>
               <PrimaryAction
                 disabled={sharing}
                 onPress={() => { void inviteAndShare() }}
                 icon={sharing ? <Spinner color="white" /> : <UserPlus size="$1" color="white" />}
               >
-                {sharing ? 'Creo invito…' : 'Censisci e crea invito'}
+                {sharing ? 'Cifro invito…' : 'Censisci e crea invito cifrato'}
               </PrimaryAction>
             </XStack>
 
