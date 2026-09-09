@@ -1,8 +1,10 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
+  DefaultLeagueSetting,
   GameWrapperHelper,
   IdentityRole,
+  LeagueType,
   PlayerInTeamStatus,
   Role,
   FantaSoccerRole,
@@ -47,7 +49,14 @@ const connection = {
 const group: Group = {
   id: 'amici',
   name: 'Amici',
-  leagues: [],
+  leagues: [{
+    id: 'league-a',
+    name: 'Campionato',
+    isMain: true,
+    type: LeagueType.League,
+    years: [{ year: 15, type: LeagueType.League, settings: { ...DefaultLeagueSetting } }],
+    basketsId: ['main'],
+  }],
   users: [{ username: 'Ale', email: 'alpha@example.com', role: IdentityRole.Participant }],
   baskets: [{
     id: 'main',
