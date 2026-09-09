@@ -44,10 +44,6 @@ export enum RoundType {
   Elimination = 1,
 }
 
-/**
- * Schema v2 deliberately persists these readable domain names directly to JSON.
- * There is no compact/raw mirror model anymore.
- */
 export interface VoteLeagueSetting {
   goal: number
   penalty: number
@@ -100,6 +96,17 @@ export interface LeagueTypeSettings {
   cardTrainer: CardTrainerSettings
 }
 
+export interface OpeningCompetitionPrize {
+  position: number
+  credits: number
+}
+
+export interface OpeningCompetitionSettings {
+  enabled: boolean
+  serieADays: number
+  prizes: OpeningCompetitionPrize[]
+}
+
 export interface LeagueSetting {
   votes: Partial<Record<Role, VoteLeagueSetting>>
   formation: FormationType
@@ -125,6 +132,9 @@ export interface LeagueSetting {
   randomAuction: boolean
   rankWithValuePoints: boolean
   market: MarketType
+  liveFormationChanges: number
+  allowLiveModuleChange: boolean
+  openingCompetition: OpeningCompetitionSettings
 }
 
 export interface AnnualLeague {
@@ -211,6 +221,16 @@ export const DefaultLeagueTypeSettings: LeagueTypeSettings = {
   numbers: { ...DefaultLeagueTypeNumberSettings },
   fromPreviousYear: null,
   cardTrainer: { maxCardsPerType: {} },
+}
+
+export const DefaultOpeningCompetitionSettings: OpeningCompetitionSettings = {
+  enabled: false,
+  serieADays: 2,
+  prizes: [
+    { position: 1, credits: 50 },
+    { position: 2, credits: 30 },
+    { position: 3, credits: 20 },
+  ],
 }
 
 export class GroupHelper {
@@ -311,6 +331,12 @@ export const DefaultLeagueSetting: LeagueSetting = {
   randomAuction: false,
   rankWithValuePoints: false,
   market: MarketType.WithVote,
+  liveFormationChanges: 0,
+  allowLiveModuleChange: false,
+  openingCompetition: {
+    ...DefaultOpeningCompetitionSettings,
+    prizes: DefaultOpeningCompetitionSettings.prizes.map(prize => ({ ...prize })),
+  },
 }
 
 export interface EnhancedGroup extends Group {
