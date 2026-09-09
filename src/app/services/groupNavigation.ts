@@ -12,6 +12,7 @@ export const GROUP_PRODUCT_ROUTES = [
   'calendar',
   'live',
   'formation',
+  'opening-competition',
   'teams',
   'players',
   'market',
@@ -63,6 +64,7 @@ const BASE_SECTIONS: GroupNavigationSection[] = [
     title: 'Lega',
     items: [
       { route: 'formation', label: 'La mia formazione', description: 'Gestisci la formazione del prossimo turno' },
+      { route: 'opening-competition', label: 'Campionato iniziale', description: 'Classifica e formazione con la rosa della stagione precedente' },
       { route: 'teams', label: 'Le squadre', description: 'Tutte le rose della lega' },
     ],
   },
@@ -118,8 +120,20 @@ const SUPER_ADMIN_SECTIONS: GroupNavigationSection[] = [
   },
 ]
 
-export function getGroupNavigationSections(member: UserOfAGroup): GroupNavigationSection[] {
-  const sections = BASE_SECTIONS.map(cloneSection)
+export function getGroupNavigationSections(
+  member: UserOfAGroup,
+  group?: Group,
+  selection?: GroupNavigationSelection,
+): GroupNavigationSection[] {
+  const openingEnabled = Boolean(group && selection?.leagueId && selection.year != null && (() => {
+    const league = group.leagues.find(item => item.id === selection.leagueId)
+    const annual = league?.years.find(item => item.year === selection.year)
+    return league?.isMain === true && annual?.settings.openingCompetition?.enabled === true
+  })())
+  const sections = BASE_SECTIONS.map(cloneSection).map(section => ({
+    ...section,
+    items: section.items.filter(item => item.route !== 'opening-competition' || openingEnabled),
+  })).filter(section => section.items.length > 0)
   const isSuperAdmin = GroupHelper.hasRole(member, IdentityRole.SuperAdmin)
   const isAdmin = isSuperAdmin || GroupHelper.hasRole(member, IdentityRole.Admin)
   if (isAdmin) sections.push(cloneSection(ADMIN_SECTION))
@@ -132,7 +146,6 @@ export function getDefaultGroupSelection(group: Group, now = new Date()): GroupN
     ?? group.leagues.find(league => league.years.length > 0)
     ?? group.leagues[0]
     ?? null
-
   if (!preferredLeague) return { leagueId: null, year: GroupHelper.getAvailableYears(group)[0] ?? null }
   const years = getLeagueYears(group, preferredLeague.id)
   const currentSeason = getCurrentSeasonYear(now)
@@ -142,16 +155,11 @@ export function getDefaultGroupSelection(group: Group, now = new Date()): GroupN
   }
 }
 
-export function normalizeGroupSelection(
-  group: Group,
-  selection: GroupNavigationSelection,
-  now = new Date(),
-): GroupNavigationSelection {
+export function normalizeGroupSelection(group: Group, selection: GroupNavigationSelection, now = new Date()): GroupNavigationSelection {
   const defaultSelection = getDefaultGroupSelection(group, now)
   const league = group.leagues.find(item => item.id === selection.leagueId)
   const leagueId = league?.id ?? defaultSelection.leagueId
   if (!leagueId) return { leagueId: null, year: defaultSelection.year }
-
   const years = getLeagueYears(group, leagueId)
   const year = selection.year != null && years.includes(selection.year)
     ? selection.year
