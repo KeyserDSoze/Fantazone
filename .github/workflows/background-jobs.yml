@@ -69,8 +69,10 @@ jobs:
             echo "run=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          node scripts/live-votes-schedule-guard.mjs --github-output >> "$GITHUB_OUTPUT"
-          if [ "$(node scripts/live-votes-schedule-guard.mjs)" != "true" ]; then
+          OUTPUT="$(node scripts/live-votes-schedule-guard.mjs --github-output)"
+          printf '%s\n' "$OUTPUT" >> "$GITHUB_OUTPUT"
+          SHOULD_RUN="$(printf '%s\n' "$OUTPUT" | sed -n 's/^run=//p')"
+          if [ "$SHOULD_RUN" != "true" ]; then
             echo "No Serie A match is live; skipping dependency install and provider calls."
           fi
       - uses: actions/setup-node@v6
@@ -91,11 +93,6 @@ jobs:
       - name: Run selected global job
         if: steps.live_guard.outputs.run == 'true'
         run: npm run job --workspace=@fantazone/jobs -- "$FANTAZONE_JOB" "$FANTAZONE_DAY" "$FANTAZONE_SEASON"
-      - name: Surface a failed live calendar refresh after preserving live-vote ingestion
-        if: always() && github.event_name == 'schedule' && env.FANTAZONE_JOB == 'ingest-live-votes' && steps.live_calendar.outcome == 'failure'
-        run: |
-          echo "Live votes were still attempted, but the canonical Serie A calendar refresh failed."
-          exit 1
       - name: Upload raw/debug outputs
         if: ${{ always() && steps.live_guard.outputs.run == 'true' }}
         uses: actions/upload-artifact@v4
@@ -105,7 +102,7 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
       - name: Commit canonical platform data and static asset changes
-        if: steps.live_guard.outputs.run == 'true'
+        if: always() && steps.live_guard.outputs.run == 'true'
         shell: bash
         run: |
           if [ -z "$(git status --porcelain -- data src/app/public/images/players)" ]; then
@@ -118,3 +115,8 @@ jobs:
           git commit -m "data: $FANTAZONE_JOB"
           git pull --rebase origin "$GITHUB_REF_NAME"
           git push origin HEAD:"$GITHUB_REF_NAME"
+      - name: Surface a failed live calendar refresh after preserving live-vote ingestion
+        if: always() && github.event_name == 'schedule' && env.FANTAZONE_JOB == 'ingest-live-votes' && steps.live_calendar.outcome == 'failure'
+        run: |
+          echo "Live votes were still attempted and canonical diffs were committed, but the Serie A calendar refresh failed."
+          exit 1
