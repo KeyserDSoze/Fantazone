@@ -15,6 +15,18 @@ const releases: Release[] = [
   {
     version: APP_VERSION,
     date: RELEASE_DATE,
+    title: 'RealCalendar più tolleranti e diagnosi fail-fast',
+    items: [
+      { category: 'Fix', text: 'Quando il year del RealCalendar o della singola giornata manca oppure vale 0, la migrazione usa la stagione della chiave Azure/Rystem e normalizza il payload invece di perderlo.' },
+      { category: 'Fix', text: 'Un year esplicito diverso dalla chiave o date chiaramente fuori stagione restano una contraddizione reale: prima viene tentato il recovery da versioni e snapshot Azure, poi la migrazione fallisce senza inventare dati.' },
+      { category: 'Miglioria', text: 'Un RealCalendar irrecuperabile non viene più soltanto messo in quarantena e saltato: raggiunge volutamente lo staging e interrompe la migrazione, rendendo immediatamente visibile il problema.' },
+      { category: 'Nuovo', text: 'last-error.json conserva ora, per questi errori, chiave, payload originale completo, destinazione attesa e dettaglio del parser; se il JSON Azure è sintatticamente malformato conserva anche il testo sorgente in source.rawText.' },
+      { category: 'Architettura', text: 'La diagnostica usa lo stesso percorso fail-closed già adottato dagli altri mapper, così un calendario non parsabile non può più scomparire silenziosamente dal risultato della migrazione.' },
+    ],
+  },
+  {
+    version: '0.3.2',
+    date: '9 settembre 2026',
     title: 'Sync Azure sicura e recovery storico più profondo',
     items: [
       { category: 'Miglioria', text: 'PreserveExisting ora aggiorna automaticamente un file già importato quando Azure cambia e il file GitHub è ancora identico all’ultima versione prodotta dalla migrazione.' },
