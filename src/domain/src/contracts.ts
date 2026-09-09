@@ -14,37 +14,23 @@ export type FantazoneManifest = {
 }
 
 /**
- * Legacy secret-free invitation kept for links created before the shared-group
- * credential model. Joining one of these links still requires entering the group
- * PAT once so it can be persisted in the user's OneDrive settings.
- */
-export type SecretFreeGroupInvitePayload = {
-  v: 2
-  group: string
-  repository: string
-  email: string
-}
-
-/**
- * Zero-backend invitation contract.
+ * Current Fantazone group invitation envelope.
  *
- * With no trusted backend and no GitHub account required for participants, the
- * GitHub credential is necessarily a group credential available to the client.
- * New invitations therefore carry the same PAT that the inviter is already using.
- * The app strips the URL fragment immediately, verifies the invited Microsoft
- * identity, and persists the credential in that user's private OneDrive app data.
+ * The shared GitHub PAT is never present in plaintext in this payload. `sealed`
+ * contains the AES-256-GCM ciphertext and can be unlocked only with the random
+ * out-of-band code generated together with the invitation.
+ *
+ * There is deliberately no invite-version field: Fantazone supports one current
+ * invitation format instead of carrying compatibility branches for obsolete links.
  */
-export type SharedCredentialGroupInvitePayload = {
-  v: 3
+export type GroupInvitePayload = {
   group: string
   repository: string
   /** Email that the invited person is expected to prove with Microsoft. */
   email: string
-  /** Shared GitHub credential for this Fantazone group repository. */
-  pat: string
+  /** Base64 AES-GCM sealed data containing the shared group PAT. */
+  sealed: string
 }
-
-export type GroupInvitePayload = SecretFreeGroupInvitePayload | SharedCredentialGroupInvitePayload
 
 export type RepositoryWrite<T> = {
   path: string

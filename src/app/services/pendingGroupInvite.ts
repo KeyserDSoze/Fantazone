@@ -1,20 +1,18 @@
-import { parseInviteFragment } from '@fantazone/github'
 import type { GroupInvitePayload } from '@fantazone/domain'
+import { parseInviteLinkFragment } from './groupInviteLink'
 
-const PENDING_GROUP_INVITE_KEY = 'fantazone.group-invite.pending.v3'
+const PENDING_GROUP_INVITE_KEY = 'fantazone.group-invite.pending'
 
 /**
- * Captures an invite fragment before Microsoft performs its full-page redirect.
- *
- * New v3 invites intentionally contain the group's shared GitHub PAT because the
- * product has no trusted backend and participants do not need a GitHub account.
- * The URL fragment is stripped immediately; sessionStorage is used only to carry
- * the pending invite through the OAuth redirect and is cleared after join/cancel.
+ * Captures the current encrypted invite before Microsoft performs its full-page
+ * OAuth redirect. The URL fragment is stripped immediately and sessionStorage
+ * keeps only ciphertext plus non-secret metadata. The separate unlock code is
+ * never stored here.
  */
-export function loadPendingGroupInvite(): GroupInvitePayload | null {
+export async function loadPendingGroupInvite(): Promise<GroupInvitePayload | null> {
   if (!isWebBrowser()) return null
 
-  const fromFragment = parseInviteFragment(window.location.hash)
+  const fromFragment = parseInviteLinkFragment(window.location.hash)
   if (fromFragment) {
     try {
       window.sessionStorage.setItem(PENDING_GROUP_INVITE_KEY, JSON.stringify(fromFragment))
@@ -45,14 +43,9 @@ export function decodePendingInvite(raw: string): GroupInvitePayload | null {
     const email = typeof value.email === 'string' ? value.email.trim().toLowerCase() : ''
     const group = typeof value.group === 'string' ? value.group.trim() : ''
     const repository = normalizeRepository(typeof value.repository === 'string' ? value.repository : '')
-    if (!group || !repository || !email || !email.includes('@')) return null
-
-    if (value.v === 2) return { v: 2, group, repository, email }
-    if (value.v !== 3) return null
-
-    const pat = typeof value.pat === 'string' ? value.pat.trim() : ''
-    if (!pat) return null
-    return { v: 3, group, repository, email, pat }
+    const sealed = typeof value.sealed === 'string' ? value.sealed.trim() : ''
+    if (!group || !repository || !email.includes('@') || !sealed) return null
+    return { group, repository, email, sealed }
   } catch {
     return null
   }

@@ -15,6 +15,21 @@ const releases: Release[] = [
   {
     version: APP_VERSION,
     date: RELEASE_DATE,
+    title: 'Routing persistente e inviti con codice separato',
+    items: [
+      { category: 'Nuovo', text: 'Le pagine del gruppo hanno ora URL reali del tipo /groups/<id>/<pagina>; anche il dettaglio partita ha un percorso dedicato, così i link sono leggibili e navigabili con back/forward del browser.' },
+      { category: 'Fix', text: 'F5 e Ctrl+F5 riaprono il gruppo e la pagina indicati nell’URL invece di tornare sempre alla Home; il contesto lega/stagione continua a essere ripristinato dalla preferenza locale per account e gruppo.' },
+      { category: 'Miglioria', text: 'Il ripristino di una route esplicita non compete più con l’apertura automatica del gruppo predefinito, evitando race e rimbalzi verso il gruppo sbagliato.' },
+      { category: 'Nuovo', text: 'Admin e SuperAdmin hanno una pagina Condividi gruppo che censisce l’email Microsoft e genera un link con il PAT cifrato AES-256-GCM più un codice casuale di sblocco da inviare separatamente.' },
+      { category: 'Architettura', text: 'Il link non contiene più la chiave AES: Fantazone genera 160 bit casuali sul dispositivo dell’amministratore e deriva la chiave AES-256 dal codice; gruppo, repository ed email restano autenticati come AAD.' },
+      { category: 'Architettura', text: 'Gli inviti hanno un solo formato corrente senza campo versione né parser legacy: i vecchi formati non vengono più accettati e il codice di sblocco non viene salvato insieme al ciphertext.' },
+      { category: 'Fix', text: 'Il frammento dell’invito viene rimosso subito dall’URL; durante OAuth Microsoft la sessione conserva soltanto il payload cifrato, e l’accesso richiede email corretta, codice corretto e verifica del PAT sull’esatto repository.' },
+      { category: 'Fix', text: 'Le route vengono ricordate nella sessione browser durante il redirect OAuth Microsoft, così il callback alla root può tornare alla pagina da cui era partito senza perdere il percorso applicativo.' },
+    ],
+  },
+  {
+    version: '0.3.3',
+    date: '9 settembre 2026',
     title: 'RealCalendar più tolleranti e diagnosi fail-fast',
     items: [
       { category: 'Fix', text: 'Quando il year del RealCalendar o della singola giornata manca oppure vale 0, la migrazione usa la stagione della chiave Azure/Rystem e normalizza il payload invece di perderlo.' },

@@ -3,88 +3,50 @@ import test from 'node:test'
 import { createInviteFragment, parseInviteFragment } from '../../src/github/src/invite'
 
 const payload = {
-  v: 3 as const,
   group: 'Amici del Bar',
   repository: 'KeyserDSoze/Fantazone.Amici-del-Bar',
   email: 'Invitato@Example.com',
-  pat: 'github_pat_shared-secret',
+  sealed: 'base64-aes-gcm-envelope',
 }
 
-test('round-trips a shared-credential group invite and normalizes the expected login email', () => {
+test('round-trips the current encrypted group invite and normalizes the login email', () => {
   const fragment = createInviteFragment(payload)
-  assert.match(fragment, /^#join=/)
+  assert.match(fragment, /^#invite=/)
   assert.deepEqual(parseInviteFragment(fragment), { ...payload, email: 'invitato@example.com' })
 })
 
-test('new invite payload carries the shared group PAT intentionally', () => {
+test('invite fragment never contains a plaintext PAT or a decryption key field', () => {
   const fragment = createInviteFragment(payload)
-  const encoded = new URLSearchParams(fragment.replace(/^#/, '')).get('join')!
+  const encoded = new URLSearchParams(fragment.replace(/^#/, '')).get('invite')!
   const decoded = JSON.parse(Buffer.from(encoded, 'base64url').toString('utf8')) as Record<string, unknown>
 
-  assert.equal(decoded.pat, 'github_pat_shared-secret')
-  assert.equal(decoded.v, 3)
-  assert.equal('token' in decoded, false)
+  assert.equal(decoded.sealed, payload.sealed)
+  assert.equal('pat' in decoded, false)
+  assert.equal('key' in decoded, false)
+  assert.equal('v' in decoded, false)
 })
 
-test('keeps old secret-free v2 invites readable for manual credential migration', () => {
+test('rejects obsolete versioned invite shapes instead of maintaining compatibility branches', () => {
   const old = {
-    v: 2,
-    group: 'Amici del Bar',
-    repository: 'KeyserDSoze/Fantazone.Amici-del-Bar',
-    email: 'Invitato@Example.com',
-  }
-  const fragment = `#join=${Buffer.from(JSON.stringify(old)).toString('base64url')}`
-  assert.deepEqual(parseInviteFragment(fragment), {
-    ...old,
-    v: 2,
-    email: 'invitato@example.com',
-  })
-})
-
-test('normalizes a legacy v1 invite and preserves its shared PAT', () => {
-  const legacy = {
-    v: 1,
-    group: 'Amici del Bar',
-    repository: 'Fantazone.Amici-del-Bar',
-    owner: 'KeyserDSoze',
-    pat: 'github_pat_legacy-secret',
-    email: 'Invitato@Example.com',
-  }
-  const fragment = `#join=${Buffer.from(JSON.stringify(legacy)).toString('base64url')}`
-
-  assert.deepEqual(parseInviteFragment(fragment), {
     v: 3,
     group: 'Amici del Bar',
     repository: 'KeyserDSoze/Fantazone.Amici-del-Bar',
-    email: 'invitato@example.com',
-    pat: 'github_pat_legacy-secret',
-  })
-})
-
-test('rejects credential invites that cannot bind a verified email', () => {
-  const legacy = {
-    v: 1,
-    group: 'Amici del Bar',
-    repository: 'Fantazone.Amici-del-Bar',
-    owner: 'KeyserDSoze',
-    pat: 'github_pat_legacy-secret',
+    email: 'Invitato@Example.com',
+    pat: 'github_pat_old',
   }
-  const fragment = `#join=${Buffer.from(JSON.stringify(legacy)).toString('base64url')}`
+  const fragment = `#join=${Buffer.from(JSON.stringify(old)).toString('base64url')}`
   assert.equal(parseInviteFragment(fragment), null)
 })
 
-test('rejects v3 invites without the shared PAT', () => {
-  const invalid = {
-    v: 3,
+test('rejects malformed or incomplete encrypted invitations', () => {
+  const incomplete = {
     group: 'Amici',
     repository: 'KeyserDSoze/Fantazone.Amici',
     email: 'invite@example.com',
   }
-  const fragment = `#join=${Buffer.from(JSON.stringify(invalid)).toString('base64url')}`
-  assert.equal(parseInviteFragment(fragment), null)
-})
+  const fragment = `#invite=${Buffer.from(JSON.stringify(incomplete)).toString('base64url')}`
 
-test('ignores unrelated or malformed fragments', () => {
+  assert.equal(parseInviteFragment(fragment), null)
   assert.equal(parseInviteFragment('#screen=home'), null)
-  assert.equal(parseInviteFragment('#join=not-json'), null)
+  assert.equal(parseInviteFragment('#invite=not-json'), null)
 })

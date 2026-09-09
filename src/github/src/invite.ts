@@ -1,60 +1,18 @@
 import type { GroupInvitePayload } from '../../domain/src/contracts'
 
-type LegacyGroupInvitePayload = {
-  v?: unknown
-  group?: unknown
-  repository?: unknown
-  owner?: unknown
-  pat?: unknown
-  email?: unknown
-}
-
 export function createInviteFragment(payload: GroupInvitePayload): string {
   const normalized = normalizeInvitePayload(payload)
   if (!normalized) throw new Error('Invito Fantazone non valido.')
-  return `#join=${toBase64Url(JSON.stringify(normalized))}`
+  return `#invite=${toBase64Url(JSON.stringify(normalized))}`
 }
 
-/**
- * Reads current v3 shared-credential invitations plus older v2/v1 links.
- *
- * v3 intentionally carries the group PAT because Fantazone has no trusted backend
- * and participants are not required to own a GitHub account. The browser strips
- * the fragment immediately after parsing it. v2 remains supported and asks the
- * participant for the shared PAT once. Legacy v1 is normalized to v3 when its PAT
- * is present.
- */
+/** Reads only the current encrypted Fantazone invitation format. */
 export function parseInviteFragment(fragment: string): GroupInvitePayload | null {
   try {
     const params = new URLSearchParams(fragment.replace(/^#/, ''))
-    const encoded = params.get('join')
+    const encoded = params.get('invite')
     if (!encoded) return null
-    const payload = JSON.parse(fromBase64Url(encoded)) as LegacyGroupInvitePayload
-
-    if (payload.v === 3 || payload.v === 2) {
-      return normalizeInvitePayload(payload)
-    }
-
-    if (payload.v === 1) {
-      const owner = text(payload.owner)
-      const repository = text(payload.repository)
-      const pat = text(payload.pat)
-      const normalizedRepository = repository.includes('/') ? repository : owner ? `${owner}/${repository}` : ''
-      return normalizeInvitePayload(pat ? {
-        v: 3,
-        group: text(payload.group),
-        repository: normalizedRepository,
-        email: text(payload.email),
-        pat,
-      } : {
-        v: 2,
-        group: text(payload.group),
-        repository: normalizedRepository,
-        email: text(payload.email),
-      })
-    }
-
-    return null
+    return normalizeInvitePayload(JSON.parse(fromBase64Url(encoded)))
   } catch {
     return null
   }
@@ -63,18 +21,14 @@ export function parseInviteFragment(fragment: string): GroupInvitePayload | null
 function normalizeInvitePayload(value: unknown): GroupInvitePayload | null {
   if (!value || typeof value !== 'object') return null
   const raw = value as Record<string, unknown>
-  if (raw.v !== 2 && raw.v !== 3) return null
 
   const group = text(raw.group)
   const repository = normalizeRepository(text(raw.repository))
   const email = normalizeEmail(text(raw.email))
-  if (!group || !repository || !email || !email.includes('@')) return null
+  const sealed = text(raw.sealed)
+  if (!group || !repository || !email || !email.includes('@') || !sealed) return null
 
-  if (raw.v === 2) return { v: 2, group, repository, email }
-
-  const pat = text(raw.pat)
-  if (!pat) return null
-  return { v: 3, group, repository, email, pat }
+  return { group, repository, email, sealed }
 }
 
 function normalizeRepository(value: string): string {

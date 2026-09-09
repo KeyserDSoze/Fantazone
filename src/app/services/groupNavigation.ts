@@ -6,28 +6,32 @@ import {
   type UserOfAGroup,
 } from '@fantazone/domain'
 
-export type GroupProductRoute =
-  | 'home'
-  | 'ranking'
-  | 'calendar'
-  | 'live'
-  | 'formation'
-  | 'teams'
-  | 'players'
-  | 'market'
-  | 'market-trades'
-  | 'hall-of-fame'
-  | 'rules'
-  | 'info'
-  | 'settings'
-  | 'push-notifications'
-  | 'patch-notes'
-  | 'auction'
-  | 'group-users-admin'
-  | 'group-baskets-admin'
-  | 'group-league-admin'
-  | 'logs'
-  | 'serie-a-admin'
+export const GROUP_PRODUCT_ROUTES = [
+  'home',
+  'ranking',
+  'calendar',
+  'live',
+  'formation',
+  'teams',
+  'players',
+  'market',
+  'market-trades',
+  'hall-of-fame',
+  'rules',
+  'info',
+  'settings',
+  'push-notifications',
+  'patch-notes',
+  'auction',
+  'share-group',
+  'group-users-admin',
+  'group-baskets-admin',
+  'group-league-admin',
+  'logs',
+  'serie-a-admin',
+] as const
+
+export type GroupProductRoute = typeof GROUP_PRODUCT_ROUTES[number]
 
 export type GroupNavigationItem = {
   route: GroupProductRoute
@@ -91,6 +95,7 @@ const BASE_SECTIONS: GroupNavigationSection[] = [
 const ADMIN_SECTION: GroupNavigationSection = {
   title: 'Gestione gruppo',
   items: [
+    { route: 'share-group', label: 'Condividi gruppo', description: 'Invita persone con un link cifrato e vincolato alla loro email Microsoft' },
     { route: 'auction', label: 'Asta', description: 'Crea, riprendi e gestisci l’asta realtime' },
   ],
 }
@@ -158,6 +163,10 @@ export function getLeagueYears(group: Group, leagueId: string): number[] {
   const league = group.leagues.find(item => item.id === leagueId)
   if (!league) return []
   return [...new Set(league.years.map(item => item.year))].sort((a, b) => b - a)
+}
+
+export function isGroupProductRoute(value: string): value is GroupProductRoute {
+  return (GROUP_PRODUCT_ROUTES as readonly string[]).includes(value)
 }
 
 export function findNavigationItem(route: GroupProductRoute): GroupNavigationItem | null {
