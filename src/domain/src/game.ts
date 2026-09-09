@@ -3,32 +3,24 @@ import type { FantaSoccerRole, Player } from './team'
 
 export type GameSide = 'home' | 'away'
 export type GameTeamSource = 'day' | 'season' | 'missing'
-export type GameEditabilitySource = 'serie-a-context' | 'legacy-fallback'
+export type GameEditabilitySource = 'serie-a-context' | 'live-formation-window' | 'legacy-fallback'
 
-/**
- * Base player view for a fantasy game. Votes/chances/real-match enrichment will
- * be added here when those repositories migrate; the persisted Player remains untouched.
- */
 export interface GamePlayer {
   current: Player
   currentPosition: FantaSoccerRole
 }
 
-/** Ephemeral team projection composed from TeamDay/Team documents. Never persisted. */
 export interface GameTeam {
   side: GameSide
   name: string
   owner: string
   additionalOwners: string[]
   players: GamePlayer[]
+  formationChanges: number
   lastUpdate: string | null
   source: GameTeamSource
 }
 
-/**
- * Replacement for the old backend GameWrapper response. This is a local read
- * model built from canonical documents and is intentionally not a JSON storage contract.
- */
 export interface GameWrapper {
   leagueId: string
   season: number
@@ -39,7 +31,10 @@ export interface GameWrapper {
   canEdit: boolean
   nextSerieADay: number
   editabilitySource: GameEditabilitySource
-  /** Locked game with no canonical result: later TeamCalculator migration must calculate it. */
+  isLiveFormationWindow: boolean
+  liveFormationDeadline: string | null
+  liveFormationChangesAllowed: number
+  allowLiveModuleChange: boolean
   requiresScoreCalculation: boolean
 }
 
