@@ -43,7 +43,7 @@ export function GroupInviteScreen({ invite, identityEmail, onConnected, onCancel
         eyebrow="Invito Fantazone"
         title={`Unisciti a ${invite.group}`}
         description={invite.v === 3
-          ? 'Verifica l’identità Microsoft e collega in modo sicuro questo dispositivo al repository GitHub condiviso del gruppo.'
+          ? 'Verifica l’identità Microsoft e collega questo dispositivo al repository GitHub condiviso del gruppo.'
           : 'Questo invito usa il formato precedente e richiede una sola volta la credenziale GitHub condivisa del gruppo.'}
       />
 
@@ -73,7 +73,7 @@ export function GroupInviteScreen({ invite, identityEmail, onConnected, onCancel
                 <Text color="$color12" fontWeight="900">Tratta l’invito come una credenziale</Text>
                 <Paragraph color="$color10" fontSize="$2" lineHeight="$5">
                   {invite.v === 3
-                    ? 'Il link contiene il PAT condiviso del gruppo. Fantazone lo acquisisce dal frammento URL e lo salva nelle impostazioni private OneDrive; non va inoltrato ad altre persone.'
+                    ? 'Gli inviti correnti trasferiscono il PAT cifrato nel frammento URL. Fantazone ha già rimosso il frammento sensibile dall’indirizzo, verificherà la credenziale e la salverà nelle impostazioni private OneDrive; i link legacy restano compatibili.'
                     : 'Il PAT verrà salvato nelle impostazioni private OneDrive e nella cache credenziali del dispositivo dopo la verifica.'}
                 </Paragraph>
               </YStack>
