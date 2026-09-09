@@ -79,6 +79,40 @@ test('full ingestion writes the current internal season id and all returned days
   assert.equal(persisted.days[37].serieADay, 38)
 })
 
+test('full ingestion preserves a manual delayed override from the canonical calendar', async () => {
+  const repoRoot = await mkdtemp(join(tmpdir(), 'fantazone-serie-a-delayed-full-'))
+  const directory = join(repoRoot, 'data', 'serie-a', 'calendars')
+  const path = join(directory, `${CURRENT_SEASON}.json`)
+  await mkdir(directory, { recursive: true })
+  await writeFile(path, JSON.stringify({
+    year: CURRENT_SEASON,
+    days: [{
+      year: CURRENT_SEASON,
+      serieADay: 1,
+      games: [{
+        home: { name: 'ROMA', abbreviation: 'rom' },
+        away: { name: 'Inter', abbreviation: 'int' },
+        date: '2026-08-22T18:45:00.000Z',
+        homeGoals: null,
+        awayGoals: null,
+        delayed: true,
+      }],
+    }],
+  }))
+
+  const result = await ingestSerieACalendar({
+    repoRoot,
+    now: NOW,
+    fetchJson: async url => {
+      const day = Number(new URL(url).searchParams.get('day'))
+      return { data: { games: [{ matches: [match('SCHEDULED', `2026-09-${String(Math.min(day, 28)).padStart(2, '0')}T18:45:00Z`)] }] } }
+    },
+  })
+
+  assert.equal(result.calendar.days[0].games[0].delayed, true)
+  assert.equal(result.calendar.days[1].games[0].delayed, false)
+})
+
 test('single-day ingestion replaces one day but refuses to create an incomplete calendar', async () => {
   const repoRoot = await mkdtemp(join(tmpdir(), 'fantazone-serie-a-day-'))
   await assert.rejects(
@@ -106,6 +140,39 @@ test('single-day ingestion replaces one day but refuses to create an incomplete 
   })
   assert.deepEqual(result.calendar.days.map(day => day.serieADay), [3, 4, 5])
   assert.equal(result.calendar.days[1].games[0].homeGoals, 1)
+})
+
+test('single-day live refresh keeps a SuperAdmin delayed override while updating provider score data', async () => {
+  const repoRoot = await mkdtemp(join(tmpdir(), 'fantazone-serie-a-delayed-day-'))
+  const directory = join(repoRoot, 'data', 'serie-a', 'calendars')
+  const path = join(directory, `${CURRENT_SEASON}.json`)
+  await mkdir(directory, { recursive: true })
+  await writeFile(path, JSON.stringify({
+    year: CURRENT_SEASON,
+    days: [{
+      year: CURRENT_SEASON,
+      serieADay: 4,
+      games: [{
+        home: { name: 'Roma', abbreviation: 'rom' },
+        away: { name: 'INTER', abbreviation: 'int' },
+        date: '2026-09-05T18:45:00.000Z',
+        homeGoals: null,
+        awayGoals: null,
+        delayed: true,
+      }],
+    }],
+  }))
+
+  const result = await ingestSerieACalendar({
+    repoRoot,
+    now: NOW,
+    day: 4,
+    fetchJson: async () => ({ data: { games: [{ matches: [match('LIVE', '2026-09-05T18:45:00Z', 2, 1)] }] } }),
+  })
+
+  assert.equal(result.calendar.days[0].games[0].homeGoals, 2)
+  assert.equal(result.calendar.days[0].games[0].awayGoals, 1)
+  assert.equal(result.calendar.days[0].games[0].delayed, true)
 })
 
 test('current-season source cannot silently label current data as a historical season', async () => {
