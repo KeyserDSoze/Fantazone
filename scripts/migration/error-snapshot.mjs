@@ -95,6 +95,9 @@ export async function writeMigrationErrorSnapshot({ workDir, records, args, erro
   const destination = diagnosticDestination(record)
   const generatedAt = new Date().toISOString()
   const target = migrationErrorSnapshotPath(workDir)
+  const diagnosticValue = record?.migrationDiagnosticValue ?? record?.value ?? null
+  const rawText = typeof record?.migrationRawText === 'string' ? record.migrationRawText : null
+  const sourceIssue = record?.migrationFatalIssue ?? null
 
   const snapshot = {
     version: SNAPSHOT_VERSION,
@@ -125,7 +128,9 @@ export async function writeMigrationErrorSnapshot({ workDir, records, args, erro
       blobName: record.blobName,
       sourcePath: `${record.container}/${record.blobName}`,
       key: record.key ?? null,
-      value: record.value ?? null,
+      value: diagnosticValue,
+      rawText,
+      issue: sourceIssue,
     } : {
       recordId: currentRecordId,
       container: null,
@@ -133,6 +138,8 @@ export async function writeMigrationErrorSnapshot({ workDir, records, args, erro
       sourcePath: null,
       key: null,
       value: null,
+      rawText: null,
+      issue: null,
     },
     destination,
     privacy: 'This file contains one legacy record and may contain personal data. It does not include GitHub PATs or the Azure connection string.',

@@ -31,13 +31,13 @@ Containers without a canonical responsibility in Fantazone, binary assets and le
 
 ## RealCalendar corruption protection
 
-Legacy Rystem stores the repository key separately from the compact value. That matters for `RealCalendar`: older Fantasoccer jobs could request the provider's next-season calendar before the internal August 10 season switch and overwrite the previous season's blob. Some historical payloads also contain top-level `y = 0` even though their Azure/Rystem key is correct.
+Legacy Rystem stores the repository key separately from the compact value. That matters for `RealCalendar`: older Fantasoccer jobs could request the provider's next-season calendar before the internal August 10 season switch and overwrite the previous season's blob. Some historical payloads also omit `y` or contain `y = 0` even though their Azure/Rystem key is correct.
 
-The migration therefore treats the **Azure/Rystem key as the canonical season id**, but it does not blindly rewrite the payload year. Every dated Serie A match must also fall inside that season's August-10-to-August-10 window. A zero `y` is repaired only when the dates prove the payload belongs to the keyed season.
+The migration therefore treats the **Azure/Rystem key as the canonical season id**. A missing or zero top-level/day `y` is repaired from that key, but every dated Serie A match must still fall inside the keyed season's August-10-to-August-10 window. This repairs absent metadata without disguising a calendar that was actually overwritten by another season.
 
-If the current `realcalendar` blob belongs to the wrong season, the scanner automatically checks Azure Blob **version history and snapshots**. Candidates are tried newest-first and accepted only when the same season/date validation succeeds. Snapshot enumeration is attempted with soft-deleted visibility when the Storage account permits it, then retried without deleted entries when that option is unavailable.
+If the current `realcalendar` blob explicitly declares another season, has dates outside the keyed season, or cannot be parsed, the scanner automatically checks Azure Blob **version history and snapshots**. Candidates are tried newest-first and accepted only when the same season/date validation succeeds. Snapshot enumeration is attempted with soft-deleted visibility when the Storage account permits it, then retried without deleted entries when that option is unavailable.
 
-This can recover an overwritten historical calendar when either blob versioning or a suitable snapshot was retained. If no valid version or snapshot exists, the record is quarantined, listed under `source.issues` in the migration report, and is not emitted as a canonical JSON file. The migration continues with the other blobs instead of importing knowingly wrong football data.
+This can recover an overwritten historical calendar when either blob versioning or a suitable snapshot was retained. If no valid version or snapshot exists, Fantazone does **not** silently drop the calendar: the source is carried into staging as a deliberate fail-closed record, the migration stops, and `migration-output/work/<repo>/last-error.json` is written with the Azure/Rystem key, original parsed payload, expected destination and parser issue. If the Azure body is not valid JSON, the exact downloaded text is preserved under `source.rawText`.
 
 Recovered calendars are listed under `source.recoveries` with their source kind (`version` or `snapshot`) and the corresponding Azure identifier.
 
@@ -118,7 +118,7 @@ To repair bad `RealCalendar` files produced by an earlier migration without open
 
 Review the dry-run report first. A path is allowed to bypass preservation only when the scanner has **proved** it is a repair candidate:
 
-- the Azure/Rystem season key is valid and a zero payload/day year was normalized after date validation; or
+- the Azure/Rystem season key is valid and a missing/zero payload/day year was normalized after date validation; or
 - the current blob was invalid and a valid older Azure blob version or snapshot was recovered.
 
 Every other GitHub collision follows normal preserve semantics. The report lists explicit repair exceptions under `repair.targetedPaths` and the writer result under `forcedOverwrites`.
@@ -134,7 +134,7 @@ Then apply the reviewed repair:
   -Apply
 ```
 
-If a corrupted historical calendar has no valid Azure version or snapshot, it appears in `source.issues` with its `targetPath` and **is not overwritten or fabricated**. That season needs a separate historical backfill/recovery source.
+If a corrupted historical calendar has no valid Azure version or snapshot, the migration stops before GitHub write and `last-error.json` identifies that exact calendar. Fix/recover that source (or the mapper), then rerun without deleting the work directory.
 
 ## Azure scan cache modes
 
@@ -213,7 +213,7 @@ For changed records, the journal also retains the SHA-256 of the **previous impo
 
 Keep the work directory if you want provenance-aware safe updates across reruns. `-ResetWork` deliberately discards the local conversion history; after a reset, `-PreserveExisting` remains conservative for pre-existing paths because it can no longer prove which GitHub content came from the prior import.
 
-If mapping fails, previous successful files/checkpoints are kept. Fix/pull the mapper and rerun. To deliberately rebuild all staging output while retaining the Azure cache:
+If mapping fails, previous successful files/checkpoints are kept. `last-error.json` records the current source record, key/value, diagnostic destination and error. Fix/pull the mapper or recover the bad source, then rerun. To deliberately rebuild all staging output while retaining the Azure cache:
 
 ```powershell
 -ResetWork
@@ -234,9 +234,9 @@ A custom staging directory can be selected with:
 
 `-Overwrite` and `-PreserveExisting` are mutually exclusive. `-RepairImportedCalendars` requires `-PreserveExisting`.
 
-## Report
+## Report and last-error diagnostics
 
-The report is written by default to:
+A successful dry-run/apply report is written by default to:
 
 ```text
 migration-output/azure-migration-<timestamp>.json
@@ -246,7 +246,6 @@ It contains:
 
 - current Azure inventory (container/blob name, size, date and ETag when available);
 - incremental source statistics: downloaded, reused and recovered-history counts;
-- quarantined source issues and their target paths;
 - historical Azure version/snapshot recoveries;
 - cache mode/baseline information;
 - staging/checkpoint paths and resume counts;
@@ -255,7 +254,15 @@ It contains:
 - targeted calendar repair paths;
 - GitHub collisions, safe updates, preserved conflicts, forced repairs and planned/written counts.
 
-It never contains the connection string or PAT values.
+When staging fails, the authoritative diagnostic is:
+
+```text
+migration-output/work/<repository>/last-error.json
+```
+
+For a RealCalendar failure it contains the source `container`, `blobName`, Azure/Rystem `key`, original parsed `value`, parser `issue`, expected destination and, when JSON parsing itself failed, `rawText`.
+
+Neither report contains the Azure connection string or GitHub PAT values.
 
 ## Multiple groups
 
@@ -286,7 +293,7 @@ Recommended post-migration checks:
 3. at least one season Team and immutable TeamDay are readable;
 4. Hall of Fame is readable;
 5. old Serie A players/teams/calendar and official/live votes are readable;
-6. `source.issues` is reviewed, especially `invalid-realcalendar-season`;
-7. `source.recoveries` is reviewed for any version/snapshot calendar recovery;
+6. `source.recoveries` is reviewed for any version/snapshot calendar recovery;
+7. if migration fails, inspect `last-error.json` before resetting any work/cache state;
 8. `repair.targetedPaths`, `safeUpdates`, `preservedCollisions` and `forcedOverwrites` are reviewed before applying changes;
 9. rerunning with `-PreserveExisting` produces mostly cache/staging reuse and no duplicate GitHub writes.
