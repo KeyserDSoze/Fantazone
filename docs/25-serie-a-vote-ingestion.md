@@ -43,6 +43,19 @@ and can be overridden by `FANTAZONE_FINAL_VOTES_BASE_URL`.
 
 Intentional schema improvement: synthetic delayed players are copied from canonical `RealPlayers`, so team, role and visibility remain complete instead of producing partially populated legacy records.
 
+## Scheduled production official/final votes
+
+The legacy backend executed `FinalVotesJob` at 03:00 and 04:00 every day. After the real 2026/27 provider path was positively validated, Fantazone keeps the same two overnight attempts but staggers them away from the top of the hour and from the other platform jobs:
+
+```text
+7 3 * * *
+7 4 * * *
+```
+
+GitHub cron is UTC. Scheduled runs do not force a day: `ingest-final-votes` therefore keeps the legacy `LiveDay ?? LastDay` selection. Running twice gives an incomplete early publication a second chance, while subsequent daily runs can also absorb provider corrections until a newer matchday becomes the selected day. A complete snapshot rebuilds player statistics; if the canonical JSON is unchanged, the workflow produces no data commit.
+
+Manual dispatch with an explicit day remains available for repair or controlled validation.
+
 ## Live votes
 
 Legacy source of truth:
@@ -120,11 +133,13 @@ Official-vote fixtures cover parsing, missing markup/bonus values, incomplete te
 
 Live-vote tests build a protobuf fixture byte-by-byte and verify SignedUri request/body/headers, protobuf decoding, event semantics, merge behavior, provider no-result handling and the RealCalendar live guard.
 
-The scheduled workflow also has tests for the five-minute cron and for the dependency-free guard's live, future, delayed and missing-calendar cases.
+The scheduled workflow also has tests for the five-minute live cron, the two overnight final-vote crons and for the dependency-free guard's live, future, delayed and missing-calendar cases.
 
 ## Production validation
 
-Functional migration does not by itself prove that today's third-party provider endpoints are still available. The first real scheduled match remains the operational validation of the current SignedUri/protobuf source.
+The current 2026/27 official-vote provider path has been positively exercised in production: a complete concluded matchday produced canonical official votes and rebuilt player statistics. The final-vote schedule is therefore enabled.
+
+The live provider parser has also completed a real post-match call without the previous protobuf overflow, but that provider returned zero players after the matchday had ended. One positive production observation during an actual live-match window remains the final live-source validation gate.
 
 The dependency chain for a new season remains:
 
