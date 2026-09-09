@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import type { AuthenticatedGroupSession, Group } from '@fantazone/domain'
+import type { BrowserNavigationMode, GroupBrowserPage } from '../services/appRouting'
 import {
   getDefaultGroupSelection,
   normalizeGroupSelection,
@@ -27,6 +28,7 @@ import { GroupPushNotificationsScreen } from './group-push-notifications-screen'
 import { GroupRankingScreen } from './group-ranking-screen'
 import { GroupRulesScreen } from './group-rules-screen'
 import { GroupSettingsScreen } from './group-settings-screen'
+import { GroupShareScreen } from './group-share-screen'
 import { GroupTeamsScreen } from './group-teams-screen'
 import { GroupUsersAdminScreen } from './group-users-admin-screen'
 import { PlatformLogsScreen } from './platform-logs-screen'
@@ -36,6 +38,8 @@ type Props = {
   runtime: GroupSessionRuntime
   session: AuthenticatedGroupSession
   theme: 'light' | 'dark'
+  browserPage?: GroupBrowserPage | null
+  onBrowserNavigate?: (page: GroupBrowserPage, mode?: BrowserNavigationMode) => void
   onToggleTheme: () => void
   onLogout: () => void | Promise<void>
   onDisconnect: () => void | Promise<void>
@@ -97,38 +101,67 @@ export function GroupDashboardScreen({
   runtime,
   session,
   theme,
+  browserPage,
+  onBrowserNavigate,
   onToggleTheme,
   onLogout,
   onDisconnect,
   onExploreArchitecture,
 }: Props) {
   void onLogout
-  const [route, setRoute] = useState<GroupProductRoute>('home')
+  const [route, setRoute] = useState<GroupProductRoute>(() => browserPage?.route ?? 'home')
   const [selection, setSelection] = useState<GroupNavigationSelection>(() => getStoredGroupSelection(runtime.group, session.identity.email))
-  const [selectedGameId, setSelectedGameId] = useState<string | null>(null)
+  const [selectedGameId, setSelectedGameId] = useState<string | null>(() => browserPage?.gameId ?? null)
   const group = runtime.group
 
   useEffect(() => { setSelection(current => normalizeGroupSelection(group, current)) }, [group])
+  useEffect(() => {
+    if (!browserPage) return
+    setRoute(browserPage.route)
+    setSelectedGameId(browserPage.gameId)
+  }, [browserPage?.route, browserPage?.gameId])
 
-  if (route === 'auction') return <AuctionScreen runtime={runtime} session={session} onBack={() => setRoute('home')} />
+  if (route === 'auction') return <AuctionScreen runtime={runtime} session={session} onBack={() => navigate('home')} />
 
   function selectLeague(leagueId: string) {
-    setSelectedGameId(null)
+    clearSelectedGame('replace')
     setSelection(current => {
       const next = normalizeGroupSelection(group, { leagueId, year: current.year })
       storeGroupSelection(group.id, session.identity.email, next)
       return next
     })
   }
+
   function selectYear(year: number) {
-    setSelectedGameId(null)
+    clearSelectedGame('replace')
     setSelection(current => {
       const next = normalizeGroupSelection(group, { ...current, year })
       storeGroupSelection(group.id, session.identity.email, next)
       return next
     })
   }
-  function navigate(next: GroupProductRoute) { setSelectedGameId(null); setRoute(next) }
+
+  function navigate(next: GroupProductRoute) {
+    setRoute(next)
+    setSelectedGameId(null)
+    onBrowserNavigate?.({ route: next, gameId: null }, 'push')
+  }
+
+  function openGame(gameId: string) {
+    setSelectedGameId(gameId)
+    onBrowserNavigate?.({ route, gameId }, 'push')
+  }
+
+  function closeGame() {
+    clearSelectedGame('replace')
+  }
+
+  function clearSelectedGame(mode: BrowserNavigationMode) {
+    if (!selectedGameId) return
+    setSelectedGameId(null)
+    onBrowserNavigate?.({ route, gameId: null }, mode)
+  }
+
   function changeGroup() {
     markManualGroupSwitchRequest()
     void onDisconnect()
@@ -150,15 +183,15 @@ export function GroupDashboardScreen({
       onExploreArchitecture={onExploreArchitecture}
     >
       {selectedGameId ? (
-        <GroupGameScreen runtime={runtime} selection={selection} gameId={selectedGameId} onBack={() => setSelectedGameId(null)} />
+        <GroupGameScreen runtime={runtime} selection={selection} gameId={selectedGameId} onBack={closeGame} />
       ) : route === 'home' ? (
         <GroupHomeScreen runtime={runtime} selection={selection} onNavigate={navigate} />
       ) : route === 'calendar' ? (
-        <GroupCalendarScreen runtime={runtime} selection={selection} onOpenGame={setSelectedGameId} />
+        <GroupCalendarScreen runtime={runtime} selection={selection} onOpenGame={openGame} />
       ) : route === 'ranking' ? (
         <GroupRankingScreen runtime={runtime} selection={selection} />
       ) : route === 'live' ? (
-        <GroupLiveScreen runtime={runtime} selection={selection} onOpenGame={setSelectedGameId} />
+        <GroupLiveScreen runtime={runtime} selection={selection} onOpenGame={openGame} />
       ) : route === 'formation' ? (
         <GroupFormationScreen runtime={runtime} session={session} selection={selection} />
       ) : route === 'teams' ? (
@@ -179,6 +212,8 @@ export function GroupDashboardScreen({
         <GroupPushNotificationsScreen runtime={runtime} session={session} />
       ) : route === 'patch-notes' ? (
         <GroupPatchNotesScreen />
+      ) : route === 'share-group' ? (
+        <GroupShareScreen runtime={runtime} session={session} />
       ) : route === 'group-users-admin' ? (
         <GroupUsersAdminScreen runtime={runtime} session={session} />
       ) : route === 'group-baskets-admin' ? (
