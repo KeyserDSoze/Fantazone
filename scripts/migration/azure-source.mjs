@@ -84,6 +84,32 @@ function normalizeCanonicalRecord(record) {
   return normalizeLegacyRealCalendarRecord(record)
 }
 
+function calendarIssue(blobName, expectedSeason, reason, detail) {
+  return {
+    container: 'realcalendar',
+    blobName,
+    key: expectedSeason,
+    reason,
+    targetPath: Number.isInteger(expectedSeason) && expectedSeason > 0
+      ? `data/serie-a/calendars/${expectedSeason}.json`
+      : null,
+    detail,
+  }
+}
+
+function fatalCalendarRecord(sourceRecord, blobName, expectedSeason, issue, rawText = null) {
+  return {
+    container: 'realcalendar',
+    blobName,
+    key: expectedSeason,
+    // Keep the mapper input intentionally invalid so staging fails closed and writes last-error.json.
+    value: null,
+    migrationDiagnosticValue: sourceRecord?.migrationDiagnosticValue ?? sourceRecord?.value ?? null,
+    migrationRawText: rawText ?? sourceRecord?.migrationRawText ?? null,
+    migrationFatalIssue: issue,
+  }
+}
+
 async function downloadText(blobClient) {
   const response = await blobClient.download()
   const text = await streamToString(response.readableStreamBody)
@@ -220,25 +246,44 @@ export async function scanAzureStorage(connectionString, options = {}) {
         const id = recordId(name, blob.name)
         const cachedMetadata = previous.blobs.get(id)
         const cachedRecord = previous.records.get(id)
+        let sourceRecord = null
+        let sourceRawText = null
         let normalized = null
         let initialIssue = null
 
         if (cachedRecord && sameBlob(cachedMetadata, metadata)) {
+          sourceRecord = cachedRecord
+          sourceRawText = cachedRecord.migrationRawText ?? null
           normalized = normalizeCanonicalRecord(cachedRecord)
           if (normalized.ok) reusedCount += 1
-          else initialIssue = normalized.issue
+          else initialIssue = cachedRecord.migrationFatalIssue ?? normalized.issue
         } else {
           const downloaded = await downloadText(containerClient.getBlobClient(blob.name))
           downloadedCount += 1
           downloadedBytes += downloaded.bytes
-          normalized = normalizeCanonicalRecord(recordFromText(name, blob.name, downloaded.text))
-          if (!normalized.ok) initialIssue = normalized.issue
+          sourceRawText = downloaded.text
+          try {
+            sourceRecord = recordFromText(name, blob.name, downloaded.text)
+            normalized = normalizeCanonicalRecord(sourceRecord)
+            if (!normalized.ok) initialIssue = normalized.issue
+          } catch (error) {
+            if (name !== 'realcalendar') throw error
+            const expectedSeason = Number.parseInt(blob.name, 10)
+            sourceRecord = { container: name, blobName: blob.name, key: expectedSeason, value: null }
+            initialIssue = calendarIssue(
+              blob.name,
+              expectedSeason,
+              'invalid-realcalendar-json',
+              `Cannot parse RealCalendar ${blob.name}: ${error.message}`,
+            )
+            normalized = { ok: false, issue: initialIssue }
+          }
         }
 
         if (normalized?.ok) {
           records.push(normalized.record)
         } else if (name === 'realcalendar') {
-          const expectedSeason = Number(cachedRecord?.key ?? Number.parseInt(blob.name, 10))
+          const expectedSeason = Number(sourceRecord?.key ?? cachedRecord?.key ?? Number.parseInt(blob.name, 10))
           const recovered = await recoverRealCalendarHistory(containerClient, blob.name, expectedSeason)
           downloadedCount += recovered.downloadedCount
           downloadedBytes += recovered.downloadedBytes
@@ -258,13 +303,16 @@ export async function scanAzureStorage(connectionString, options = {}) {
               reason: initialIssue?.detail ?? 'Current RealCalendar payload is not valid for its Azure/Rystem season key.',
             })
           } else {
-            issues.push(initialIssue ?? {
-              container: name,
-              blobName: blob.name,
-              key: expectedSeason,
-              reason: 'invalid-realcalendar-season',
-              detail: 'Current RealCalendar payload is invalid and no valid Azure blob version or snapshot could be recovered.',
-            })
+            const issue = initialIssue ?? calendarIssue(
+              blob.name,
+              expectedSeason,
+              'invalid-realcalendar-season',
+              'Current RealCalendar payload is invalid and no valid Azure blob version or snapshot could be recovered.',
+            )
+            issues.push(issue)
+            // Do not silently quarantine an unrecoverable calendar. Carry it into staging as a
+            // deliberate failing record so last-error.json contains the exact source JSON/raw text.
+            records.push(fatalCalendarRecord(sourceRecord, blob.name, expectedSeason, issue, sourceRawText))
           }
         } else if (initialIssue) {
           issues.push(initialIssue)
