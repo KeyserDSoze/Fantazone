@@ -94,7 +94,33 @@ try {
     if ($PreserveExisting) { $arguments += "--preserve-existing" }
     if ($RepairImportedCalendars) { $arguments += "--repair-imported-calendars" }
 
+    $repairScript = Join-Path $PSScriptRoot "repair-historical-calendar-cache.mjs"
+    $repairArguments = @($repairScript)
+    if ($CachePath) { $repairArguments += @("--cache", $CachePath) }
+
+    # On normal reruns, repair a previously detected unrecoverable RealCalendar before staging.
+    # A RefreshCache run intentionally scans Azure first, so its fallback is attempted after the
+    # first failed pass against the newly written cache below.
+    if ($RepairImportedCalendars -and -not $NoCache -and -not $RefreshCache) {
+        $repairExitCode = Invoke-NodeMigration $repairArguments
+        if ($repairExitCode -ne 0) { throw "Historical calendar repair preflight failed with exit code $repairExitCode." }
+    }
+
     $nodeExitCode = Invoke-NodeMigration $arguments
+
+    # A first migration (or RefreshCache) may discover the bad historical blob only during this run.
+    # The scanner has already saved that diagnostic record in the cache. Repair it there and retry
+    # exactly once; for RefreshCache the retry uses the repaired cache instead of overwriting it again.
+    if ($nodeExitCode -ne 0 -and $RepairImportedCalendars -and -not $NoCache) {
+        Write-Host "[Repair] Migration stopped on an unresolved calendar; attempting verified historical fallback and one retry..."
+        $repairExitCode = Invoke-NodeMigration $repairArguments
+        if ($repairExitCode -eq 0) {
+            $retryArguments = @($arguments | Where-Object { $_ -ne "--refresh-cache" -and $_ -ne "--reuse-cache" })
+            $retryArguments += "--reuse-cache"
+            $nodeExitCode = Invoke-NodeMigration $retryArguments
+        }
+    }
+
     if ($nodeExitCode -ne 0) { throw "Migration process failed with exit code $nodeExitCode." }
 }
 finally {
