@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { RefreshCw, Zap } from '@tamagui/lucide-icons-2'
-import { Button, Paragraph, Spinner, Text, XStack, YStack } from 'tamagui'
+import { RefreshCw, Trophy, Zap } from '@tamagui/lucide-icons-2'
+import { Button, Paragraph, ScrollView, Spinner, Text, XStack, YStack } from 'tamagui'
 import {
   Behaviour,
   GameResultHelper,
@@ -8,8 +8,10 @@ import {
   RankHelper,
   RealCalendarHelper,
   VoteHelper,
+  buildRealRank,
   formatSeasonFromYear,
   type LiveGroup,
+  type RealRank,
   type Vote,
   type VotedRealPlayer,
 } from '@fantazone/domain'
@@ -27,6 +29,7 @@ type Props = {
 
 export function GroupLiveScreen({ runtime, selection, onOpenGame }: Props) {
   const [liveGroup, setLiveGroup] = useState<LiveGroup | null>(null)
+  const [serieARank, setSerieARank] = useState<RealRank | null>(null)
   const [events, setEvents] = useState<VotedRealPlayer[]>([])
   const [isDuringSerieADay, setIsDuringSerieADay] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -45,13 +48,15 @@ export function GroupLiveScreen({ runtime, selection, onOpenGame }: Props) {
         runtime.liveComposer.getLiveGroup(selection.year, { refresh: true }),
         runtime.realCalendarRepository.getCalendar(selection.year, { refresh: true }),
       ])
-      const context = realCalendar ? RealCalendarHelper.context(realCalendar, new Date()) : null
+      const now = new Date()
+      const context = realCalendar ? RealCalendarHelper.context(realCalendar, now) : null
       const liveDay = context?.liveDay?.serieADay ?? null
       const cachedLiveVotes = liveDay != null
         ? await runtime.liveVoteRepository.getVotes(selection.year, liveDay)
         : null
 
       setLiveGroup(group)
+      setSerieARank(realCalendar ? buildRealRank(realCalendar, now) : null)
       setEvents(sortLiveEvents((cachedLiveVotes?.players ?? []).filter(player => player.vote && VoteHelper.hasDoneSomething(player.vote))))
       setIsDuringSerieADay(context?.isDuringSerieADay ?? false)
       setLastUpdated(new Date())
@@ -65,6 +70,7 @@ export function GroupLiveScreen({ runtime, selection, onOpenGame }: Props) {
 
   useEffect(() => {
     setLiveGroup(null)
+    setSerieARank(null)
     setEvents([])
     setLastUpdated(null)
     void loadLive()
@@ -181,6 +187,62 @@ export function GroupLiveScreen({ runtime, selection, onOpenGame }: Props) {
         </YStack>
       ) : null}
 
+      {serieARank && serieARank.teams.length > 0 ? (
+        <Surface accent="green" padding="$4">
+          <YStack gap="$3">
+            <XStack alignItems="center" justifyContent="space-between" gap="$3" flexWrap="wrap">
+              <XStack alignItems="center" gap="$2">
+                <Trophy size="$1" color="$green10" />
+                <Text color="$color12" fontSize="$6" fontWeight="900">Classifica Serie A</Text>
+              </XStack>
+              <StatusPill tone={isDuringSerieADay ? 'red' : 'green'}>
+                {isDuringSerieADay ? 'Proiezione live' : 'Da calendario canonico'}
+              </StatusPill>
+            </XStack>
+            <Paragraph color="$color9" fontSize="$2">
+              Derivata direttamente dai risultati del calendario condiviso. Durante le partite include i punteggi live già pubblicati dal provider.
+            </Paragraph>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <YStack minWidth={760} gap="$1">
+                <XStack paddingHorizontal="$2" paddingVertical="$1" alignItems="center">
+                  <RankCell width={36} value="#" header />
+                  <RankCell flex={1} minWidth={180} value="Squadra" header align="left" />
+                  <RankCell value="G" header />
+                  <RankCell value="V" header />
+                  <RankCell value="N" header />
+                  <RankCell value="P" header />
+                  <RankCell value="GF" header />
+                  <RankCell value="GS" header />
+                  <RankCell value="DR" header />
+                  <RankCell value="Pt" header strong />
+                </XStack>
+                {serieARank.teams.map((team, index) => (
+                  <XStack
+                    key={team.name}
+                    paddingHorizontal="$2"
+                    paddingVertical="$2"
+                    borderRadius="$3"
+                    alignItems="center"
+                    backgroundColor={index < 4 ? '$green2' : index % 2 === 0 ? '$color2' : 'transparent'}
+                  >
+                    <RankCell width={36} value={String(index + 1)} strong={index < 4} />
+                    <RankCell flex={1} minWidth={180} value={team.name} align="left" strong />
+                    <RankCell value={String(team.played)} />
+                    <RankCell value={String(team.victories)} />
+                    <RankCell value={String(team.draws)} />
+                    <RankCell value={String(team.defeats)} />
+                    <RankCell value={String(team.goalsFor)} />
+                    <RankCell value={String(team.goalsAgainst)} />
+                    <RankCell value={team.goalDifference > 0 ? `+${team.goalDifference}` : String(team.goalDifference)} />
+                    <RankCell value={String(team.points)} strong />
+                  </XStack>
+                ))}
+              </YStack>
+            </ScrollView>
+          </YStack>
+        </Surface>
+      ) : null}
+
       {league ? (
         <YStack gap="$4">
           {roundKeys.map(roundKey => {
@@ -275,6 +337,40 @@ export function GroupLiveScreen({ runtime, selection, onOpenGame }: Props) {
         </YStack>
       ) : null}
     </AppScreen>
+  )
+}
+
+function RankCell({
+  value,
+  width = 54,
+  flex,
+  minWidth,
+  align = 'center',
+  header = false,
+  strong = false,
+}: {
+  value: string
+  width?: number
+  flex?: number
+  minWidth?: number
+  align?: 'left' | 'center' | 'right'
+  header?: boolean
+  strong?: boolean
+}) {
+  return (
+    <Text
+      width={flex ? undefined : width}
+      flex={flex}
+      minWidth={minWidth}
+      textAlign={align}
+      color={header ? '$color8' : '$color12'}
+      fontSize={header ? '$1' : '$2'}
+      fontWeight={header || strong ? '900' : '600'}
+      textTransform={header ? 'uppercase' : undefined}
+      numberOfLines={1}
+    >
+      {value}
+    </Text>
   )
 }
 

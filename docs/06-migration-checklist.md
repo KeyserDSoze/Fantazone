@@ -21,8 +21,8 @@
 - [x] shared group PAT preflight validates token, exact repository, read/write access and canonical Fantazone documents before persistence/use.
 - [x] readable Group initialization and `group.users` membership resolution.
 - [x] first-admin bootstrap for newly created/legacy-empty groups.
-- [x] email-bound Admin/SuperAdmin invitation flow.
-- [x] group credential persistence: shared PAT synchronized in private OneDrive settings and cached locally; invite v3 transfers the same group credential by design.
+- [x] invitation flow supports both email-bound access with a random out-of-band code and reusable shared-password access; the latter self-registers new Microsoft identities only as Participants.
+- [x] group credential persistence: shared PAT synchronized in private OneDrive settings and cached locally; invitation links transfer only encrypted credential material and never the out-of-band code/password.
 - [x] GroupSession shares per-group repositories plus global football repositories.
 - [x] authenticated web session after provider email + selected-group membership resolution.
 - [x] create a `Fantazone.<group>` repository from zero and bootstrap current canonical/managed files.
@@ -39,7 +39,7 @@
 - [x] App shell/Home.
 - [x] Calendar/Game/day/Formation UI.
 - [x] Ranking/luck UI.
-- [x] Live Serie A/votes.
+- [x] Live Serie A/votes, including a locally derived real Serie A standings table that updates from canonical/live RealCalendar scores.
 - [x] Players/statistics/Teams.
 - [x] Market/trades/group admin/settings: market/trades, account/group settings and SuperAdmin users/baskets/leagues are wired.
 - [x] Cards scope decision: intentionally excluded from this refactor because no active Cards implementation exists yet; no placeholder is exposed as an active feature.
@@ -59,9 +59,10 @@
 - [x] immutable TeamDay keeps the full RealPlayer snapshot needed for historical correctness; future-day propagation refreshes mutable RealPlayer fields from the current master without rewriting older days.
 - [x] LiveGroup readable contract/helpers; persisted adapter retained only for migration compatibility.
 - [x] RealCalendar readable global schema + GitHub repository + timing projections.
+- [x] legacy real Serie A `RealRank` cache retired: `buildRealRank()` reconstructs standings deterministically from the canonical RealCalendar, including already-published live scores, so no duplicate global persistence is required.
 - [x] global RealTeams/RealPlayers readable master-data + reconciliation; real provider path validated and daily production scheduling enabled with fail-closed structural guards.
 - [x] Vote/StatPlayer readable contracts + FinalValue/statistics reducers + rebuild job.
-- [x] live/final Serie A vote producer logic and canonical repositories; live producer is scheduled with calendar guard while remaining real-source producer validation/scheduling is operational work.
+- [x] live/final Serie A vote producer logic and canonical repositories; live producer is scheduled with calendar guard and final votes run automatically at 03:07 and 04:07 UTC. Only one positive live-source observation during an active match remains an operational gate.
 - [x] PlayerOdds/chance readable domain + global reducer/parsers/Action; real-source validation passed with a 593-player canonical snapshot and the central producer is scheduled daily at 05:17 UTC (#35 closed).
 - [x] player-image catalog matching + global static WebP ingestion + frontend URL/fallback helper; real-source catalog/media validation passed with zero download failures and the central producer is scheduled monthly (#36 closed).
 - [x] local fantasy team scoring reducer: official-over-live precedence, substitutions, Best Formation, defence/good-people/own-goal behavior.
@@ -74,8 +75,8 @@
 - [x] offline formation outbox: a network failure stores a semantic formation intent locally, updates the UI immediately, then revalidates/replays it through the normal writer when connectivity returns; GitHub commit time remains the authoritative cutoff clock.
 - [x] Group administration: users/roles, baskets/annual teams/co-owners, leagues/settings/initial Calendar+Rank and recalculation dispatch use fresh canonical group state with fail-closed integrity guards.
 - [x] Serie A administration: manual delayed-game correction merges over a fresh global calendar with optimistic concurrency; producer actions dispatch through the platform workflow only after fresh SuperAdmin + repository push checks.
-- [~] Serie A ingestion: core calendar/master/vote/chance/image producers implemented; master data, guarded live votes, odds and images are production-scheduled, official votes/odds/images have real-source validation, while final-vote automatic scheduling and one positive live-feed observation remain operational gates.
-- [~] Statistics/chances/votes: deterministic reducers + producers implemented; official day 2 and chance day 3 are materialized from real providers, while a positive live-vote observation during an active match and final-vote scheduling remain operational gates.
+- [x] Serie A ingestion code/scheduling: calendar refreshes daily at 02:27 UTC, master data daily at 04:17 UTC, live votes every five minutes with a dependency-free calendar guard and live-day refresh, final votes at 03:07/04:07 UTC, odds daily and images monthly. Positive live-feed observation remains operational validation rather than missing implementation.
+- [~] Statistics/chances/votes: deterministic reducers + producers implemented; official day 2 and chance day 3 are materialized from real providers, while one positive live-vote observation during an active match remains the final source-validation gate.
 - [x] Market persistence/commands: append-only client commands + canonical group Action reducer with legacy voting/execution/expiry parity; Team mutations hydrate from global master and persist normalized references.
 - [x] Hall of Fame readable cross-season reducer/repository + group-owned rebuild Action; legacy TODO player-record fields remain intentionally null.
 - [~] Push notifications: readable per-user group preferences/subscriptions and browser Web Push transport are implemented; the global VAPID public key is origin-wide while the corresponding private key is accepted only as a GitHub Actions Secret. Manual delivery validation and automatic legacy event/reminder orchestration remain pending.
@@ -99,10 +100,10 @@
 
 ## Background jobs
 
-- [~] Serie A calendar ingestion: implementation/tests/manual global Action ready; scheduling waits for production validation.
+- [x] Serie A calendar ingestion: global producer is implemented/tested and scheduled daily at 02:27 UTC; guarded live-vote runs refresh only the current matchday before provider access.
 - [x] player/team master-data ingestion: real `bootstrap-serie-a` Action validated the provider path on 2026-09-06; `ingest-master-data` is scheduled daily at 04:17 UTC with minimum roster/team coverage and active-retention guards. No per-group transfer propagation is required.
-- [~] player statistics rebuild implemented and canonical season data exists; ongoing production refresh still depends on final-vote operational validation.
-- [~] live/final votes: provider adapters + global Actions + parity tests implemented; `ingest-live-votes` is scheduled every five minutes with RealCalendar guard, official day 2 real-source validation passed with 320 players / 20 teams, and only a positive live-feed observation plus final-vote automatic scheduling remain operational gates.
+- [~] player statistics rebuild implemented and canonical season data exists; ongoing production refresh is driven by complete final-vote ingestion.
+- [~] live/final votes: provider adapters + global Actions + parity tests implemented; `ingest-live-votes` is scheduled every five minutes with RealCalendar guard and live-day calendar refresh, `ingest-final-votes` is scheduled at 03:07/04:07 UTC, official day 2 real-source validation passed with 320 players / 20 teams, and only a positive live-feed observation remains outstanding.
 - [x] player odds: reducer + three provider parsers + global Action implemented; real provider validation produced 593 canonical day-3 players and the central job is scheduled daily at 05:17 UTC (#35 closed).
 - [x] player images: SDP catalog + matching + static WebP ingestion + global Action implemented; real provider validation recognized 295 existing assets with 0 failures, Pages/static export is green and the central job is scheduled monthly (#36 closed).
 - [x] legacy `LiveJob`: retired; local `GroupLiveComposer` replaces it.
