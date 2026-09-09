@@ -14,10 +14,30 @@ export type AppBrowserLocation =
 export type BrowserNavigationMode = 'push' | 'replace'
 
 const LOGIN_RETURN_PATH_KEY = 'fantazone.browser-route.oauth-return.v1'
+const OAUTH_RETURN_PENDING_KEY = 'fantazone.browser-route.oauth-callback.v1'
 
 export function readBrowserLocation(): AppBrowserLocation {
   if (!isWebBrowser()) return { kind: 'groups' }
-  return parseBrowserPath(window.location.pathname)
+
+  const callback = hasOAuthCallback()
+  if (callback) {
+    try { window.sessionStorage.setItem(OAUTH_RETURN_PENDING_KEY, '1') } catch { /* best effort */ }
+    const remembered = readRememberedBrowserReturnPath()
+    return remembered ? parseBrowserPath(pathnameFromReturnPath(remembered)) : parseBrowserPath(window.location.pathname)
+  }
+
+  const shouldRestore = readAndClearOAuthReturnPending()
+  if (shouldRestore) {
+    const remembered = readRememberedBrowserReturnPath()
+    if (remembered) {
+      restoreBrowserReturnPath(remembered)
+      return parseBrowserPath(pathnameFromReturnPath(remembered))
+    }
+  }
+
+  const location = parseBrowserPath(window.location.pathname)
+  rememberBrowserLocation(location)
+  return location
 }
 
 export function parseBrowserPath(pathname: string): AppBrowserLocation {
@@ -54,6 +74,7 @@ export function browserPath(location: AppBrowserLocation): string {
 export function navigateBrowser(location: AppBrowserLocation, mode: BrowserNavigationMode = 'push'): void {
   if (!isWebBrowser()) return
   const path = browserPath(location)
+  rememberBrowserLocation(location)
   if (`${window.location.pathname}${window.location.search}${window.location.hash}` === path) return
   window.history[mode === 'replace' ? 'replaceState' : 'pushState']({}, document.title, path)
 }
@@ -72,14 +93,8 @@ export function rememberBrowserReturnPath(): void {
 
 export function restoreRememberedBrowserReturnPath(): void {
   if (!isWebBrowser()) return
-  let returnPath: string | undefined
-  try {
-    returnPath = window.sessionStorage.getItem(LOGIN_RETURN_PATH_KEY) ?? undefined
-    window.sessionStorage.removeItem(LOGIN_RETURN_PATH_KEY)
-  } catch {
-    return
-  }
-  restoreBrowserReturnPath(returnPath)
+  const returnPath = readRememberedBrowserReturnPath()
+  if (returnPath) restoreBrowserReturnPath(returnPath)
 }
 
 export function currentBrowserReturnPath(): string | undefined {
@@ -92,6 +107,42 @@ export function restoreBrowserReturnPath(returnPath: string | undefined): void {
   if (!isWebBrowser()) return
   if (!returnPath || !returnPath.startsWith('/') || returnPath.startsWith('//')) return
   window.history.replaceState({}, document.title, returnPath)
+}
+
+function rememberBrowserLocation(location: AppBrowserLocation): void {
+  if (!isWebBrowser()) return
+  try { window.sessionStorage.setItem(LOGIN_RETURN_PATH_KEY, browserPath(location)) } catch { /* best effort */ }
+}
+
+function readRememberedBrowserReturnPath(): string | undefined {
+  if (!isWebBrowser()) return undefined
+  try {
+    const value = window.sessionStorage.getItem(LOGIN_RETURN_PATH_KEY) ?? undefined
+    return value && value.startsWith('/') && !value.startsWith('//') ? value : undefined
+  } catch {
+    return undefined
+  }
+}
+
+function readAndClearOAuthReturnPending(): boolean {
+  if (!isWebBrowser()) return false
+  try {
+    const pending = window.sessionStorage.getItem(OAUTH_RETURN_PENDING_KEY) === '1'
+    if (pending) window.sessionStorage.removeItem(OAUTH_RETURN_PENDING_KEY)
+    return pending
+  } catch {
+    return false
+  }
+}
+
+function hasOAuthCallback(): boolean {
+  if (!isWebBrowser()) return false
+  const params = new URLSearchParams(window.location.search)
+  return Boolean(params.get('code') || params.get('error')) && Boolean(params.get('state'))
+}
+
+function pathnameFromReturnPath(returnPath: string): string {
+  try { return new URL(returnPath, 'https://fanta.plus').pathname } catch { return '/' }
 }
 
 function decodePathPart(value: string): string {
