@@ -48,33 +48,35 @@ The same PAT is cached locally as a convenience/fallback:
 - web: localStorage, namespaced by Microsoft identity;
 - native: Expo SecureStore, namespaced by Microsoft identity.
 
-OneDrive is the synchronized source for the group credential. Legacy settings catalogs without PAT are upgraded lazily: a still-valid local PAT is promoted to OneDrive after the first successful group open, otherwise the user is asked for the current shared group PAT.
+OneDrive is the synchronized source for the group credential. Settings catalogs without PAT are upgraded lazily: a still-valid local PAT is promoted to OneDrive after the first successful group open, otherwise the user is asked for the current shared group PAT.
 
 ## Invitations
 
-Current share links use an external **v4 encrypted envelope**. Admin and SuperAdmin users can create them from the dedicated **Condividi gruppo** page or from group settings.
+Fantazone supports **one current invitation format only**. There is no invite schema/version switch and obsolete invitation links are intentionally not decoded.
 
-The envelope contains, in the URL fragment:
+Admin and SuperAdmin users create invitations from the dedicated **Condividi gruppo** page. Fantazone produces two separate values:
+
+1. a link containing the encrypted invitation envelope;
+2. a random unlock code generated locally for that individual invitation.
+
+The URL fragment contains only:
 
 - current group display name;
 - exact `owner/repository`;
 - invited Microsoft email;
-- the group PAT encrypted with **AES-256-GCM**;
-- the AES key required to decrypt that PAT.
+- the group PAT encrypted with **AES-256-GCM**.
 
-Group, repository and invited email are passed as AES-GCM additional authenticated data (AAD), so changing those fields makes decryption fail. The PAT itself is not present as plaintext in the URL representation.
+It does **not** contain the PAT plaintext, the AES key, or the unlock code. Group, repository and invited email are passed as AES-GCM additional authenticated data (AAD), so changing those fields makes decryption fail.
 
-Fantazone is intentionally zero-backend and has no recipient public-key infrastructure. The link therefore has to be self-contained: the decryption key travels in the same URL fragment. **This means the full link is still a bearer credential.** Anyone who obtains the complete link has enough information to decrypt and use the group PAT. Encryption prevents the PAT from appearing directly as plaintext and gives authenticated/tamper-evident packaging; it does not make a leaked full link harmless.
+The unlock code is generated from 160 bits of cryptographically secure random data and rendered in grouped, human-readable characters. Fantazone hashes that high-entropy code with SHA-256 in the Fantazone invite domain and imports the result as the AES-256 key. Because the code itself already has high entropy, it is not a short numeric OTP that could realistically be brute-forced offline.
 
-On web, fanta.plus removes the URL fragment immediately after parsing/decrypting it, keeps the pending invite only in `sessionStorage` across the Microsoft OAuth redirect, and clears it after join/cancel. The invited Microsoft email must match the authenticated identity before the repository credential is accepted.
+The inviter should send the link and unlock code through separate messages or, preferably, separate channels. Possessing only the link is insufficient to recover the PAT; possessing only the unlock code is also insufficient.
 
-Older invitations remain readable:
+On web, fanta.plus removes the URL fragment immediately after parsing it. `sessionStorage` keeps only the encrypted envelope across the Microsoft OAuth redirect; the unlock code is never persisted alongside it. After Microsoft login, the invited email must match the authenticated identity and the user must enter the separately received unlock code before the PAT can be decrypted.
 
-- v3 links carried the shared PAT directly inside a base64url-encoded fragment;
-- v2 links were secret-free and ask the participant for the shared group PAT once;
-- legacy v1 links are normalized into one of those flows when possible.
+After a successful unlock, the PAT is verified against the exact repository, membership is verified against the Microsoft identity, and the credential is stored in the participant's private OneDrive app settings and local credential cache.
 
-After a successful join the PAT is verified against the exact repository, membership is verified against the Microsoft identity, and the credential is stored in the participant's private OneDrive app settings and local credential cache.
+The unlock code is generated once per invitation and Fantazone does not save it. Because the product intentionally has no trusted backend, this is not a server-enforced single-use token: somebody who retained both the encrypted link and the unlock code could reproduce the decryption while the shared PAT remains valid. The practical security boundary is therefore the separation of link and code plus Microsoft email verification; revoking repository-level access still requires rotating the shared PAT.
 
 ## Browser routing and refresh
 
@@ -113,8 +115,8 @@ For that reason:
 - use a dedicated fine-grained PAT for each Fantazone group repository;
 - scope it only to that repository;
 - grant only the repository permissions Fantazone needs;
-- share invite links only through a private channel and only with the intended participant;
-- rotate the PAT if an invite link is exposed or a participant should lose repository-level access;
-- treat invite links as secrets even though the PAT inside current v4 links is encrypted.
+- send invite links and unlock codes separately and only to the intended participant;
+- rotate the PAT if both invitation factors are exposed or a participant should lose repository-level access;
+- treat the combination of link + unlock code as equivalent to the shared group credential.
 
 This is the accepted tradeoff for keeping Fantazone fully zero-backend.
