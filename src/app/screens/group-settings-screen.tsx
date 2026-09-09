@@ -1,27 +1,19 @@
 import React, { useMemo, useState } from 'react'
-import { Linking, Platform, Share } from 'react-native'
+import { Linking } from 'react-native'
 import {
   ExternalLink,
   Github,
   Pencil,
-  ShieldAlert,
-  UserPlus,
   UserRound,
 } from '@tamagui/lucide-icons-2'
 import { Button, Input, Paragraph, Spinner, Text, XStack, YStack } from 'tamagui'
 import { GroupHelper, IdentityRole, type AuthenticatedGroupSession } from '@fantazone/domain'
 import { AppScreen, PageIntro, PrimaryAction, StatusPill, Surface } from '../components/design-system'
-import { publicWebUrl } from '../config/publicOrigin'
-import { createEncryptedInviteFragment } from '../services/groupInviteLink'
 import type { GroupSessionRuntime } from '../services/groupSessionRuntime'
 
 export function GroupSettingsScreen({ runtime, session }: { runtime: GroupSessionRuntime; session: AuthenticatedGroupSession }) {
   const group = runtime.group
   const connection = runtime.connection
-  const [inviteEmail, setInviteEmail] = useState('')
-  const [inviteUsername, setInviteUsername] = useState('')
-  const [shareStatus, setShareStatus] = useState<string | null>(null)
-  const [sharing, setSharing] = useState(false)
   const [displayGroupName, setDisplayGroupName] = useState(group.name)
   const [leagueNames, setLeagueNames] = useState<Record<string, string>>(() =>
     Object.fromEntries(group.leagues.map(league => [league.id, league.name || league.id])),
@@ -50,43 +42,6 @@ export function GroupSettingsScreen({ runtime, session }: { runtime: GroupSessio
     }
   }
 
-  async function inviteAndShare() {
-    const email = inviteEmail.trim().toLowerCase()
-    if (!email || !email.includes('@')) {
-      setShareStatus('Inserisci l’email con cui il partecipante farà login.')
-      return
-    }
-    setSharing(true)
-    setShareStatus(null)
-    try {
-      const invited = await runtime.inviteMember(session.member, { email, username: inviteUsername })
-      const fragment = await createEncryptedInviteFragment({
-        v: 3,
-        group: runtime.group.name,
-        repository: connection.repository.full_name,
-        email: invited.email,
-        pat: connection.token,
-      })
-      const inviteUrl = publicWebUrl(`/join${fragment}`)
-      if (Platform.OS === 'web' && typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(inviteUrl)
-        setShareStatus(`Utente ${invited.email} censito nel gruppo e invito cifrato copiato.`)
-      } else {
-        await Share.share({
-          title: `Invito Fantazone · ${runtime.group.name}`,
-          message: `Unisciti al gruppo Fantazone ${runtime.group.name} con ${invited.email}: ${inviteUrl}`,
-        })
-        setShareStatus(`Utente ${invited.email} censito nel gruppo e invito cifrato pronto.`)
-      }
-      setInviteEmail('')
-      setInviteUsername('')
-    } catch (caught) {
-      setShareStatus(caught instanceof Error ? caught.message : 'Impossibile creare l’invito.')
-    } finally {
-      setSharing(false)
-    }
-  }
-
   const repositoryUrl = connection.repository.html_url ?? `https://github.com/${connection.repository.full_name}`
 
   return (
@@ -94,7 +49,7 @@ export function GroupSettingsScreen({ runtime, session }: { runtime: GroupSessio
       <PageIntro
         eyebrow="Gruppo e account"
         title="Impostazioni"
-        description="Gestisci identità, repository, nomi visualizzati e accessi al gruppo mantenendo l’architettura zero-backend di Fantazone."
+        description="Gestisci identità, repository e nomi visualizzati mantenendo l’architettura zero-backend di Fantazone. Gli inviti sono raccolti nella pagina dedicata Condividi gruppo."
       />
 
       <XStack gap="$3" flexWrap="wrap" alignItems="stretch">
@@ -247,97 +202,6 @@ export function GroupSettingsScreen({ runtime, session }: { runtime: GroupSessio
             {displayStatus ? (
               <YStack padding="$3" borderRadius="$4" backgroundColor="$color3">
                 <Paragraph size="$2" color="$color10">{displayStatus}</Paragraph>
-              </YStack>
-            ) : null}
-          </YStack>
-        </Surface>
-      ) : null}
-
-      {canManage ? (
-        <Surface accent="blue" padding="$5">
-          <YStack gap="$5">
-            <XStack gap="$3" justifyContent="space-between" alignItems="flex-start" flexWrap="wrap">
-              <XStack gap="$3" alignItems="center" flex={1} minWidth={260}>
-                <YStack
-                  width={46}
-                  height={46}
-                  borderRadius="$4"
-                  alignItems="center"
-                  justifyContent="center"
-                  backgroundColor="$blue4"
-                >
-                  <UserPlus size="$1.2" color="$blue10" />
-                </YStack>
-                <YStack gap="$1" flex={1}>
-                  <Text color="$blue10" fontSize="$1" fontWeight="900" textTransform="uppercase">Accesso al gruppo</Text>
-                  <Text color="$color12" fontSize="$6" fontWeight="900">Invita un partecipante</Text>
-                  <Paragraph size="$2" color="$color9">
-                    Censisci l’identità Microsoft nel gruppo e genera il link cifrato che trasferisce la credenziale GitHub condivisa.
-                  </Paragraph>
-                </YStack>
-              </XStack>
-              <StatusPill tone="blue">AES-256-GCM</StatusPill>
-            </XStack>
-
-            <YStack
-              padding="$4"
-              borderRadius="$5"
-              borderWidth={1}
-              borderColor="$yellow6"
-              backgroundColor="$yellow2"
-              gap="$2"
-            >
-              <XStack gap="$2" alignItems="center">
-                <ShieldAlert size="$1" color="$yellow10" />
-                <Text color="$yellow11" fontWeight="900">Link sensibile anche se cifrato</Text>
-              </XStack>
-              <Paragraph size="$2" color="$yellow11">
-                Il PAT è cifrato nel frammento URL, ma il link resta una credenziale bearer: essendo Fantazone zero-backend, contiene anche il materiale necessario alla decifratura e va condiviso solo privatamente.
-              </Paragraph>
-            </YStack>
-
-            <XStack gap="$3" flexWrap="wrap">
-              <YStack gap="$2" flex={1} minWidth={260}>
-                <FieldLabel>Email Microsoft</FieldLabel>
-                <Input
-                  size="$4"
-                  borderRadius="$4"
-                  value={inviteEmail}
-                  onChangeText={setInviteEmail}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  keyboardType="email-address"
-                  placeholder="email@esempio.it"
-                />
-              </YStack>
-              <YStack gap="$2" flex={1} minWidth={240}>
-                <FieldLabel>Nome visualizzato</FieldLabel>
-                <Input
-                  size="$4"
-                  borderRadius="$4"
-                  value={inviteUsername}
-                  onChangeText={setInviteUsername}
-                  placeholder="Opzionale"
-                />
-              </YStack>
-            </XStack>
-
-            <XStack gap="$3" justifyContent="space-between" alignItems="center" flexWrap="wrap">
-              <Paragraph size="$2" color="$color9" flex={1} minWidth={240}>
-                L’invitato dovrà accedere con l’email indicata; Fantazone decifrerà e verificherà il PAT, poi lo salverà nel suo spazio OneDrive e sul dispositivo.
-              </Paragraph>
-              <PrimaryAction
-                disabled={sharing}
-                onPress={() => { void inviteAndShare() }}
-                icon={sharing ? <Spinner color="white" /> : <UserPlus size="$1" color="white" />}
-              >
-                {sharing ? 'Cifro invito…' : 'Censisci e crea invito cifrato'}
-              </PrimaryAction>
-            </XStack>
-
-            {shareStatus ? (
-              <YStack padding="$3" borderRadius="$4" backgroundColor="$color3">
-                <Paragraph size="$2" color="$color10">{shareStatus}</Paragraph>
               </YStack>
             ) : null}
           </YStack>
