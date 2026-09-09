@@ -122,7 +122,13 @@ export class GroupAuctionSetupService {
         const owner = normalizeEmail(annualTeam.owner)
         if (!owner || result.has(owner)) continue
         const openingPrize = opening?.teams.find(item => normalizeEmail(item.owner) === owner)?.prize ?? 0
-        let team = await this.runtime.teamRepository.getTeam(basketId, season, annualTeam.owner, { refresh: true })
+        const teamSnapshot = await this.runtime.teamRepository.getTeamSnapshot(
+          basketId,
+          season,
+          annualTeam.owner,
+          { refresh: true },
+        )
+        let team = teamSnapshot?.value ?? null
         if (!team) {
           if (kind === AuctionKind.Repairing) throw new Error(`La squadra ${annualTeam.name} non esiste ancora: impossibile avviare un’asta di riparazione.`)
           team = {
@@ -135,9 +141,24 @@ export class GroupAuctionSetupService {
             formationChanges: 0,
             lastUpdate: null,
           }
-          await this.runtime.teamRepository.writeTeam(basketId, season, annualTeam.owner, team, `auction: initialize ${annualTeam.name}`, { createOnly: true })
-        } else if (kind === AuctionKind.Starting) {
+          await this.runtime.teamRepository.writeTeam(
+            basketId,
+            season,
+            annualTeam.owner,
+            team,
+            `auction: initialize ${annualTeam.name}`,
+            { createOnly: true },
+          )
+        } else if (kind === AuctionKind.Starting && (team.openingCompetitionPrize ?? 0) !== openingPrize) {
           team = { ...team, openingCompetitionPrize: openingPrize }
+          await this.runtime.teamRepository.writeTeam(
+            basketId,
+            season,
+            annualTeam.owner,
+            team,
+            `auction: apply opening competition prize ${annualTeam.owner}`,
+            { expectedSha: teamSnapshot!.sha },
+          )
         }
         result.set(owner, { basketId, team })
       }
