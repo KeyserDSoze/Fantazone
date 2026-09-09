@@ -2,6 +2,7 @@ import type { GroupInvitePayload } from '@fantazone/domain'
 import { parseInviteLinkFragment } from './groupInviteLink'
 
 const PENDING_GROUP_INVITE_KEY = 'fantazone.group-invite.pending.v4'
+const LEGACY_PENDING_GROUP_INVITE_KEY = 'fantazone.group-invite.pending.v3'
 
 /**
  * Captures an invite fragment before Microsoft performs its full-page redirect.
@@ -9,7 +10,8 @@ const PENDING_GROUP_INVITE_KEY = 'fantazone.group-invite.pending.v4'
  * Current v4 links encrypt the group's shared GitHub PAT with AES-256-GCM. The URL
  * fragment is stripped immediately; sessionStorage carries only the already
  * decrypted pending invite through the OAuth redirect and is cleared after
- * join/cancel. Older v3/v2/v1 links remain readable.
+ * join/cancel. Older v3/v2/v1 links and an in-flight v3 OAuth transaction remain
+ * readable for backward compatibility.
  */
 export async function loadPendingGroupInvite(): Promise<GroupInvitePayload | null> {
   if (!isWebBrowser()) return null
@@ -18,6 +20,7 @@ export async function loadPendingGroupInvite(): Promise<GroupInvitePayload | nul
   if (fromFragment) {
     try {
       window.sessionStorage.setItem(PENDING_GROUP_INVITE_KEY, JSON.stringify(fromFragment))
+      window.sessionStorage.removeItem(LEGACY_PENDING_GROUP_INVITE_KEY)
     } catch {
       // The in-memory caller can still continue even if browser storage is blocked.
     }
@@ -27,6 +30,7 @@ export async function loadPendingGroupInvite(): Promise<GroupInvitePayload | nul
 
   try {
     const raw = window.sessionStorage.getItem(PENDING_GROUP_INVITE_KEY)
+      ?? window.sessionStorage.getItem(LEGACY_PENDING_GROUP_INVITE_KEY)
     if (!raw) return null
     return decodePendingInvite(raw)
   } catch {
@@ -36,7 +40,10 @@ export async function loadPendingGroupInvite(): Promise<GroupInvitePayload | nul
 
 export function clearPendingGroupInvite(): void {
   if (!isWebBrowser()) return
-  try { window.sessionStorage.removeItem(PENDING_GROUP_INVITE_KEY) } catch { /* best effort */ }
+  try {
+    window.sessionStorage.removeItem(PENDING_GROUP_INVITE_KEY)
+    window.sessionStorage.removeItem(LEGACY_PENDING_GROUP_INVITE_KEY)
+  } catch { /* best effort */ }
 }
 
 export function decodePendingInvite(raw: string): GroupInvitePayload | null {
