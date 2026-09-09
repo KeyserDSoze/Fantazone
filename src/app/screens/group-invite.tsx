@@ -1,9 +1,10 @@
 import React, { useMemo, useState } from 'react'
-import { Github, LockKeyhole, LogIn } from '@tamagui/lucide-icons-2'
+import { Github, KeyRound, LockKeyhole, LogIn } from '@tamagui/lucide-icons-2'
 import { Button, Input, Paragraph, Spinner, Text, XStack, YStack } from 'tamagui'
 import { GitHubApiError } from '@fantazone/github'
 import type { GroupInvitePayload } from '@fantazone/domain'
 import { AppScreen, PageIntro, PrimaryAction, StatusPill, Surface } from '../components/design-system'
+import { decryptInvitePat, isValidInviteUnlockCode } from '../services/groupInviteLink'
 import { connectKnownGroup } from '../services/groupReconnect'
 import type { GroupConnection } from '../services/groupSessionRuntime'
 
@@ -16,18 +17,21 @@ type Props = {
 }
 
 export function GroupInviteScreen({ invite, identityEmail, onConnected, onCancel, onUseAnotherAccount }: Props) {
-  const [legacyPat, setLegacyPat] = useState('')
+  const [unlockCode, setUnlockCode] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const emailMatches = identityEmail.trim().toLowerCase() === invite.email
-  const pat = invite.v === 3 ? invite.pat : legacyPat
-  const canSubmit = useMemo(() => emailMatches && pat.trim().length > 0 && !loading, [emailMatches, pat, loading])
+  const canSubmit = useMemo(
+    () => emailMatches && isValidInviteUnlockCode(unlockCode) && !loading,
+    [emailMatches, unlockCode, loading],
+  )
 
   async function join() {
     if (!canSubmit) return
     setLoading(true)
     setError(null)
     try {
+      const pat = await decryptInvitePat(invite, unlockCode)
       const connection = await connectKnownGroup(pat, { name: invite.group, repository: invite.repository })
       await onConnected({ ...connection, expectedEmail: invite.email })
     } catch (caught) {
@@ -42,9 +46,7 @@ export function GroupInviteScreen({ invite, identityEmail, onConnected, onCancel
       <PageIntro
         eyebrow="Invito Fantazone"
         title={`Unisciti a ${invite.group}`}
-        description={invite.v === 3
-          ? 'Verifica l’identità Microsoft e collega questo dispositivo al repository GitHub condiviso del gruppo.'
-          : 'Questo invito usa il formato precedente e richiede una sola volta la credenziale GitHub condivisa del gruppo.'}
+        description="Verifica l’identità Microsoft e usa il codice di sblocco ricevuto separatamente per decifrare la credenziale GitHub del gruppo."
       />
 
       <XStack gap="$4" flexWrap="wrap" alignItems="stretch">
@@ -66,15 +68,13 @@ export function GroupInviteScreen({ invite, identityEmail, onConnected, onCancel
             </YStack>
           </Surface>
 
-          <Surface accent="yellow" padding="$4">
+          <Surface accent="green" padding="$4">
             <XStack gap="$3" alignItems="flex-start">
-              <LockKeyhole size="$1.2" color="$yellow10" />
+              <LockKeyhole size="$1.2" color="$green10" />
               <YStack flex={1} gap="$1">
-                <Text color="$color12" fontWeight="900">Tratta l’invito come una credenziale</Text>
+                <Text color="$color12" fontWeight="900">Il link da solo non sblocca il PAT</Text>
                 <Paragraph color="$color10" fontSize="$2" lineHeight="$5">
-                  {invite.v === 3
-                    ? 'Gli inviti correnti trasferiscono il PAT cifrato nel frammento URL. Fantazone ha già rimosso il frammento sensibile dall’indirizzo, verificherà la credenziale e la salverà nelle impostazioni private OneDrive; i link legacy restano compatibili.'
-                    : 'Il PAT verrà salvato nelle impostazioni private OneDrive e nella cache credenziali del dispositivo dopo la verifica.'}
+                  Il frammento dell’invito contiene solo il PAT cifrato AES-256-GCM e i dati necessari a identificare gruppo, repository ed email. La chiave deriva dal codice casuale generato per questo invito e quel codice non viaggia nel link né viene salvato insieme al payload.
                 </Paragraph>
               </YStack>
             </XStack>
@@ -100,23 +100,29 @@ export function GroupInviteScreen({ invite, identityEmail, onConnected, onCancel
                   <Paragraph color="$red11">Questo invito è destinato a {invite.email}. Accedi con l’account Microsoft corretto per continuare.</Paragraph>
                   <PrimaryAction onPress={() => { void onUseAnotherAccount() }} icon={<LogIn size="$1" color="white" />}>Usa un altro account Microsoft</PrimaryAction>
                 </YStack>
-              ) : invite.v !== 3 ? (
+              ) : (
                 <YStack gap="$2">
-                  <Text color="$color9" fontSize="$2" fontWeight="800">PERSONAL ACCESS TOKEN DEL GRUPPO</Text>
+                  <XStack gap="$2" alignItems="center">
+                    <KeyRound size="$1" color="$blue10" />
+                    <Text color="$color9" fontSize="$2" fontWeight="800">CODICE DI SBLOCCO DELL’INVITO</Text>
+                  </XStack>
                   <Input
                     size="$4"
                     borderRadius="$4"
-                    value={legacyPat}
-                    onChangeText={setLegacyPat}
+                    value={unlockCode}
+                    onChangeText={setUnlockCode}
                     secureTextEntry
                     autoFocus
-                    autoCapitalize="none"
+                    autoCapitalize="characters"
                     autoCorrect={false}
-                    placeholder="github_pat_..."
+                    placeholder="XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX"
                     onSubmitEditing={() => { void join() }}
                   />
+                  <Paragraph color="$color9" fontSize="$2">
+                    Inserisci il codice ricevuto separatamente dal link. Spazi e trattini sono accettati.
+                  </Paragraph>
                 </YStack>
-              ) : null}
+              )}
 
               {error ? <Surface accent="red" padding="$3"><Paragraph color="$red11">{error}</Paragraph></Surface> : null}
 
@@ -125,7 +131,7 @@ export function GroupInviteScreen({ invite, identityEmail, onConnected, onCancel
                 {emailMatches ? (
                   <YStack flexGrow={1} flexBasis={220}>
                     <PrimaryAction disabled={!canSubmit} onPress={() => { void join() }} icon={loading ? <Spinner color="white" /> : <LogIn size="$1" color="white" />}>
-                      {loading ? 'Verifica in corso…' : invite.v === 3 ? 'Verifica e unisciti' : 'Salva PAT e unisciti'}
+                      {loading ? 'Decifro e verifico…' : 'Sblocca e unisciti'}
                     </PrimaryAction>
                   </YStack>
                 ) : null}
