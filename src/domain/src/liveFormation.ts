@@ -1,4 +1,4 @@
-import type { LeagueSetting } from './group'
+import { Role, type LeagueSetting } from './group'
 import { getPlayerKey } from './realPlayer'
 import type { RealCalendar, RealDay } from './realCalendar'
 import { FantaSoccerRole, PlayerInTeamStatus, type Team } from './team'
@@ -87,16 +87,16 @@ export function getLiveFormationChangesRemaining(team: Team | null | undefined, 
 }
 
 function moduleOf(team: Team): string {
-  const counts = new Map<FantaSoccerRole, number>()
+  const counts = new Map<Role, number>()
   for (const player of team.players) {
     if (player.status !== PlayerInTeamStatus.Active) continue
     if (player.position < FantaSoccerRole.GoalKeeper || player.position > FantaSoccerRole.Forward) continue
-    counts.set(player.position, (counts.get(player.position) ?? 0) + 1)
+    counts.set(player.role, (counts.get(player.role) ?? 0) + 1)
   }
   return [
-    counts.get(FantaSoccerRole.GoalKeeper) ?? 0,
-    counts.get(FantaSoccerRole.Defensor) ?? 0,
-    counts.get(FantaSoccerRole.Midfielder) ?? 0,
-    counts.get(FantaSoccerRole.Forward) ?? 0,
+    counts.get(Role.GoalKeeper) ?? 0,
+    counts.get(Role.Defensor) ?? 0,
+    counts.get(Role.Midfielder) ?? 0,
+    counts.get(Role.Forward) ?? 0,
   ].join('-')
 }
