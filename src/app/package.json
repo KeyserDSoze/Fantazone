@@ -1,6 +1,6 @@
 {
   "name": "fantazone-app",
-  "version": "0.3.5",
+  "version": "0.3.6",
   "private": true,
   "main": "index.js",
   "scripts": {
@@ -38,17 +38,13 @@
     "react-native-gesture-handler": "~2.32.0",
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "~4.26.0",
-    "react-native-svg": "15.15.4",
-    "react-native-webrtc": "124.0.8",
-    "tamagui": "2.7.7",
-    "zustand": "^5.0.15"
+    "react-native-svg": "^15.15.0",
+    "react-native-web": "^0.21.2",
+    "tamagui": "2.7.7"
   },
   "devDependencies": {
-    "@babel/core": "^7.29.7",
-    "@tamagui/babel-plugin": "2.7.7",
-    "@tamagui/cli": "2.7.7",
-    "@types/react": "~19.2.10",
-    "babel-preset-expo": "~57.0.10",
-    "typescript": "~6.0.3"
+    "@types/react": "~19.2.2",
+    "babel-preset-expo": "~57.0.9",
+    "typescript": "~5.9.2"
   }
 }
