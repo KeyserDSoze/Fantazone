@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import type { AuthenticatedGroupSession } from '@fantazone/domain'
+import type { AuthenticatedGroupSession, Group } from '@fantazone/domain'
 import {
   getDefaultGroupSelection,
   normalizeGroupSelection,
@@ -42,6 +42,57 @@ type Props = {
   onExploreArchitecture: () => void
 }
 
+const GROUP_SELECTION_STORAGE_PREFIX = 'fantazone:group-selection:v1'
+
+function getStoredGroupSelection(group: Group, identityEmail: string): GroupNavigationSelection {
+  const fallback = getDefaultGroupSelection(group)
+  const storage = getWebStorage()
+  if (!storage) return fallback
+
+  try {
+    const raw = storage.getItem(getGroupSelectionStorageKey(group.id, identityEmail))
+    if (!raw) return fallback
+
+    const parsed = JSON.parse(raw) as Partial<GroupNavigationSelection> | null
+    if (!parsed || typeof parsed !== 'object') return fallback
+
+    const leagueId = parsed.leagueId == null
+      ? null
+      : typeof parsed.leagueId === 'string'
+        ? parsed.leagueId
+        : fallback.leagueId
+    const year = parsed.year == null
+      ? null
+      : typeof parsed.year === 'number' && Number.isInteger(parsed.year)
+        ? parsed.year
+        : fallback.year
+
+    return normalizeGroupSelection(group, { leagueId, year })
+  } catch {
+    return fallback
+  }
+}
+
+function storeGroupSelection(groupId: string, identityEmail: string, selection: GroupNavigationSelection): void {
+  const storage = getWebStorage()
+  if (!storage) return
+
+  try {
+    storage.setItem(getGroupSelectionStorageKey(groupId, identityEmail), JSON.stringify(selection))
+  } catch {
+    // localStorage may be unavailable or full: the in-memory selection remains valid.
+  }
+}
+
+function getGroupSelectionStorageKey(groupId: string, identityEmail: string): string {
+  return `${GROUP_SELECTION_STORAGE_PREFIX}:${encodeURIComponent(identityEmail.trim().toLowerCase())}:${encodeURIComponent(groupId)}`
+}
+
+function getWebStorage(): Storage | null {
+  if (typeof window === 'undefined') return null
+  try { return window.localStorage } catch { return null }
+}
+
 export function GroupDashboardScreen({
   runtime,
   session,
@@ -53,7 +104,7 @@ export function GroupDashboardScreen({
 }: Props) {
   void onLogout
   const [route, setRoute] = useState<GroupProductRoute>('home')
-  const [selection, setSelection] = useState<GroupNavigationSelection>(() => getDefaultGroupSelection(runtime.group))
+  const [selection, setSelection] = useState<GroupNavigationSelection>(() => getStoredGroupSelection(runtime.group, session.identity.email))
   const [selectedGameId, setSelectedGameId] = useState<string | null>(null)
   const group = runtime.group
 
@@ -63,9 +114,20 @@ export function GroupDashboardScreen({
 
   function selectLeague(leagueId: string) {
     setSelectedGameId(null)
-    setSelection(current => normalizeGroupSelection(group, { leagueId, year: current.year }))
+    setSelection(current => {
+      const next = normalizeGroupSelection(group, { leagueId, year: current.year })
+      storeGroupSelection(group.id, session.identity.email, next)
+      return next
+    })
   }
-  function selectYear(year: number) { setSelectedGameId(null); setSelection(current => ({ ...current, year })) }
+  function selectYear(year: number) {
+    setSelectedGameId(null)
+    setSelection(current => {
+      const next = normalizeGroupSelection(group, { ...current, year })
+      storeGroupSelection(group.id, session.identity.email, next)
+      return next
+    })
+  }
   function navigate(next: GroupProductRoute) { setSelectedGameId(null); setRoute(next) }
   function changeGroup() {
     markManualGroupSwitchRequest()
