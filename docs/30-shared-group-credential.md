@@ -28,13 +28,14 @@ For each Microsoft user, `settings.json` in the OneDrive app root stores the rep
 
 ```json
 {
-  "version": 2,
+  "version": 3,
   "groups": [
     {
       "id": "...",
       "name": "Amici del Bar",
       "repository": "owner/lega-2026",
-      "pat": "github_pat_..."
+      "pat": "github_pat_...",
+      "isDefault": true
     }
   ]
 }
@@ -47,20 +48,46 @@ The same PAT is cached locally as a convenience/fallback:
 - web: localStorage, namespaced by Microsoft identity;
 - native: Expo SecureStore, namespaced by Microsoft identity.
 
-OneDrive is the synchronized source for the group credential. A legacy v1 settings catalog without PAT is upgraded lazily: a still-valid local PAT is promoted to OneDrive after the first successful group open, otherwise the user is asked for the current shared group PAT.
+OneDrive is the synchronized source for the group credential. Legacy settings catalogs without PAT are upgraded lazily: a still-valid local PAT is promoted to OneDrive after the first successful group open, otherwise the user is asked for the current shared group PAT.
 
 ## Invitations
 
-New invite payloads are v3 and contain:
+Current share links use an external **v4 encrypted envelope**. Admin and SuperAdmin users can create them from the dedicated **Condividi gruppo** page or from group settings.
+
+The envelope contains, in the URL fragment:
 
 - current group display name;
 - exact `owner/repository`;
 - invited Microsoft email;
-- shared group PAT.
+- the group PAT encrypted with **AES-256-GCM**;
+- the AES key required to decrypt that PAT.
 
-The invite URL is therefore a credential and must be shared privately. On web, fanta.plus removes the URL fragment immediately after parsing it, keeps the pending invite only in sessionStorage across the Microsoft OAuth redirect, and clears it after join/cancel.
+Group, repository and invited email are passed as AES-GCM additional authenticated data (AAD), so changing those fields makes decryption fail. The PAT itself is not present as plaintext in the URL representation.
 
-Older secret-free v2 invitations remain readable. They ask the participant for the shared group PAT once, then store it in OneDrive and locally.
+Fantazone is intentionally zero-backend and has no recipient public-key infrastructure. The link therefore has to be self-contained: the decryption key travels in the same URL fragment. **This means the full link is still a bearer credential.** Anyone who obtains the complete link has enough information to decrypt and use the group PAT. Encryption prevents the PAT from appearing directly as plaintext and gives authenticated/tamper-evident packaging; it does not make a leaked full link harmless.
+
+On web, fanta.plus removes the URL fragment immediately after parsing/decrypting it, keeps the pending invite only in `sessionStorage` across the Microsoft OAuth redirect, and clears it after join/cancel. The invited Microsoft email must match the authenticated identity before the repository credential is accepted.
+
+Older invitations remain readable:
+
+- v3 links carried the shared PAT directly inside a base64url-encoded fragment;
+- v2 links were secret-free and ask the participant for the shared group PAT once;
+- legacy v1 links are normalized into one of those flows when possible.
+
+After a successful join the PAT is verified against the exact repository, membership is verified against the Microsoft identity, and the credential is stored in the participant's private OneDrive app settings and local credential cache.
+
+## Browser routing and refresh
+
+The web application uses History API routes instead of keeping every screen at `/`. Group pages are represented as:
+
+- `/groups/<stored-group-id>/<page>`;
+- `/groups/<stored-group-id>/<page>/game/<game-id>` for an opened match;
+- `/join` for invite entry;
+- `/architecture` for the architecture overview.
+
+GitHub Pages publishes `index.html` also as `404.html`, so a direct request or F5 on one of these paths boots the SPA and restores the requested route. The group id in the URL is the per-user stable id stored in that Microsoft user's OneDrive catalog; it does not expose the PAT or GitHub repository name.
+
+League and season context remain a separate local preference, namespaced by Microsoft identity and group, and are restored together with the routed page.
 
 ## Repository preflight
 
@@ -86,7 +113,8 @@ For that reason:
 - use a dedicated fine-grained PAT for each Fantazone group repository;
 - scope it only to that repository;
 - grant only the repository permissions Fantazone needs;
+- share invite links only through a private channel and only with the intended participant;
 - rotate the PAT if an invite link is exposed or a participant should lose repository-level access;
-- treat invite links as secrets.
+- treat invite links as secrets even though the PAT inside current v4 links is encrypted.
 
 This is the accepted tradeoff for keeping Fantazone fully zero-backend.
