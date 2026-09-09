@@ -83,7 +83,18 @@ jobs:
           test -f src/app/dist/offline/serie-a/index.json
           test -n "$(find src/app/dist/offline/serie-a -maxdepth 1 -name '*.json.gz' -print -quit)"
       - name: Install Playwright Chromium
-        run: npx playwright install --with-deps chromium
+        shell: bash
+        run: |
+          # GitHub's Ubuntu image preconfigures Google Chrome. Playwright Chromium
+          # does not need that repository, and a transient Release/Packages race can
+          # otherwise make apt update fail inside `--with-deps`.
+          for source in /etc/apt/sources.list.d/*; do
+            [ -f "$source" ] || continue
+            if grep -q 'dl\.google\.com/linux/chrome' "$source"; then
+              sudo rm -f "$source"
+            fi
+          done
+          npx playwright install --with-deps chromium
       - name: Run Playwright browser tests
         run: npm run test:e2e
       - name: Upload Playwright report
