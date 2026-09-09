@@ -4,6 +4,7 @@ import {
   RealCalendarHelper,
   applyFormationPositions,
   validateFormation,
+  validateLiveFormationChange,
   type AuthenticatedGroupSession,
   type FormationPositionUpdate,
   type Group,
@@ -25,7 +26,7 @@ export type SaveGameFormationInput = {
 export type SavedFormation = {
   team: Team
   sha: string
-  source: 'season'
+  source: 'season' | 'day'
   serieADay: number
 }
 
@@ -58,12 +59,9 @@ export class FormationValidationError extends Error {
 }
 
 /**
- * Write-side replacement for Game/SaveTeam.
- *
- * The client only ever mutates the season Team. Immutable TeamDay snapshots are
- * produced by the group GitHub Action from the resulting Git commit, using the
- * commit timestamp as the authoritative Serie A cutoff clock. This means a client
- * can never rewrite an already frozen historical TeamDay directly.
+ * Before kickoff only the mutable season Team is changed and the GitHub Action freezes TeamDay.
+ * During an enabled live window the already-frozen TeamDay is the canonical write target, so the
+ * current match changes without leaking the live formation into the following giornata.
  */
 export class GroupFormationWriter {
   constructor(
@@ -82,11 +80,7 @@ export class GroupFormationWriter {
       throw new FormationAuthorizationError('Utente non valido nel gruppo selezionato.')
     }
 
-    const wrapper = await this.games.getGame({
-      leagueId: input.leagueId,
-      season: input.season,
-      gameId: input.gameId,
-    })
+    const wrapper = await this.games.getGame({ leagueId: input.leagueId, season: input.season, gameId: input.gameId })
     if (!wrapper) throw new FormationTeamNotFoundError()
 
     const requestedOwner = normalizeEmail(input.owner)
@@ -96,26 +90,61 @@ export class GroupFormationWriter {
     const annual = findAnnualTeam(group, requestedOwner, input.season)
     if (!annual) throw new FormationTeamNotFoundError()
     const canonicalOwner = annual.team.owner
-    const isOwner = [annual.team.owner, ...(annual.team.additionalOwners ?? [])]
-      .some(email => normalizeEmail(email) === normalizeEmail(actor.email))
+    const isOwner = GroupHelper.isOwner(annual.team, actor.email)
     const adminOverride = input.asAdmin === true && GroupHelper.hasRole(actor, IdentityRole.SuperAdmin)
-    if (!isOwner && !adminOverride) throw new FormationAuthorizationError('Non sei l’owner della squadra.')
+    if (!isOwner && !adminOverride) throw new FormationAuthorizationError('Non sei l’owner o co-owner della squadra.')
+
+    const league = group.leagues.find(item => item.id === input.leagueId)
+    const annualLeague = league?.years.find(item => item.year === input.season)
+    if (!annualLeague) throw new FormationLockedError()
+
+    if (wrapper.isLiveFormationWindow) {
+      const daySnapshot = await this.teams.getTeamDaySnapshot(
+        annual.basketId, input.season, wrapper.serieADay, canonicalOwner, { refresh: true },
+      )
+      const fallbackSnapshot = daySnapshot ? null : await this.teams.getTeamSnapshot(
+        annual.basketId, input.season, canonicalOwner, { refresh: true },
+      )
+      const base = daySnapshot?.value ?? fallbackSnapshot?.value
+      if (!base) throw new FormationTeamNotFoundError()
+
+      const canonical: Team = {
+        ...base,
+        owner: canonicalOwner,
+        additionalOwners: [...(annual.team.additionalOwners ?? [])],
+        formationChanges: base.formationChanges ?? 0,
+      }
+      const positioned = applyFormationPositions(canonical, input.positions)
+      const liveValidation = validateLiveFormationChange(canonical, positioned, annualLeague.settings)
+      if (!liveValidation.valid) throw new FormationValidationError([liveValidation.error])
+      const validation = validateFormation(positioned)
+      if (!validation.valid) throw new FormationValidationError(validation.errors)
+      const updated: Team = {
+        ...positioned,
+        formationChanges: liveValidation.nextFormationChanges,
+        lastUpdate: operationNow.toISOString(),
+      }
+      const sha = await this.teams.writeTeamDay(
+        annual.basketId,
+        input.season,
+        wrapper.serieADay,
+        canonicalOwner,
+        updated,
+        `feat: live formation ${canonicalOwner} day ${wrapper.serieADay}`,
+        daySnapshot ? { expectedSha: daySnapshot.sha } : { createOnly: true },
+      )
+      return { team: updated, sha, source: 'day', serieADay: wrapper.serieADay }
+    }
 
     if (!wrapper.canEdit) {
       const realCalendar = await this.realCalendars.getCalendar(input.season, { refresh: true })
       const liveSerieADay = realCalendar ? RealCalendarHelper.getLiveSerieADay(realCalendar, operationNow) : 0
       const isCurrentLiveDay = liveSerieADay === wrapper.serieADay
-      if (!isCurrentLiveDay) throw new FormationLockedError()
+      if (!adminOverride || !isCurrentLiveDay) throw new FormationLockedError()
     }
 
-    const seasonSnapshot = await this.teams.getTeamSnapshot(
-      annual.basketId,
-      input.season,
-      canonicalOwner,
-      { refresh: true },
-    )
+    const seasonSnapshot = await this.teams.getTeamSnapshot(annual.basketId, input.season, canonicalOwner, { refresh: true })
     if (!seasonSnapshot) throw new FormationTeamNotFoundError()
-
     const positioned = applyFormationPositions(seasonSnapshot.value, input.positions)
     const validation = validateFormation(positioned)
     if (!validation.valid) throw new FormationValidationError(validation.errors)

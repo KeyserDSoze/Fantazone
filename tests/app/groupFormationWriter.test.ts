@@ -1,8 +1,10 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
+  DefaultLeagueSetting,
   FantaSoccerRole,
   IdentityRole,
+  LeagueType,
   PlayerInTeamStatus,
   Role,
   getPlayerKey,
@@ -56,21 +58,40 @@ class FakeContentClient implements RepositoryContentClient {
 }
 
 const NOW = new Date('2026-09-02T12:00:00Z')
-const group: Group = {
-  id: 'amici',
-  name: 'Amici',
-  leagues: [],
-  users: [
-    { username: 'Owner', email: 'owner@example.com', role: IdentityRole.Participant },
-    { username: 'Co', email: 'coowner@example.com', role: IdentityRole.Participant },
-    { username: 'Other', email: 'other@example.com', role: IdentityRole.Participant },
-    { username: 'Admin', email: 'admin@example.com', role: IdentityRole.Participant | IdentityRole.SuperAdmin },
-  ],
-  baskets: [{
-    id: 'main',
-    name: 'Principale',
-    years: [{ year: 2026, teams: [{ name: 'Owner Team', owner: 'owner@example.com', additionalOwners: ['coowner@example.com'] }] }],
-  }],
+const users: UserOfAGroup[] = [
+  { username: 'Owner', email: 'owner@example.com', role: IdentityRole.Participant },
+  { username: 'Co', email: 'coowner@example.com', role: IdentityRole.Participant },
+  { username: 'Other', email: 'other@example.com', role: IdentityRole.Participant },
+  { username: 'Admin', email: 'admin@example.com', role: IdentityRole.Participant | IdentityRole.SuperAdmin },
+]
+
+function makeGroup(liveFormationChanges = 0): Group {
+  return {
+    id: 'amici',
+    name: 'Amici',
+    leagues: [{
+      id: 'league-a',
+      name: 'Campionato',
+      isMain: true,
+      type: LeagueType.League,
+      years: [{
+        year: 2026,
+        type: LeagueType.League,
+        settings: {
+          ...DefaultLeagueSetting,
+          liveFormationChanges,
+          allowLiveModuleChange: false,
+        },
+      }],
+      basketsId: ['main'],
+    }],
+    users: users.map(user => ({ ...user })),
+    baskets: [{
+      id: 'main',
+      name: 'Principale',
+      years: [{ year: 2026, teams: [{ name: 'Owner Team', owner: 'owner@example.com', additionalOwners: ['coowner@example.com'] }] }],
+    }],
+  }
 }
 
 const calendar: Calendar = {
@@ -104,6 +125,7 @@ function putPlatform(client: FakeContentClient, path: string, value: unknown, sh
 async function fixture(includeDay = false, schedule: Schedule = 'next4') {
   const client = new FakeContentClient()
   const team = makeTeam()
+  const group = makeGroup(schedule === 'live4' ? 2 : 0)
   put(client, GROUP_DOCUMENT_PATH, group)
   put(client, calendarDocumentPath('league-a', 2026), calendar)
   put(client, seasonTeamDocumentPath('main', 2026, 'owner@example.com'), team, 'sha-season')
@@ -111,12 +133,14 @@ async function fixture(includeDay = false, schedule: Schedule = 'next4') {
   if (schedule !== 'none') putPlatform(client, realCalendarDocumentPath(2026), realCalendar(schedule))
   return {
     client,
+    group,
     team,
     runtime: await GroupSessionRuntime.open(connection, client, { now: () => NOW }),
   }
 }
 
 function session(email: string): AuthenticatedGroupSession {
+  const group = makeGroup()
   const member = group.users.find(user => user.email === email) as UserOfAGroup
   return { group, member, identity: { provider: 'microsoft', subject: email, email } }
 }
@@ -144,7 +168,7 @@ test('saves the current season Team as normalized player references and leaves T
   assert.equal(season.lastUpdate, NOW.toISOString())
 })
 
-test('never overwrites an existing TeamDay when the current formation changes', async () => {
+test('never overwrites an existing TeamDay when a future formation changes', async () => {
   const { client, runtime, team } = await fixture(true)
   const result = await runtime.formationWriter.saveGameFormation({
     session: session('coowner@example.com'), leagueId: 'league-a', season: 2026, gameId: 'game-1',
@@ -178,27 +202,32 @@ test('rejects a historical non-live day for a normal owner', async () => {
   )
 })
 
-test('allows the current live day owner to change only the season Team for the next snapshot', async () => {
-  const { client, runtime, team } = await fixture(true, 'live4')
+test('writes the current TeamDay and increments its counter during the live window', async () => {
+  const { client, runtime } = await fixture(true, 'live4')
   const saved = await runtime.formationWriter.saveGameFormation({
     session: session('owner@example.com'), leagueId: 'league-a', season: 2026, gameId: 'game-1',
     owner: 'owner@example.com', positions: swap,
   })
-  assert.equal(saved.source, 'season')
+  assert.equal(saved.source, 'day')
   assert.equal(saved.serieADay, 4)
+  assert.equal(client.lastWriteSha, 'sha-day')
   const day = JSON.parse(client.files.get(key('KeyserDSoze', 'Fantazone.Amici', dayTeamDocumentPath('main', 2026, 4, 'owner@example.com'), 'main'))!.content) as Team
-  assert.deepEqual(day, team)
+  assert.equal(day.players.find(player => player.name === 'Fwd starter Alpha')?.position, FantaSoccerRole.Tribune)
+  assert.equal(day.players.find(player => player.name === 'Fwd tribune Alpha')?.position, FantaSoccerRole.Forward)
+  assert.equal(day.formationChanges, 1)
+  assert.equal(day.lastUpdate, NOW.toISOString())
 })
 
-test('allows an explicit SuperAdmin ownership override on the current live day without touching TeamDay', async () => {
-  const { client, runtime, team } = await fixture(true, 'live4')
+test('allows an explicit SuperAdmin ownership override on the current live TeamDay', async () => {
+  const { client, runtime } = await fixture(true, 'live4')
   const saved = await runtime.formationWriter.saveGameFormation({
     session: session('admin@example.com'), leagueId: 'league-a', season: 2026, gameId: 'game-1',
     owner: 'owner@example.com', asAdmin: true, positions: swap,
   })
+  assert.equal(saved.source, 'day')
   assert.equal(saved.serieADay, 4)
   const day = JSON.parse(client.files.get(key('KeyserDSoze', 'Fantazone.Amici', dayTeamDocumentPath('main', 2026, 4, 'owner@example.com'), 'main'))!.content) as Team
-  assert.deepEqual(day, team)
+  assert.equal(day.formationChanges, 1)
 })
 
 test('does not let SuperAdmin use an older non-live day to mutate the current Team', async () => {

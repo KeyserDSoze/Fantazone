@@ -21,6 +21,7 @@ import {
   GitHubJsonStore,
   GitHubLiveGroupRepository,
   GitHubMarketRepository,
+  GitHubOpeningCompetitionRepository,
   GitHubRankRepository,
   GitHubRealCalendarRepository,
   GitHubRealPlayersRepository,
@@ -97,6 +98,7 @@ export class GroupSessionRuntime {
   readonly auctionRepository: GitHubAuctionRepository
   readonly auctionSignalingRepository: GitHubAuctionSignalingRepository
   readonly auctionDiscovery: GroupAuctionDiscoveryService
+  readonly openingCompetitionRepository: GitHubOpeningCompetitionRepository
   /** Legacy persisted cache adapter kept temporarily for migration compatibility. Prefer liveComposer. */
   readonly liveGroupRepository: GitHubLiveGroupRepository
   readonly realCalendarRepository: GitHubRealCalendarRepository
@@ -135,6 +137,7 @@ export class GroupSessionRuntime {
     this.auctionRepository = new GitHubAuctionRepository(this.store, this.target)
     this.auctionSignalingRepository = new GitHubAuctionSignalingRepository(this.store, this.target, options.now)
     this.auctionDiscovery = new GroupAuctionDiscoveryService(this.auctionRepository, options.now)
+    this.openingCompetitionRepository = new GitHubOpeningCompetitionRepository(this.store, this.target)
     this.liveGroupRepository = new GitHubLiveGroupRepository(this.store, this.target)
     this.realCalendarRepository = new GitHubRealCalendarRepository(this.store, this.platformTarget)
     this.liveVoteRepository = new GitHubSerieAVoteRepository(this.store, this.platformTarget, 'live')
@@ -189,8 +192,6 @@ export class GroupSessionRuntime {
   async refreshGroup(): Promise<Group> {
     const canonical = await this.groupRepository.getGroup({ refresh: true })
     if (!canonical) throw new GroupDocumentUnavailableError(this.connection)
-    // Repository bootstrap owns creation of settings.json. A direct runtime used by
-    // tests/legacy callers stays read-only and simply falls back to canonical names.
     const settings = await this.groupSettingsRepository.getSettings({ refresh: true }) ?? createGroupRepositorySettings(canonical)
     const group = applyGroupRepositorySettings(canonical, settings)
     this.currentGroup = group
@@ -242,20 +243,13 @@ export class GroupSessionRuntime {
     const freshSnapshot = await this.store.readJson<unknown>(manifestLocation, { refresh: true })
     const freshManifest = decodeRepositoryRevisionManifest(freshSnapshot.value)
     const revision = freshManifest.revision
-
-    // When refresh fell back to IndexedDB/AsyncStorage there is no new remote fact
-    // to reconcile. Keep the current runtime and durable replica untouched.
-    if (freshSnapshot.fromCache) {
-      return { changed: false, previousRevision, revision, offline: true }
-    }
+    if (freshSnapshot.fromCache) return { changed: false, previousRevision, revision, offline: true }
 
     this.observedRevision = revision
     if (freshManifest.updating !== true && (previousRevision == null || previousRevision === revision)) {
       return { changed: false, previousRevision, revision, offline: false }
     }
 
-    // Preserve the durable offline replica until a replacement snapshot has been
-    // downloaded successfully by the app. Only stale process memory is discarded.
     this.store.invalidateRepositoryMemory(this.target.owner, this.target.repo, [manifestLocation])
     await this.refreshGroup()
     return { changed: true, previousRevision, revision, offline: false }
@@ -267,11 +261,6 @@ export class GroupSessionRuntime {
     return resolveGroupLogin(group, identity, expectedEmail)
   }
 
-  /**
-   * Censuses one email-bound recipient. Existing active users are returned without
-   * rewriting group.json; real changes are retried with a fresh canonical document
-   * when GitHub reports an optimistic-concurrency race.
-   */
   async inviteMember(actor: UserOfAGroup, input: { email: string; username?: string }): Promise<UserOfAGroup> {
     const email = normalizeEmail(input.email)
     if (!email || !email.includes('@')) throw new Error('Inserisci una email valida per l’invito.')
@@ -313,11 +302,6 @@ export class GroupSessionRuntime {
     throw new Error('Impossibile aggiornare i partecipanti del gruppo.')
   }
 
-  /**
-   * Shared-password invitations may enroll the currently verified Microsoft account
-   * as Participant. A deliberately disabled account is never reactivated by a generic
-   * invitation; only an Admin/SuperAdmin can re-enable it explicitly.
-   */
   async ensureSharedInviteParticipant(identity: ExternalIdentity): Promise<UserOfAGroup> {
     const email = normalizeEmail(identity.email)
     if (!email || !email.includes('@')) throw new Error('L’account Microsoft non espone una email valida.')

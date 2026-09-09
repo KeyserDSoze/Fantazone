@@ -4,36 +4,43 @@ import {
   DefaultLeagueSetting,
   IdentityRole,
   LeagueType,
+  cloneLeagueSetting,
   type Calendar,
   type Group,
   type RealCalendar,
 } from '../../src/domain/src/index'
 import { resolveFormationTarget } from '../../src/app/services/groupFormationTarget'
 
-const group: Group = {
-  id: 'amici',
-  name: 'Amici',
-  users: [{ username: 'Ale', email: 'ale@example.com', role: IdentityRole.Participant }],
-  leagues: [{
-    id: 'campionato',
-    name: 'Campionato',
-    isMain: true,
-    type: LeagueType.League,
-    basketsId: ['a'],
-    years: [{ year: 15, type: LeagueType.League, settings: DefaultLeagueSetting }],
-  }],
-  baskets: [{
-    id: 'a',
-    name: 'A',
-    years: [{
-      year: 15,
-      teams: [
-        { name: 'Ale FC', owner: 'owner@example.com', additionalOwners: ['ale@example.com'] },
-        { name: 'Bob FC', owner: 'bob@example.com', additionalOwners: [] },
-      ],
+function makeGroup(liveFormationChanges = 0): Group {
+  const settings = cloneLeagueSetting(DefaultLeagueSetting)
+  settings.liveFormationChanges = liveFormationChanges
+  return {
+    id: 'amici',
+    name: 'Amici',
+    users: [{ username: 'Ale', email: 'ale@example.com', role: IdentityRole.Participant }],
+    leagues: [{
+      id: 'campionato',
+      name: 'Campionato',
+      isMain: true,
+      type: LeagueType.League,
+      basketsId: ['a'],
+      years: [{ year: 15, type: LeagueType.League, settings }],
     }],
-  }],
+    baskets: [{
+      id: 'a',
+      name: 'A',
+      years: [{
+        year: 15,
+        teams: [
+          { name: 'Ale FC', owner: 'owner@example.com', additionalOwners: ['ale@example.com'] },
+          { name: 'Bob FC', owner: 'bob@example.com', additionalOwners: [] },
+        ],
+      }],
+    }],
+  }
 }
+
+const group = makeGroup()
 
 const calendar: Calendar = {
   year: 15,
@@ -89,9 +96,9 @@ test('formation target resolves an additional owner to the canonical team owner 
   })
 })
 
-test('formation target uses the live Serie A day while a round is in progress', () => {
+test('formation target stays on the live Serie A day only when live changes are enabled', () => {
   const target = resolveFormationTarget({
-    group,
+    group: makeGroup(2),
     leagueId: 'campionato',
     season: 15,
     identityEmail: 'ale@example.com',
@@ -101,6 +108,34 @@ test('formation target uses the live Serie A day while a round is in progress', 
   })
   assert.equal(target?.gameId, 'g1')
   assert.equal(target?.serieADay, 1)
+})
+
+test('formation target moves to the next day when live changes are disabled', () => {
+  const target = resolveFormationTarget({
+    group,
+    leagueId: 'campionato',
+    season: 15,
+    identityEmail: 'ale@example.com',
+    calendar,
+    realCalendar,
+    now: new Date('2026-08-30T19:00:00.000Z'),
+  })
+  assert.equal(target?.gameId, 'g2')
+  assert.equal(target?.serieADay, 2)
+})
+
+test('formation target moves to the next day after the four-hour live edit tail closes', () => {
+  const target = resolveFormationTarget({
+    group: makeGroup(2),
+    leagueId: 'campionato',
+    season: 15,
+    identityEmail: 'ale@example.com',
+    calendar,
+    realCalendar,
+    now: new Date('2026-08-30T22:00:01.000Z'),
+  })
+  assert.equal(target?.gameId, 'g2')
+  assert.equal(target?.serieADay, 2)
 })
 
 test('formation target falls back to the first pending owned game without a RealCalendar', () => {

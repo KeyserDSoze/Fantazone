@@ -70,6 +70,8 @@ test('writes mutable Team as player references and hydrates it from the global m
     additionalOwners: [],
     players: [{ playerKey: 'portiere', price: 12, revenue: 12, status: 0, position: 0 }],
     moneyFromRank: 0,
+    openingCompetitionPrize: 0,
+    formationChanges: 0,
     lastUpdate: null,
   })
   assert.equal('name' in persisted.players[0], false)

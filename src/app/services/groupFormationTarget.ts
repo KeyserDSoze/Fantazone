@@ -3,6 +3,7 @@ import {
   GameResultHelper,
   GroupHelper,
   RealCalendarHelper,
+  getLiveFormationWindow,
   type Calendar,
   type CalendarDay,
   type CalendarGame,
@@ -38,18 +39,23 @@ export function resolveFormationTarget(input: {
   if (ownedGames.length === 0) return null
 
   const now = input.now ?? new Date()
+  const league = input.group.leagues.find(item => item.id === input.leagueId) ?? null
+  const annual = league?.years.find(item => item.year === input.season) ?? null
   const context = input.realCalendar ? RealCalendarHelper.context(input.realCalendar, now) : null
-  const targetSerieADay = context?.liveDay?.serieADay
-    ?? context?.nextDay?.serieADay
-    ?? context?.lastDay?.serieADay
-    ?? null
+  const liveWindow = input.realCalendar && annual
+    ? getLiveFormationWindow(input.realCalendar, annual.settings, now)
+    : null
+  const targetSerieADay = liveWindow?.serieADay ?? context?.nextDay?.serieADay ?? null
+
+  // With a canonical RealCalendar, no live window and no next day means the season is over.
+  // Do not fall back to an historical or arbitrary pending fantasy game.
+  if (input.realCalendar && targetSerieADay == null) return null
 
   const exact = targetSerieADay == null
     ? null
     : ownedGames.find(entry => entry.day.serieADay === targetSerieADay) ?? null
 
-  const target = exact
-    ?? chooseFallbackGame(ownedGames, targetSerieADay)
+  const target = exact ?? chooseFallbackGame(ownedGames, targetSerieADay)
   if (!target) return null
 
   return {

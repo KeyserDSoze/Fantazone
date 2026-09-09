@@ -15,6 +15,19 @@ const releases: Release[] = [
   {
     version: APP_VERSION,
     date: RELEASE_DATE,
+    title: 'Parità nuovo anno: co-owner, cambi live e campionato iniziale',
+    items: [
+      { category: 'Miglioria', text: 'Owner e co-owner vengono riconosciuti con confronto email case-insensitive nei percorsi di formazione, così le comproprietà ereditate dai dati legacy continuano a funzionare anche con differenze di maiuscole/minuscole.' },
+      { category: 'Nuovo', text: 'Le impostazioni annuali supportano ora liveFormationChanges e allowLiveModuleChange: durante la giornata è possibile fare un numero configurabile di scambi a due giocatori, con modulo bloccabile e contatore persistito sulla TeamDay corrente.' },
+      { category: 'Nuovo', text: 'La lega principale può abilitare il Campionato iniziale: usa le rose della stagione precedente, i voti della nuova stagione e una formazione distinta per ciascuna giornata prevista.' },
+      { category: 'Miglioria', text: 'La classifica del Campionato iniziale conserva i pari merito per posizione e assegna i premi configurati senza spezzare artificialmente i punteggi uguali.' },
+      { category: 'Fix', text: 'Il premio del Campionato iniziale viene persistito sulla squadra prima dell’asta iniziale e viene sottratto dal costo della rosa, rendendo subito disponibile il credito nel budget d’asta anche dopo reload o cambio dispositivo.' },
+      { category: 'Architettura', text: 'La parità con il backend 2.0.9 resta zero-backend: controlli e scritture usano documenti canonici GitHub; le modifiche live scrivono la TeamDay corrente e non vengono accodate offline oltre la finestra temporale.' },
+    ],
+  },
+  {
+    version: '0.3.5',
+    date: '9 settembre 2026',
     title: 'Inviti generali e scritture GitHub più robuste',
     items: [
       { category: 'Nuovo', text: 'Condividi gruppo offre ora due modalità affiancate: invito personale legato a una email Microsoft oppure accesso generale riutilizzabile protetto da una password consegnata separatamente.' },

@@ -21,6 +21,7 @@ import { GroupLeagueAdminScreen } from './group-league-admin-screen'
 import { GroupLiveScreen } from './group-live-screen'
 import { GroupMarketCreateScreen } from './group-market-create-screen'
 import { GroupMarketTradesScreen } from './group-market-trades-screen'
+import { GroupOpeningCompetitionScreen } from './group-opening-competition-screen'
 import { GroupPatchNotesScreen } from './group-patch-notes-screen'
 import { GroupPlayersScreen } from './group-players-screen'
 import { GroupProductShell } from './group-product-shell'
@@ -52,62 +53,29 @@ function getStoredGroupSelection(group: Group, identityEmail: string): GroupNavi
   const fallback = getDefaultGroupSelection(group)
   const storage = getWebStorage()
   if (!storage) return fallback
-
   try {
     const raw = storage.getItem(getGroupSelectionStorageKey(group.id, identityEmail))
     if (!raw) return fallback
-
     const parsed = JSON.parse(raw) as Partial<GroupNavigationSelection> | null
     if (!parsed || typeof parsed !== 'object') return fallback
-
-    const leagueId = parsed.leagueId == null
-      ? null
-      : typeof parsed.leagueId === 'string'
-        ? parsed.leagueId
-        : fallback.leagueId
-    const year = parsed.year == null
-      ? null
-      : typeof parsed.year === 'number' && Number.isInteger(parsed.year)
-        ? parsed.year
-        : fallback.year
-
+    const leagueId = parsed.leagueId == null ? null : typeof parsed.leagueId === 'string' ? parsed.leagueId : fallback.leagueId
+    const year = parsed.year == null ? null : typeof parsed.year === 'number' && Number.isInteger(parsed.year) ? parsed.year : fallback.year
     return normalizeGroupSelection(group, { leagueId, year })
-  } catch {
-    return fallback
-  }
+  } catch { return fallback }
 }
 
 function storeGroupSelection(groupId: string, identityEmail: string, selection: GroupNavigationSelection): void {
   const storage = getWebStorage()
   if (!storage) return
-
-  try {
-    storage.setItem(getGroupSelectionStorageKey(groupId, identityEmail), JSON.stringify(selection))
-  } catch {
-    // localStorage may be unavailable or full: the in-memory selection remains valid.
-  }
+  try { storage.setItem(getGroupSelectionStorageKey(groupId, identityEmail), JSON.stringify(selection)) } catch { /* best effort */ }
 }
 
 function getGroupSelectionStorageKey(groupId: string, identityEmail: string): string {
   return `${GROUP_SELECTION_STORAGE_PREFIX}:${encodeURIComponent(identityEmail.trim().toLowerCase())}:${encodeURIComponent(groupId)}`
 }
+function getWebStorage(): Storage | null { if (typeof window === 'undefined') return null; try { return window.localStorage } catch { return null } }
 
-function getWebStorage(): Storage | null {
-  if (typeof window === 'undefined') return null
-  try { return window.localStorage } catch { return null }
-}
-
-export function GroupDashboardScreen({
-  runtime,
-  session,
-  theme,
-  browserPage,
-  onBrowserNavigate,
-  onToggleTheme,
-  onLogout,
-  onDisconnect,
-  onExploreArchitecture,
-}: Props) {
+export function GroupDashboardScreen({ runtime, session, theme, browserPage, onBrowserNavigate, onToggleTheme, onLogout, onDisconnect, onExploreArchitecture }: Props) {
   void onLogout
   const [route, setRoute] = useState<GroupProductRoute>(() => browserPage?.route ?? 'home')
   const [selection, setSelection] = useState<GroupNavigationSelection>(() => getStoredGroupSelection(runtime.group, session.identity.email))
@@ -131,7 +99,6 @@ export function GroupDashboardScreen({
       return next
     })
   }
-
   function selectYear(year: number) {
     clearSelectedGame('replace')
     setSelection(current => {
@@ -140,48 +107,14 @@ export function GroupDashboardScreen({
       return next
     })
   }
-
-  function navigate(next: GroupProductRoute) {
-    setRoute(next)
-    setSelectedGameId(null)
-    onBrowserNavigate?.({ route: next, gameId: null }, 'push')
-  }
-
-  function openGame(gameId: string) {
-    setSelectedGameId(gameId)
-    onBrowserNavigate?.({ route, gameId }, 'push')
-  }
-
-  function closeGame() {
-    clearSelectedGame('replace')
-  }
-
-  function clearSelectedGame(mode: BrowserNavigationMode) {
-    if (!selectedGameId) return
-    setSelectedGameId(null)
-    onBrowserNavigate?.({ route, gameId: null }, mode)
-  }
-
-  function changeGroup() {
-    markManualGroupSwitchRequest()
-    void onDisconnect()
-  }
+  function navigate(next: GroupProductRoute) { setRoute(next); setSelectedGameId(null); onBrowserNavigate?.({ route: next, gameId: null }, 'push') }
+  function openGame(gameId: string) { setSelectedGameId(gameId); onBrowserNavigate?.({ route, gameId }, 'push') }
+  function closeGame() { clearSelectedGame('replace') }
+  function clearSelectedGame(mode: BrowserNavigationMode) { if (!selectedGameId) return; setSelectedGameId(null); onBrowserNavigate?.({ route, gameId: null }, mode) }
+  function changeGroup() { markManualGroupSwitchRequest(); void onDisconnect() }
 
   return (
-    <GroupProductShell
-      group={group}
-      member={session.member}
-      identityEmail={session.identity.email}
-      route={route}
-      selection={selection}
-      theme={theme}
-      onToggleTheme={onToggleTheme}
-      onRouteChange={navigate}
-      onLeagueChange={selectLeague}
-      onYearChange={selectYear}
-      onChangeGroup={changeGroup}
-      onExploreArchitecture={onExploreArchitecture}
-    >
+    <GroupProductShell group={group} member={session.member} identityEmail={session.identity.email} route={route} selection={selection} theme={theme} onToggleTheme={onToggleTheme} onRouteChange={navigate} onLeagueChange={selectLeague} onYearChange={selectYear} onChangeGroup={changeGroup} onExploreArchitecture={onExploreArchitecture}>
       {selectedGameId ? (
         <GroupGameScreen runtime={runtime} selection={selection} gameId={selectedGameId} onBack={closeGame} />
       ) : route === 'home' ? (
@@ -194,6 +127,8 @@ export function GroupDashboardScreen({
         <GroupLiveScreen runtime={runtime} selection={selection} onOpenGame={openGame} />
       ) : route === 'formation' ? (
         <GroupFormationScreen runtime={runtime} session={session} selection={selection} />
+      ) : route === 'opening-competition' ? (
+        <GroupOpeningCompetitionScreen runtime={runtime} session={session} selection={selection} />
       ) : route === 'teams' ? (
         <GroupTeamsScreen runtime={runtime} selection={selection} />
       ) : route === 'players' ? (
@@ -233,8 +168,4 @@ export function GroupDashboardScreen({
   )
 }
 
-/** Adding a GroupProductRoute without wiring a screen must fail typecheck. */
-function UnreachableRoute({ route }: { route: never }) {
-  void route
-  return null
-}
+function UnreachableRoute({ route }: { route: never }) { void route; return null }
