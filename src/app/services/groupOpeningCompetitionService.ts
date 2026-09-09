@@ -52,7 +52,7 @@ export async function prepareOpeningCompetition(
     )
   }
 
-  const scores = new Map(members.map(member => [normalize(member.team.owner), 0] as const))
+  const scores = new Map<string, number>(members.map(member => [normalize(member.team.owner), 0]))
   const leagueType = GroupHelper.getAnnualType(league, year)
   for (let day = 1; day <= settings.serieADays; day += 1) {
     const officialVotes = await runtime.officialVoteRepository.getVotes(year, day, { refresh: true })
