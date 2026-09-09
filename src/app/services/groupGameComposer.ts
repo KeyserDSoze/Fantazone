@@ -4,6 +4,7 @@ import {
   GroupHelper,
   RealCalendarHelper,
   TeamHelper,
+  getLiveFormationWindow,
   type Calendar,
   type CalendarDay,
   type CalendarGame,
@@ -30,10 +31,6 @@ type LocatedGame = {
   game: CalendarGame
 }
 
-/**
- * Local replacement for GET /Game/Get. It joins canonical Group, Calendar,
- * global RealCalendar and Team/TeamDay documents without persisting an aggregate.
- */
 export class GroupGameComposer {
   constructor(
     private readonly getGroup: () => Group,
@@ -51,12 +48,16 @@ export class GroupGameComposer {
     const located = findGame(calendar, input.gameId)
     if (!located) return null
 
+    const group = this.getGroup()
+    const annual = GroupHelper.getAnnualLeague(group, input.leagueId, input.season)
+    if (!annual) return null
     const realCalendar = await this.realCalendars.getCalendar(input.season)
     const nextSerieADay = realCalendar
       ? RealCalendarHelper.getNextSerieADay(realCalendar, this.now()) ?? 39
       : 39
-    const canEdit = located.day.serieADay >= nextSerieADay
-    const group = this.getGroup()
+    const liveWindow = getLiveFormationWindow(realCalendar, annual.settings, this.now())
+    const isLiveFormationWindow = liveWindow?.serieADay === located.day.serieADay
+    const canEdit = located.day.serieADay >= nextSerieADay || isLiveFormationWindow
 
     const [home, away] = await Promise.all([
       this.composeTeam(group, input.season, located.day.serieADay, located.game, 'home', canEdit),
@@ -72,7 +73,11 @@ export class GroupGameComposer {
       teams: [home, away],
       canEdit,
       nextSerieADay,
-      editabilitySource: realCalendar ? 'serie-a-context' : 'legacy-fallback',
+      editabilitySource: isLiveFormationWindow ? 'live-formation-window' : (realCalendar ? 'serie-a-context' : 'legacy-fallback'),
+      isLiveFormationWindow,
+      liveFormationDeadline: isLiveFormationWindow ? liveWindow?.deadline ?? null : null,
+      liveFormationChangesAllowed: annual.settings.liveFormationChanges ?? 0,
+      allowLiveModuleChange: annual.settings.allowLiveModuleChange ?? false,
       requiresScoreCalculation: !canEdit && !GameResultHelper.hasValue(located.game.result),
     }
   }
@@ -120,6 +125,7 @@ function projectTeam(side: GameSide, team: Team, source: 'day' | 'season'): Game
       current: player,
       currentPosition: player.position,
     })),
+    formationChanges: team.formationChanges ?? 0,
     lastUpdate: team.lastUpdate,
     source,
   }
@@ -132,6 +138,7 @@ function missingTeam(side: GameSide, name: string, owner: string): GameTeam {
     owner,
     additionalOwners: [],
     players: [],
+    formationChanges: 0,
     lastUpdate: null,
     source: 'missing',
   }
