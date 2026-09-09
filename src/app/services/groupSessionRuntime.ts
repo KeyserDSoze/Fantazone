@@ -28,6 +28,7 @@ import {
   GitHubTeamRepository,
   REPOSITORY_MANIFEST_PATH,
   RepositoryRevisionContentClient,
+  RepositoryWriteConflictError,
   type GitHubRepo,
   type GroupRepositorySettings,
   type GroupRepositoryTarget,
@@ -71,6 +72,8 @@ export const DEFAULT_PLATFORM_TARGET: PlatformRepositoryTarget = {
   repo: 'Fantazone',
   ref: 'main',
 }
+
+const GROUP_MUTATION_ATTEMPTS = 4
 
 export class GroupDocumentUnavailableError extends Error {
   constructor(public readonly connection: GroupConnection) {
@@ -264,34 +267,98 @@ export class GroupSessionRuntime {
     return resolveGroupLogin(group, identity, expectedEmail)
   }
 
+  /**
+   * Censuses one email-bound recipient. Existing active users are returned without
+   * rewriting group.json; real changes are retried with a fresh canonical document
+   * when GitHub reports an optimistic-concurrency race.
+   */
   async inviteMember(actor: UserOfAGroup, input: { email: string; username?: string }): Promise<UserOfAGroup> {
-    const group = await this.refreshGroup()
-    const currentActor = GroupHelper.findUserByEmail(group, actor.email)
-    const canManageUsers = Boolean(currentActor) && (
-      GroupHelper.hasRole(currentActor!, IdentityRole.Admin) ||
-      GroupHelper.hasRole(currentActor!, IdentityRole.SuperAdmin)
-    )
-    if (!canManageUsers) throw new Error('Solo Admin o SuperAdmin possono invitare utenti nel gruppo.')
-
     const email = normalizeEmail(input.email)
     if (!email || !email.includes('@')) throw new Error('Inserisci una email valida per l’invito.')
-    const existingIndex = group.users.findIndex(user => normalizeEmail(user.email) === email)
-    const existing = existingIndex >= 0 ? group.users[existingIndex] : null
-    const username = input.username?.trim() || existing?.username || email.split('@')[0]
-    const invited: UserOfAGroup = existing
-      ? { ...existing, username, email: existing.email, role: existing.role === IdentityRole.None ? IdentityRole.Participant : existing.role }
-      : { username, email, role: IdentityRole.Participant }
 
-    const users = [...group.users]
-    if (existingIndex >= 0) users[existingIndex] = invited
-    else users.push(invited)
-    const updated: Group = { ...group, users }
-    await this.groupRepository.writeGroup(updated, `chore: invite ${email}`)
-    this.currentGroup = updated
-    return invited
+    for (let attempt = 0; attempt < GROUP_MUTATION_ATTEMPTS; attempt += 1) {
+      const canonical = await this.groupRepository.getGroup({ refresh: true })
+      if (!canonical) throw new GroupDocumentUnavailableError(this.connection)
+      const currentActor = GroupHelper.findUserByEmail(canonical, actor.email)
+      const canManageUsers = Boolean(currentActor) && (
+        GroupHelper.hasRole(currentActor!, IdentityRole.Admin) ||
+        GroupHelper.hasRole(currentActor!, IdentityRole.SuperAdmin)
+      )
+      if (!canManageUsers) throw new Error('Solo Admin o SuperAdmin possono invitare utenti nel gruppo.')
+
+      const existingIndex = canonical.users.findIndex(user => normalizeEmail(user.email) === email)
+      const existing = existingIndex >= 0 ? canonical.users[existingIndex] : null
+      const username = input.username?.trim() || existing?.username || email.split('@')[0]
+      const invited: UserOfAGroup = existing
+        ? { ...existing, username, email: existing.email, role: existing.role === IdentityRole.None ? IdentityRole.Participant : existing.role }
+        : { username, email, role: IdentityRole.Participant }
+
+      if (existing && invited.username === existing.username && invited.role === existing.role) {
+        await this.refreshGroup()
+        return GroupHelper.findUserByEmail(this.group, email) ?? invited
+      }
+
+      const users = [...canonical.users]
+      if (existingIndex >= 0) users[existingIndex] = invited
+      else users.push(invited)
+      try {
+        await this.groupRepository.writeGroup({ ...canonical, users }, `chore: invite ${email}`)
+        await this.refreshGroup()
+        return GroupHelper.findUserByEmail(this.group, email) ?? invited
+      } catch (error) {
+        if (!(error instanceof RepositoryWriteConflictError) || attempt === GROUP_MUTATION_ATTEMPTS - 1) throw error
+        await sleep(120 * (attempt + 1))
+      }
+    }
+    throw new Error('Impossibile aggiornare i partecipanti del gruppo.')
+  }
+
+  /**
+   * Shared-password invitations may enroll the currently verified Microsoft account
+   * as Participant. A deliberately disabled account is never reactivated by a generic
+   * invitation; only an Admin/SuperAdmin can re-enable it explicitly.
+   */
+  async ensureSharedInviteParticipant(identity: ExternalIdentity): Promise<UserOfAGroup> {
+    const email = normalizeEmail(identity.email)
+    if (!email || !email.includes('@')) throw new Error('L’account Microsoft non espone una email valida.')
+
+    for (let attempt = 0; attempt < GROUP_MUTATION_ATTEMPTS; attempt += 1) {
+      const canonical = await this.groupRepository.getGroup({ refresh: true })
+      if (!canonical) throw new GroupDocumentUnavailableError(this.connection)
+      const existing = GroupHelper.findUserByEmail(canonical, email)
+      if (existing) {
+        if (existing.role === IdentityRole.None) {
+          throw new Error('Questo account è stato disabilitato nel gruppo e non può rientrare tramite l’invito generale.')
+        }
+        await this.refreshGroup()
+        return GroupHelper.findUserByEmail(this.group, email) ?? existing
+      }
+
+      const participant: UserOfAGroup = {
+        username: identity.displayName?.trim() || email.split('@')[0],
+        email,
+        role: IdentityRole.Participant,
+      }
+      try {
+        await this.groupRepository.writeGroup(
+          { ...canonical, users: [...canonical.users, participant] },
+          `chore: join shared invite ${email}`,
+        )
+        await this.refreshGroup()
+        return GroupHelper.findUserByEmail(this.group, email) ?? participant
+      } catch (error) {
+        if (!(error instanceof RepositoryWriteConflictError) || attempt === GROUP_MUTATION_ATTEMPTS - 1) throw error
+        await sleep(120 * (attempt + 1))
+      }
+    }
+    throw new Error('Impossibile censire il partecipante nel gruppo.')
   }
 }
 
 function normalizeEmail(email: string | null | undefined): string {
   return email?.trim().toLowerCase() ?? ''
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms))
 }

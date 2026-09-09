@@ -313,7 +313,9 @@ export default function App() {
     setError(null)
     beginOperation('Accesso Microsoft', 'Apertura della procedura di autenticazione…')
     try {
-      const completed = await beginMicrosoftAppLogin(pendingInvite?.email)
+      const completed = await beginMicrosoftAppLogin(
+        pendingInvite?.mode === 'email' ? pendingInvite.email : undefined,
+      )
       if (!completed) return
       updateOperation('Caricamento dei tuoi gruppi da OneDrive…')
       const remoteSettings = await loadUserSettings(completed.graphAccessToken)
@@ -369,8 +371,10 @@ export default function App() {
 
   async function joinInvitedGroup(connection: ConnectedGroup) {
     if (!microsoftSession || !pendingInvite) throw new Error('Invito Fantazone non disponibile.')
-    if (microsoftSession.identity.email.toLowerCase() !== pendingInvite.email) {
-      throw new Error(`Questo invito è per ${pendingInvite.email}.`)
+    const expectedEmail = pendingInvite.mode === 'email' ? pendingInvite.email : undefined
+    if (pendingInvite.mode === 'email' && !expectedEmail) throw new Error('L’invito personale non contiene una email valida.')
+    if (expectedEmail && microsoftSession.identity.email.toLowerCase() !== expectedEmail) {
+      throw new Error(`Questo invito è per ${expectedEmail}.`)
     }
     if (connection.repository.full_name.toLowerCase() !== pendingInvite.repository.toLowerCase()) {
       throw new Error(`Il PAT deve aprire esattamente ${pendingInvite.repository}.`)
@@ -379,8 +383,15 @@ export default function App() {
     beginOperation('Ingresso nel gruppo', 'Verifica dell’invito e preparazione della copia locale…')
     try {
       const session = await freshMicrosoftSession(true)
-      const invitedConnection: ConnectedGroup = { ...connection, expectedEmail: pendingInvite.email }
+      if (expectedEmail && session.identity.email.toLowerCase() !== expectedEmail) {
+        throw new Error(`Questo invito è per ${expectedEmail}.`)
+      }
+      const invitedConnection: ConnectedGroup = { ...connection, expectedEmail }
       const opened = await openGroupConnection(invitedConnection)
+      if (pendingInvite.mode === 'shared') {
+        updateOperation('Registrazione del tuo account Microsoft come Partecipante…')
+        await opened.ensureSharedInviteParticipant(session.identity)
+      }
       await authorizeIdentity(opened, session.identity)
       await saveGroupConnection(invitedConnection, credentialOwnerKey(session.identity))
 

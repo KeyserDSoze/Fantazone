@@ -52,31 +52,79 @@ OneDrive is the synchronized source for the group credential. Settings catalogs 
 
 ## Invitations
 
-Fantazone supports **one current invitation format only**. There is no invite schema/version switch and obsolete invitation links are intentionally not decoded.
+Fantazone supports **one current invitation envelope** with two access modes. There is no invite schema/version switch and obsolete invitation shapes are intentionally not decoded.
 
-Admin and SuperAdmin users create invitations from the dedicated **Condividi gruppo** page. Fantazone produces two separate values:
+Admin and SuperAdmin users create both modes from the dedicated **Condividi gruppo** page.
 
-1. a link containing the encrypted invitation envelope;
-2. a random unlock code generated locally for that individual invitation.
+### Personal invitation by email
 
-The URL fragment contains only:
+This mode is appropriate when the administrator wants to address one precise Microsoft identity.
 
+Fantazone:
+
+1. censuses the target email as Participant if it is not already present;
+2. generates a random 160-bit unlock code;
+3. generates a random 128-bit salt;
+4. derives the AES-256 key from that code with PBKDF2-HMAC-SHA-256;
+5. encrypts the shared PAT with AES-256-GCM;
+6. creates a link bound to that Microsoft email.
+
+If the email is already an active member, issuing another personal invitation does not rewrite `group.json`. A deliberately disabled member may only be re-enabled by an administrator-managed personal census, never by the generic password flow below.
+
+The administrator sends two values separately: the encrypted link and the random unlock code. Microsoft login must match the email embedded in the invitation.
+
+### Generic invitation with a shared password
+
+This mode is designed for groups where the administrator does not want to census every email in advance.
+
+The administrator chooses a password of at least 16 characters or asks Fantazone to generate a high-entropy password. Fantazone then:
+
+1. generates a random 128-bit salt;
+2. derives the AES-256 key from the shared password with PBKDF2-HMAC-SHA-256;
+3. encrypts the same group PAT with AES-256-GCM;
+4. creates one reusable invitation link with **no Microsoft email inside it**.
+
+The administrator can distribute the same link and password to multiple people. Every recipient still authenticates with Microsoft. After the password decrypts a valid PAT for the exact repository:
+
+- an existing active member enters normally;
+- an unknown Microsoft email is added automatically to `group.users` as `Participant`;
+- an account already present with `IdentityRole.None` is rejected and is not automatically reactivated;
+- the generic flow can never create Admin or SuperAdmin users.
+
+Concurrent first joins and administrator census writes re-read the canonical group document and retry optimistic GitHub conflicts rather than blindly overwriting another change.
+
+### Encrypted envelope
+
+Both modes use the same current envelope. The URL fragment contains:
+
+- invitation mode (`email` or `shared`);
 - current group display name;
 - exact `owner/repository`;
-- invited Microsoft email;
-- the group PAT encrypted with **AES-256-GCM**.
+- invited Microsoft email only in personal mode;
+- random salt and PBKDF2 work factor;
+- the group PAT encrypted with AES-256-GCM.
 
-It does **not** contain the PAT plaintext, the AES key, or the unlock code. Group, repository and invited email are passed as AES-GCM additional authenticated data (AAD), so changing those fields makes decryption fail.
+It does **not** contain the PAT plaintext, the AES key, the personal unlock code, or the shared password.
 
-The unlock code is generated from 160 bits of cryptographically secure random data and rendered in grouped, human-readable characters. Fantazone hashes that high-entropy code with SHA-256 in the Fantazone invite domain and imports the result as the AES-256 key. Because the code itself already has high entropy, it is not a short numeric OTP that could realistically be brute-forced offline.
+Mode, group, repository, optional email, salt and work factor are AES-GCM additional authenticated data (AAD). Changing any of those fields makes decryption fail.
 
-The inviter should send the link and unlock code through separate messages or, preferably, separate channels. Possessing only the link is insufficient to recover the PAT; possessing only the unlock code is also insufficient.
+Fantazone currently uses PBKDF2-HMAC-SHA-256 with 120,000 iterations. WebCrypto is used where available; native runtimes use an equivalent portable implementation so the same invitation can be created or opened across web, iOS and Android.
 
-On web, fanta.plus removes the URL fragment immediately after parsing it. `sessionStorage` keeps only the encrypted envelope across the Microsoft OAuth redirect; the unlock code is never persisted alongside it. After Microsoft login, the invited email must match the authenticated identity and the user must enter the separately received unlock code before the PAT can be decrypted.
+On web, fanta.plus removes the URL fragment immediately after parsing it. `sessionStorage` keeps only the encrypted envelope across the Microsoft OAuth redirect. Neither the personal unlock code nor the shared password is persisted alongside the ciphertext.
 
-After a successful unlock, the PAT is verified against the exact repository, membership is verified against the Microsoft identity, and the credential is stored in the participant's private OneDrive app settings and local credential cache.
+After successful decryption, the PAT is verified against the exact repository before the credential is persisted in the participant's private OneDrive app settings and local credential cache.
 
-The unlock code is generated once per invitation and Fantazone does not save it. Because the product intentionally has no trusted backend, this is not a server-enforced single-use token: somebody who retained both the encrypted link and the unlock code could reproduce the decryption while the shared PAT remains valid. The practical security boundary is therefore the separation of link and code plus Microsoft email verification; revoking repository-level access still requires rotating the shared PAT.
+## Reuse and revocation
+
+A personal unlock code is generated once per invitation and Fantazone does not save it. Because there is no trusted backend, however, it is not a server-enforced one-time token: somebody retaining both link and code can repeat the decryption while the shared PAT remains valid.
+
+A generic password invitation is intentionally reusable. Anybody possessing both the link and the password can attempt Microsoft-authenticated enrollment until one of those factors or the underlying PAT is changed.
+
+Application membership revocation and repository-level revocation are different boundaries:
+
+- setting a member role to `None` prevents that Microsoft account from re-entering through the generic invitation;
+- replacing the generic link/password prevents future users who know only the old pair from decrypting a newly generated invitation, but does not revoke a PAT they may already have obtained;
+- rotating the dedicated GitHub PAT is required for strong repository-level revocation after the credential itself may have been exposed.
 
 ## Browser routing and refresh
 
@@ -104,6 +152,8 @@ Before an existing group credential is accepted, the app checks:
 
 `ensureGroupInitialized()` then runs before persistence. It create-only initializes canonical files including root `settings.json`, and installs/upgrades only Fantazone-managed workflow/runtime files. If the runtime must be installed/upgraded, that operation is the real check that the PAT can modify managed workflows. The credential is not saved as usable until runtime opening and Microsoft membership authorization succeed.
 
+Canonical app writes use a two-phase `manifest.json` revision. A race while starting a write remains a real failure, but once the canonical document has already been committed, a later race while publishing `updating:false` is no longer reported to the UI as if the document itself had failed. The repository remains conservatively marked updating until a later successful transition.
+
 The real integration suite validates these capabilities against `Fantazone.Test`; a token with Contents write but without Workflows write can mutate league data but deliberately fails runtime bootstrap.
 
 ## Security boundary
@@ -115,8 +165,9 @@ For that reason:
 - use a dedicated fine-grained PAT for each Fantazone group repository;
 - scope it only to that repository;
 - grant only the repository permissions Fantazone needs;
-- send invite links and unlock codes separately and only to the intended participant;
-- rotate the PAT if both invitation factors are exposed or a participant should lose repository-level access;
-- treat the combination of link + unlock code as equivalent to the shared group credential.
+- deliver the link and its out-of-band code/password separately;
+- use a strong generated password for generic invitations when practical;
+- disable users in Fantazone when their application access should stop;
+- rotate the PAT if the shared repository credential may have been exposed or repository-level access must be revoked.
 
 This is the accepted tradeoff for keeping Fantazone fully zero-backend.

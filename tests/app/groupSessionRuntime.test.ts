@@ -1,13 +1,20 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { IdentityRole, type Group } from '../../src/domain/src/index'
-import { GROUP_DOCUMENT_PATH, GROUP_SETTINGS_PATH, REPOSITORY_MANIFEST_PATH, type RepositoryContentClient } from '../../src/github/src/index'
+import {
+  GitHubApiError,
+  GROUP_DOCUMENT_PATH,
+  GROUP_SETTINGS_PATH,
+  REPOSITORY_MANIFEST_PATH,
+  type RepositoryContentClient,
+} from '../../src/github/src/index'
 import { DEFAULT_PLATFORM_TARGET, GroupSessionRuntime } from '../../src/app/services/groupSessionRuntime'
 
 class FakeContentClient implements RepositoryContentClient {
   readonly files = new Map<string, { sha: string; content: string }>()
   reads = 0
   writes = 0
+  conflictGroupWriteOnce = false
   readonly readsByPath = new Map<string, number>()
 
   async tryGetContent(owner: string, repo: string, path: string, ref?: string) {
@@ -17,6 +24,10 @@ class FakeContentClient implements RepositoryContentClient {
   }
 
   async putContent(owner: string, repo: string, path: string, content: string, _message: string, _sha?: string, branch?: string) {
+    if (path === GROUP_DOCUMENT_PATH && this.conflictGroupWriteOnce) {
+      this.conflictGroupWriteOnce = false
+      throw new GitHubApiError(409, 'synthetic group race')
+    }
     this.writes += 1
     const key = `${owner}/${repo}/${path}@${branch ?? ''}`
     const sha = `write-${this.writes}`
@@ -182,7 +193,33 @@ test('only an authenticated admin can census an invited participant before shari
   assert.equal(client.writes, 1)
 })
 
-test('a non-admin participant cannot add an invite recipient to group.users', async () => {
+test('reissuing an email invitation to an existing active member does not rewrite group.json', async () => {
+  const client = new FakeContentClient()
+  const adminGroup = group(IdentityRole.Participant | IdentityRole.Admin)
+  client.files.set(`KeyserDSoze/Fantazone.Amici/${GROUP_DOCUMENT_PATH}@main`, { sha: 'group-1', content: JSON.stringify(adminGroup) })
+  const runtime = await GroupSessionRuntime.open(connection, client)
+
+  const invited = await runtime.inviteMember(adminGroup.users[0], { email: 'ALE@example.com' })
+
+  assert.equal(invited.email, 'ale@example.com')
+  assert.equal(client.writes, 0)
+})
+
+test('email census retries a transient optimistic group write conflict', async () => {
+  const client = new FakeContentClient()
+  const adminGroup = group(IdentityRole.Participant | IdentityRole.Admin)
+  client.files.set(`KeyserDSoze/Fantazone.Amici/${GROUP_DOCUMENT_PATH}@main`, { sha: 'group-1', content: JSON.stringify(adminGroup) })
+  client.conflictGroupWriteOnce = true
+  const runtime = await GroupSessionRuntime.open(connection, client)
+
+  const invited = await runtime.inviteMember(adminGroup.users[0], { email: 'new@example.com' })
+
+  assert.equal(invited.email, 'new@example.com')
+  assert.equal(runtime.group.users.some(user => user.email === 'new@example.com'), true)
+  assert.equal(client.writes, 1)
+})
+
+test('a non-admin participant cannot add an email invite recipient to group.users', async () => {
   const client = new FakeContentClient()
   const participantGroup = group(IdentityRole.Participant)
   client.files.set(`KeyserDSoze/Fantazone.Amici/${GROUP_DOCUMENT_PATH}@main`, { sha: 'group-1', content: JSON.stringify(participantGroup) })
@@ -191,4 +228,66 @@ test('a non-admin participant cannot add an invite recipient to group.users', as
     runtime.inviteMember(participantGroup.users[0], { email: 'new@example.com' }),
     /Admin o SuperAdmin/,
   )
+})
+
+test('shared invitation self-enrolls a verified Microsoft identity only as Participant', async () => {
+  const client = new FakeContentClient()
+  client.files.set(`KeyserDSoze/Fantazone.Amici/${GROUP_DOCUMENT_PATH}@main`, { sha: 'group-1', content: JSON.stringify(group()) })
+  const runtime = await GroupSessionRuntime.open(connection, client)
+
+  const member = await runtime.ensureSharedInviteParticipant({
+    provider: 'microsoft',
+    subject: 'new-subject',
+    email: 'NEW@example.com',
+    displayName: 'Nuovo Utente',
+  })
+
+  assert.equal(member.email, 'new@example.com')
+  assert.equal(member.username, 'Nuovo Utente')
+  assert.equal(member.role, IdentityRole.Participant)
+  assert.equal(runtime.group.users.some(user => user.email === 'new@example.com'), true)
+  assert.equal(client.writes, 1)
+})
+
+test('shared invitation does not rewrite an existing active member', async () => {
+  const client = new FakeContentClient()
+  client.files.set(`KeyserDSoze/Fantazone.Amici/${GROUP_DOCUMENT_PATH}@main`, { sha: 'group-1', content: JSON.stringify(group()) })
+  const runtime = await GroupSessionRuntime.open(connection, client)
+
+  const member = await runtime.ensureSharedInviteParticipant({
+    provider: 'microsoft',
+    subject: 'ale-subject',
+    email: 'ALE@example.com',
+  })
+
+  assert.equal(member.email, 'ale@example.com')
+  assert.equal(client.writes, 0)
+})
+
+test('shared invitation cannot reactivate a deliberately disabled member', async () => {
+  const client = new FakeContentClient()
+  client.files.set(`KeyserDSoze/Fantazone.Amici/${GROUP_DOCUMENT_PATH}@main`, { sha: 'group-1', content: JSON.stringify(group(IdentityRole.None)) })
+  const runtime = await GroupSessionRuntime.open(connection, client)
+
+  await assert.rejects(
+    runtime.ensureSharedInviteParticipant({ provider: 'microsoft', subject: 'ale-subject', email: 'ale@example.com' }),
+    /disabilitato/,
+  )
+  assert.equal(client.writes, 0)
+})
+
+test('shared invitation enrollment retries a transient optimistic conflict', async () => {
+  const client = new FakeContentClient()
+  client.files.set(`KeyserDSoze/Fantazone.Amici/${GROUP_DOCUMENT_PATH}@main`, { sha: 'group-1', content: JSON.stringify(group()) })
+  client.conflictGroupWriteOnce = true
+  const runtime = await GroupSessionRuntime.open(connection, client)
+
+  const member = await runtime.ensureSharedInviteParticipant({
+    provider: 'microsoft',
+    subject: 'new-subject',
+    email: 'new@example.com',
+  })
+
+  assert.equal(member.role, IdentityRole.Participant)
+  assert.equal(client.writes, 1)
 })

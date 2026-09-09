@@ -14,6 +14,7 @@ class FakeContentClient implements RepositoryContentClient {
   readonly writes: string[] = []
   conflictManifestOnce = false
   failDocumentWrite = false
+  failStableManifestWrites = 0
 
   async tryGetContent(owner: string, repo: string, path: string, ref?: string): Promise<StoredFile | null> {
     return this.files.get(key(owner, repo, path, ref)) ?? null
@@ -30,6 +31,14 @@ class FakeContentClient implements RepositoryContentClient {
         content: JSON.stringify({ schemaVersion: 2, revision: 2, updatedAt: '2026-09-06T10:00:00.000Z' }),
       })
       throw new GitHubApiError(409, 'synthetic manifest race')
+    }
+    if (
+      path === REPOSITORY_MANIFEST_PATH &&
+      this.writes.includes(documentPath) &&
+      this.failStableManifestWrites > 0
+    ) {
+      this.failStableManifestWrites -= 1
+      throw new GitHubApiError(409, 'synthetic stable-manifest race')
     }
     if (path === documentPath && this.failDocumentWrite) {
       throw new GitHubApiError(409, 'synthetic document race')
@@ -103,6 +112,30 @@ test('best-effort closes the updating phase when the document write conflicts', 
   assert.equal(manifest.revision, 3)
   assert.equal(manifest.updating, false)
   assert.deepEqual(client.writes, [REPOSITORY_MANIFEST_PATH, REPOSITORY_MANIFEST_PATH])
+})
+
+test('does not report a committed document as failed when the final manifest transition keeps racing', async () => {
+  const client = new FakeContentClient()
+  seedManifest(client)
+  client.files.set(key(target.owner, target.repo, documentPath, target.ref), { sha: 'group-1', content: '{}' })
+  client.failStableManifestWrites = 8
+  const revisionClient = new RepositoryRevisionContentClient(client, target)
+
+  const result = await revisionClient.putContent(
+    target.owner,
+    target.repo,
+    documentPath,
+    '{"name":"Committed"}',
+    'test',
+    'group-1',
+    target.ref,
+  )
+
+  assert.ok(result.sha)
+  assert.equal(client.files.get(key(target.owner, target.repo, documentPath, target.ref))!.content, '{"name":"Committed"}')
+  const manifest = JSON.parse(client.files.get(key(target.owner, target.repo, REPOSITORY_MANIFEST_PATH, target.ref))!.content)
+  assert.equal(manifest.updating, true)
+  assert.deepEqual(client.writes, [REPOSITORY_MANIFEST_PATH, documentPath])
 })
 
 test('keeps realtime signaling writes out of manifest revisions', async () => {

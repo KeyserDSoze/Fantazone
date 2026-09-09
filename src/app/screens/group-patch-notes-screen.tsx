@@ -15,6 +15,19 @@ const releases: Release[] = [
   {
     version: APP_VERSION,
     date: RELEASE_DATE,
+    title: 'Inviti generali e scritture GitHub più robuste',
+    items: [
+      { category: 'Nuovo', text: 'Condividi gruppo offre ora due modalità affiancate: invito personale legato a una email Microsoft oppure accesso generale riutilizzabile protetto da una password consegnata separatamente.' },
+      { category: 'Nuovo', text: 'Con l’accesso generale non serve censire le email in anticipo: dopo login Microsoft, password corretta e verifica del PAT, un account nuovo viene registrato automaticamente esclusivamente come Partecipante.' },
+      { category: 'Miglioria', text: 'Un account già attivo può ricevere un nuovo invito personale senza riscrivere group.json; un account disabilitato non può invece riattivarsi da solo usando l’accesso generale.' },
+      { category: 'Architettura', text: 'Codice personale e password condivisa restano fuori dal link e da sessionStorage. La chiave AES-256 viene derivata con PBKDF2-HMAC-SHA-256 e salt casuale prima della cifratura AES-256-GCM del PAT.' },
+      { category: 'Fix', text: 'Le modifiche a group.users ritentano i conflitti ottimistici GitHub rileggendo il documento canonico, così due operazioni vicine non falliscono immediatamente per uno SHA diventato obsoleto.' },
+      { category: 'Fix', text: 'Corretto il falso Repository write conflict 409 che poteva comparire dopo una scrittura di group.json già riuscita: una race nella chiusura di manifest.json non viene più attribuita al documento già committato.' },
+    ],
+  },
+  {
+    version: '0.3.4',
+    date: '9 settembre 2026',
     title: 'Routing persistente e inviti con codice separato',
     items: [
       { category: 'Nuovo', text: 'Le pagine del gruppo hanno ora URL reali del tipo /groups/<id>/<pagina>; anche il dettaglio partita ha un percorso dedicato, così i link sono leggibili e navigabili con back/forward del browser.' },
