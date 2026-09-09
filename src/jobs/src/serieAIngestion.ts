@@ -64,12 +64,13 @@ export async function ingestSerieACalendar(
   const baseUrl = options.baseUrl?.trim() ||
     process.env.FANTAZONE_SERIE_A_CALENDAR_BASE_URL?.trim() ||
     DEFAULT_GAZZETTA_CALENDAR_BASE_URL
+  const existing = await readExistingCalendar(outputPath)
 
   let calendar: RealCalendar
   if (day == null) {
-    calendar = await fetchFullCalendar({ season, baseUrl, fetchJson })
+    const refreshed = await fetchFullCalendar({ season, baseUrl, fetchJson })
+    calendar = preserveDelayedOverrides(existing, refreshed)
   } else {
-    const existing = await readExistingCalendar(outputPath)
     if (!existing) {
       throw new Error(
         `Il calendario ${season} non esiste ancora. Esegui prima ingest-serie-a senza day per creare le 38 giornate.`,
@@ -77,7 +78,7 @@ export async function ingestSerieACalendar(
     }
     const updatedDay = await fetchCalendarDay({ season, serieADay: day, baseUrl, fetchJson })
     if (!updatedDay) throw new Error(`La sorgente non ha restituito partite valide per la giornata ${day}.`)
-    calendar = replaceDay(existing, updatedDay)
+    calendar = preserveDelayedOverrides(existing, replaceDay(existing, updatedDay))
   }
 
   await mkdir(dirname(outputPath), { recursive: true })
@@ -171,6 +172,36 @@ function replaceDay(calendar: RealCalendar, replacement: RealDay): RealCalendar 
   days.push(replacement)
   days.sort((a, b) => a.serieADay - b.serieADay)
   return { year: calendar.year, days }
+}
+
+function preserveDelayedOverrides(previous: RealCalendar | null, refreshed: RealCalendar): RealCalendar {
+  if (!previous || previous.year !== refreshed.year) return refreshed
+
+  const delayed = new Set<string>()
+  for (const day of previous.days) {
+    for (const game of day.games) {
+      if (game.delayed) delayed.add(gameIdentity(day.serieADay, game))
+    }
+  }
+  if (delayed.size === 0) return refreshed
+
+  return {
+    ...refreshed,
+    days: refreshed.days.map(day => ({
+      ...day,
+      games: day.games.map(game => delayed.has(gameIdentity(day.serieADay, game))
+        ? { ...game, delayed: true }
+        : game),
+    })),
+  }
+}
+
+function gameIdentity(serieADay: number, game: RealGame): string {
+  return `${serieADay}:${normalizeComparableTeam(game.home.name)}:${normalizeComparableTeam(game.away.name)}`
+}
+
+function normalizeComparableTeam(value: string | null | undefined): string {
+  return value?.trim().toLocaleLowerCase('it-IT') ?? ''
 }
 
 async function readExistingCalendar(path: string): Promise<RealCalendar | null> {
