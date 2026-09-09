@@ -1,26 +1,21 @@
 import type { GroupInvitePayload } from '@fantazone/domain'
 import { parseInviteLinkFragment } from './groupInviteLink'
 
-const PENDING_GROUP_INVITE_KEY = 'fantazone.group-invite.pending.v4'
-const LEGACY_PENDING_GROUP_INVITE_KEY = 'fantazone.group-invite.pending.v3'
+const PENDING_GROUP_INVITE_KEY = 'fantazone.group-invite.pending'
 
 /**
- * Captures an invite fragment before Microsoft performs its full-page redirect.
- *
- * Current v4 links encrypt the group's shared GitHub PAT with AES-256-GCM. The URL
- * fragment is stripped immediately; sessionStorage carries only the already
- * decrypted pending invite through the OAuth redirect and is cleared after
- * join/cancel. Older v3/v2/v1 links and an in-flight v3 OAuth transaction remain
- * readable for backward compatibility.
+ * Captures the current encrypted invite before Microsoft performs its full-page
+ * OAuth redirect. The URL fragment is stripped immediately and sessionStorage
+ * keeps only ciphertext plus non-secret metadata. The separate unlock code is
+ * never stored here.
  */
 export async function loadPendingGroupInvite(): Promise<GroupInvitePayload | null> {
   if (!isWebBrowser()) return null
 
-  const fromFragment = await parseInviteLinkFragment(window.location.hash)
+  const fromFragment = parseInviteLinkFragment(window.location.hash)
   if (fromFragment) {
     try {
       window.sessionStorage.setItem(PENDING_GROUP_INVITE_KEY, JSON.stringify(fromFragment))
-      window.sessionStorage.removeItem(LEGACY_PENDING_GROUP_INVITE_KEY)
     } catch {
       // The in-memory caller can still continue even if browser storage is blocked.
     }
@@ -30,7 +25,6 @@ export async function loadPendingGroupInvite(): Promise<GroupInvitePayload | nul
 
   try {
     const raw = window.sessionStorage.getItem(PENDING_GROUP_INVITE_KEY)
-      ?? window.sessionStorage.getItem(LEGACY_PENDING_GROUP_INVITE_KEY)
     if (!raw) return null
     return decodePendingInvite(raw)
   } catch {
@@ -40,10 +34,7 @@ export async function loadPendingGroupInvite(): Promise<GroupInvitePayload | nul
 
 export function clearPendingGroupInvite(): void {
   if (!isWebBrowser()) return
-  try {
-    window.sessionStorage.removeItem(PENDING_GROUP_INVITE_KEY)
-    window.sessionStorage.removeItem(LEGACY_PENDING_GROUP_INVITE_KEY)
-  } catch { /* best effort */ }
+  try { window.sessionStorage.removeItem(PENDING_GROUP_INVITE_KEY) } catch { /* best effort */ }
 }
 
 export function decodePendingInvite(raw: string): GroupInvitePayload | null {
@@ -52,14 +43,9 @@ export function decodePendingInvite(raw: string): GroupInvitePayload | null {
     const email = typeof value.email === 'string' ? value.email.trim().toLowerCase() : ''
     const group = typeof value.group === 'string' ? value.group.trim() : ''
     const repository = normalizeRepository(typeof value.repository === 'string' ? value.repository : '')
-    if (!group || !repository || !email || !email.includes('@')) return null
-
-    if (value.v === 2) return { v: 2, group, repository, email }
-    if (value.v !== 3) return null
-
-    const pat = typeof value.pat === 'string' ? value.pat.trim() : ''
-    if (!pat) return null
-    return { v: 3, group, repository, email, pat }
+    const sealed = typeof value.sealed === 'string' ? value.sealed.trim() : ''
+    if (!group || !repository || !email.includes('@') || !sealed) return null
+    return { group, repository, email, sealed }
   } catch {
     return null
   }
