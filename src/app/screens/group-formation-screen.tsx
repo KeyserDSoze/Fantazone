@@ -17,6 +17,7 @@ import {
   applyFormationPositions,
   calculateAutomaticFormation,
   formatSeasonFromYear,
+  getLiveFormationChangesRemaining,
   getPlayerKey,
   validateFormation,
   type AuthenticatedGroupSession,
@@ -97,12 +98,30 @@ export function GroupFormationScreen({ runtime, session, selection }: Props) {
       })
       if (!resolved) throw new Error('Non hai una squadra o una partita disponibile nella lega selezionata.')
 
-      const [game, currentTeam] = await Promise.all([
-        runtime.gameComposer.getGame({ leagueId: selection.leagueId, season: selection.year, gameId: resolved.gameId }),
-        runtime.teamRepository.getTeam(resolved.basketId, selection.year, resolved.owner, { refresh: true }),
-      ])
+      const game = await runtime.gameComposer.getGame({
+        leagueId: selection.leagueId,
+        season: selection.year,
+        gameId: resolved.gameId,
+      })
       if (!game) throw new Error('La partita della formazione non è disponibile.')
-      if (!currentTeam) throw new Error('La squadra corrente non è disponibile.')
+
+      const seasonTeam = await runtime.teamRepository.getTeam(
+        resolved.basketId,
+        selection.year,
+        resolved.owner,
+        { refresh: true },
+      )
+      if (!seasonTeam) throw new Error('La squadra corrente non è disponibile.')
+
+      const currentTeam = game.isLiveFormationWindow
+        ? await runtime.teamRepository.getTeamDay(
+            resolved.basketId,
+            selection.year,
+            game.serieADay,
+            resolved.owner,
+            { refresh: true },
+          ) ?? seasonTeam
+        : seasonTeam
 
       setTarget(resolved)
       setWrapper(game)
@@ -131,9 +150,16 @@ export function GroupFormationScreen({ runtime, session, selection }: Props) {
     return applyFormationPositions(team, formationUpdates(activePlayers, positions))
   }, [team, activePlayers, positions])
   const validation = useMemo(() => previewTeam ? validateFormation(previewTeam) : null, [previewTeam])
+  const liveChangesRemaining = wrapper?.isLiveFormationWindow
+    ? getLiveFormationChangesRemaining(team, { liveFormationChanges: wrapper.liveFormationChangesAllowed })
+    : null
 
   async function applyAutomaticProposal() {
     if (!team || !wrapper || selection.year == null) return
+    if (wrapper.isLiveFormationWindow) {
+      setError('Durante il live sono ammessi soltanto gli scambi previsti dalla regola della lega: la proposta automatica è disabilitata.')
+      return
+    }
     setAutomaticLoading(true)
     setError(null)
     setStatus(null)
@@ -202,9 +228,17 @@ export function GroupFormationScreen({ runtime, session, selection }: Props) {
       setPositions(positionStateFromTeam(saved.team))
       setAutomaticBackup(null)
       markConnectivity('online')
-      setStatus('Formazione sincronizzata con il gruppo. La GitHub Action determinerà la TeamDay corretta dal timestamp del commit, senza riscrivere le giornate già congelate.')
+      if (saved.source === 'day' && wrapper?.isLiveFormationWindow) {
+        const remaining = getLiveFormationChangesRemaining(saved.team, { liveFormationChanges: wrapper.liveFormationChangesAllowed })
+        setStatus(`Modifica live salvata sulla giornata ${saved.serieADay}. Modifiche ancora disponibili: ${remaining}.`)
+      } else {
+        setStatus('Formazione sincronizzata con il gruppo. La GitHub Action determinerà la TeamDay corretta dal timestamp del commit, senza riscrivere le giornate già congelate.')
+      }
     } catch (caught) {
-      if (isNetworkFailure(caught)) {
+      if (isNetworkFailure(caught) && wrapper?.isLiveFormationWindow) {
+        markConnectivity('offline')
+        setError('Le modifiche live richiedono una connessione attiva: non vengono messe in coda perché potrebbero essere sincronizzate dopo la chiusura della finestra valida.')
+      } else if (isNetworkFailure(caught)) {
         updateOperation('Connessione assente: salvataggio della modifica sul dispositivo…')
         await enqueueFormationMutation(runtime.connection.repository.full_name, {
           identityEmail: session.identity.email,
@@ -276,34 +310,48 @@ export function GroupFormationScreen({ runtime, session, selection }: Props) {
       ) : null}
 
       {wrapper && target ? (
-        <Surface accent="blue" padding="$5">
+        <Surface accent={wrapper.isLiveFormationWindow ? 'red' : 'blue'} padding="$5">
           <XStack gap="$4" justifyContent="space-between" alignItems="center" flexWrap="wrap">
             <XStack gap="$3" alignItems="center" flex={1} minWidth={260}>
               <YStack
                 width={52}
                 height={52}
                 borderRadius="$5"
-                backgroundColor="$blue4"
+                backgroundColor={wrapper.isLiveFormationWindow ? '$red4' : '$blue4'}
                 borderWidth={1}
-                borderColor="$blue6"
+                borderColor={wrapper.isLiveFormationWindow ? '$red6' : '$blue6'}
                 alignItems="center"
                 justifyContent="center"
               >
-                <CalendarDays size="$1.4" color="$blue10" />
+                <CalendarDays size="$1.4" color={wrapper.isLiveFormationWindow ? '$red10' : '$blue10'} />
               </YStack>
               <YStack gap="$1" flex={1} minWidth={0}>
-                <Text color="$blue10" fontSize="$2" fontWeight="900" textTransform="uppercase">Prossima sfida</Text>
+                <Text color={wrapper.isLiveFormationWindow ? '$red10' : '$blue10'} fontSize="$2" fontWeight="900" textTransform="uppercase">
+                  {wrapper.isLiveFormationWindow ? 'Formazione live' : 'Prossima sfida'}
+                </Text>
                 <H2 color="$color12" fontSize="$7" lineHeight="$7">{wrapper.game.home} vs {wrapper.game.away}</H2>
                 <Text color="$color9">Giornata fanta {wrapper.fantasyDay} · Serie A {wrapper.serieADay}ª</Text>
               </YStack>
             </XStack>
-            <StatusPill tone={wrapper.canEdit ? 'green' : 'yellow'}>
-              {wrapper.canEdit ? 'Turno futuro' : 'Giornata iniziata'}
+            <StatusPill tone={wrapper.isLiveFormationWindow ? 'red' : wrapper.canEdit ? 'green' : 'yellow'}>
+              {wrapper.isLiveFormationWindow ? `${liveChangesRemaining ?? 0} cambi rimasti` : wrapper.canEdit ? 'Turno futuro' : 'Giornata iniziata'}
             </StatusPill>
           </XStack>
-          <Paragraph marginTop="$3" size="$2" color="$color9" maxWidth={820}>
-            Modifichi sempre la squadra corrente. Le TeamDay già congelate restano immutabili; l’Action assegna il commit alla giornata valida in base al timestamp.
-          </Paragraph>
+          {wrapper.isLiveFormationWindow ? (
+            <YStack marginTop="$3" gap="$1.5">
+              <Paragraph size="$2" color="$red11" maxWidth={860}>
+                Il salvataggio modifica esclusivamente la TeamDay della giornata corrente. Ogni modifica valida deve essere uno scambio tra due giocatori e consuma un cambio.
+              </Paragraph>
+              <Text size="$2" color="$color9">
+                Modulo {wrapper.allowLiveModuleChange ? 'modificabile' : 'bloccato'}
+                {wrapper.liveFormationDeadline ? ` · finestra fino alle ${new Date(wrapper.liveFormationDeadline).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}` : ''}
+              </Text>
+            </YStack>
+          ) : (
+            <Paragraph marginTop="$3" size="$2" color="$color9" maxWidth={820}>
+              Modifichi la squadra corrente. Le TeamDay già congelate restano immutabili; l’Action assegna il commit alla giornata valida in base al timestamp.
+            </Paragraph>
+          )}
         </Surface>
       ) : null}
 
@@ -334,7 +382,7 @@ export function GroupFormationScreen({ runtime, session, selection }: Props) {
                   backgroundColor="$purple3"
                   borderColor="$purple6"
                   color="$purple11"
-                  disabled={saving || automaticLoading}
+                  disabled={saving || automaticLoading || wrapper?.isLiveFormationWindow === true}
                   icon={automaticLoading ? undefined : Sparkles}
                   onPress={() => { void applyAutomaticProposal() }}
                 >
@@ -353,7 +401,9 @@ export function GroupFormationScreen({ runtime, session, selection }: Props) {
                 ) : null}
               </XStack>
               <Paragraph size="$2" color="$color9" maxWidth={850}>
-                La proposta automatica resta sul dispositivo finché non salvi. Usa probabilità, indisponibilità, forma recente e difficoltà casa/avversario mantenendo la logica Fantasoccer.
+                {wrapper?.isLiveFormationWindow
+                  ? 'Durante il live la proposta automatica è disabilitata: valgono soltanto gli scambi consentiti dalla regola annuale.'
+                  : 'La proposta automatica resta sul dispositivo finché non salvi. Usa probabilità, indisponibilità, forma recente e difficoltà casa/avversario mantenendo la logica Fantasoccer.'}
               </Paragraph>
             </YStack>
           </Surface>
@@ -392,15 +442,17 @@ export function GroupFormationScreen({ runtime, session, selection }: Props) {
                   {validation?.valid === true ? 'Pronta da salvare' : 'Completa la formazione'}
                 </Text>
                 <Paragraph color="$color9" size="$2">
-                  Il salvataggio aggiorna la squadra corrente; in assenza di rete la modifica resta in coda offline e verrà rivalidata alla sincronizzazione.
+                  {wrapper?.isLiveFormationWindow
+                    ? 'Il salvataggio live è immediato e richiede rete: il server GitHub deve verificare limite, scambio e modulo prima della scadenza.'
+                    : 'Il salvataggio aggiorna la squadra corrente; in assenza di rete la modifica resta in coda offline e verrà rivalidata alla sincronizzazione.'}
                 </Paragraph>
               </YStack>
               <PrimaryAction
-                disabled={saving || automaticLoading || validation?.valid !== true}
+                disabled={saving || automaticLoading || validation?.valid !== true || (wrapper?.isLiveFormationWindow === true && (liveChangesRemaining ?? 0) <= 0)}
                 onPress={() => { void saveFormation() }}
                 icon={saving ? <Spinner color="white" /> : <Save size="$1" color="white" />}
               >
-                {saving ? 'Salvataggio…' : 'Salva formazione'}
+                {saving ? 'Salvataggio…' : wrapper?.isLiveFormationWindow ? 'Salva modifica live' : 'Salva formazione'}
               </PrimaryAction>
             </XStack>
           </Surface>
