@@ -1,90 +1,107 @@
 # Background jobs migration
 
-The current Fantasoccer background-job project contains the following jobs. None may disappear silently: a legacy job is either migrated, split, or explicitly retired with its replacement documented.
+Fantazone does not recreate the legacy backend scheduler. Every historical Fantasoccer job is classified as either a **global platform producer**, a **group-owned mutation**, or an explicitly **retired derived/cache job**.
 
-| Legacy job | Legacy intent | Fantazone target |
-|---|---|---|
-| `SerieAJob` | refresh Serie A/calendar/live source data | **global:** `ingest-serie-a` -> readable RealCalendar JSON; production validation/scheduling still pending |
-| `AllPlayersAndAllTeamsJob` | refresh player/team master data and duplicate real-team changes into group rosters | **global:** `ingest-master-data` -> readable RealTeams/RealPlayers + reconciliation, scheduled daily at 04:17 UTC; runtime v8 current Teams resolve the global master by `playerKey`, so the old per-group propagation side effect is retired |
-| `LiveVotesJob` | ingest live fantasy votes | **global:** `ingest-live-votes` -> SignedUri/protobuf adapter -> readable live vote JSON; scheduled every 5 minutes with RealCalendar guard |
-| `LiveJob` | rebuild per-group live match/rank snapshot | **retired in #30:** `GroupLiveComposer` derives `LiveGroup` locally; no Action/cache loop |
-| `FinalVotesJob` | ingest final votes | **global:** `ingest-final-votes` -> official vote JSON + completeness check + stats rebuild |
-| `PlayerOddsJob` | ingest player odds/probabilities | **global:** `ingest-player-odds` Action; implementation complete, production validation/scheduling pending (#35) |
-| `PlayerImagesJob` | refresh player images | **global:** `ingest-player-images` -> GitHub Pages WebP assets; implementation complete, production validation/scheduling pending (#36) |
-| `SetFormationJob` | copy previous formation to next day when missing | **group-owned:** deterministic `set-next-formations`; new TeamDay refreshes RealPlayer fields from the current global master |
-| `GroupsManagerJob` | definitive game calculation, ranking and knockout progression | **retired in #31:** shared reducers + group-owned `recalculate-day` / `recalculate-all` workflow |
-| `NewsJob` | news ingestion, currently disabled | tracked; implement only if product keeps feature |
-| `TeamHelperJob` | team helper calculations, currently disabled | pure/local domain calculation where still useful |
-| `PushNotificationJob` | decide/send notifications | decision logic migrates; delivery requires explicit transport design |
-| `HallOfFameJob` | historical/Hall of Fame aggregation | **group-owned:** weekly rebuild Action |
-| `MarketJob` | scheduled market state processing | **group-owned:** serialized command processing + daily expiry Action |
+## Migration matrix
+
+| Legacy job | Fantazone result |
+|---|---|
+| `SerieAJob` | **global:** `ingest-serie-a`; readable RealCalendar, full daily refresh plus live-day refresh during guarded live runs |
+| `AllPlayersAndAllTeamsJob` | **global:** `ingest-master-data`; readable RealTeams/RealPlayers + reconciliation. Old per-group transfer fan-out is retired because current Team documents resolve global players by `playerKey` |
+| `LiveVotesJob` | **global:** `ingest-live-votes`; SignedUri/protobuf adapter, readable live-vote JSON, five-minute RealCalendar guard |
+| `LiveJob` | **retired:** `GroupLiveComposer` derives live group state locally from canonical inputs; no high-frequency cache commits |
+| `FinalVotesJob` | **global:** `ingest-final-votes`; readable official votes + completeness check + automatic statistics rebuild |
+| `PlayerOddsJob` | **global:** `ingest-player-odds`; readable probable-formation/availability snapshot |
+| `PlayerImagesJob` | **global:** `ingest-player-images`; shared WebP assets served by Pages |
+| `SetFormationJob` | **group-owned:** deterministic next-TeamDay propagation |
+| `GroupsManagerJob` | **retired as a monolith:** pure scoring/rank/progression reducers + group-owned `recalculate-day` / `recalculate-all` |
+| `NewsJob` | **retired:** the legacy job was disabled and the feature is not part of the active Fantazone product |
+| `TeamHelperJob` | **retired as a scheduled job:** useful calculations are pure/local domain logic |
+| `PushNotificationJob` | **split:** browser subscription/preferences + group-owned Web Push transport and manual test dispatch are implemented; automatic delivery waits for real VAPID/browser validation |
+| `HallOfFameJob` | **group-owned:** rebuild Action |
+| `MarketJob` | **group-owned:** serialized command/expiry processing |
+
+There is no remaining legacy background job waiting for a code port. The open work is production/device validation, tracked by #5, #29, #37, #40 and #7.
 
 ## Hard runtime split
 
-Fantazone deliberately separates shared/global producers from group-owned mutations.
-
 ### Platform/global Actions
 
-Only work whose output is shared by every fantasy group belongs in `KeyserDSoze/Fantazone/.github/workflows/background-jobs.yml`:
+Only state shared by every group belongs in `KeyserDSoze/Fantazone/.github/workflows/background-jobs.yml`:
 
 - `ingest-serie-a`;
 - `ingest-master-data`;
 - `rebuild-player-stats`;
 - `ingest-live-votes`;
 - `ingest-final-votes`;
-- global odds/images producers.
+- `ingest-player-odds`;
+- `ingest-player-images`.
 
-They write shared `data/serie-a/...` documents or globally shared static assets once.
-
-The central workflow must **not** expose formation propagation, fantasy-day recalculation, market processing, Hall-of-Fame rebuilds or any other command that mutates one particular group's state.
+They write `data/serie-a/...` documents or shared static assets. The platform workflow never enumerates fantasy groups and never stores group PATs.
 
 ### Group-owned Actions
 
-Every `Fantazone.<group>` repository owns its canonical fantasy state and receives Fantazone-managed group workflow files during bootstrap/runtime upgrades.
+Every `Fantazone.<group>` repository owns its mutable fantasy state. Managed group workflows handle formation snapshots/propagation, market processing, auction outcomes, definitive recalculation and Hall-of-Fame rebuilds using that repository's short-lived `GITHUB_TOKEN`.
 
-Current runtime v8 includes formation snapshot consolidation, next-formation propagation, market processing, auction assignment outcomes, definitive recalculation and Hall-of-Fame rebuilds. It deliberately does **not** include a player-transfer synchronization job.
+The managed runtime reads engine code and current global data from the platform repository while committing only the group's own `data/` changes. Current Team documents contain normalized player references; TeamDay snapshots freeze the resolved RealPlayer state for history, so later transfers never rewrite old matchdays.
 
-The group workflow uses three checkouts with different purposes:
+See `docs/28-group-repository-lifecycle.md` and `docs/35-normalized-season-team.md`.
 
-```text
-group/          -> its own writable repository
-engine/         -> KeyserDSoze/Fantazone @ main
-platform-data/  -> KeyserDSoze/Fantazone @ main, sparse data/ only
-```
+## Current production schedules
 
-It runs the shared job implementation from `engine/`, reads the latest normalized football data from `platform-data/` and commits only group `data/` changes with that group's own short-lived `GITHUB_TOKEN`.
+GitHub cron expressions are UTC.
 
-The platform therefore never enumerates all groups and never stores their PATs. Runtime v8 remains the managed workflow/schema version in `fantazone.json`; while there are no production group installations requiring backwards compatibility, both engine code and shared data follow the single supported `main` branch.
+| Producer | Schedule | Notes |
+|---|---:|---|
+| full Serie A calendar | `27 2 * * *` | refreshes all 38 rounds once per day so postponements and future kickoff changes converge |
+| live votes | `*/5 * * * *` | dependency-free RealCalendar guard skips dependency installation and provider calls when no match is live |
+| final votes | `7 3 * * *` and `7 4 * * *` | preserves the two legacy overnight attempts, staggered away from the top of the hour |
+| master data | `17 4 * * *` | fail-closed structural validation before replacing canonical players/teams |
+| player odds | `17 5 * * *` | global probable-formation / injury snapshot |
+| player images | `17 3 3 * *` | monthly shared image refresh |
 
-See `docs/28-group-repository-lifecycle.md` for create/bootstrap/upgrade/versioning rules and `docs/35-normalized-season-team.md` for current Team versus TeamDay persistence.
+All scheduled producers share one non-cancelling concurrency group. Successful canonical diffs are rebased before push; unchanged JSON/assets produce no commit.
 
-## Implemented global jobs
+### Live calendar refresh
+
+The old server refreshed calendar state frequently during the playing window. Re-running a 38-round HTTP ingestion every five minutes would be wasteful in GitHub Actions, so Fantazone splits that responsibility:
+
+1. the daily `ingest-serie-a` run refreshes the full season;
+2. the five-minute live guard identifies the canonical `season` and `serieADay` of an actually live match;
+3. after dependencies are installed, that run refreshes **only that day** with `ingest-serie-a <day> <season>`;
+4. `ingest-live-votes` then reads the refreshed canonical calendar context.
+
+A calendar-source failure is isolated from the live-vote provider attempt: the live producer is still allowed to run, successful live canonical output may be committed, and the workflow then fails visibly so the calendar regression is not hidden. By contrast, if the selected producer itself fails, partial canonical output is not committed.
+
+## Global producers
 
 ### `ingest-serie-a`
 
-Fetches Serie A calendar data into `data/serie-a/calendars/<season-id>.json`.
+Writes:
+
+```text
+data/serie-a/calendars/<season-id>.json
+```
+
+The provider is the current Gazzetta calendar API. A full run requests rounds 1–38; a single-day run can update only an already initialized season and refuses to create a partial calendar. Season ids preserve the legacy Fantasoccer convention (`15 = 2026/27`).
+
+The 2026/27 real provider path was validated during the production bootstrap. The canonical calendar now also drives the lightweight live schedule guard.
 
 ### `ingest-master-data`
 
-Builds readable RealTeams/RealPlayers, preserves active/inactive/transfer reconciliation and triggers player-stat rebuild only on the legacy `playerCountChanged` condition.
+Writes readable RealTeams/RealPlayers and performs the legacy active/inactive/reactivation/transfer reconciliation. A real-world transfer is persisted only in the global master; current fantasy Teams resolve it by `playerKey`.
 
-A real-world transfer is persisted only here. Mutable season Team documents store `playerKey` references and resolve name/team/role/activity/visibility from this master at read time, so no fan-out update to every group repository is needed.
-
-The production provider path has already completed successfully through the real `bootstrap-serie-a` Action on 2026-09-06. The standalone producer now runs once per day at `04:17 UTC` under the same serialized platform-maintenance lock used by the live producer.
-
-Before it can modify canonical master data it fails closed unless all of these structural conditions hold:
-
-- the RealCalendar contains at least 20 unique Serie A teams;
-- the Fantacalcio source yields at least 400 valid active players;
-- every canonical calendar team is represented by at least one parsed player;
-- when a previous master exists, the new source retains at least 85% of its active-player count;
-- player keys remain unique and every provider team abbreviation resolves to a canonical RealCalendar team.
-
-These guards are intentionally conservative. A provider markup regression must fail the Action instead of marking hundreds of healthy players inactive. No group repository is touched by this job.
+The production source fails closed unless structural checks hold, including a complete Serie A club set, a plausible player count, team coverage, unique player keys and retention relative to the previous active master. The job keeps the legacy rule that player statistics are rebuilt automatically only when `playerCountChanged=true`.
 
 ### `rebuild-player-stats`
 
-Reads canonical RealPlayers + official vote documents and writes `data/serie-a/stats/<season-id>.json` with legacy statistics semantics.
+Reads canonical RealPlayers + official vote documents and writes:
+
+```text
+data/serie-a/stats/<season-id>.json
+```
+
+The reducer is deterministic and network-free.
 
 ### `ingest-final-votes`
 
@@ -94,7 +111,9 @@ Writes:
 data/serie-a/votes/official/<season-id>/<serie-a-day>.json
 ```
 
-It preserves vote/card/bonus semantics, delayed-game synthetic sixes and completeness checks. Complete output triggers the statistics rebuild for the same day.
+It preserves vote/card/bonus semantics, delayed-game synthetic sixes and completeness checks. Without an explicit day it mirrors legacy `FinalVotesJob` and selects `RealCalendar.LiveDay ?? LastDay`. Complete output rebuilds statistics for that day; incomplete output remains retryable.
+
+The real 2026/27 provider has been positively validated with a complete 20-team matchday. Automatic runs are enabled twice nightly at 03:07 and 04:07 UTC. Manual explicit-day dispatch remains available for repairs.
 
 ### `ingest-live-votes`
 
@@ -104,45 +123,47 @@ Writes:
 data/serie-a/votes/live/<season-id>/<serie-a-day>.json
 ```
 
-The SignedUri/protobuf protocol and legacy event mapping are preserved. Empty or unchanged provider output does not rewrite the snapshot. The production workflow is scheduled every five minutes; a lightweight RealCalendar guard exits before dependency installation/provider access when no match is live. Other scheduled jobs bypass that live-only guard.
+The SignedUri/protobuf protocol and legacy event mapping are preserved. Empty/unchanged output does not rewrite the snapshot. Scheduled runs are every five minutes, but provider access occurs only inside the canonical 2h15 live-match window.
+
+The protobuf path has completed a real post-match call without the previous integer-overflow failure. The only remaining production gate is observing one **non-empty** real snapshot during an actual live match (#29/#37).
 
 ### `ingest-player-odds`
 
-Writes one shared readable chance snapshot to:
+Writes:
 
 ```text
 data/serie-a/chances/<season-id>/<serie-a-day>.json
 ```
 
-It targets `RealCalendar.LiveDay ?? NextDay`, resets stale current-source flags, merges Fantagazzetta/Gazzetta/injury observations, isolates source failures and preserves the previous usable snapshot when every provider fails. The implementation is complete; a real production Action run and scheduling decision remain tracked by #35.
+It targets `RealCalendar.LiveDay ?? NextDay`, resets stale source flags, merges Fantagazzetta/Gazzetta/injury observations and isolates provider failures. The real provider chain has been validated and the producer is scheduled daily.
 
 ### `ingest-player-images`
 
-Reads global RealPlayers plus the Lega Serie A SDP current/previous-season catalog and writes shared static files to:
+Writes shared static files:
 
 ```text
 src/app/public/images/players/<legacy-player-key>.webp
 ```
 
-They are served by Pages as `https://fanta.plus/images/players/<legacy-player-key>.webp`. Existing files are retained, individual download failures are isolated, and unavailable provider catalogs never destroy existing files. The legacy job stored WebP payloads behind `.jpg` names; Fantazone validates the WebP signature and uses the truthful `.webp` extension. Full details: `docs/29-player-images.md` and #36.
+They are served as `https://fanta.plus/images/players/<legacy-player-key>.webp`. Existing files are retained, individual failures are isolated and the WebP signature is validated. The real catalog/media path has been validated with zero download failures in the production run used to enable the monthly schedule.
 
-## Retired `LiveJob`
+## Retired backend loops
 
-Legacy `LiveJob` was only a high-frequency cache builder. Fantazone replaces it with:
+### `LiveJob`
+
+Fantazone derives live state instead of committing a high-frequency cache:
 
 ```text
-canonical Group/Calendar/Rank/TeamDay
-+ global RealCalendar/official/live votes
+Group / Calendar / Rank / TeamDay
++ global RealCalendar / official votes / live votes
         -> pure reducers
         -> GroupLiveComposer
         -> in-memory LiveGroup
 ```
 
-No periodic derived-state commit is required.
+### transfer fan-out from `AllPlayersAndAllTeamsJob`
 
-## Retired transfer fan-out from `AllPlayersAndAllTeamsJob`
-
-The old server updated the embedded real club inside every active fantasy roster whenever the global player master changed. Runtime v8 removes that duplication:
+The server used to rewrite the embedded Serie A club inside every fantasy roster after transfers. Runtime normalization removes that duplication:
 
 ```text
 current Team: playerKey + fantasy-owned fields
@@ -150,11 +171,11 @@ current Team: playerKey + fantasy-owned fields
               global RealPlayers
 ```
 
-When a TeamDay is frozen, the reference is resolved and the full RealPlayer snapshot is persisted for history. Existing TeamDay documents are never rewritten after later transfers.
+A TeamDay resolves and freezes the current RealPlayer data at snapshot time; historical TeamDays never change afterward.
 
-## Retired `GroupsManagerJob`
+### `GroupsManagerJob`
 
-Legacy `GroupsManagerJob` mixed several responsibilities. Fantazone splits them explicitly:
+Its responsibilities are now explicit:
 
 ```text
 official vote download             -> global `ingest-final-votes`
@@ -164,23 +185,22 @@ Cup/NewCup advancement             -> `progressLeagueCalendar()`
 persistence/rebuild                -> group-owned workflow
 ```
 
-`recalculate-day` fails closed when its official vote document is missing. `recalculate-all` skips future/missing-vote days instead of creating fake 0-0 results, while still allowing already-completed Cup/NewCup calendars to advance.
+`recalculate-day` fails closed if official votes are missing. `recalculate-all` skips future/missing-vote days instead of inventing results.
 
-Full details: `docs/27-definitive-day-recalculation.md` and issue #31.
+## Push notifications
 
-## `SetFormationJob` migration
+Web Push V1 is implemented without an application server: the browser stores its subscription/preferences in the group repository and the group Action signs/sends notifications with the repository secret `FANTAZONE_VAPID_PRIVATE_KEY`.
 
-The operation chooses `LiveDay ?? LastDay`, never creates day 39 and never overwrites an existing next TeamDay. It copies fantasy-owned formation state from the source TeamDay, but refreshes the RealPlayer portion from the current season master before freezing the new target TeamDay. Thus a transfer between two matchdays affects the new snapshot without mutating the historical source day.
+Automatic legacy event delivery remains intentionally disabled until one real browser subscription + secret + manual delivery succeeds. See `docs/38-zero-backend-push.md`.
 
 ## Migration rule
 
-Before enabling a producer/rebuild job:
+A producer/rebuild is considered complete only when:
 
-1. port representative legacy behavior/tests;
-2. identify whether it is a real producer/write or only a derived cache;
-3. classify the output as **global** or **group-owned** before adding any Action;
-4. keep deterministic business logic in shared TypeScript reducers;
-5. use platform Actions only for globally shared data;
-6. use group Actions only for group-owned persistence;
-7. advance the group runtime only when existing group repositories must receive a managed artifact change;
-8. validate the real provider path before enabling a new production schedule.
+1. representative legacy behavior is ported or intentionally retired;
+2. the output is classified global vs group-owned;
+3. deterministic business logic lives in shared TypeScript reducers;
+4. provider adapters fail safely and have offline tests;
+5. real external providers are validated before recurring schedules are enabled;
+6. group-owned state is never mutated by the central platform Action;
+7. operational checks that require real devices/networks remain explicitly tracked instead of being simulated in CI.
