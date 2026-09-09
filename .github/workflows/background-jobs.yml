@@ -1,9 +1,11 @@
 name: Background jobs
-run-name: "Fantazone · ${{ github.event_name == 'workflow_dispatch' && inputs.job || github.event.schedule == '17 4 * * *' && 'ingest-master-data' || github.event.schedule == '17 5 * * *' && 'ingest-player-odds' || github.event.schedule == '17 3 3 * *' && 'ingest-player-images' || 'ingest-live-votes' }}"
+run-name: "Fantazone · ${{ github.event_name == 'workflow_dispatch' && inputs.job || github.event.schedule == '7 3 * * *' && 'ingest-final-votes' || github.event.schedule == '7 4 * * *' && 'ingest-final-votes' || github.event.schedule == '17 4 * * *' && 'ingest-master-data' || github.event.schedule == '17 5 * * *' && 'ingest-player-odds' || github.event.schedule == '17 3 3 * *' && 'ingest-player-images' || 'ingest-live-votes' }}"
 
 on:
   schedule:
     - cron: '*/5 * * * *'
+    - cron: '7 3 * * *'
+    - cron: '7 4 * * *'
     - cron: '17 4 * * *'
     - cron: '17 5 * * *'
     - cron: '17 3 3 * *'
@@ -39,7 +41,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  FANTAZONE_JOB: ${{ github.event_name == 'schedule' && github.event.schedule == '17 4 * * *' && 'ingest-master-data' || github.event_name == 'schedule' && github.event.schedule == '17 5 * * *' && 'ingest-player-odds' || github.event_name == 'schedule' && github.event.schedule == '17 3 3 * *' && 'ingest-player-images' || github.event_name == 'schedule' && 'ingest-live-votes' || inputs.job }}
+  FANTAZONE_JOB: ${{ github.event_name == 'schedule' && github.event.schedule == '7 3 * * *' && 'ingest-final-votes' || github.event_name == 'schedule' && github.event.schedule == '7 4 * * *' && 'ingest-final-votes' || github.event_name == 'schedule' && github.event.schedule == '17 4 * * *' && 'ingest-master-data' || github.event_name == 'schedule' && github.event.schedule == '17 5 * * *' && 'ingest-player-odds' || github.event_name == 'schedule' && github.event.schedule == '17 3 3 * *' && 'ingest-player-images' || github.event_name == 'schedule' && 'ingest-live-votes' || inputs.job }}
   FANTAZONE_DAY: ${{ inputs.day }}
   FANTAZONE_SEASON: ${{ inputs.season }}
   FANTAZONE_SERIE_A_CALENDAR_BASE_URL: ${{ vars.FANTAZONE_SERIE_A_CALENDAR_BASE_URL }}
