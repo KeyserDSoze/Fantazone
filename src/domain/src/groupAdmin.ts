@@ -68,15 +68,30 @@ export const isLeagueSettingValid = (setting: LeagueSetting): boolean => {
     setting.pointForCleanSheet,
     setting.moneyForGoal,
     setting.moneyForSufferedGoal,
+    setting.liveFormationChanges,
+    setting.openingCompetition?.serieADays,
   ]
 
   if (!integerValues.every(Number.isInteger)) return false
   if (setting.startingMoney < 25) return false
   if (setting.delayedDay < 0 || setting.delayedDay > 37) return false
   if (setting.cancelledDay < 0 || setting.cancelledDay > 38) return false
+  if (setting.liveFormationChanges < 0 || setting.liveFormationChanges > 11) return false
+  if (typeof setting.allowLiveModuleChange !== 'boolean') return false
   if (setting.pointForFirstGoal < 1 || setting.pointForNextGoal < 1) return false
   if (setting.pointForOwnGoal < 0 || setting.differencePointForOwnGoal < 0) return false
   if (setting.pointForCleanSheet < 0) return false
+
+  const opening = setting.openingCompetition
+  if (!opening || typeof opening.enabled !== 'boolean') return false
+  if (opening.serieADays < 1 || opening.serieADays > 38) return false
+  if (!Array.isArray(opening.prizes)) return false
+  const positions = new Set<number>()
+  for (const prize of opening.prizes) {
+    if (!Number.isInteger(prize.position) || prize.position < 1 || positions.has(prize.position)) return false
+    if (!Number.isInteger(prize.credits) || prize.credits < 0) return false
+    positions.add(prize.position)
+  }
 
   const fallbackVotes = setting.votes[-1]
   if (!fallbackVotes) return false
