@@ -342,7 +342,7 @@ export function GroupFormationScreen({ runtime, session, selection }: Props) {
               <Paragraph size="$2" color="$red11" maxWidth={860}>
                 Il salvataggio modifica esclusivamente la TeamDay della giornata corrente. Ogni modifica valida deve essere uno scambio tra due giocatori e consuma un cambio.
               </Paragraph>
-              <Text size="$2" color="$color9">
+              <Text fontSize="$2" color="$color9">
                 Modulo {wrapper.allowLiveModuleChange ? 'modificabile' : 'bloccato'}
                 {wrapper.liveFormationDeadline ? ` · finestra fino alle ${new Date(wrapper.liveFormationDeadline).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}` : ''}
               </Text>
