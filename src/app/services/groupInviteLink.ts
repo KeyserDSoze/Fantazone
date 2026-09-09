@@ -1,85 +1,90 @@
-import {
-  AESEncryptionKey,
-  AESSealedData,
-  aesDecryptAsync,
-  aesEncryptAsync,
-} from 'expo-crypto'
 import type { GroupInvitePayload } from '@fantazone/domain'
-import { parseInviteFragment } from '@fantazone/github'
+import { createInviteFragment, parseInviteFragment } from '@fantazone/github'
 
-const BASE64_URL = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_'
+const BASE64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+const UNLOCK_CODE_ALPHABET = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ'
+const UNLOCK_CODE_BYTES = 20
+const UNLOCK_CODE_LENGTH = 32
+const KEY_DERIVATION_CONTEXT = 'fantazone-group-invite:'
 
-type SharedCredentialInvite = Extract<GroupInvitePayload, { v: 3 }>
+type SharedCredentialInvite = Omit<GroupInvitePayload, 'sealed'> & { pat: string }
+type CryptoModule = typeof import('expo-crypto')
 
-type EncryptedInviteEnvelope = {
-  v: 4
-  group: string
-  repository: string
-  email: string
-  key: string
-  sealed: string
+export type EncryptedInviteCreation = {
+  fragment: string
+  unlockCode: string
 }
 
 /**
- * Creates a self-contained zero-backend invitation. The PAT is encrypted with
- * AES-256-GCM and the group/repository/email metadata is authenticated as AAD.
- *
- * The encryption key intentionally travels in the URL fragment because there is
- * no trusted Fantazone backend or recipient public-key infrastructure. This keeps
- * the PAT encrypted in the link representation and out of server requests/logs,
- * but the complete link is still a bearer credential and must be shared privately.
+ * Encrypts the shared group PAT with AES-256-GCM and a random 160-bit unlock code.
+ * The unlock code is deliberately NOT written into the URL or persisted with the
+ * encrypted envelope: the inviter must send it to the recipient separately.
  */
-export async function createEncryptedInviteFragment(payload: SharedCredentialInvite): Promise<string> {
+export async function createEncryptedInviteFragment(payload: SharedCredentialInvite): Promise<EncryptedInviteCreation> {
   const normalized = normalizeSharedInvite(payload)
-  const key = await AESEncryptionKey.generate()
-  const sealed = await aesEncryptAsync(
+  const Crypto = await loadCrypto()
+  const unlockCode = formatUnlockCode(bytesToBase32(await Crypto.getRandomBytesAsync(UNLOCK_CODE_BYTES)))
+  const key = await deriveEncryptionKey(Crypto, unlockCode)
+  const sealedData = await Crypto.aesEncryptAsync(
     utf8(normalized.pat),
     key,
     { additionalData: utf8(inviteAad(normalized)) },
   )
+  const sealed = await sealedData.combined('base64')
+  if (typeof sealed !== 'string') throw new Error('Fantazone non è riuscito a serializzare l’invito cifrato.')
 
-  const envelope: EncryptedInviteEnvelope = {
-    v: 4,
+  const invite: GroupInvitePayload = {
     group: normalized.group,
     repository: normalized.repository,
     email: normalized.email,
-    key: await key.encoded('base64'),
-    sealed: await sealed.combined('base64') as string,
+    sealed,
   }
-  return `#join4=${bytesToBase64Url(utf8(JSON.stringify(envelope)))}`
+
+  return {
+    fragment: createInviteFragment(invite),
+    unlockCode,
+  }
 }
 
-/** Reads AES-GCM v4 invitations and keeps v3/v2/v1 links backward compatible. */
-export async function parseInviteLinkFragment(fragment: string): Promise<GroupInvitePayload | null> {
+/** Reads only the current encrypted link envelope; no legacy invite formats are accepted. */
+export function parseInviteLinkFragment(fragment: string): GroupInvitePayload | null {
+  return parseInviteFragment(fragment)
+}
+
+/** Unlocks the PAT only when the separately delivered random code is correct. */
+export async function decryptInvitePat(invite: GroupInvitePayload, unlockCode: string): Promise<string> {
+  const normalizedCode = normalizeInviteUnlockCode(unlockCode)
+  if (!isValidUnlockCode(normalizedCode)) {
+    throw new Error('Il codice di sblocco non è valido. Controlla tutti i gruppi di caratteri e riprova.')
+  }
+
+  const Crypto = await loadCrypto()
+  const key = await deriveEncryptionKey(Crypto, normalizedCode)
+
   try {
-    const params = new URLSearchParams(fragment.replace(/^#/, ''))
-    const encoded = params.get('join4')
-    if (!encoded) return parseInviteFragment(fragment)
-
-    const envelope = JSON.parse(text(base64UrlToBytes(encoded))) as Partial<EncryptedInviteEnvelope>
-    const metadata = normalizeEncryptedEnvelope(envelope)
-    if (!metadata) return null
-
-    const key = await AESEncryptionKey.import(metadata.key, 'base64')
-    const sealed = AESSealedData.fromCombined(metadata.sealed)
-    const decrypted = await aesDecryptAsync(
-      sealed,
+    const sealedData = Crypto.AESSealedData.fromCombined(invite.sealed)
+    const decrypted = await Crypto.aesDecryptAsync(
+      sealedData,
       key,
-      { additionalData: utf8(inviteAad(metadata)) },
+      {
+        additionalData: utf8(inviteAad(invite)),
+        output: 'bytes',
+      },
     )
     const pat = text(typeof decrypted === 'string' ? base64ToBytes(decrypted) : decrypted).trim()
-    if (!pat) return null
-
-    return {
-      v: 3,
-      group: metadata.group,
-      repository: metadata.repository,
-      email: metadata.email,
-      pat,
-    }
+    if (!pat) throw new Error('empty plaintext')
+    return pat
   } catch {
-    return null
+    throw new Error('Codice di sblocco errato oppure invito alterato. Il PAT non è stato decifrato.')
   }
+}
+
+export function normalizeInviteUnlockCode(value: string): string {
+  return value.trim().toUpperCase().replace(/[\s-]+/g, '')
+}
+
+export function isValidInviteUnlockCode(value: string): boolean {
+  return isValidUnlockCode(normalizeInviteUnlockCode(value))
 }
 
 function normalizeSharedInvite(payload: SharedCredentialInvite): SharedCredentialInvite {
@@ -88,27 +93,53 @@ function normalizeSharedInvite(payload: SharedCredentialInvite): SharedCredentia
   const email = payload.email.trim().toLowerCase()
   const pat = payload.pat.trim()
   if (!group || !repository || !email.includes('@') || !pat) throw new Error('Invito Fantazone non valido.')
-  return { v: 3, group, repository, email, pat }
+  return { group, repository, email, pat }
 }
 
-function normalizeEncryptedEnvelope(value: Partial<EncryptedInviteEnvelope>): EncryptedInviteEnvelope | null {
-  if (value.v !== 4) return null
-  const group = typeof value.group === 'string' ? value.group.trim() : ''
-  const repository = normalizeRepository(typeof value.repository === 'string' ? value.repository : '')
-  const email = typeof value.email === 'string' ? value.email.trim().toLowerCase() : ''
-  const key = typeof value.key === 'string' ? value.key.trim() : ''
-  const sealed = typeof value.sealed === 'string' ? value.sealed.trim() : ''
-  if (!group || !repository || !email.includes('@') || !key || !sealed) return null
-  return { v: 4, group, repository, email, key, sealed }
-}
-
-function inviteAad(value: Pick<EncryptedInviteEnvelope, 'group' | 'repository' | 'email'>): string {
+function inviteAad(value: Pick<GroupInvitePayload, 'group' | 'repository' | 'email'>): string {
   return JSON.stringify({
-    v: 4,
-    group: value.group,
-    repository: value.repository,
-    email: value.email,
+    group: value.group.trim(),
+    repository: normalizeRepository(value.repository),
+    email: value.email.trim().toLowerCase(),
   })
+}
+
+async function deriveEncryptionKey(Crypto: CryptoModule, unlockCode: string) {
+  const normalized = normalizeInviteUnlockCode(unlockCode)
+  if (!isValidUnlockCode(normalized)) throw new Error('Codice di sblocco Fantazone non valido.')
+
+  const digest = await Crypto.digest(
+    Crypto.CryptoDigestAlgorithm.SHA256,
+    utf8(`${KEY_DERIVATION_CONTEXT}${normalized}`),
+  )
+  return Crypto.AESEncryptionKey.import(bytesToBase64(new Uint8Array(digest)), 'base64')
+}
+
+function isValidUnlockCode(value: string): boolean {
+  return value.length === UNLOCK_CODE_LENGTH && [...value].every(char => UNLOCK_CODE_ALPHABET.includes(char))
+}
+
+function formatUnlockCode(value: string): string {
+  return value.match(/.{1,4}/g)?.join('-') ?? value
+}
+
+function bytesToBase32(bytes: Uint8Array): string {
+  let output = ''
+  let buffer = 0
+  let bits = 0
+
+  for (const byte of bytes) {
+    buffer = (buffer << 8) | byte
+    bits += 8
+    while (bits >= 5) {
+      bits -= 5
+      output += UNLOCK_CODE_ALPHABET[(buffer >> bits) & 31]
+      buffer &= (1 << bits) - 1
+    }
+  }
+
+  if (bits > 0) output += UNLOCK_CODE_ALPHABET[(buffer << (5 - bits)) & 31]
+  return output
 }
 
 function normalizeRepository(value: string): string {
@@ -124,7 +155,7 @@ function text(value: Uint8Array): string {
   return new TextDecoder().decode(value)
 }
 
-function bytesToBase64Url(bytes: Uint8Array): string {
+function bytesToBase64(bytes: Uint8Array): string {
   let output = ''
   for (let index = 0; index < bytes.length; index += 3) {
     const a = bytes[index]
@@ -132,21 +163,23 @@ function bytesToBase64Url(bytes: Uint8Array): string {
     const hasC = index + 2 < bytes.length
     const b = hasB ? bytes[index + 1] : 0
     const c = hasC ? bytes[index + 2] : 0
-    output += BASE64_URL[a >> 2]
-    output += BASE64_URL[((a & 0x03) << 4) | (b >> 4)]
-    if (hasB) output += BASE64_URL[((b & 0x0f) << 2) | (c >> 6)]
-    if (hasC) output += BASE64_URL[c & 0x3f]
+    output += BASE64[a >> 2]
+    output += BASE64[((a & 0x03) << 4) | (b >> 4)]
+    output += hasB ? BASE64[((b & 0x0f) << 2) | (c >> 6)] : '='
+    output += hasC ? BASE64[c & 0x3f] : '='
   }
   return output
 }
 
-function base64UrlToBytes(value: string): Uint8Array {
+function base64ToBytes(value: string): Uint8Array {
+  const normalized = value.replace(/\s+/g, '')
   const bytes: number[] = []
   let buffer = 0
   let bits = 0
-  for (const char of value.replace(/=+$/g, '')) {
-    const index = BASE64_URL.indexOf(char)
-    if (index < 0) throw new Error('Invito base64url non valido.')
+
+  for (const char of normalized.replace(/=+$/g, '')) {
+    const index = BASE64.indexOf(char)
+    if (index < 0) throw new Error('Base64 non valido.')
     buffer = (buffer << 6) | index
     bits += 6
     if (bits >= 8) {
@@ -155,10 +188,10 @@ function base64UrlToBytes(value: string): Uint8Array {
       buffer &= (1 << bits) - 1
     }
   }
+
   return Uint8Array.from(bytes)
 }
 
-function base64ToBytes(value: string): Uint8Array {
-  const normalized = value.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '')
-  return base64UrlToBytes(normalized)
+async function loadCrypto(): Promise<CryptoModule> {
+  return import('expo-crypto')
 }
