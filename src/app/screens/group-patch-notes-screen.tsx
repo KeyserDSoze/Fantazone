@@ -15,6 +15,20 @@ const releases: Release[] = [
   {
     version: APP_VERSION,
     date: RELEASE_DATE,
+    title: 'Routing persistente e inviti cifrati',
+    items: [
+      { category: 'Nuovo', text: 'Le pagine del gruppo hanno ora URL reali del tipo /groups/<id>/<pagina>; anche il dettaglio partita ha un percorso dedicato, così i link sono leggibili e navigabili con back/forward del browser.' },
+      { category: 'Fix', text: 'F5 e Ctrl+F5 riaprono il gruppo e la pagina indicati nell’URL invece di tornare sempre alla Home; il contesto lega/stagione continua a essere ripristinato dalla preferenza locale per account e gruppo.' },
+      { category: 'Miglioria', text: 'Il ripristino di una route esplicita non compete più con l’apertura automatica del gruppo predefinito, evitando race e rimbalzi verso il gruppo sbagliato.' },
+      { category: 'Nuovo', text: 'Admin e SuperAdmin hanno una pagina Condividi gruppo che censisce l’email Microsoft e genera un invito self-contained con il PAT cifrato AES-256-GCM.' },
+      { category: 'Architettura', text: 'Gruppo, repository ed email sono autenticati come AAD: una modifica del payload invalida la decifratura. Il frammento sensibile viene rimosso subito e i vecchi inviti v3/v2/v1 restano compatibili.' },
+      { category: 'Architettura', text: 'Fantazone resta zero-backend: la chiave AES viaggia nello stesso frammento per rendere l’invito autosufficiente. Il PAT non è in chiaro nel link, ma il link completo resta una bearer credential e va trattato come una password.' },
+      { category: 'Fix', text: 'Le route vengono ricordate nella sessione browser durante il redirect OAuth Microsoft, così il callback alla root può tornare alla pagina da cui era partito senza perdere il percorso applicativo.' },
+    ],
+  },
+  {
+    version: '0.3.3',
+    date: '9 settembre 2026',
     title: 'RealCalendar più tolleranti e diagnosi fail-fast',
     items: [
       { category: 'Fix', text: 'Quando il year del RealCalendar o della singola giornata manca oppure vale 0, la migrazione usa la stagione della chiave Azure/Rystem e normalizza il payload invece di perderlo.' },
