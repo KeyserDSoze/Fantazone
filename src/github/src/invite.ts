@@ -1,4 +1,4 @@
-import type { GroupInvitePayload } from '../../domain/src/contracts'
+import type { GroupInvitePayload, GroupInviteMode } from '../../domain/src/contracts'
 
 export function createInviteFragment(payload: GroupInvitePayload): string {
   const normalized = normalizeInvitePayload(payload)
@@ -6,7 +6,7 @@ export function createInviteFragment(payload: GroupInvitePayload): string {
   return `#invite=${toBase64Url(JSON.stringify(normalized))}`
 }
 
-/** Reads only the current encrypted Fantazone invitation format. */
+/** Reads only the single current Fantazone invitation envelope. */
 export function parseInviteFragment(fragment: string): GroupInvitePayload | null {
   try {
     const params = new URLSearchParams(fragment.replace(/^#/, ''))
@@ -22,13 +22,24 @@ function normalizeInvitePayload(value: unknown): GroupInvitePayload | null {
   if (!value || typeof value !== 'object') return null
   const raw = value as Record<string, unknown>
 
+  const mode = normalizeMode(raw.mode)
   const group = text(raw.group)
   const repository = normalizeRepository(text(raw.repository))
   const email = normalizeEmail(text(raw.email))
+  const salt = text(raw.salt)
+  const iterations = typeof raw.iterations === 'number' && Number.isInteger(raw.iterations) ? raw.iterations : 0
   const sealed = text(raw.sealed)
-  if (!group || !repository || !email || !email.includes('@') || !sealed) return null
+  if (!mode || !group || !repository || !salt || iterations < 1 || iterations > 1_000_000 || !sealed) return null
+  if (mode === 'email' && (!email || !email.includes('@'))) return null
+  if (mode === 'shared' && email) return null
 
-  return { group, repository, email, sealed }
+  return mode === 'email'
+    ? { mode, group, repository, email, salt, iterations, sealed }
+    : { mode, group, repository, salt, iterations, sealed }
+}
+
+function normalizeMode(value: unknown): GroupInviteMode | null {
+  return value === 'email' || value === 'shared' ? value : null
 }
 
 function normalizeRepository(value: string): string {
