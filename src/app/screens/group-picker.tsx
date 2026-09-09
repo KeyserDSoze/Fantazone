@@ -9,6 +9,7 @@ export function GroupPickerScreen({
   groups,
   userEmail,
   error,
+  autoOpen = true,
   onOpen,
   onAdd,
   onRemove,
@@ -17,6 +18,7 @@ export function GroupPickerScreen({
   groups: StoredGroup[]
   userEmail: string
   error?: string | null
+  autoOpen?: boolean
   onOpen: (group: StoredGroup) => void
   onAdd: () => void
   onRemove: (group: StoredGroup) => void
@@ -26,7 +28,7 @@ export function GroupPickerScreen({
   const autoOpenAttempted = useRef(false)
 
   useEffect(() => {
-    if (autoOpenAttempted.current || groups.length === 0) return
+    if (!autoOpen || autoOpenAttempted.current || groups.length === 0) return
     autoOpenAttempted.current = true
     if (consumeManualGroupSwitchRequest()) return
 
@@ -34,7 +36,7 @@ export function GroupPickerScreen({
       ? groups[0]
       : groups.find(group => group.isDefault === true)
     if (preferred) onOpen(preferred)
-  }, [groups, onOpen])
+  }, [autoOpen, groups, onOpen])
 
   return (
     <AppScreen maxWidth={1120}>
