@@ -15,6 +15,7 @@ import {
   Package,
   PlayCircle,
   Settings,
+  Share2,
   Star,
   Sun,
   TrendingUp,
@@ -80,6 +81,7 @@ const ROUTE_ICONS: Record<GroupProductRoute, typeof Home> = {
   'push-notifications': Bell,
   'patch-notes': FileText,
   auction: Gavel,
+  'share-group': Share2,
   'group-users-admin': UserCog,
   'group-baskets-admin': Package,
   'group-league-admin': Trophy,
@@ -306,7 +308,7 @@ export function GroupProductShell({
               <Text color="$color9" fontSize="$2" fontWeight="700">Offline-first</Text>
             </XStack>
           </XStack>
-          <YStack flex={1} minHeight={0}>{children}</YStack>
+          <YStack flex={1} minWidth={0}>{children}</YStack>
         </YStack>
       </XStack>
     )
