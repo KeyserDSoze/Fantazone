@@ -91,13 +91,15 @@ export async function prepareOpeningCompetition(
   }
 
   const existing = await runtime.openingCompetitionRepository.getStandingsSnapshot(league.id, year, { refresh: true })
-  await runtime.openingCompetitionRepository.writeStandings(
-    league.id,
-    year,
-    result,
-    `opening: update standings ${league.id} ${year}`,
-    existing ? { expectedSha: existing.sha } : { createOnly: true },
-  )
+  if (!existing || JSON.stringify(existing.value) !== JSON.stringify(result)) {
+    await runtime.openingCompetitionRepository.writeStandings(
+      league.id,
+      year,
+      result,
+      `opening: update standings ${league.id} ${year}`,
+      existing ? { expectedSha: existing.sha } : { createOnly: true },
+    )
+  }
   return result
 }
 
