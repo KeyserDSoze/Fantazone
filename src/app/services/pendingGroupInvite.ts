@@ -6,8 +6,8 @@ const PENDING_GROUP_INVITE_KEY = 'fantazone.group-invite.pending'
 /**
  * Captures the current encrypted invite before Microsoft performs its full-page
  * OAuth redirect. The URL fragment is stripped immediately and sessionStorage
- * keeps only ciphertext plus non-secret metadata. The separate unlock code is
- * never stored here.
+ * keeps only ciphertext plus non-secret metadata. Neither the email unlock code
+ * nor the shared group password is ever stored here.
  */
 export async function loadPendingGroupInvite(): Promise<GroupInvitePayload | null> {
   if (!isWebBrowser()) return null
@@ -40,12 +40,20 @@ export function clearPendingGroupInvite(): void {
 export function decodePendingInvite(raw: string): GroupInvitePayload | null {
   try {
     const value = JSON.parse(raw) as Record<string, unknown>
+    const mode = value.mode === 'email' || value.mode === 'shared' ? value.mode : null
     const email = typeof value.email === 'string' ? value.email.trim().toLowerCase() : ''
     const group = typeof value.group === 'string' ? value.group.trim() : ''
     const repository = normalizeRepository(typeof value.repository === 'string' ? value.repository : '')
+    const salt = typeof value.salt === 'string' ? value.salt.trim() : ''
+    const iterations = typeof value.iterations === 'number' && Number.isInteger(value.iterations) ? value.iterations : 0
     const sealed = typeof value.sealed === 'string' ? value.sealed.trim() : ''
-    if (!group || !repository || !email.includes('@') || !sealed) return null
-    return { group, repository, email, sealed }
+    if (!mode || !group || !repository || !salt || iterations < 1 || iterations > 1_000_000 || !sealed) return null
+    if (mode === 'email') {
+      if (!email.includes('@')) return null
+      return { mode, group, repository, email, salt, iterations, sealed }
+    }
+    if (email) return null
+    return { mode, group, repository, salt, iterations, sealed }
   } catch {
     return null
   }
