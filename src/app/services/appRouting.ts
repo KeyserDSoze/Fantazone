@@ -13,6 +13,8 @@ export type AppBrowserLocation =
 
 export type BrowserNavigationMode = 'push' | 'replace'
 
+const LOGIN_RETURN_PATH_KEY = 'fantazone.browser-route.oauth-return.v1'
+
 export function readBrowserLocation(): AppBrowserLocation {
   if (!isWebBrowser()) return { kind: 'groups' }
   return parseBrowserPath(window.location.pathname)
@@ -61,6 +63,23 @@ export function subscribeBrowserNavigation(listener: (location: AppBrowserLocati
   const handlePopState = () => listener(readBrowserLocation())
   window.addEventListener('popstate', handlePopState)
   return () => window.removeEventListener('popstate', handlePopState)
+}
+
+export function rememberBrowserReturnPath(): void {
+  if (!isWebBrowser()) return
+  try { window.sessionStorage.setItem(LOGIN_RETURN_PATH_KEY, currentBrowserReturnPath() ?? '/groups') } catch { /* best effort */ }
+}
+
+export function restoreRememberedBrowserReturnPath(): void {
+  if (!isWebBrowser()) return
+  let returnPath: string | undefined
+  try {
+    returnPath = window.sessionStorage.getItem(LOGIN_RETURN_PATH_KEY) ?? undefined
+    window.sessionStorage.removeItem(LOGIN_RETURN_PATH_KEY)
+  } catch {
+    return
+  }
+  restoreBrowserReturnPath(returnPath)
 }
 
 export function currentBrowserReturnPath(): string | undefined {
