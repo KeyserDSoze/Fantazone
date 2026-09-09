@@ -1,20 +1,20 @@
-import { parseInviteFragment } from '@fantazone/github'
 import type { GroupInvitePayload } from '@fantazone/domain'
+import { parseInviteLinkFragment } from './groupInviteLink'
 
-const PENDING_GROUP_INVITE_KEY = 'fantazone.group-invite.pending.v3'
+const PENDING_GROUP_INVITE_KEY = 'fantazone.group-invite.pending.v4'
 
 /**
  * Captures an invite fragment before Microsoft performs its full-page redirect.
  *
- * New v3 invites intentionally contain the group's shared GitHub PAT because the
- * product has no trusted backend and participants do not need a GitHub account.
- * The URL fragment is stripped immediately; sessionStorage is used only to carry
- * the pending invite through the OAuth redirect and is cleared after join/cancel.
+ * Current v4 links encrypt the group's shared GitHub PAT with AES-256-GCM. The URL
+ * fragment is stripped immediately; sessionStorage carries only the already
+ * decrypted pending invite through the OAuth redirect and is cleared after
+ * join/cancel. Older v3/v2/v1 links remain readable.
  */
-export function loadPendingGroupInvite(): GroupInvitePayload | null {
+export async function loadPendingGroupInvite(): Promise<GroupInvitePayload | null> {
   if (!isWebBrowser()) return null
 
-  const fromFragment = parseInviteFragment(window.location.hash)
+  const fromFragment = await parseInviteLinkFragment(window.location.hash)
   if (fromFragment) {
     try {
       window.sessionStorage.setItem(PENDING_GROUP_INVITE_KEY, JSON.stringify(fromFragment))
