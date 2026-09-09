@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { calculateOpeningCompetitionPrizes } from '../../src/domain/src/index'
+import { TeamHelper, calculateOpeningCompetitionPrizes, type Team } from '../../src/domain/src/index'
 
 test('opening competition awards prizes by sporting position and preserves ties', () => {
   const standings = [
@@ -28,4 +28,19 @@ test('opening competition prize lookup is case-insensitive for owner keys', () =
     { owner: 'Winner@Example.COM', score: 12 },
   ])
   assert.equal(prizes['winner@example.com'], 25)
+})
+
+test('opening competition prize is credited to the starting-auction budget', () => {
+  const team: Team = {
+    name: 'Winner',
+    owner: 'winner@example.com',
+    additionalOwners: [],
+    players: [],
+    moneyFromRank: 0,
+    openingCompetitionPrize: 50,
+    formationChanges: 0,
+    lastUpdate: null,
+  }
+  assert.equal(TeamHelper.getCost(team), -50)
+  assert.equal(TeamHelper.enhance(team).cost, -50)
 })
