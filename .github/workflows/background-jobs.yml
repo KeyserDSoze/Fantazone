@@ -91,6 +91,7 @@ jobs:
         continue-on-error: true
         run: npm run job --workspace=@fantazone/jobs -- ingest-serie-a "${{ steps.live_guard.outputs.day }}" "${{ steps.live_guard.outputs.season }}"
       - name: Run selected global job
+        id: selected_job
         if: steps.live_guard.outputs.run == 'true'
         run: npm run job --workspace=@fantazone/jobs -- "$FANTAZONE_JOB" "$FANTAZONE_DAY" "$FANTAZONE_SEASON"
       - name: Upload raw/debug outputs
@@ -102,7 +103,7 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
       - name: Commit canonical platform data and static asset changes
-        if: always() && steps.live_guard.outputs.run == 'true'
+        if: always() && steps.live_guard.outputs.run == 'true' && steps.selected_job.outcome == 'success'
         shell: bash
         run: |
           if [ -z "$(git status --porcelain -- data src/app/public/images/players)" ]; then
@@ -118,5 +119,5 @@ jobs:
       - name: Surface a failed live calendar refresh after preserving live-vote ingestion
         if: always() && github.event_name == 'schedule' && env.FANTAZONE_JOB == 'ingest-live-votes' && steps.live_calendar.outcome == 'failure'
         run: |
-          echo "Live votes were still attempted and canonical diffs were committed, but the Serie A calendar refresh failed."
+          echo "Live votes were still attempted and successful canonical diffs were committed, but the Serie A calendar refresh failed."
           exit 1
