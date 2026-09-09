@@ -7,9 +7,9 @@ import test from 'node:test'
 
 const SCRIPT = resolve('scripts/live-votes-schedule-guard.mjs')
 
-async function runGuard(root: string, now: string): Promise<string> {
+async function runGuard(root: string, now: string, args: string[] = []): Promise<string> {
   return new Promise((resolvePromise, reject) => {
-    const child = spawn(process.execPath, [SCRIPT, '--root', root, '--now', now], { stdio: ['ignore', 'pipe', 'pipe'] })
+    const child = spawn(process.execPath, [SCRIPT, '--root', root, '--now', now, ...args], { stdio: ['ignore', 'pipe', 'pipe'] })
     let stdout = ''
     let stderr = ''
     child.stdout.on('data', chunk => { stdout += String(chunk) })
@@ -22,12 +22,12 @@ async function runGuard(root: string, now: string): Promise<string> {
   })
 }
 
-async function writeCalendar(root: string, games: Array<{ date: string | null; delayed: boolean }>) {
+async function writeCalendar(root: string, games: Array<{ date: string | null; delayed: boolean }>, serieADay = 1) {
   const path = join(root, 'data/serie-a/calendars/15.json')
   await mkdir(dirname(path), { recursive: true })
   await writeFile(path, JSON.stringify({
     year: 15,
-    days: [{ year: 15, serieADay: 1, games: games.map(game => ({
+    days: [{ year: 15, serieADay, games: games.map(game => ({
       home: { name: 'Roma', abbreviation: 'rom' },
       away: { name: 'Milan', abbreviation: 'mil' },
       homeGoals: null,
@@ -44,6 +44,15 @@ test('scheduled live-vote guard runs during the legacy 2h15 live-match window', 
   assert.equal(await runGuard(root, '2026-09-06T21:00:01Z'), 'false')
 })
 
+test('scheduled live-vote guard exposes the canonical season and day for the workflow calendar refresh', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'fantazone-live-guard-'))
+  await writeCalendar(root, [{ date: '2026-09-11T20:45:00Z', delayed: false }], 4)
+  assert.equal(
+    await runGuard(root, '2026-09-11T21:00:00Z', ['--github-output']),
+    'run=true\nday=4\nseason=15',
+  )
+})
+
 test('scheduled live-vote guard ignores future and delayed games', async () => {
   const root = await mkdtemp(join(tmpdir(), 'fantazone-live-guard-'))
   await writeCalendar(root, [
@@ -56,4 +65,5 @@ test('scheduled live-vote guard ignores future and delayed games', async () => {
 test('scheduled live-vote guard is a no-op when calendar data is absent', async () => {
   const root = await mkdtemp(join(tmpdir(), 'fantazone-live-guard-'))
   assert.equal(await runGuard(root, '2026-09-06T20:00:00Z'), 'false')
+  assert.equal(await runGuard(root, '2026-09-06T20:00:00Z', ['--github-output']), 'run=false\nday=\nseason=')
 })
