@@ -15,6 +15,19 @@ const releases: Release[] = [
   {
     version: APP_VERSION,
     date: RELEASE_DATE,
+    title: 'Classifica Serie A derivata e live più completo',
+    items: [
+      { category: 'Nuovo', text: 'La schermata Live mostra ora anche la classifica completa della Serie A con giocate, vittorie, pareggi, sconfitte, gol fatti/subiti, differenza reti e punti.' },
+      { category: 'Miglioria', text: 'Durante una partita la classifica Serie A incorpora immediatamente i punteggi live già presenti nel RealCalendar e continua ad aggiornarsi insieme al refresh del Live.' },
+      { category: 'Architettura', text: 'La vecchia cache RealRank del backend non viene reintrodotta: la classifica è una proiezione pura e deterministica del RealCalendar canonico, quindi non richiede un altro documento globale da sincronizzare.' },
+      { category: 'Fix', text: 'Partite future, rinviate, senza data valida o con risultato incompleto non alterano la classifica; l’ordinamento mantiene la semantica legacy per punti, differenza reti, gol fatti, gol subiti e nome.' },
+      { category: 'Miglioria', text: 'Il calendario Serie A completo viene aggiornato automaticamente ogni giorno alle 02:27 UTC; durante una finestra live viene aggiornato soltanto il turno corrente prima di interrogare il feed voti.' },
+      { category: 'Miglioria', text: 'I voti finali hanno ora due tentativi automatici alle 03:07 e 04:07 UTC, mantenendo i due retry notturni del backend senza collisioni a inizio ora.' },
+    ],
+  },
+  {
+    version: '0.3.6',
+    date: '9 settembre 2026',
     title: 'Parità nuovo anno: co-owner, cambi live e campionato iniziale',
     items: [
       { category: 'Miglioria', text: 'Owner e co-owner vengono riconosciuti con confronto email case-insensitive nei percorsi di formazione, così le comproprietà ereditate dai dati legacy continuano a funzionare anche con differenze di maiuscole/minuscole.' },
@@ -169,8 +182,8 @@ const roadmap = [
     text: 'Registrare e verificare i redirect Entra mobile/desktop e chiudere l’acceptance reale su iOS e Android.',
   },
   {
-    title: 'Feed live e voti finali',
-    text: 'Ottenere una osservazione positiva del feed durante una partita attiva e abilitare lo scheduling automatico dei voti finali.',
+    title: 'Feed live reale',
+    text: 'Ottenere una osservazione positiva e non vuota del feed voti durante una partita attiva; calendario e voti finali sono già schedulati automaticamente.',
   },
   {
     title: 'Push end-to-end',
