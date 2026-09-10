@@ -8,6 +8,7 @@ import {
   shouldRevealEvolutionCards,
   type AuthenticatedGroupSession,
   type EvolutionCardCommitment,
+  type LeagueSetting,
   type RealDay,
 } from '@fantazone/domain'
 import {
@@ -199,7 +200,7 @@ export class GroupEvolutionCardService {
     }
   }
 
-  private async authorize(input: CommitEvolutionCardsInput): Promise<{ settings: ReturnType<typeof leagueSettings>; day: RealDay; owner: string }> {
+  private async authorize(input: CommitEvolutionCardsInput): Promise<{ settings: LeagueSetting; day: RealDay; owner: string }> {
     const group = await this.runtime.refreshGroup()
     const league = group.leagues.find(item => item.id === input.leagueId)
     const annual = league?.years.find(item => item.year === input.season)
@@ -238,10 +239,6 @@ function firstKickoff(day: RealDay): Date | null {
 function cardLockAt(day: RealDay, minutesBefore: number): Date | null {
   const first = firstKickoff(day)
   return first ? new Date(first.getTime() - Math.max(0, minutesBefore) * 60_000) : null
-}
-
-function leagueSettings(value: unknown) {
-  return value as never
 }
 
 function normalize(value: string | null | undefined): string {
