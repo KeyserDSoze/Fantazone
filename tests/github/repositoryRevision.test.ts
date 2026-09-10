@@ -4,6 +4,7 @@ import {
   GitHubApiError,
   REPOSITORY_MANIFEST_PATH,
   RepositoryRevisionContentClient,
+  isRepositoryRevisionManifestStale,
   type RepositoryContentClient,
 } from '../../src/github/src/index'
 
@@ -15,6 +16,8 @@ class FakeContentClient implements RepositoryContentClient {
   conflictManifestOnce = false
   failDocumentWrite = false
   failStableManifestWrites = 0
+  replaceManifestOnRepairConflict: StoredFile | null = null
+  replaceManifestDuringDocumentWrite: StoredFile | null = null
 
   async tryGetContent(owner: string, repo: string, path: string, ref?: string): Promise<StoredFile | null> {
     return this.files.get(key(owner, repo, path, ref)) ?? null
@@ -24,6 +27,11 @@ class FakeContentClient implements RepositoryContentClient {
     const fileKey = key(owner, repo, path, branch)
     const existing = this.files.get(fileKey)
 
+    if (path === REPOSITORY_MANIFEST_PATH && this.replaceManifestOnRepairConflict) {
+      this.files.set(fileKey, this.replaceManifestOnRepairConflict)
+      this.replaceManifestOnRepairConflict = null
+      throw new GitHubApiError(409, 'synthetic repair race')
+    }
     if (path === REPOSITORY_MANIFEST_PATH && this.conflictManifestOnce) {
       this.conflictManifestOnce = false
       this.files.set(fileKey, {
@@ -45,6 +53,15 @@ class FakeContentClient implements RepositoryContentClient {
     }
 
     if (existing && sha !== existing.sha) throw new GitHubApiError(409, 'stale sha')
+
+    if (path === documentPath && this.replaceManifestDuringDocumentWrite) {
+      this.files.set(
+        key(target.owner, target.repo, REPOSITORY_MANIFEST_PATH, target.ref),
+        this.replaceManifestDuringDocumentWrite,
+      )
+      this.replaceManifestDuringDocumentWrite = null
+    }
+
     const nextSha = `${path}-sha-${this.writes.length + 1}`
     this.writes.push(path)
     this.files.set(fileKey, { sha: nextSha, content: text })
@@ -136,6 +153,96 @@ test('does not report a committed document as failed when the final manifest tra
   const manifest = JSON.parse(client.files.get(key(target.owner, target.repo, REPOSITORY_MANIFEST_PATH, target.ref))!.content)
   assert.equal(manifest.updating, true)
   assert.deepEqual(client.writes, [REPOSITORY_MANIFEST_PATH, documentPath])
+})
+
+test('detects only old in-flight manifests as stale', () => {
+  const now = new Date('2026-09-10T10:10:00.000Z')
+  assert.equal(isRepositoryRevisionManifestStale({
+    schemaVersion: 2,
+    revision: 2,
+    updatedAt: '2026-09-10T10:00:00.000Z',
+    updating: true,
+  }, now), true)
+  assert.equal(isRepositoryRevisionManifestStale({
+    schemaVersion: 2,
+    revision: 2,
+    updatedAt: '2026-09-10T10:09:00.000Z',
+    updating: true,
+  }, now), false)
+  assert.equal(isRepositoryRevisionManifestStale({
+    schemaVersion: 2,
+    revision: 2,
+    updatedAt: '2026-09-10T09:00:00.000Z',
+    updating: false,
+  }, now), false)
+})
+
+test('stale repair re-evaluates a conflict and never closes a newer fresh marker', async () => {
+  const client = new FakeContentClient()
+  client.files.set(key(target.owner, target.repo, REPOSITORY_MANIFEST_PATH, target.ref), {
+    sha: 'manifest-6',
+    content: JSON.stringify({
+      schemaVersion: 2,
+      revision: 6,
+      updatedAt: '2026-09-10T09:00:00.000Z',
+      updating: true,
+    }),
+  })
+  client.replaceManifestOnRepairConflict = {
+    sha: 'manifest-7',
+    content: JSON.stringify({
+      schemaVersion: 2,
+      revision: 7,
+      updatedAt: '2026-09-10T10:09:59.000Z',
+      updating: true,
+    }),
+  }
+  const revisionClient = new RepositoryRevisionContentClient(
+    client,
+    target,
+    () => new Date('2026-09-10T10:10:00.000Z'),
+  )
+
+  const repaired = await revisionClient.repairStaleRevision()
+  const manifest = JSON.parse(client.files.get(key(target.owner, target.repo, REPOSITORY_MANIFEST_PATH, target.ref))!.content)
+
+  assert.equal(repaired, null)
+  assert.equal(manifest.revision, 7)
+  assert.equal(manifest.updating, true)
+})
+
+test('a writer never closes a newer in-flight revision that appeared after its begin phase', async () => {
+  const client = new FakeContentClient()
+  seedManifest(client)
+  client.files.set(key(target.owner, target.repo, documentPath, target.ref), { sha: 'group-1', content: '{}' })
+  client.replaceManifestDuringDocumentWrite = {
+    sha: 'manifest-3',
+    content: JSON.stringify({
+      schemaVersion: 2,
+      revision: 3,
+      updatedAt: '2026-09-10T10:00:02.000Z',
+      updating: true,
+    }),
+  }
+  const revisionClient = new RepositoryRevisionContentClient(
+    client,
+    target,
+    () => new Date('2026-09-10T10:00:03.000Z'),
+  )
+
+  await revisionClient.putContent(
+    target.owner,
+    target.repo,
+    documentPath,
+    '{"name":"Amici"}',
+    'test',
+    'group-1',
+    target.ref,
+  )
+
+  const manifest = JSON.parse(client.files.get(key(target.owner, target.repo, REPOSITORY_MANIFEST_PATH, target.ref))!.content)
+  assert.equal(manifest.revision, 3)
+  assert.equal(manifest.updating, true)
 })
 
 test('keeps realtime signaling writes out of manifest revisions', async () => {
