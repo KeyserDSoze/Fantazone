@@ -113,7 +113,8 @@ export const isLeagueSettingValid = (setting: LeagueSetting): boolean => {
 }
 
 function isEvolutionSettingValid(setting: LeagueSetting): boolean {
-  const evolution = setting.evolution ?? createDefaultFantazoneEvolutionSettings()
+  const defaults = createDefaultFantazoneEvolutionSettings()
+  const evolution = setting.evolution ?? defaults
   if (typeof evolution.enabled !== 'boolean' || !evolution.name?.trim()) return false
   if (!Number.isInteger(evolution.schemaVersion) || evolution.schemaVersion < 1) return false
 
@@ -135,9 +136,11 @@ function isEvolutionSettingValid(setting: LeagueSetting): boolean {
   if (!Array.isArray(skills.catalog.disabledSkillIds) || !Array.isArray(skills.catalog.customSkills)) return false
 
   const cards = evolution.coachCards
+  const revealGrace = cards.revealGraceSecondsAfterFirstKickoff ?? defaults.coachCards.revealGraceSecondsAfterFirstKickoff
   if (!Number.isInteger(cards.cardsPerMatch) || cards.cardsPerMatch < 0 || cards.cardsPerMatch > 5) return false
   if (!Number.isInteger(cards.cardsInSeasonDeck) || cards.cardsInSeasonDeck < 0 || cards.cardsInSeasonDeck > 200) return false
   if (!Number.isInteger(cards.lockMinutesBeforeFirstKickoff) || cards.lockMinutesBeforeFirstKickoff < 0 || cards.lockMinutesBeforeFirstKickoff > 7 * 24 * 60) return false
+  if (!Number.isInteger(revealGrace) || revealGrace < 0 || revealGrace > 600) return false
   if (!Array.isArray(cards.catalog.disabledCardIds) || !Array.isArray(cards.catalog.customCards)) return false
 
   if (!Array.isArray(evolution.families.thresholds) || evolution.families.thresholds.length === 0) return false
