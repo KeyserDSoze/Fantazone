@@ -15,6 +15,17 @@ const releases: Release[] = [
   {
     version: APP_VERSION,
     date: RELEASE_DATE,
+    title: 'Checkpoint asta serializzati senza rallentare il realtime',
+    items: [
+      { category: 'Fix', text: 'Due boundary durevoli dell’asta che arrivano quasi insieme dallo stesso host non provano più a scrivere GitHub con lo stesso SHA del checkpoint, evitando conflitti ottimistici interni alla stessa sessione.' },
+      { category: 'Architettura', text: 'Checkpoint e outcome di assegnazione vengono accodati come una singola unità durevole: una scrittura successiva non può superare l’outcome della precedente e ogni checkpoint usa lo SHA prodotto dal writer appena completato.' },
+      { category: 'Miglioria', text: 'La serializzazione riguarda soltanto la persistenza GitHub: le offerte continuano a restare in memoria e sul DataChannel WebRTC, senza diventare commit e senza attendere la coda durevole.' },
+      { category: 'Fix', text: 'Un regression test con scritture volutamente sovrapposte verifica che sia attivo un solo writer alla volta e che i checkpoint #1 e #2 vengano persistiti nell’ordine corretto.' },
+    ],
+  },
+  {
+    version: '0.3.11',
+    date: '10 settembre 2026',
     title: 'Inizializzazione leghe concorrente e idempotente',
     items: [
       { category: 'Fix', text: 'Due SuperAdmin o due dispositivi che inizializzano quasi insieme Calendar e Rank della stessa lega non ricevono più un falso errore create-only quando l’altro writer ha già creato il documento canonico.' },

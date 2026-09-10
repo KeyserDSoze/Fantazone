@@ -11,6 +11,14 @@ Fantazone uses GitHub only as a slow rendezvous and durability boundary for auct
 5. Once the ordered `fantazone-auction-v1` DataChannel opens, the participant stops GitHub signaling polling and requests the current auction checkpoint from the host.
 6. Commands/events then travel only over the DataChannel. Durable assignment outcomes continue to cross the existing GitHub Action boundary.
 
+## Durable ordering
+
+Realtime command dispatch is independent from GitHub persistence: accepted events are broadcast first and bids remain DataChannel/in-memory traffic. Durable boundaries are then enqueued by the authoritative host.
+
+Only one durable operation is allowed to write at a time. Each queued unit snapshots the checkpoint that belongs to that boundary, writes it with the latest known Git blob SHA, advances the SHA from the successful response, and only then writes the optional append-only assignment outcome. A later durable boundary cannot overtake that checkpoint/outcome pair.
+
+This queue is deliberately not a global realtime lock. A second bid or command can still be reduced and broadcast while an earlier checkpoint commit is in flight; only the GitHub durability side is serialized.
+
 ## Reconnect
 
 A participant keeps the same `peerId` across reconnects. `RTCPeerConnection.connectionState === failed` triggers an immediate reconnect; `disconnected` gets a short grace period first. Reconnect increments the peer `generation`, causing the host to discard the old negotiator and publish a fresh offer.
