@@ -75,13 +75,14 @@ export function FantazoneEvolutionSettingsPanel({ settings, onChange }: Props) {
 
           <Module
             title="Carte allenatore"
-            description="Le carte scelte restano coperte, si bloccano prima del turno e vengono rivelate al primo kickoff."
+            description="Le carte scelte restano coperte, si bloccano prima del turno e vengono rivelate al primo kickoff. Se il reveal non arriva entro la finestra di sicurezza, la carta viene forfeited per impedire reveal selettivi dopo aver visto la partita."
             enabled={evolution.coachCards.enabled}
             onToggle={() => patch('coachCards', { ...evolution.coachCards, enabled: !evolution.coachCards.enabled })}
           >
             <Numeric label="Carte per partita" value={evolution.coachCards.cardsPerMatch} onChange={value => number(value, evolution.coachCards.cardsPerMatch, next => patch('coachCards', { ...evolution.coachCards, cardsPerMatch: Math.max(0, Math.round(next)) }))} />
             <Numeric label="Carte nel deck stagionale" value={evolution.coachCards.cardsInSeasonDeck} onChange={value => number(value, evolution.coachCards.cardsInSeasonDeck, next => patch('coachCards', { ...evolution.coachCards, cardsInSeasonDeck: Math.max(0, Math.round(next)) }))} />
             <Numeric label="Blocco prima del kickoff (min)" value={evolution.coachCards.lockMinutesBeforeFirstKickoff} onChange={value => number(value, evolution.coachCards.lockMinutesBeforeFirstKickoff, next => patch('coachCards', { ...evolution.coachCards, lockMinutesBeforeFirstKickoff: Math.max(0, Math.round(next)) }))} />
+            <Numeric label="Finestra reveal dopo kickoff (sec)" value={evolution.coachCards.revealGraceSecondsAfterFirstKickoff} onChange={value => number(value, evolution.coachCards.revealGraceSecondsAfterFirstKickoff, next => patch('coachCards', { ...evolution.coachCards, revealGraceSecondsAfterFirstKickoff: Math.max(0, Math.min(600, Math.round(next))) }))} />
           </Module>
 
           <Module
