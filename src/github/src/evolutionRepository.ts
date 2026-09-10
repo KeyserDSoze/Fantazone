@@ -1,5 +1,5 @@
 import type {
-  EvolutionCardSelection,
+  EvolutionCardCommitment,
   EvolutionPlayerSeasonState,
   EvolutionRuleTrace,
   EvolutionSeasonSkillDocument,
@@ -21,12 +21,16 @@ export interface EvolutionPlayerStateDocument {
   players: EvolutionPlayerSeasonState[]
 }
 
+/**
+ * Card choices stay sealed in the shared repository until reveal. A commitment never
+ * contains card ids; the optional reveal is cryptographically verified by consumers.
+ */
 export interface EvolutionCardsDocument {
-  version: 1
+  version: 2
   leagueId: string
   year: number
   serieADay: number
-  selections: Record<string, EvolutionCardSelection>
+  commitments: Record<string, EvolutionCardCommitment>
 }
 
 export interface EvolutionTraceDocument {
@@ -95,7 +99,7 @@ export class GitHubEvolutionRepository {
     year: number,
     serieADay: number,
     document: EvolutionCardsDocument,
-    message = 'feat: update Evolution match cards',
+    message = 'feat: update sealed Evolution match cards',
     options: RepositoryJsonWriteOptions = {},
   ): Promise<string> {
     validateCardsDocument(document, leagueId, year, serieADay)
@@ -201,8 +205,18 @@ function validateSeasonDocument(document: EvolutionSeasonSkillDocument, year: nu
 }
 
 function validateCardsDocument(document: EvolutionCardsDocument, leagueId: string, year: number, serieADay: number): void {
-  if (document.version !== 1 || document.leagueId !== leagueId || document.year !== year || document.serieADay !== serieADay || !document.selections) {
+  if (document.version !== 2 || document.leagueId !== leagueId || document.year !== year || document.serieADay !== serieADay || !document.commitments) {
     throw new Error('Evolution cards key does not match its document')
+  }
+  for (const [owner, commitment] of Object.entries(document.commitments)) {
+    validateOwner(owner)
+    if (!commitment || typeof commitment.commitment !== 'string' || !/^[a-f0-9]{64}$/i.test(commitment.commitment)) {
+      throw new Error(`Invalid Evolution card commitment for ${owner}`)
+    }
+    if (!Number.isFinite(Date.parse(commitment.committedAt))) throw new Error(`Invalid Evolution committedAt for ${owner}`)
+    if (commitment.reveal && (!Array.isArray(commitment.reveal.cardIds) || typeof commitment.reveal.nonce !== 'string')) {
+      throw new Error(`Invalid Evolution card reveal for ${owner}`)
+    }
   }
 }
 
