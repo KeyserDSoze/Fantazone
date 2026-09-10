@@ -53,7 +53,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": false,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -1072,12 +1072,12 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
+        "fantagazzetta": false,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
-        "status": 0,
-        "description": null,
+        "status": 1,
+        "description": "Il brasiliano costretto al cambio mercoled&igrave; in Champions League per noie muscolari che andranno valutate. A rischio forfait per domenica contro il Bologna in campionato.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -1653,7 +1653,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": false,
+        "gazzetta": true,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -1912,12 +1912,12 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
-        "gazzetta": true,
+        "fantagazzetta": false,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
-        "status": 0,
-        "description": null,
+        "status": 1,
+        "description": "Il portiere uscito claudicante dal match di mercoled&igrave; in Champions League per un fastidio muscolare alla coscia sinistra. Condizioni da valutare, verso il forfait domenica in campionato contro il Bologna.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -2757,7 +2757,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "l'esterno offensivo dei neroverdi KO il 6 settembre a Bologna vittima di un guaio muscolare alla gamba che andr&agrave; valutato. Di certo assente per domenica sera contro la Juventus.&nbsp;",
+        "description": "l'esterno offensivo dei neroverdi KO il 6 settembre a Bologna vittima di una lesione di grado moderato al flessore della gamba destra. Recuperabile dall'inizio di ottobre.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -2873,7 +2873,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": false,
+        "gazzetta": true,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -3753,7 +3753,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": false,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 2,
@@ -4053,7 +4053,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": false,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -4073,7 +4073,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": false,
+        "gazzetta": true,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -4453,7 +4453,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": false,
+        "gazzetta": true,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -5817,7 +5817,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "il centrocampista KO il 7 settembre contro il Lecce in casa vittima di un problema al ginocchio destro. Condizioni da valutare, di certo assente nel prossimo turno di campionato.&nbsp;",
+        "description": "il centrocampista KO il 7 settembre contro il Lecce in casa vittima della rottura del legamento crociato anteriore. Verr&agrave; operato e costretto a un lungo stop (ipotizziamo un rientro da marzo).",
         "lastGame": null,
         "trend": 2
       }
@@ -6232,8 +6232,8 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
-        "gazzetta": false,
+        "fantagazzetta": true,
+        "gazzetta": true,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -6417,7 +6417,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "il difensore costretto al cambio a Frosinone il 6 settembre per un fastidio che andr&agrave; valutato, ora viaggia verso il forfait per venerd&igrave; in casa contro la Fiorentina.&nbsp;",
+        "description": "il difensore costretto al cambio a Frosinone il 6 settembre per un risentimento muscolare mio-fasciale all'adduttore della gamba destra. Recuperabile dall'inizio di ottobre.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -6973,7 +6973,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": false,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -7392,8 +7392,8 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
-        "gazzetta": false,
+        "fantagazzetta": true,
+        "gazzetta": true,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -7993,7 +7993,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": false,
+        "gazzetta": true,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -9033,7 +9033,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": false,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -9317,7 +9317,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "il difensore costretto al cambio a Milano contro i rossoneri a fine agosto per un guaio alla spalla che andr&agrave; valutato. Forfait certo per venerd&igrave; contro la Fiorentina.&nbsp;",
+        "description": "il difensore costretto al cambio a Milano contro i rossoneri a fine agosto per un guaio alla spalla che ha richiesto l'intervento chirurgico. Lungo stop e rientro dalla met&agrave; di dicembre.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -10836,8 +10836,8 @@
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
-        "status": 0,
-        "description": null,
+        "status": 1,
+        "description": "Il difensore condizionato da una fastidiosa fascite plantare, di certo assente nel prossimo turno di campionato. Tempi di recupero da valutare.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
