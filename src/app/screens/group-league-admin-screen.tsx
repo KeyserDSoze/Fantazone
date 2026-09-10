@@ -7,11 +7,13 @@ import {
   MarketType,
   cloneLeagueSetting,
   formatSeasonFromYear,
+  resolveFantazoneEvolutionSettings,
   type AuthenticatedGroupSession,
   type Group,
   type LeagueSetting,
 } from '@fantazone/domain'
 import { AppScreen, PageIntro, PrimaryAction, StatusPill, Surface } from '../components/design-system'
+import { FantazoneEvolutionSettingsPanel } from '../components/FantazoneEvolutionSettingsPanel'
 import type { GroupNavigationSelection } from '../services/groupNavigation'
 import {
   copyLeagueYearFromPrevious,
@@ -351,6 +353,11 @@ export function GroupLeagueAdminScreen({ runtime, session, selection }: Props) {
                 <ToggleButton active={draft.allowLiveModuleChange} label="Cambio modulo durante il live" onPress={() => setDraft(current => current ? { ...current, allowLiveModuleChange: !current.allowLiveModuleChange } : current)} />
               </XStack>
 
+              <FantazoneEvolutionSettingsPanel
+                settings={draft}
+                onChange={evolution => setDraft(current => current ? { ...current, evolution } : current)}
+              />
+
               {league.isMain ? (
                 <Surface accent="yellow" padding="$4">
                   <YStack gap="$4">
@@ -453,6 +460,7 @@ function withSeasonDefaults(settings: LeagueSetting): LeagueSetting {
       ...DefaultOpeningCompetitionSettings,
       prizes: DefaultOpeningCompetitionSettings.prizes.map(prize => ({ ...prize })),
     },
+    evolution: resolveFantazoneEvolutionSettings(cloned),
   }
 }
 
