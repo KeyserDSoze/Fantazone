@@ -71,6 +71,12 @@ Group Actions commit `data/**` and a stable manifest revision together.
 
 While a group is open the app checks the manifest immediately, every 60 seconds and when the app returns to foreground. If the remote revision is unchanged, no group-wide refresh occurs. If it changed, stale **memory** is discarded, current membership/configuration is refreshed and a new ZIP snapshot replaces the durable group replica. The old durable copy is not deleted merely because a newer revision exists.
 
+A fresh `updating: true` marker is intentionally conservative: readers keep invalidating current memory and application writers wait instead of publishing through another write's transition. This serializes client-side canonical writes at the manifest boundary and prevents one writer from prematurely declaring another writer's revision stable.
+
+If `updating: true` survives for at least five minutes, Fantazone treats the marker as abandoned. The normal repository sync attempts a self-heal by re-reading the current manifest and publishing one newer `updating: false` revision with the current blob SHA. A conflict forces a complete re-evaluation; therefore a newer fresh marker is never closed by a repair that started from an older stale SHA. Read-only credentials, concurrent activity or transport failures simply leave the repository in conservative refresh mode until a later poll can prove that a repair is safe.
+
+The close phase also remembers which revision started the canonical write. If a newer in-flight revision appears before the writer finishes, the older writer does not close it. This preserves the invariant that a stable manifest cannot silently cover an unrelated canonical write still in progress.
+
 ## Offline writes
 
 Offline writes are not implemented as blind cached JSON replacement. Only operations with a safe semantic replay contract should enter an outbox.

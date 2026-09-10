@@ -62,11 +62,15 @@ function group(role: number = IdentityRole.Participant, name = 'Amici'): Group {
   }
 }
 
-function manifest(revision: number, updating = false) {
+function manifest(
+  revision: number,
+  updating = false,
+  updatedAt = `2026-09-06T10:00:0${revision}.000Z`,
+) {
   return JSON.stringify({
     schemaVersion: 2,
     revision,
-    updatedAt: `2026-09-06T10:00:0${revision}.000Z`,
+    updatedAt,
     updating,
   })
 }
@@ -134,13 +138,15 @@ test('uses manifest revision as the group cache invalidation clock', async () =>
   assert.equal(runtime.group.name, 'Amici aggiornati')
 })
 
-test('treats an in-flight manifest revision as stale on every poll until it becomes stable', async () => {
+test('treats a fresh in-flight manifest revision as stale on every poll until it becomes stable', async () => {
   const client = new FakeContentClient()
   const groupKey = `KeyserDSoze/Fantazone.Amici/${GROUP_DOCUMENT_PATH}@main`
   const manifestKey = `KeyserDSoze/Fantazone.Amici/${REPOSITORY_MANIFEST_PATH}@main`
   client.files.set(groupKey, { sha: 'group-1', content: JSON.stringify(group()) })
   client.files.set(manifestKey, { sha: 'manifest-1', content: manifest(1) })
-  const runtime = await GroupSessionRuntime.open(connection, client)
+  const runtime = await GroupSessionRuntime.open(connection, client, {
+    now: () => new Date('2026-09-06T10:00:30.000Z'),
+  })
   await runtime.syncRepositoryRevision()
 
   client.files.set(groupKey, { sha: 'group-2', content: JSON.stringify(group(IdentityRole.Participant, 'Durante update')) })
@@ -151,12 +157,44 @@ test('treats an in-flight manifest revision as stale on every poll until it beco
   assert.deepEqual(firstInFlight, { changed: true, previousRevision: 1, revision: 2, offline: false })
   assert.deepEqual(secondInFlight, { changed: true, previousRevision: 2, revision: 2, offline: false })
   assert.equal(runtime.group.name, 'Durante update')
+  assert.equal(client.writes, 0)
 
   client.files.set(groupKey, { sha: 'group-3', content: JSON.stringify(group(IdentityRole.Participant, 'Update completato')) })
   client.files.set(manifestKey, { sha: 'manifest-3', content: manifest(3, false) })
   const stable = await runtime.syncRepositoryRevision()
   assert.deepEqual(stable, { changed: true, previousRevision: 2, revision: 3, offline: false })
   assert.equal(runtime.group.name, 'Update completato')
+})
+
+test('self-heals an abandoned in-flight manifest after the stale threshold', async () => {
+  const client = new FakeContentClient()
+  const groupKey = `KeyserDSoze/Fantazone.Amici/${GROUP_DOCUMENT_PATH}@main`
+  const manifestKey = `KeyserDSoze/Fantazone.Amici/${REPOSITORY_MANIFEST_PATH}@main`
+  client.files.set(groupKey, { sha: 'group-1', content: JSON.stringify(group()) })
+  client.files.set(manifestKey, { sha: 'manifest-1', content: manifest(1) })
+  const runtime = await GroupSessionRuntime.open(connection, client, {
+    now: () => new Date('2026-09-06T10:10:00.000Z'),
+  })
+  await runtime.syncRepositoryRevision()
+
+  client.files.set(groupKey, { sha: 'group-2', content: JSON.stringify(group(IdentityRole.Participant, 'Dopo crash')) })
+  client.files.set(manifestKey, {
+    sha: 'manifest-2',
+    content: manifest(2, true, '2026-09-06T10:00:00.000Z'),
+  })
+
+  const healed = await runtime.syncRepositoryRevision()
+  const persistedManifest = JSON.parse(client.files.get(manifestKey)!.content)
+
+  assert.deepEqual(healed, { changed: true, previousRevision: 1, revision: 3, offline: false })
+  assert.equal(persistedManifest.revision, 3)
+  assert.equal(persistedManifest.updating, false)
+  assert.equal(persistedManifest.updatedAt, '2026-09-06T10:10:00.000Z')
+  assert.equal(runtime.group.name, 'Dopo crash')
+  assert.equal(client.writes, 1)
+
+  const stable = await runtime.syncRepositoryRevision()
+  assert.deepEqual(stable, { changed: false, previousRevision: 3, revision: 3, offline: false })
 })
 
 test('re-reads selected group.users membership when resolving external identity', async () => {

@@ -240,11 +240,29 @@ export class GroupSessionRuntime {
     const cachedRevision = cachedManifest ? decodeRepositoryRevisionManifest(cachedManifest.value).revision : null
     const previousRevision = this.revisionClient.lastRevision ?? this.observedRevision ?? cachedRevision
 
-    const freshSnapshot = await this.store.readJson<unknown>(manifestLocation, { refresh: true })
-    const freshManifest = decodeRepositoryRevisionManifest(freshSnapshot.value)
-    const revision = freshManifest.revision
-    if (freshSnapshot.fromCache) return { changed: false, previousRevision, revision, offline: true }
+    let freshSnapshot = await this.store.readJson<unknown>(manifestLocation, { refresh: true })
+    let freshManifest = decodeRepositoryRevisionManifest(freshSnapshot.value)
+    if (freshSnapshot.fromCache) {
+      return { changed: false, previousRevision, revision: freshManifest.revision, offline: true }
+    }
 
+    if (freshManifest.updating === true) {
+      try {
+        const repairedRevision = await this.revisionClient.repairStaleRevision(this.target.ref)
+        if (repairedRevision !== null) {
+          // The revision client writes the manifest below the JSON store boundary, so
+          // explicitly refresh once more to replace the cached in-flight snapshot.
+          freshSnapshot = await this.store.readJson<unknown>(manifestLocation, { refresh: true })
+          freshManifest = decodeRepositoryRevisionManifest(freshSnapshot.value)
+        }
+      } catch {
+        // A read-only token, concurrent writer or transport failure must never make
+        // synchronization less safe. Keep treating the marker as in-flight and retry
+        // on the next regular poll.
+      }
+    }
+
+    const revision = freshManifest.revision
     this.observedRevision = revision
     if (freshManifest.updating !== true && (previousRevision == null || previousRevision === revision)) {
       return { changed: false, previousRevision, revision, offline: false }
