@@ -13,7 +13,10 @@ import {
   type OpeningCompetitionStandings,
   type Team,
 } from '@fantazone/domain'
+import { RepositoryWriteConflictError } from '@fantazone/github'
 import type { GroupSessionRuntime } from './groupSessionRuntime'
+
+const OPENING_PREPARE_ATTEMPTS = 3
 
 export type OpeningCompetitionTeamResult = {
   team: Team
@@ -22,7 +25,28 @@ export type OpeningCompetitionTeamResult = {
   day: number
 }
 
+/**
+ * Opening standings and previous-season snapshots are derived/idempotent state.
+ * Recompute the whole projection after an optimistic write race instead of retrying
+ * an already-stale standings payload. This lets concurrent team saves converge on
+ * the newest TeamDay documents without reporting a false failure to either writer.
+ */
 export async function prepareOpeningCompetition(
+  runtime: GroupSessionRuntime,
+  leagueId: string,
+  year: number,
+): Promise<OpeningCompetitionStandings> {
+  for (let attempt = 0; attempt < OPENING_PREPARE_ATTEMPTS; attempt += 1) {
+    try {
+      return await prepareOpeningCompetitionOnce(runtime, leagueId, year)
+    } catch (error) {
+      if (!(error instanceof RepositoryWriteConflictError) || attempt === OPENING_PREPARE_ATTEMPTS - 1) throw error
+    }
+  }
+  throw new Error('Impossibile aggiornare il campionato iniziale.')
+}
+
+async function prepareOpeningCompetitionOnce(
   runtime: GroupSessionRuntime,
   leagueId: string,
   year: number,
@@ -170,7 +194,15 @@ export async function saveOpeningCompetitionTeam(
     `opening: save ${current.owner} day ${day}`,
     existing ? { expectedSha: existing.sha } : { createOnly: true },
   )
-  await prepareOpeningCompetition(runtime, leagueId, year)
+
+  try {
+    await prepareOpeningCompetition(runtime, leagueId, year)
+  } catch (error) {
+    // The TeamDay above is the canonical user mutation and is already committed.
+    // Standings are derived and reparable, so an exhausted concurrent standings
+    // race must not turn a successful formation save into a false failure.
+    if (!(error instanceof RepositoryWriteConflictError)) throw error
+  }
   return updated
 }
 
