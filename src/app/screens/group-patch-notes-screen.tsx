@@ -15,6 +15,17 @@ const releases: Release[] = [
   {
     version: APP_VERSION,
     date: RELEASE_DATE,
+    title: 'Attivazione asta concorrente e idempotente',
+    items: [
+      { category: 'Fix', text: 'Se due Admin attivano quasi insieme la stessa asta, il dispositivo che perde la race sul puntatore GitHub rilegge lo stato canonico e considera l’operazione riuscita quando il winner punta già allo stesso checkpoint.' },
+      { category: 'Fix', text: 'Se invece durante la race vince davvero un’altra asta, Fantazone espone il conflitto di dominio “asta già attiva” con l’id canonico vincente invece di mostrare un generico Repository write conflict.' },
+      { category: 'Architettura', text: 'Il recovery viene eseguito soltanto dopo un vero conflitto ottimistico e non inventa stato: se dopo la race non esiste alcun puntatore canonico, l’errore GitHub originale continua a propagarsi.' },
+      { category: 'Miglioria', text: 'Restano invariati i controlli fail-closed: un checkpoint deve esistere già in modo durevole e deve corrispondere a gruppo, lega e stagione prima di poter diventare l’asta attiva.' },
+    ],
+  },
+  {
+    version: '0.3.12',
+    date: '10 settembre 2026',
     title: 'Checkpoint asta serializzati senza rallentare il realtime',
     items: [
       { category: 'Fix', text: 'Due boundary durevoli dell’asta che arrivano quasi insieme dallo stesso host non provano più a scrivere GitHub con lo stesso SHA del checkpoint, evitando conflitti ottimistici interni alla stessa sessione.' },
