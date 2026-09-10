@@ -11,7 +11,6 @@ import {
   calculateRankFromCalendar,
   calculateTeamPoint,
   createEvolutionPlayerSeasonState,
-  getAuthorizedEvolutionCardIds,
   getCurrentSeasonYear,
   getEvolutionPlayerMatchState,
   getPlayerKey,
@@ -19,6 +18,7 @@ import {
   resolveFantazoneEvolutionSettings,
   type Calendar,
   type DefinitiveDayEvolutionGameContext,
+  type EvolutionCardSelection,
   type EvolutionPlayerSeasonState,
   type EvolutionRuleTrace,
   type EvolutionSeasonCoachDeckDocument,
@@ -26,6 +26,8 @@ import {
   type Group,
   type LeagueSetting,
   type Rank,
+  type RealCalendar,
+  type RealDay,
   type Team,
   type VotedRealPlayers,
 } from '@fantazone/domain'
@@ -34,18 +36,21 @@ import {
   calendarDocumentPath,
   dailyRankDocumentPath,
   dayTeamDocumentPath,
+  decodeRealCalendar,
   decodeVotedRealPlayers,
   evolutionCardsPath,
   evolutionPlayerStatePath,
   evolutionSkillsPath,
   evolutionTracePath,
   isGroupDocument,
+  realCalendarDocumentPath,
   seasonRankDocumentPath,
   serieAVoteDocumentPath,
   type EvolutionCardsDocument,
   type EvolutionPlayerStateDocument,
   type EvolutionTraceDocument,
 } from '@fantazone/github'
+import { getAuthoritativeEvolutionCardIds } from './evolutionCardAuthority'
 
 export type GroupRecalculationOptions = {
   groupRepoRoot: string
@@ -105,6 +110,9 @@ async function recalculateGroup(
     const skillDocument = evolution.enabled && evolution.playerSkills.enabled
       ? await readOptionalJson<EvolutionSeasonSkillDocument>(resolve(options.groupRepoRoot, evolutionSkillsPath(league.id, season)))
       : null
+    const realCalendar = evolution.enabled && evolution.coachCards.enabled
+      ? await readRealCalendar(options.platformRepoRoot, season)
+      : null
     const coachDeck = evolution.enabled && evolution.coachCards.enabled && evolution.coachCards.cardsInSeasonDeck > 0
       ? assignEvolutionCoachDecks(
           league.id,
@@ -141,8 +149,23 @@ async function recalculateGroup(
             serieADay - 1,
             settings,
             coachDeck,
+            realCalendar,
           )
         : new Map<string, string[]>()
+      const realDay = realCalendar?.days.find(day => day.serieADay === serieADay) ?? null
+      const cardSelections = evolution.enabled && evolution.coachCards.enabled && cards
+        ? await buildAuthoritativeCardSelectionsForDay(
+            options.groupRepoRoot,
+            league.id,
+            season,
+            serieADay,
+            settings,
+            cards,
+            coachDeck,
+            consumedCardsBefore,
+            realDay,
+          )
+        : new Map<string, EvolutionCardSelection>()
       const stateBefore = evolution.enabled
         ? await rebuildEvolutionStatesForLeague(
             options.groupRepoRoot,
@@ -164,17 +187,7 @@ async function recalculateGroup(
           if (day.serieADay !== serieADay) continue
           const teamsByOwner = await loadTeamsForDay(options.groupRepoRoot, group, season, day)
           const evolutionByGameId = evolution.enabled
-            ? buildEvolutionGameContexts(
-                day,
-                league.id,
-                season,
-                settings,
-                skillDocument,
-                cards,
-                coachDeck,
-                consumedCardsBefore,
-                stateBefore,
-              )
+            ? buildEvolutionGameContexts(day, league.id, season, skillDocument, cardSelections, stateBefore)
             : undefined
           days[index] = calculateDefinitiveDay({
             day,
@@ -250,11 +263,8 @@ function buildEvolutionGameContexts(
   day: Calendar['rounds'][string][number],
   leagueId: string,
   season: number,
-  settings: LeagueSetting,
   skills: EvolutionSeasonSkillDocument | null,
-  cards: EvolutionCardsDocument | null,
-  coachDeck: EvolutionSeasonCoachDeckDocument | null,
-  consumedCardsByOwner: Map<string, string[]>,
+  cardSelections: Map<string, EvolutionCardSelection>,
   stateByOwner: Map<string, EvolutionPlayerStateDocument>,
 ): Map<string, DefinitiveDayEvolutionGameContext> {
   const result = new Map<string, DefinitiveDayEvolutionGameContext>()
@@ -264,26 +274,8 @@ function buildEvolutionGameContexts(
     result.set(game.id, {
       homeSkillAssignments: skills?.assignments ?? [],
       awaySkillAssignments: skills?.assignments ?? [],
-      homeCards: revealedCardSelection(
-        cards,
-        leagueId,
-        season,
-        day.serieADay,
-        game.homeOwner,
-        settings,
-        coachDeck,
-        consumedCardsByOwner.get(homeOwner) ?? [],
-      ),
-      awayCards: revealedCardSelection(
-        cards,
-        leagueId,
-        season,
-        day.serieADay,
-        game.awayOwner,
-        settings,
-        coachDeck,
-        consumedCardsByOwner.get(awayOwner) ?? [],
-      ),
+      homeCards: cardSelections.get(homeOwner) ?? null,
+      awayCards: cardSelections.get(awayOwner) ?? null,
       homePlayerState: playerMatchState(stateByOwner.get(homeOwner)),
       awayPlayerState: playerMatchState(stateByOwner.get(awayOwner)),
       seed: `${leagueId}:${season}:${day.serieADay}:${game.id}`,
@@ -292,34 +284,43 @@ function buildEvolutionGameContexts(
   return result
 }
 
-function revealedCardSelection(
-  cards: EvolutionCardsDocument | null,
+async function buildAuthoritativeCardSelectionsForDay(
+  groupRepoRoot: string,
   leagueId: string,
   year: number,
   serieADay: number,
-  owner: string,
   settings: LeagueSetting,
+  cards: EvolutionCardsDocument,
   coachDeck: EvolutionSeasonCoachDeckDocument | null,
-  consumedCardIds: readonly string[],
-) {
-  const sealed = cards?.commitments?.[normalizeOwner(owner)]
-  const cardIds = getAuthorizedEvolutionCardIds({
-    sealed,
-    leagueId,
-    year,
-    serieADay,
-    owner,
-    settings,
-    deck: coachDeck,
-    consumedCardIds,
-  })
-  if (!sealed || !sealed.reveal || !cardIds) return null
-  return {
-    cardIds,
-    selectedAt: sealed.committedAt,
-    lockedAt: sealed.lockedAt,
-    revealedAt: sealed.reveal.revealedAt,
+  consumedCardsByOwner: Map<string, string[]>,
+  realDay: RealDay | null,
+): Promise<Map<string, EvolutionCardSelection>> {
+  const result = new Map<string, EvolutionCardSelection>()
+  const relativePath = evolutionCardsPath(leagueId, year, serieADay)
+  for (const [owner, sealed] of Object.entries(cards.commitments ?? {})) {
+    const ownerKey = normalizeOwner(owner)
+    const cardIds = await getAuthoritativeEvolutionCardIds({
+      groupRepoRoot,
+      relativePath,
+      cards,
+      owner,
+      leagueId,
+      year,
+      serieADay,
+      settings,
+      deck: coachDeck,
+      consumedCardIds: consumedCardsByOwner.get(ownerKey) ?? [],
+      realDay,
+    })
+    if (!sealed.reveal || !cardIds) continue
+    result.set(ownerKey, {
+      cardIds,
+      selectedAt: sealed.committedAt,
+      lockedAt: sealed.lockedAt,
+      revealedAt: sealed.reveal.revealedAt,
+    })
   }
+  return result
 }
 
 async function rebuildEvolutionConsumedCards(
@@ -329,27 +330,31 @@ async function rebuildEvolutionConsumedCards(
   throughSerieADay: number,
   settings: LeagueSetting,
   coachDeck: EvolutionSeasonCoachDeckDocument | null,
+  realCalendar: RealCalendar | null,
 ): Promise<Map<string, string[]>> {
   const consumedByOwner = new Map<string, string[]>()
   if (throughSerieADay <= 0) return consumedByOwner
 
   for (let serieADay = 1; serieADay <= Math.min(38, throughSerieADay); serieADay += 1) {
-    const cards = await readOptionalJson<EvolutionCardsDocument>(
-      resolve(groupRepoRoot, evolutionCardsPath(leagueId, year, serieADay)),
-    )
+    const relativePath = evolutionCardsPath(leagueId, year, serieADay)
+    const cards = await readOptionalJson<EvolutionCardsDocument>(resolve(groupRepoRoot, relativePath))
     if (!cards) continue
-    for (const [owner, sealed] of Object.entries(cards.commitments ?? {})) {
+    const realDay = realCalendar?.days.find(day => day.serieADay === serieADay) ?? null
+    for (const owner of Object.keys(cards.commitments ?? {})) {
       const ownerKey = normalizeOwner(owner)
       const consumed = consumedByOwner.get(ownerKey) ?? []
-      const cardIds = getAuthorizedEvolutionCardIds({
-        sealed,
+      const cardIds = await getAuthoritativeEvolutionCardIds({
+        groupRepoRoot,
+        relativePath,
+        cards,
+        owner,
         leagueId,
         year,
         serieADay,
-        owner,
         settings,
         deck: coachDeck,
         consumedCardIds: consumed,
+        realDay,
       })
       if (cardIds) consumedByOwner.set(ownerKey, [...consumed, ...cardIds])
     }
@@ -550,6 +555,12 @@ async function readGroup(root: string): Promise<Group> {
   const value = await readRequiredJson<unknown>(path, 'Group')
   if (!isGroupDocument(value)) throw new Error(`Unsupported group JSON schema in ${path}`)
   return value
+}
+
+async function readRealCalendar(root: string, season: number): Promise<RealCalendar | null> {
+  const path = resolve(root, realCalendarDocumentPath(season))
+  const value = await readOptionalJson<unknown>(path)
+  return value == null ? null : decodeRealCalendar(value, season)
 }
 
 async function readOfficialVotes(root: string, season: number, day: number): Promise<VotedRealPlayers | null> {
