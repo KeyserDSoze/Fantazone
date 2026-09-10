@@ -21,6 +21,13 @@ export type SaveGameFormationInput = {
   owner: string
   positions: readonly FormationPositionUpdate[]
   asAdmin?: boolean
+  /**
+   * Internal replay flag for a formation that was accepted into the local outbox
+   * before kickoff but could only reach GitHub later. Replays never mutate the live
+   * TeamDay: they update the mutable season Team and let the group Action apply the
+   * Git commit timestamp to the next eligible giornata.
+   */
+  offlineReplay?: boolean
 }
 
 export type SavedFormation = {
@@ -62,6 +69,11 @@ export class FormationValidationError extends Error {
  * Before kickoff only the mutable season Team is changed and the GitHub Action freezes TeamDay.
  * During an enabled live window the already-frozen TeamDay is the canonical write target, so the
  * current match changes without leaking the live formation into the following giornata.
+ *
+ * An offline replay is different from a live edit: the intent was queued while ordinary pre-kickoff
+ * editing was active, but GitHub did not receive it at that time. If the original fixture has since
+ * locked (including an enabled live-change window), replay writes only the season Team. The group
+ * Action then uses the real Git commit timestamp to roll that formation to the next eligible day.
  */
 export class GroupFormationWriter {
   constructor(
@@ -98,7 +110,8 @@ export class GroupFormationWriter {
     const annualLeague = league?.years.find(item => item.year === input.season)
     if (!annualLeague) throw new FormationLockedError()
 
-    if (wrapper.isLiveFormationWindow) {
+    const offlineReplay = input.offlineReplay === true
+    if (wrapper.isLiveFormationWindow && !offlineReplay) {
       const daySnapshot = await this.teams.getTeamDaySnapshot(
         annual.basketId, input.season, wrapper.serieADay, canonicalOwner, { refresh: true },
       )
@@ -136,7 +149,7 @@ export class GroupFormationWriter {
       return { team: updated, sha, source: 'day', serieADay: wrapper.serieADay }
     }
 
-    if (!wrapper.canEdit) {
+    if (!wrapper.canEdit && !offlineReplay) {
       const realCalendar = await this.realCalendars.getCalendar(input.season, { refresh: true })
       const liveSerieADay = realCalendar ? RealCalendarHelper.getLiveSerieADay(realCalendar, operationNow) : 0
       const isCurrentLiveDay = liveSerieADay === wrapper.serieADay
@@ -155,7 +168,9 @@ export class GroupFormationWriter {
       input.season,
       canonicalOwner,
       updated,
-      `feat: save current formation ${canonicalOwner}`,
+      offlineReplay
+        ? `feat: replay offline formation ${canonicalOwner}`
+        : `feat: save current formation ${canonicalOwner}`,
       { expectedSha: seasonSnapshot.sha },
     )
 
