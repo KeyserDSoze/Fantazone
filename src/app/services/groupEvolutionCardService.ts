@@ -2,6 +2,7 @@ import {
   GroupHelper,
   assignEvolutionCoachDecks,
   createEvolutionCardCommitment,
+  getAuthorizedEvolutionCardIds,
   getEvolutionCardCatalog,
   getEvolutionCoachDeckAvailability,
   getVerifiedEvolutionCardIds,
@@ -53,13 +54,12 @@ export class GroupEvolutionCardService {
   ) {}
 
   async getCardAvailability(input: Omit<CommitEvolutionCardsInput, 'cardIds'>): Promise<Record<string, number> | null> {
-    const { group, settings, owner, leagueOwners } = await this.authorize({ ...input, cardIds: [] })
-    void group
+    const { settings, owner, leagueOwners } = await this.authorize({ ...input, cardIds: [] })
     const evolution = resolveFantazoneEvolutionSettings(settings)
     if (!evolution.enabled || !evolution.coachCards.enabled) return {}
     if (evolution.coachCards.cardsInSeasonDeck === 0) return null
     const deck = await this.ensureCoachDeck(input.leagueId, input.season, settings, leagueOwners)
-    const consumed = await this.getConsumedCardIds(input, owner, input.serieADay - 1)
+    const consumed = await this.getConsumedCardIds(input, owner, input.serieADay - 1, settings, deck)
     return getEvolutionCoachDeckAvailability(deck, owner, consumed, false)
   }
 
@@ -82,7 +82,7 @@ export class GroupEvolutionCardService {
 
     if (evolution.coachCards.cardsInSeasonDeck > 0) {
       const deck = await this.ensureCoachDeck(input.leagueId, input.season, settings, leagueOwners)
-      const consumed = await this.getConsumedCardIds(input, owner, input.serieADay - 1)
+      const consumed = await this.getConsumedCardIds(input, owner, input.serieADay - 1, settings, deck)
       const availability = getEvolutionCoachDeckAvailability(deck, owner, consumed, false)
       if (!isEvolutionCoachDeckSelectionAvailable(availability, cardIds)) {
         throw new Error('Una o più carte selezionate non sono più disponibili nel tuo deck stagionale.')
@@ -201,6 +201,8 @@ export class GroupEvolutionCardService {
     input: Omit<CommitEvolutionCardsInput, 'cardIds'>,
     owner: string,
     throughDay: number,
+    settings: LeagueSetting,
+    deck: EvolutionSeasonCoachDeckDocument,
   ): Promise<string[]> {
     const consumed: string[] = []
     for (let day = 1; day <= Math.min(38, throughDay); day += 1) {
@@ -233,7 +235,17 @@ export class GroupEvolutionCardService {
         owner,
       })
       if (!verified) throw new Error(`Il reveal Evolution della giornata ${day} non è valido.`)
-      consumed.push(...verified)
+      const authorized = getAuthorizedEvolutionCardIds({
+        sealed,
+        leagueId: input.leagueId,
+        year: input.season,
+        serieADay: day,
+        owner,
+        settings,
+        deck,
+        consumedCardIds: consumed,
+      })
+      if (authorized) consumed.push(...authorized)
     }
     return consumed
   }
@@ -247,26 +259,29 @@ export class GroupEvolutionCardService {
     const normalizedOwners = [...new Set(owners.map(normalize).filter(Boolean))]
     for (let attempt = 0; attempt < WRITE_ATTEMPTS; attempt += 1) {
       const snapshot = await this.runtime.evolutionRepository.getCoachDeckSnapshot(leagueId, season, { refresh: true })
-      const existingOwners = new Set(snapshot?.value.decks.map(deck => normalize(deck.owner)) ?? [])
-      if (snapshot && normalizedOwners.every(owner => existingOwners.has(owner))) return snapshot.value
-
-      const document = assignEvolutionCoachDecks(
+      const generatedAt = snapshot && Number.isFinite(Date.parse(snapshot.value.generatedAt))
+        ? snapshot.value.generatedAt
+        : this.now().toISOString()
+      const canonical = assignEvolutionCoachDecks(
         leagueId,
         normalizedOwners,
         settings,
         season,
-        snapshot?.value.generatedAt ?? this.now().toISOString(),
-        snapshot?.value.seed,
+        generatedAt,
       )
+      if (snapshot && sameCoachDeck(snapshot.value, canonical)) return snapshot.value
+
       try {
         await this.runtime.evolutionRepository.writeCoachDeck(
           leagueId,
           season,
-          document,
-          `feat: initialize Fantazone Evolution coach decks ${leagueId} ${season}`,
+          canonical,
+          snapshot
+            ? `fix: repair Fantazone Evolution coach decks ${leagueId} ${season}`
+            : `feat: initialize Fantazone Evolution coach decks ${leagueId} ${season}`,
           snapshot ? { expectedSha: snapshot.sha } : { createOnly: true },
         )
-        return document
+        return canonical
       } catch (error) {
         if (!(error instanceof RepositoryWriteConflictError) || attempt === WRITE_ATTEMPTS - 1) throw error
       }
@@ -335,6 +350,14 @@ export class GroupEvolutionCardService {
       leagueOwners: leagueTeams.map(team => team.owner),
     }
   }
+}
+
+function sameCoachDeck(left: EvolutionSeasonCoachDeckDocument, right: EvolutionSeasonCoachDeckDocument): boolean {
+  return left.version === right.version &&
+    left.leagueId === right.leagueId &&
+    left.year === right.year &&
+    left.seed === right.seed &&
+    JSON.stringify(left.decks) === JSON.stringify(right.decks)
 }
 
 function firstKickoff(day: RealDay): Date | null {
