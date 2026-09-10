@@ -20,6 +20,7 @@ import {
   type AuthenticatedGroupSession,
   type Player,
 } from '@fantazone/domain'
+import { AuctionEvolutionSkillStrip } from '../components/AuctionEvolutionSkillStrip'
 import { AppScreen, PageIntro, PrimaryAction, StatusPill, Surface } from '../components/design-system'
 import {
   BrowserAuctionHostConnectionCoordinator,
@@ -459,6 +460,12 @@ export function AuctionScreen({ runtime, session, onBack }: Props) {
             checkpoint={checkpoint}
             view={view ?? liveViewFromCheckpoint(checkpoint)}
             remainingSeconds={remainingSeconds}
+          />
+          <AuctionEvolutionSkillStrip
+            runtime={runtime}
+            leagueId={checkpoint.leagueKey.league}
+            season={checkpoint.leagueKey.year}
+            playerName={view?.playerName ?? checkpoint.current?.player.name ?? null}
           />
 
           {mode === 'none' ? (
