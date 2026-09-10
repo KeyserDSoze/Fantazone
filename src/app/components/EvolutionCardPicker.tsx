@@ -41,6 +41,7 @@ export function EvolutionCardPicker({
   const [day, setDay] = useState<RealDay | null>(null)
   const [availability, setAvailability] = useState<Record<string, number> | null | undefined>(undefined)
   const [hasLocalSecret, setHasLocalSecret] = useState(false)
+  const [clockNow, setClockNow] = useState(() => Date.now())
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -49,6 +50,7 @@ export function EvolutionCardPicker({
     if (!annual || !evolution?.enabled || !evolution.coachCards.enabled) return
     setLoading(true)
     setError(null)
+    setClockNow(Date.now())
     try {
       const [cards, realCalendar, secret, cardAvailability] = await Promise.all([
         runtime.evolutionRepository.getCards(leagueId, season, serieADay, { refresh: true }),
@@ -75,8 +77,11 @@ export function EvolutionCardPicker({
             currentSecret = null
             setMessage('Kickoff raggiunto: le carte sono state rivelate automaticamente e verificate.')
           }
-        } catch {
-          // Keep the sealed state and retry while this matchday screen stays open.
+        } catch (caught) {
+          if (isRevealExpiredMessage(caught)) {
+            currentSecret = null
+            setError(toMessage(caught))
+          }
         }
       }
 
@@ -99,6 +104,7 @@ export function EvolutionCardPicker({
   useEffect(() => {
     if (!annual || !evolution?.enabled || !evolution.coachCards.enabled || !sealed || sealed.reveal || !hasLocalSecret) return
     const timer = setInterval(() => {
+      setClockNow(Date.now())
       void service.revealOwnCardsIfDue({ session, leagueId, season, serieADay, owner })
         .then(result => {
           if (!result) return
@@ -108,9 +114,10 @@ export function EvolutionCardPicker({
           setMessage('Kickoff raggiunto: le carte sono state rivelate automaticamente e verificate.')
           setError(null)
         })
-        .catch(() => {
-          // Network or timing failure is non-destructive: the local secret remains and
-          // this timer retries on the next pass while the matchday screen is open.
+        .catch(caught => {
+          if (!isRevealExpiredMessage(caught)) return
+          setHasLocalSecret(false)
+          setError(toMessage(caught))
         })
     }, 30_000)
     return () => clearInterval(timer)
@@ -119,7 +126,9 @@ export function EvolutionCardPicker({
   if (!annual || !evolution?.enabled || !evolution.coachCards.enabled) return null
 
   const locked = day ? isEvolutionCardSelectionLocked(day, annual.settings) : false
-  const revealDue = day ? (!evolution.coachCards.revealAtFirstKickoff || shouldRevealEvolutionCards(day, annual.settings)) : false
+  const revealDue = day ? (!evolution.coachCards.revealAtFirstKickoff || shouldRevealEvolutionCards(day, annual.settings, new Date(clockNow))) : false
+  const revealDeadline = day ? cardRevealDeadline(day, evolution.coachCards.revealGraceSecondsAfterFirstKickoff) : null
+  const revealExpired = Boolean(sealed && !sealed.reveal && revealDeadline && clockNow > revealDeadline.getTime())
   const verified = sealed?.reveal
     ? getVerifiedEvolutionCardIds(sealed, { leagueId, year: season, serieADay, owner })
     : null
@@ -145,6 +154,7 @@ export function EvolutionCardPicker({
       const result = await service.commitCards({ session, leagueId, season, serieADay, owner, cardIds: selected })
       setSealed(result.commitment)
       setHasLocalSecret(true)
+      setClockNow(Date.now())
       setMessage('Carte sigillate: nel repository è stato pubblicato soltanto il commitment SHA-256.')
     } catch (caught) {
       setError(toMessage(caught))
@@ -164,6 +174,7 @@ export function EvolutionCardPicker({
       setSelected(result.reveal?.cardIds ?? [])
       setMessage('Reveal pubblicato e verificato contro il commitment originale.')
     } catch (caught) {
+      if (isRevealExpiredMessage(caught)) setHasLocalSecret(false)
       setError(toMessage(caught))
     } finally {
       setLoading(false)
@@ -171,22 +182,23 @@ export function EvolutionCardPicker({
   }
 
   return (
-    <Surface accent="purple" padding="$5">
+    <Surface accent={revealExpired ? 'red' : 'purple'} padding="$5">
       <YStack gap="$4">
         <XStack justifyContent="space-between" alignItems="flex-start" gap="$3" flexWrap="wrap">
           <YStack flex={1} minWidth={260} gap="$1">
             <XStack alignItems="center" gap="$2">
-              <LockKeyhole size="$1.1" color="$purple10" />
+              <LockKeyhole size="$1.1" color={revealExpired ? '$red10' : '$purple10'} />
               <Text color="$color12" fontSize="$6" fontWeight="900">Carte Fantazone Evolution</Text>
             </XStack>
             <Paragraph color="$color10">
               Scegli fino a {maxCardsPerMatch} carte. Prima del reveal gli avversari possono vedere soltanto l’hash della scelta, non le carte.
               {availability === null ? ' Questa lega usa il catalogo illimitato.' : ' Il numero su ogni carta indica le copie ancora disponibili nel deck stagionale prima di questa giocata.'}
+              {` Il reveal deve arrivare su GitHub entro ${evolution.coachCards.revealGraceSecondsAfterFirstKickoff} secondi dal primo kickoff.`}
             </Paragraph>
           </YStack>
           <XStack gap="$2" alignItems="center" flexWrap="wrap">
-            <StatusPill tone={verified ? 'green' : locked ? 'yellow' : 'purple'}>
-              {verified ? 'Rivelate e verificate' : sealed ? 'Sigillate' : locked ? 'Scelta chiusa' : 'Scelta aperta'}
+            <StatusPill tone={verified ? 'green' : revealExpired ? 'red' : locked ? 'yellow' : 'purple'}>
+              {verified ? 'Rivelate e verificate' : revealExpired ? 'Forfeited' : sealed ? 'Sigillate' : locked ? 'Scelta chiusa' : 'Scelta aperta'}
             </StatusPill>
             <Button size="$3" circular chromeless icon={loading ? undefined : RefreshCw} disabled={loading} onPress={() => { void refresh() }}>
               {loading ? <Spinner /> : null}
@@ -196,6 +208,7 @@ export function EvolutionCardPicker({
 
         {error ? <Paragraph color="$red11">{error}</Paragraph> : null}
         {message ? <Paragraph color="$green11">{message}</Paragraph> : null}
+        {revealExpired ? <Paragraph color="$red11">Il commitment resta nello storico per audit, ma questa carta non può più essere applicata al risultato.</Paragraph> : null}
 
         <XStack gap="$3" flexWrap="wrap" alignItems="stretch">
           {catalog.map(card => {
@@ -243,15 +256,27 @@ export function EvolutionCardPicker({
               {sealed ? 'Aggiorna scelta sigillata' : 'Sigilla carte'}
             </PrimaryAction>
           ) : null}
-          {sealed && !sealed.reveal && hasLocalSecret && revealDue ? (
+          {sealed && !sealed.reveal && hasLocalSecret && revealDue && !revealExpired ? (
             <Button borderRadius="$4" icon={Eye} disabled={loading} onPress={() => { void reveal() }}>Rivela ora</Button>
           ) : null}
-          {sealed && !sealed.reveal && !revealDue ? <Text color="$color9" fontSize="$2">Il reveal parte automaticamente dal primo calcio d’inizio mentre Fantazone è aperto; altrimenti viene eseguito alla prossima apertura.</Text> : null}
-          {sealed && !sealed.reveal && !hasLocalSecret ? <Text color="$red10" fontSize="$2">Il commitment esiste ma il segreto non è su questo dispositivo: il reveal non può essere ricostruito.</Text> : null}
+          {sealed && !sealed.reveal && !revealDue && !revealExpired ? <Text color="$color9" fontSize="$2">Il reveal parte automaticamente dal primo calcio d’inizio mentre Fantazone è aperto; se il dispositivo non torna online entro la finestra configurata, la carta viene forfeited.</Text> : null}
+          {sealed && !sealed.reveal && !hasLocalSecret && !revealExpired ? <Text color="$red10" fontSize="$2">Il commitment esiste ma il segreto non è su questo dispositivo: senza il reveal entro la finestra la carta verrà forfeited.</Text> : null}
         </XStack>
       </YStack>
     </Surface>
   )
+}
+
+function cardRevealDeadline(day: RealDay, graceSeconds: number): Date | null {
+  const values = day.games
+    .filter(game => !game.delayed && Boolean(game.date))
+    .map(game => Date.parse(game.date!))
+    .filter(Number.isFinite)
+  return values.length ? new Date(Math.min(...values) + Math.max(0, graceSeconds) * 1_000) : null
+}
+
+function isRevealExpiredMessage(error: unknown): boolean {
+  return toMessage(error).toLowerCase().includes('forfeited') || toMessage(error).toLowerCase().includes('finestra di reveal')
 }
 
 function toMessage(error: unknown): string {
