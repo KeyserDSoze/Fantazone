@@ -78,6 +78,7 @@ export class GroupGameComposer {
       liveFormationDeadline: isLiveFormationWindow ? liveWindow?.deadline ?? null : null,
       liveFormationChangesAllowed: annual.settings.liveFormationChanges ?? 0,
       allowLiveModuleChange: annual.settings.allowLiveModuleChange ?? false,
+      progressiveLineupLock: isLiveFormationWindow ? liveWindow?.progressiveLineupLock ?? false : false,
       requiresScoreCalculation: !canEdit && !GameResultHelper.hasValue(located.game.result),
     }
   }
