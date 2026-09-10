@@ -43,6 +43,7 @@ export class GroupAuctionHostSession {
   private state: AuctionCheckpoint
   private teams: AuctionTeams
   private checkpointSha: string
+  private durabilityTail: Promise<void> = Promise.resolve()
   private readonly now: () => Date
 
   private constructor(
@@ -118,39 +119,66 @@ export class GroupAuctionHostSession {
 
   /**
    * Persist the latest host checkpoint with Git blob optimistic concurrency.
-   * Call this at durable boundaries and periodically; do not call it for every bid.
+   * Calls are serialized independently from realtime command dispatch so overlapping
+   * durable boundaries from the same host never reuse the same checkpoint SHA.
+   * Bid traffic remains in-memory/DataChannel-only and is not blocked on GitHub.
    */
-  async persistCheckpoint(): Promise<RepositoryJsonSnapshot<AuctionCheckpoint>> {
-    const written = await this.repository.writeCheckpoint(this.state, { expectedSha: this.checkpointSha })
+  persistCheckpoint(): Promise<RepositoryJsonSnapshot<AuctionCheckpoint>> {
+    const checkpoint = cloneJson(this.state)
+    return this.enqueueDurability(() => this.writeCheckpoint(checkpoint))
+  }
+
+  /**
+   * Durable ordering is checkpoint first, assignment outcome second. The whole
+   * checkpoint/outcome pair is queued as one durability unit so a later durable
+   * boundary cannot overtake an earlier assignment outcome. Bids return immediately
+   * without Git writes. Outcome create-only conflicts are tolerated when the existing
+   * document represents the same request, even if the Action already moved it from
+   * pending to applied/rejected while a client retry was in flight.
+   */
+  persistDurableResult(result: GroupAuctionDispatchResult): Promise<GroupAuctionDurabilityResult> {
+    if (!isAuctionDurableBoundary(result)) {
+      return Promise.resolve({ checkpoint: null, assignmentOutcome: null })
+    }
+
+    const checkpoint = cloneJson(this.state)
+    const assignmentOutcome = result.assignmentOutcome ? cloneJson(result.assignmentOutcome) : null
+    return this.enqueueDurability(async () => {
+      const writtenCheckpoint = await this.writeCheckpoint(checkpoint)
+      if (!assignmentOutcome) return { checkpoint: writtenCheckpoint, assignmentOutcome: null }
+      const writtenOutcome = await this.submitAssignmentOutcome(assignmentOutcome)
+      return { checkpoint: writtenCheckpoint, assignmentOutcome: writtenOutcome }
+    })
+  }
+
+  private async writeCheckpoint(checkpoint: AuctionCheckpoint): Promise<RepositoryJsonSnapshot<AuctionCheckpoint>> {
+    const written = await this.repository.writeCheckpoint(checkpoint, { expectedSha: this.checkpointSha })
     this.checkpointSha = written.sha
     return written
   }
 
-  /**
-   * Durable ordering is checkpoint first, assignment outcome second. Bids return
-   * immediately without Git writes. Outcome create-only conflicts are tolerated when
-   * the existing document represents the same request, even if the Action already
-   * moved it from pending to applied/rejected while a client retry was in flight.
-   */
-  async persistDurableResult(result: GroupAuctionDispatchResult): Promise<GroupAuctionDurabilityResult> {
-    if (!isAuctionDurableBoundary(result)) return { checkpoint: null, assignmentOutcome: null }
-    const checkpoint = await this.persistCheckpoint()
-    if (!result.assignmentOutcome) return { checkpoint, assignmentOutcome: null }
-
+  private async submitAssignmentOutcome(
+    assignmentOutcome: AuctionAssignmentOutcome,
+  ): Promise<RepositoryJsonSnapshot<AuctionAssignmentOutcome>> {
     try {
-      const assignmentOutcome = await this.repository.submitAssignmentOutcome(result.assignmentOutcome)
-      return { checkpoint, assignmentOutcome }
+      return await this.repository.submitAssignmentOutcome(assignmentOutcome)
     } catch (error) {
       if (!(error instanceof RepositoryWriteConflictError)) throw error
       const existing = await this.repository.getAssignmentOutcome(
-        result.assignmentOutcome.season,
-        result.assignmentOutcome.auctionId,
-        result.assignmentOutcome.sequence,
+        assignmentOutcome.season,
+        assignmentOutcome.auctionId,
+        assignmentOutcome.sequence,
         { refresh: true },
       )
-      if (!existing || !sameAssignmentRequest(existing.value, result.assignmentOutcome)) throw error
-      return { checkpoint, assignmentOutcome: existing }
+      if (!existing || !sameAssignmentRequest(existing.value, assignmentOutcome)) throw error
+      return existing
     }
+  }
+
+  private enqueueDurability<T>(operation: () => Promise<T>): Promise<T> {
+    const run = this.durabilityTail.then(operation)
+    this.durabilityTail = run.then(() => undefined, () => undefined)
+    return run
   }
 }
 
