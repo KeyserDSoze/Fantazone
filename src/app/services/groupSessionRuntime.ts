@@ -15,6 +15,7 @@ import {
   GitHubAuctionSignalingRepository,
   GitHubCalendarRepository,
   GitHubClient,
+  GitHubEvolutionRepository,
   GitHubGroupRepository,
   GitHubGroupSettingsRepository,
   GitHubHallOfFameRepository,
@@ -93,6 +94,7 @@ export class GroupSessionRuntime {
   readonly rankRepository: GitHubRankRepository
   readonly realPlayersRepository: GitHubRealPlayersRepository
   readonly teamRepository: GitHubTeamRepository
+  readonly evolutionRepository: GitHubEvolutionRepository
   readonly marketRepository: GitHubMarketRepository
   readonly hallOfFameRepository: GitHubHallOfFameRepository
   readonly auctionRepository: GitHubAuctionRepository
@@ -132,6 +134,7 @@ export class GroupSessionRuntime {
     this.rankRepository = new GitHubRankRepository(this.store, this.target)
     this.realPlayersRepository = new GitHubRealPlayersRepository(this.store, this.platformTarget)
     this.teamRepository = new GitHubTeamRepository(this.store, this.target, this.rankRepository, this.realPlayersRepository)
+    this.evolutionRepository = new GitHubEvolutionRepository(this.store, this.target)
     this.marketRepository = new GitHubMarketRepository(this.store, this.target)
     this.hallOfFameRepository = new GitHubHallOfFameRepository(this.store, this.target)
     this.auctionRepository = new GitHubAuctionRepository(this.store, this.target)
