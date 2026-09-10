@@ -129,7 +129,7 @@ function makeWriter(options: { live: boolean; canEdit: boolean; liveFormationCha
 }
 
 const swap = [
-  { playerKey: getPlayerKey('Forward starter 1'), position: FantaSoccerRole.Tribune },
+  { playerKey: getPlayerKey('Forward starter Alpha'), position: FantaSoccerRole.Tribune },
   { playerKey: getPlayerKey('Forward tribune'), position: FantaSoccerRole.Forward },
 ]
 
@@ -149,7 +149,7 @@ test('an offline formation queued before kickoff rolls into the season Team when
   assert.equal(saved.source, 'season')
   assert.equal(fixture.seasonWrites, 1)
   assert.equal(fixture.dayWrites, 0)
-  assert.equal(fixture.writtenTeam?.players.find(player => player.name === 'Forward starter 1')?.position, FantaSoccerRole.Tribune)
+  assert.equal(fixture.writtenTeam?.players.find(player => player.name === 'Forward starter Alpha')?.position, FantaSoccerRole.Tribune)
   assert.equal(fixture.writtenTeam?.players.find(player => player.name === 'Forward tribune')?.position, FantaSoccerRole.Forward)
 })
 
@@ -175,30 +175,30 @@ test('an offline replay never consumes live changes or mutates TeamDay even if t
 function team(): Team {
   const players: Player[] = [
     player('Goalkeeper starter', Role.GoalKeeper, FantaSoccerRole.GoalKeeper),
-    player('Defender starter 1', Role.Defensor, FantaSoccerRole.Defensor),
-    player('Defender starter 2', Role.Defensor, FantaSoccerRole.Defensor),
-    player('Defender starter 3', Role.Defensor, FantaSoccerRole.Defensor),
-    player('Defender starter 4', Role.Defensor, FantaSoccerRole.Defensor),
-    player('Midfielder starter 1', Role.Midfielder, FantaSoccerRole.Midfielder),
-    player('Midfielder starter 2', Role.Midfielder, FantaSoccerRole.Midfielder),
-    player('Midfielder starter 3', Role.Midfielder, FantaSoccerRole.Midfielder),
-    player('Forward starter 1', Role.Forward, FantaSoccerRole.Forward),
-    player('Forward starter 2', Role.Forward, FantaSoccerRole.Forward),
-    player('Forward starter 3', Role.Forward, FantaSoccerRole.Forward),
+    player('Defender starter Alpha', Role.Defensor, FantaSoccerRole.Defensor),
+    player('Defender starter Beta', Role.Defensor, FantaSoccerRole.Defensor),
+    player('Defender starter Gamma', Role.Defensor, FantaSoccerRole.Defensor),
+    player('Defender starter Delta', Role.Defensor, FantaSoccerRole.Defensor),
+    player('Midfielder starter Alpha', Role.Midfielder, FantaSoccerRole.Midfielder),
+    player('Midfielder starter Beta', Role.Midfielder, FantaSoccerRole.Midfielder),
+    player('Midfielder starter Gamma', Role.Midfielder, FantaSoccerRole.Midfielder),
+    player('Forward starter Alpha', Role.Forward, FantaSoccerRole.Forward),
+    player('Forward starter Beta', Role.Forward, FantaSoccerRole.Forward),
+    player('Forward starter Gamma', Role.Forward, FantaSoccerRole.Forward),
     player('Goalkeeper backup', Role.GoalKeeper, FantaSoccerRole.BackupGoalKeeper),
-    player('Defender backup 1', Role.Defensor, FantaSoccerRole.FirstBackupDefensor),
-    player('Defender backup 2', Role.Defensor, FantaSoccerRole.SecondBackupDefensor),
-    player('Midfielder backup 1', Role.Midfielder, FantaSoccerRole.FirstBackupMidfielder),
-    player('Midfielder backup 2', Role.Midfielder, FantaSoccerRole.SecondBackupMidfielder),
-    player('Forward backup 1', Role.Forward, FantaSoccerRole.FirstBackupForward),
-    player('Forward backup 2', Role.Forward, FantaSoccerRole.SecondBackupForward),
+    player('Defender backup Alpha', Role.Defensor, FantaSoccerRole.FirstBackupDefensor),
+    player('Defender backup Beta', Role.Defensor, FantaSoccerRole.SecondBackupDefensor),
+    player('Midfielder backup Alpha', Role.Midfielder, FantaSoccerRole.FirstBackupMidfielder),
+    player('Midfielder backup Beta', Role.Midfielder, FantaSoccerRole.SecondBackupMidfielder),
+    player('Forward backup Alpha', Role.Forward, FantaSoccerRole.FirstBackupForward),
+    player('Forward backup Beta', Role.Forward, FantaSoccerRole.SecondBackupForward),
     player('Forward tribune', Role.Forward, FantaSoccerRole.Tribune),
-    player('Tribune 2', Role.GoalKeeper, FantaSoccerRole.Tribune),
-    player('Tribune 3', Role.Defensor, FantaSoccerRole.Tribune),
-    player('Tribune 4', Role.Defensor, FantaSoccerRole.Tribune),
-    player('Tribune 5', Role.Midfielder, FantaSoccerRole.Tribune),
-    player('Tribune 6', Role.Midfielder, FantaSoccerRole.Tribune),
-    player('Tribune 7', Role.Forward, FantaSoccerRole.Tribune),
+    player('Tribune Goalkeeper', Role.GoalKeeper, FantaSoccerRole.Tribune),
+    player('Tribune Defender Alpha', Role.Defensor, FantaSoccerRole.Tribune),
+    player('Tribune Defender Beta', Role.Defensor, FantaSoccerRole.Tribune),
+    player('Tribune Midfielder Alpha', Role.Midfielder, FantaSoccerRole.Tribune),
+    player('Tribune Midfielder Beta', Role.Midfielder, FantaSoccerRole.Tribune),
+    player('Tribune Forward', Role.Forward, FantaSoccerRole.Tribune),
   ]
   return {
     name: 'Owner Team', owner: OWNER, additionalOwners: [], players,
