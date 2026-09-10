@@ -33,6 +33,7 @@ export function EvolutionCardPicker({
 }) {
   const annual = runtime.group.leagues.find(item => item.id === leagueId)?.years.find(item => item.year === season)
   const evolution = annual ? resolveFantazoneEvolutionSettings(annual.settings) : null
+  const maxCardsPerMatch = evolution?.coachCards.cardsPerMatch ?? 0
   const catalog = useMemo(() => annual ? getEvolutionCardCatalog(annual.settings) : [], [annual?.settings])
   const service = useMemo(() => new GroupEvolutionCardService(runtime), [runtime])
   const [selected, setSelected] = useState<string[]>([])
@@ -123,7 +124,7 @@ export function EvolutionCardPicker({
     if (locked || sealed?.reveal) return
     setSelected(current => {
       if (current.includes(cardId)) return current.filter(item => item !== cardId)
-      if (current.length >= evolution.coachCards.cardsPerMatch) return current
+      if (current.length >= maxCardsPerMatch) return current
       return [...current, cardId]
     })
     setMessage(null)
@@ -173,7 +174,7 @@ export function EvolutionCardPicker({
               <Text color="$color12" fontSize="$6" fontWeight="900">Carte Fantazone Evolution</Text>
             </XStack>
             <Paragraph color="$color10">
-              Scegli fino a {evolution.coachCards.cardsPerMatch} carte. Prima del reveal gli avversari possono vedere soltanto l’hash della scelta, non le carte.
+              Scegli fino a {maxCardsPerMatch} carte. Prima del reveal gli avversari possono vedere soltanto l’hash della scelta, non le carte.
             </Paragraph>
           </YStack>
           <XStack gap="$2" alignItems="center" flexWrap="wrap">
