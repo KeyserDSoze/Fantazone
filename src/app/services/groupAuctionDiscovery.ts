@@ -5,6 +5,7 @@ import {
 } from '@fantazone/domain'
 import {
   GitHubAuctionRepository,
+  RepositoryWriteConflictError,
   type RepositoryJsonSnapshot,
 } from '@fantazone/github'
 
@@ -95,7 +96,19 @@ export class GroupAuctionDiscoveryService {
     }
 
     const expectedSha = options.expectedPointerSha ?? current?.sha
-    return this.repository.writeActiveAuction(pointer, expectedSha ? { expectedSha } : { createOnly: true })
+    try {
+      return await this.repository.writeActiveAuction(pointer, expectedSha ? { expectedSha } : { createOnly: true })
+    } catch (error) {
+      if (!(error instanceof RepositoryWriteConflictError)) throw error
+
+      // Another device can win between the refreshed read above and this optimistic
+      // pointer write. Re-read the canonical pointer before surfacing a false failure.
+      const winner = await this.repository.getActiveAuction(pointer.season, pointer.leagueId, { refresh: true })
+      if (!winner) throw error
+      if (winner.value.auctionId === checkpoint.id) return winner
+      if (winner.value.auctionId) throw new ActiveAuctionAlreadyExistsError(winner.value, checkpoint.id)
+      throw error
+    }
   }
 
   async clearActiveAuction(

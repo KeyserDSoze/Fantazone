@@ -6,12 +6,15 @@ import {
   AuctionType,
   Role,
   createActiveAuctionPointer,
+  type ActiveAuctionPointer,
   type AuctionCheckpoint,
 } from '../../src/domain/src/index'
 import {
   GitHubAuctionRepository,
   GitHubJsonStore,
+  RepositoryWriteConflictError,
   type RepositoryContentClient,
+  type RepositoryJsonSnapshot,
 } from '../../src/github/src/index'
 import {
   ActiveAuctionAlreadyExistsError,
@@ -37,6 +40,33 @@ class FakeContentClient implements RepositoryContentClient {
     const nextSha = `write-${this.writes}`
     this.files.set(key, { sha: nextSha, content: text })
     return { sha: nextSha }
+  }
+}
+
+class ActivationRaceRepository {
+  activeReads = 0
+  writes = 0
+
+  constructor(
+    private readonly durableCheckpoint: AuctionCheckpoint,
+    private readonly winner: RepositoryJsonSnapshot<ActiveAuctionPointer> | null,
+  ) {}
+
+  async getCheckpoint() {
+    return snapshot(this.durableCheckpoint, 'checkpoint-sha')
+  }
+
+  async getActiveAuction() {
+    this.activeReads += 1
+    return this.activeReads === 1 ? null : this.winner
+  }
+
+  async writeActiveAuction() {
+    this.writes += 1
+    throw new RepositoryWriteConflictError(
+      { owner: 'KeyserDSoze', repo: 'Fantazone.Amici', ref: 'main', path: 'data/groups/seasons/15/auctions/active/league.json' },
+      409,
+    )
   }
 }
 
@@ -121,6 +151,58 @@ test('does not replace another active auction implicitly and can clear with SHA'
   assert.equal(cleared.value.auctionId, null)
 })
 
+test('converges when another device wins the pointer race with the same auction', async () => {
+  const cp = checkpoint('auction-same')
+  const winner = snapshot(createActiveAuctionPointer({
+    leagueId: 'league',
+    season: 15,
+    auctionId: cp.id,
+    updatedAt: new Date('2026-09-06T20:02:00Z'),
+  }), 'winner-sha')
+  const repository = new ActivationRaceRepository(cp, winner)
+  const service = new GroupAuctionDiscoveryService(repository as unknown as GitHubAuctionRepository)
+
+  const activated = await service.activateCheckpoint(cp)
+
+  assert.equal(activated.sha, 'winner-sha')
+  assert.equal(activated.value.auctionId, cp.id)
+  assert.equal(repository.writes, 1)
+  assert.equal(repository.activeReads, 2)
+})
+
+test('surfaces the canonical competing auction when another device wins the pointer race', async () => {
+  const cp = checkpoint('auction-requested')
+  const winner = snapshot(createActiveAuctionPointer({
+    leagueId: 'league',
+    season: 15,
+    auctionId: 'auction-winner',
+    updatedAt: new Date('2026-09-06T20:02:00Z'),
+  }), 'winner-sha')
+  const repository = new ActivationRaceRepository(cp, winner)
+  const service = new GroupAuctionDiscoveryService(repository as unknown as GitHubAuctionRepository)
+
+  await assert.rejects(service.activateCheckpoint(cp), error => {
+    assert.ok(error instanceof ActiveAuctionAlreadyExistsError)
+    assert.equal(error.pointer.auctionId, 'auction-winner')
+    assert.equal(error.requestedAuctionId, 'auction-requested')
+    return true
+  })
+  assert.equal(repository.activeReads, 2)
+})
+
+test('preserves the original write conflict when no canonical pointer appears after the race', async () => {
+  const cp = checkpoint('auction-missing-winner')
+  const repository = new ActivationRaceRepository(cp, null)
+  const service = new GroupAuctionDiscoveryService(repository as unknown as GitHubAuctionRepository)
+
+  await assert.rejects(service.activateCheckpoint(cp), RepositoryWriteConflictError)
+  assert.equal(repository.activeReads, 2)
+})
+
 function serviceWith(client: FakeContentClient) {
   return new GroupAuctionDiscoveryService(new GitHubAuctionRepository(new GitHubJsonStore(client), target))
+}
+
+function snapshot<T>(value: T, sha: string): RepositoryJsonSnapshot<T> {
+  return { value: JSON.parse(JSON.stringify(value)) as T, sha, fromCache: false }
 }
