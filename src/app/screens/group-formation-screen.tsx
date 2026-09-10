@@ -3,6 +3,7 @@ import { Image } from 'react-native'
 import {
   AlertTriangle,
   CalendarDays,
+  LockKeyhole,
   RefreshCw,
   RotateCcw,
   Save,
@@ -17,16 +18,20 @@ import {
   applyFormationPositions,
   calculateAutomaticFormation,
   formatSeasonFromYear,
+  getEvolutionLockedPlayerKeys,
   getLiveFormationChangesRemaining,
   getPlayerKey,
+  resolveFantazoneEvolutionSettings,
   validateFormation,
   type AuthenticatedGroupSession,
   type FormationPositionUpdate,
   type GameWrapper,
   type Player,
+  type RealDay,
   type Team,
 } from '@fantazone/domain'
 import { GitHubChanceRepository, GitHubStatPlayersRepository } from '@fantazone/github'
+import { EvolutionCardPicker } from '../components/EvolutionCardPicker'
 import { AppScreen, PageIntro, PrimaryAction, StatusPill, Surface } from '../components/design-system'
 import { resolveFormationTarget, type FormationTarget } from '../services/groupFormationTarget'
 import type { GroupNavigationSelection } from '../services/groupNavigation'
@@ -54,6 +59,7 @@ export function GroupFormationScreen({ runtime, session, selection }: Props) {
   const [target, setTarget] = useState<FormationTarget | null>(null)
   const [wrapper, setWrapper] = useState<GameWrapper | null>(null)
   const [team, setTeam] = useState<Team | null>(null)
+  const [realDay, setRealDay] = useState<RealDay | null>(null)
   const [positions, setPositions] = useState<PositionState>({})
   const [automaticBackup, setAutomaticBackup] = useState<PositionState | null>(null)
   const [loading, setLoading] = useState(false)
@@ -62,6 +68,10 @@ export function GroupFormationScreen({ runtime, session, selection }: Props) {
   const [error, setError] = useState<string | null>(null)
   const [status, setStatus] = useState<string | null>(null)
   const league = runtime.group.leagues.find(item => item.id === selection.leagueId) ?? null
+  const annualSettings = selection.year == null
+    ? null
+    : league?.years.find(item => item.year === selection.year)?.settings ?? null
+  const evolution = annualSettings ? resolveFantazoneEvolutionSettings(annualSettings) : null
   const chanceRepository = useMemo(() => new GitHubChanceRepository(runtime.store, runtime.platformTarget), [runtime])
   const statRepository = useMemo(() => new GitHubStatPlayersRepository(runtime.store, runtime.platformTarget), [runtime])
 
@@ -71,6 +81,7 @@ export function GroupFormationScreen({ runtime, session, selection }: Props) {
       setTarget(null)
       setWrapper(null)
       setTeam(null)
+      setRealDay(null)
       setAutomaticBackup(null)
       return
     }
@@ -126,11 +137,13 @@ export function GroupFormationScreen({ runtime, session, selection }: Props) {
       setTarget(resolved)
       setWrapper(game)
       setTeam(currentTeam)
+      setRealDay(realCalendar?.days.find(day => day.serieADay === game.serieADay) ?? null)
       setPositions(positionStateFromTeam(currentTeam))
     } catch (caught) {
       setTarget(null)
       setWrapper(null)
       setTeam(null)
+      setRealDay(null)
       setPositions({})
       setAutomaticBackup(null)
       setError(toMessage(caught))
@@ -150,14 +163,19 @@ export function GroupFormationScreen({ runtime, session, selection }: Props) {
     return applyFormationPositions(team, formationUpdates(activePlayers, positions))
   }, [team, activePlayers, positions])
   const validation = useMemo(() => previewTeam ? validateFormation(previewTeam) : null, [previewTeam])
-  const liveChangesRemaining = wrapper?.isLiveFormationWindow
+  const liveLimitedChanges = (wrapper?.liveFormationChangesAllowed ?? 0) > 0
+  const liveChangesRemaining = wrapper?.isLiveFormationWindow && liveLimitedChanges
     ? getLiveFormationChangesRemaining(team, { liveFormationChanges: wrapper.liveFormationChangesAllowed })
     : null
+  const lockedPlayerKeys = useMemo(() => {
+    if (!annualSettings || !realDay || !evolution?.enabled || !evolution.progressiveLineupLock.enabled) return new Set<string>()
+    return getEvolutionLockedPlayerKeys(activePlayers, realDay, annualSettings, new Date())
+  }, [activePlayers, annualSettings, evolution?.enabled, evolution?.progressiveLineupLock.enabled, realDay])
 
   async function applyAutomaticProposal() {
     if (!team || !wrapper || selection.year == null) return
     if (wrapper.isLiveFormationWindow) {
-      setError('Durante il live sono ammessi soltanto gli scambi previsti dalla regola della lega: la proposta automatica è disabilitata.')
+      setError('Durante il live sono ammessi soltanto i cambi previsti dalle regole della lega: la proposta automatica è disabilitata.')
       return
     }
     setAutomaticLoading(true)
@@ -174,8 +192,8 @@ export function GroupFormationScreen({ runtime, session, selection }: Props) {
         throw new Error(`Probabilità Serie A ${selection.year}/${wrapper.serieADay} non disponibili. Esegui prima il producer delle probabilità.`)
       }
       updateOperation('Calcolo della proposta migliore con i dati disponibili…')
-      const realDay = realCalendar?.days.find(day => day.serieADay === wrapper.serieADay) ?? null
-      const result = calculateAutomaticFormation({ team, chances, stats, realDay })
+      const selectedRealDay = realCalendar?.days.find(day => day.serieADay === wrapper.serieADay) ?? null
+      const result = calculateAutomaticFormation({ team, chances, stats, realDay: selectedRealDay })
       const preview = applyFormationPositions(team, result.updates)
       const checked = validateFormation(preview)
       if (!checked.valid) throw new Error(checked.errors[0] ?? 'La proposta automatica non produce una formazione valida.')
@@ -229,8 +247,12 @@ export function GroupFormationScreen({ runtime, session, selection }: Props) {
       setAutomaticBackup(null)
       markConnectivity('online')
       if (saved.source === 'day' && wrapper?.isLiveFormationWindow) {
-        const remaining = getLiveFormationChangesRemaining(saved.team, { liveFormationChanges: wrapper.liveFormationChangesAllowed })
-        setStatus(`Modifica live salvata sulla giornata ${saved.serieADay}. Modifiche ancora disponibili: ${remaining}.`)
+        if (liveLimitedChanges) {
+          const remaining = getLiveFormationChangesRemaining(saved.team, { liveFormationChanges: wrapper.liveFormationChangesAllowed })
+          setStatus(`Modifica live salvata sulla giornata ${saved.serieADay}. Modifiche ancora disponibili: ${remaining}.`)
+        } else {
+          setStatus(`Formazione Evolution aggiornata sulla giornata ${saved.serieADay}. I giocatori già scesi in campo restano bloccati.`)
+        }
       } else {
         setStatus('Formazione sincronizzata con il gruppo. La GitHub Action determinerà la TeamDay corretta dal timestamp del commit, senza riscrivere le giornate già congelate.')
       }
@@ -334,16 +356,23 @@ export function GroupFormationScreen({ runtime, session, selection }: Props) {
               </YStack>
             </XStack>
             <StatusPill tone={wrapper.isLiveFormationWindow ? 'red' : wrapper.canEdit ? 'green' : 'yellow'}>
-              {wrapper.isLiveFormationWindow ? `${liveChangesRemaining ?? 0} cambi rimasti` : wrapper.canEdit ? 'Turno futuro' : 'Giornata iniziata'}
+              {wrapper.isLiveFormationWindow
+                ? liveLimitedChanges ? `${liveChangesRemaining ?? 0} cambi rimasti` : wrapper.progressiveLineupLock ? 'Lock progressivo' : 'Live'
+                : wrapper.canEdit ? 'Turno futuro' : 'Giornata iniziata'}
             </StatusPill>
           </XStack>
           {wrapper.isLiveFormationWindow ? (
             <YStack marginTop="$3" gap="$1.5">
               <Paragraph size="$2" color="$red11" maxWidth={860}>
-                Il salvataggio modifica esclusivamente la TeamDay della giornata corrente. Ogni modifica valida deve essere uno scambio tra due giocatori e consuma un cambio.
+                {liveLimitedChanges && wrapper.progressiveLineupLock
+                  ? 'Ogni modifica deve rispettare sia il limite di cambi sia il lock progressivo: i calciatori la cui partita è iniziata non possono più essere spostati.'
+                  : liveLimitedChanges
+                    ? 'Il salvataggio modifica esclusivamente la TeamDay della giornata corrente. Ogni modifica valida deve essere uno scambio tra due giocatori e consuma un cambio.'
+                    : 'Fantazone Evolution mantiene modificabili i giocatori delle partite non ancora iniziate. Ogni calciatore si blocca al kickoff della propria squadra reale.'}
               </Paragraph>
               <Text fontSize="$2" color="$color9">
                 Modulo {wrapper.allowLiveModuleChange ? 'modificabile' : 'bloccato'}
+                {wrapper.progressiveLineupLock ? ` · ${lockedPlayerKeys.size} giocatori già bloccati` : ''}
                 {wrapper.liveFormationDeadline ? ` · finestra fino alle ${new Date(wrapper.liveFormationDeadline).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}` : ''}
               </Text>
             </YStack>
@@ -353,6 +382,17 @@ export function GroupFormationScreen({ runtime, session, selection }: Props) {
             </Paragraph>
           )}
         </Surface>
+      ) : null}
+
+      {wrapper && target && selection.leagueId && selection.year != null ? (
+        <EvolutionCardPicker
+          runtime={runtime}
+          session={session}
+          leagueId={selection.leagueId}
+          season={selection.year}
+          serieADay={wrapper.serieADay}
+          owner={target.owner}
+        />
       ) : null}
 
       {team ? (
@@ -402,7 +442,7 @@ export function GroupFormationScreen({ runtime, session, selection }: Props) {
               </XStack>
               <Paragraph size="$2" color="$color9" maxWidth={850}>
                 {wrapper?.isLiveFormationWindow
-                  ? 'Durante il live la proposta automatica è disabilitata: valgono soltanto gli scambi consentiti dalla regola annuale.'
+                  ? 'Durante il live la proposta automatica è disabilitata: valgono soltanto i cambi consentiti dalle regole annuali e dagli eventuali lock già scattati.'
                   : 'La proposta automatica resta sul dispositivo finché non salvi. Usa probabilità, indisponibilità, forma recente e difficoltà casa/avversario mantenendo la logica Fantasoccer.'}
               </Paragraph>
             </YStack>
@@ -421,15 +461,20 @@ export function GroupFormationScreen({ runtime, session, selection }: Props) {
                   <StatusPill tone="neutral">{roleShortLabel(role)}</StatusPill>
                 </XStack>
                 <XStack gap="$3" flexWrap="wrap" alignItems="stretch">
-                  {players.map(player => (
-                    <PlayerPositionCard
-                      key={getPlayerKey(player.name)}
-                      player={player}
-                      value={positions[getPlayerKey(player.name)] ?? player.position}
-                      disabled={saving || automaticLoading}
-                      onChange={position => setPositions(current => ({ ...current, [getPlayerKey(player.name)]: position }))}
-                    />
-                  ))}
+                  {players.map(player => {
+                    const playerKey = getPlayerKey(player.name)
+                    const locked = lockedPlayerKeys.has(playerKey)
+                    return (
+                      <PlayerPositionCard
+                        key={playerKey}
+                        player={player}
+                        value={positions[playerKey] ?? player.position}
+                        disabled={saving || automaticLoading || locked}
+                        locked={locked}
+                        onChange={position => setPositions(current => ({ ...current, [playerKey]: position }))}
+                      />
+                    )
+                  })}
                 </XStack>
               </YStack>
             )
@@ -443,12 +488,14 @@ export function GroupFormationScreen({ runtime, session, selection }: Props) {
                 </Text>
                 <Paragraph color="$color9" size="$2">
                   {wrapper?.isLiveFormationWindow
-                    ? 'Il salvataggio live è immediato e richiede rete: il server GitHub deve verificare limite, scambio e modulo prima della scadenza.'
+                    ? wrapper.progressiveLineupLock
+                      ? 'Il salvataggio live è immediato e richiede rete: GitHub rivalida il lock di ogni giocatore usando il kickoff reale al momento della scrittura.'
+                      : 'Il salvataggio live è immediato e richiede rete: GitHub deve verificare limite, scambio e modulo prima della scadenza.'
                     : 'Il salvataggio aggiorna la squadra corrente; in assenza di rete la modifica resta in coda offline e verrà rivalidata alla sincronizzazione.'}
                 </Paragraph>
               </YStack>
               <PrimaryAction
-                disabled={saving || automaticLoading || validation?.valid !== true || (wrapper?.isLiveFormationWindow === true && (liveChangesRemaining ?? 0) <= 0)}
+                disabled={saving || automaticLoading || validation?.valid !== true || (wrapper?.isLiveFormationWindow === true && liveLimitedChanges && (liveChangesRemaining ?? 0) <= 0)}
                 onPress={() => { void saveFormation() }}
                 icon={saving ? <Spinner color="white" /> : <Save size="$1" color="white" />}
               >
@@ -466,11 +513,13 @@ function PlayerPositionCard({
   player,
   value,
   disabled,
+  locked,
   onChange,
 }: {
   player: Player
   value: FantaSoccerRole
   disabled: boolean
+  locked: boolean
   onChange: (position: FantaSoccerRole) => void
 }) {
   const options = positionOptions(player.role)
@@ -483,10 +532,11 @@ function PlayerPositionCard({
       maxWidth={560}
       padding="$4"
       borderWidth={1}
-      borderColor={isStarterPosition(value) ? '$blue6' : '$color5'}
-      backgroundColor={isStarterPosition(value) ? '$blue2' : '$color2'}
+      borderColor={locked ? '$red6' : isStarterPosition(value) ? '$blue6' : '$color5'}
+      backgroundColor={locked ? '$red2' : isStarterPosition(value) ? '$blue2' : '$color2'}
       borderRadius="$5"
       gap="$4"
+      opacity={locked ? 0.82 : 1}
     >
       <XStack gap="$3" alignItems="center">
         <PlayerAvatar name={player.name} />
@@ -494,8 +544,18 @@ function PlayerPositionCard({
           <Text color="$color12" fontWeight="900" fontSize="$5" numberOfLines={1}>{player.name}</Text>
           <Text color="$color9" numberOfLines={1}>{player.team.name} · {player.price}</Text>
         </YStack>
-        <StatusPill tone={positionTone(value)}>{current}</StatusPill>
+        <YStack gap="$1" alignItems="flex-end">
+          {locked ? <StatusPill tone="red">Bloccato</StatusPill> : null}
+          <StatusPill tone={positionTone(value)}>{current}</StatusPill>
+        </YStack>
       </XStack>
+
+      {locked ? (
+        <XStack gap="$2" alignItems="center">
+          <LockKeyhole size="$0.9" color="$red10" />
+          <Text color="$red11" fontSize="$2" fontWeight="700">La partita di {player.team.name} è già iniziata.</Text>
+        </XStack>
+      ) : null}
 
       <XStack gap="$2" flexWrap="wrap">
         {options.map(option => {
