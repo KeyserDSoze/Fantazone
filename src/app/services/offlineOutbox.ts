@@ -70,6 +70,7 @@ export async function flushFormationOutbox(
         gameId: item.gameId,
         owner: item.owner,
         positions: item.positions,
+        offlineReplay: true,
       })
       await removeFormationMutation(repository, item.id)
       synced += 1
