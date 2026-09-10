@@ -266,11 +266,31 @@ export interface EvolutionSeasonSkillDocument {
   assignments: EvolutionPlayerSkillAssignment[]
 }
 
+/** Decrypted/revealed card choice consumed by the rule engine. */
 export interface EvolutionCardSelection {
   cardIds: string[]
   selectedAt: string
   lockedAt: string | null
   revealedAt: string | null
+}
+
+/** Public reveal attached to a previously sealed card commitment. */
+export interface EvolutionCardReveal {
+  cardIds: string[]
+  nonce: string
+  revealedAt: string
+}
+
+/**
+ * Repository-safe card state. Before reveal it contains no card ids and therefore does
+ * not disclose the coach choice to another participant inspecting GitHub directly.
+ */
+export interface EvolutionCardCommitment {
+  commitment: string
+  committedAt: string
+  lockedAt: string | null
+  revealAt: string | null
+  reveal: EvolutionCardReveal | null
 }
 
 export type EvolutionPlayerUsage = 'starter' | 'subbed-in' | 'bench-unused' | 'tribune'
