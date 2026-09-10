@@ -54,11 +54,34 @@ export function EvolutionCardPicker({
         readEvolutionCardSecret(runtime.connection.repository.full_name, leagueId, season, serieADay, owner),
       ])
       const ownerKey = owner.trim().toLowerCase()
-      setSealed(cards?.commitments[ownerKey] ?? null)
-      setDay(realCalendar?.days.find(item => item.serieADay === serieADay) ?? null)
-      setHasLocalSecret(Boolean(secret))
-      if (secret?.cardIds.length) setSelected(secret.cardIds)
-      else if (cards?.commitments[ownerKey]?.reveal) setSelected(cards.commitments[ownerKey].reveal!.cardIds)
+      const selectedDay = realCalendar?.days.find(item => item.serieADay === serieADay) ?? null
+      let currentSealed = cards?.commitments[ownerKey] ?? null
+      let currentSecret = secret
+
+      if (
+        selectedDay &&
+        currentSealed &&
+        !currentSealed.reveal &&
+        currentSecret &&
+        (!evolution.coachCards.revealAtFirstKickoff || shouldRevealEvolutionCards(selectedDay, annual.settings))
+      ) {
+        try {
+          const revealed = await service.revealOwnCardsIfDue({ session, leagueId, season, serieADay, owner })
+          if (revealed) {
+            currentSealed = revealed
+            currentSecret = null
+            setMessage('Kickoff raggiunto: le carte sono state rivelate automaticamente e verificate.')
+          }
+        } catch {
+          // Keep the sealed state and retry while this matchday screen stays open.
+        }
+      }
+
+      setSealed(currentSealed)
+      setDay(selectedDay)
+      setHasLocalSecret(Boolean(currentSecret))
+      if (currentSecret?.cardIds.length) setSelected(currentSecret.cardIds)
+      else if (currentSealed?.reveal) setSelected(currentSealed.reveal.cardIds)
     } catch (caught) {
       setError(toMessage(caught))
     } finally {
@@ -67,6 +90,26 @@ export function EvolutionCardPicker({
   }
 
   useEffect(() => { void refresh() }, [runtime, leagueId, season, serieADay, owner, evolution?.enabled, evolution?.coachCards.enabled])
+
+  useEffect(() => {
+    if (!annual || !evolution?.enabled || !evolution.coachCards.enabled || !sealed || sealed.reveal || !hasLocalSecret) return
+    const timer = setInterval(() => {
+      void service.revealOwnCardsIfDue({ session, leagueId, season, serieADay, owner })
+        .then(result => {
+          if (!result) return
+          setSealed(result)
+          setHasLocalSecret(false)
+          setSelected(result.reveal?.cardIds ?? [])
+          setMessage('Kickoff raggiunto: le carte sono state rivelate automaticamente e verificate.')
+          setError(null)
+        })
+        .catch(() => {
+          // Network or timing failure is non-destructive: the local secret remains and
+          // this timer retries on the next pass while the matchday screen is open.
+        })
+    }, 30_000)
+    return () => clearInterval(timer)
+  }, [annual, evolution?.enabled, evolution?.coachCards.enabled, sealed?.commitment, sealed?.reveal, hasLocalSecret, service, session, leagueId, season, serieADay, owner])
 
   if (!annual || !evolution?.enabled || !evolution.coachCards.enabled) return null
 
@@ -185,9 +228,9 @@ export function EvolutionCardPicker({
             </PrimaryAction>
           ) : null}
           {sealed && !sealed.reveal && hasLocalSecret && revealDue ? (
-            <Button borderRadius="$4" icon={Eye} disabled={loading} onPress={() => { void reveal() }}>Rivela carte</Button>
+            <Button borderRadius="$4" icon={Eye} disabled={loading} onPress={() => { void reveal() }}>Rivela ora</Button>
           ) : null}
-          {sealed && !sealed.reveal && !revealDue ? <Text color="$color9" fontSize="$2">Reveal automatico disponibile dal primo calcio d’inizio.</Text> : null}
+          {sealed && !sealed.reveal && !revealDue ? <Text color="$color9" fontSize="$2">Il reveal parte automaticamente dal primo calcio d’inizio mentre Fantazone è aperto; altrimenti viene eseguito alla prossima apertura.</Text> : null}
           {sealed && !sealed.reveal && !hasLocalSecret ? <Text color="$red10" fontSize="$2">Il commitment esiste ma il segreto non è su questo dispositivo: il reveal non può essere ricostruito.</Text> : null}
         </XStack>
       </YStack>
