@@ -39,6 +39,7 @@ export function EvolutionCardPicker({
   const [selected, setSelected] = useState<string[]>([])
   const [sealed, setSealed] = useState<EvolutionCardCommitment | null>(null)
   const [day, setDay] = useState<RealDay | null>(null)
+  const [availability, setAvailability] = useState<Record<string, number> | null | undefined>(undefined)
   const [hasLocalSecret, setHasLocalSecret] = useState(false)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
@@ -49,10 +50,11 @@ export function EvolutionCardPicker({
     setLoading(true)
     setError(null)
     try {
-      const [cards, realCalendar, secret] = await Promise.all([
+      const [cards, realCalendar, secret, cardAvailability] = await Promise.all([
         runtime.evolutionRepository.getCards(leagueId, season, serieADay, { refresh: true }),
         runtime.realCalendarRepository.getCalendar(season, { refresh: true }),
         readEvolutionCardSecret(runtime.connection.repository.full_name, leagueId, season, serieADay, owner),
+        service.getCardAvailability({ session, leagueId, season, serieADay, owner }),
       ])
       const ownerKey = owner.trim().toLowerCase()
       const selectedDay = realCalendar?.days.find(item => item.serieADay === serieADay) ?? null
@@ -80,9 +82,11 @@ export function EvolutionCardPicker({
 
       setSealed(currentSealed)
       setDay(selectedDay)
+      setAvailability(cardAvailability)
       setHasLocalSecret(Boolean(currentSecret))
       if (currentSecret?.cardIds.length) setSelected(currentSecret.cardIds)
       else if (currentSealed?.reveal) setSelected(currentSealed.reveal.cardIds)
+      else setSelected([])
     } catch (caught) {
       setError(toMessage(caught))
     } finally {
@@ -122,6 +126,8 @@ export function EvolutionCardPicker({
 
   function toggle(cardId: string) {
     if (locked || sealed?.reveal) return
+    const remaining = availability === null ? null : availability?.[cardId] ?? 0
+    if (remaining !== null && remaining <= 0 && !selected.includes(cardId)) return
     setSelected(current => {
       if (current.includes(cardId)) return current.filter(item => item !== cardId)
       if (current.length >= maxCardsPerMatch) return current
@@ -175,6 +181,7 @@ export function EvolutionCardPicker({
             </XStack>
             <Paragraph color="$color10">
               Scegli fino a {maxCardsPerMatch} carte. Prima del reveal gli avversari possono vedere soltanto l’hash della scelta, non le carte.
+              {availability === null ? ' Questa lega usa il catalogo illimitato.' : ' Il numero su ogni carta indica le copie ancora disponibili nel deck stagionale prima di questa giocata.'}
             </Paragraph>
           </YStack>
           <XStack gap="$2" alignItems="center" flexWrap="wrap">
@@ -193,6 +200,8 @@ export function EvolutionCardPicker({
         <XStack gap="$3" flexWrap="wrap" alignItems="stretch">
           {catalog.map(card => {
             const active = selected.includes(card.id)
+            const remaining = availability === null ? null : availability?.[card.id] ?? 0
+            const unavailable = remaining !== null && remaining <= 0 && !active
             return (
               <Button
                 key={card.id}
@@ -207,13 +216,19 @@ export function EvolutionCardPicker({
                 alignItems="stretch"
                 backgroundColor={active ? '$purple4' : '$color3'}
                 borderColor={active ? '$purple7' : '$color5'}
-                disabled={locked || Boolean(sealed?.reveal)}
+                opacity={unavailable ? 0.5 : 1}
+                disabled={locked || Boolean(sealed?.reveal) || unavailable}
                 onPress={() => toggle(card.id)}
               >
                 <YStack gap="$1.5" alignItems="flex-start">
-                  <XStack justifyContent="space-between" width="100%" gap="$2">
+                  <XStack justifyContent="space-between" width="100%" gap="$2" alignItems="center">
                     <Text color={active ? '$purple11' : '$color12'} fontWeight="900" flex={1}>{active ? '✓ ' : ''}{card.name}</Text>
-                    <Text color="$color8" fontSize="$1" fontWeight="800">{card.rarity.toUpperCase()}</Text>
+                    <YStack alignItems="flex-end" gap="$0.5">
+                      <Text color="$color8" fontSize="$1" fontWeight="800">{card.rarity.toUpperCase()}</Text>
+                      <Text color={unavailable ? '$red10' : '$purple10'} fontSize="$1" fontWeight="900">
+                        {remaining === null ? '∞' : `×${remaining}`}
+                      </Text>
+                    </YStack>
                   </XStack>
                   <Paragraph color="$color10" size="$2" textAlign="left">{card.description}</Paragraph>
                 </YStack>
