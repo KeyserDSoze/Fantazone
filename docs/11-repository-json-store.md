@@ -85,8 +85,10 @@ Formation saves use an appendable local intent containing identity, fixture/team
 
 1. refreshes authoritative remote state;
 2. revalidates membership and formation rules;
-3. replays the formation save through the normal writer;
+3. replays the formation against the latest mutable season Team;
 4. removes the outbox item only after GitHub accepts it.
+
+A replay is never converted into a live TeamDay edit. If the fixture that was editable when the intent was queued has started in the meantime—even when live formation changes are enabled—the replay updates only the mutable season Team. The group Action then uses the real Git commit timestamp to decide the next eligible TeamDay. This preserves the intended offline-first rule: an unsent pre-kickoff formation cannot arrive late and alter a match already in progress, while the user's latest team still becomes the basis for the following giornata.
 
 The GitHub commit timestamp remains the authoritative cutoff clock. A formation prepared before kickoff but synchronized after kickoff therefore applies according to the actual remote commit time, not a user-controlled device clock.
 
