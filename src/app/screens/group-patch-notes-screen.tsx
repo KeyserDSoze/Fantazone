@@ -15,6 +15,17 @@ const releases: Release[] = [
   {
     version: APP_VERSION,
     date: RELEASE_DATE,
+    title: 'Formazioni offline sicure dopo il calcio d’inizio',
+    items: [
+      { category: 'Fix', text: 'Una formazione salvata offline prima del kickoff non resta più bloccata nell’outbox se la connessione torna quando la partita originaria è già iniziata o conclusa.' },
+      { category: 'Architettura', text: 'Il replay offline non viene mai trasformato in una modifica live della TeamDay: aggiorna soltanto la Team stagionale e lascia alla GitHub Action il compito di applicarla alla prima giornata ancora eleggibile usando il timestamp reale del commit.' },
+      { category: 'Fix', text: 'Anche con i cambi formazione live abilitati, un intent nato offline prima della partita non consuma il contatore live e non può arrivare in ritardo modificando una TeamDay già in corso.' },
+      { category: 'Miglioria', text: 'Prima del replay vengono comunque riletti gruppo, membership, ownership/co-ownership, rosa e formazione canonici; un intent obsoleto o non più autorizzato continua quindi a fallire chiuso invece di sovrascrivere dati più recenti.' },
+    ],
+  },
+  {
+    version: '0.3.8',
+    date: '10 settembre 2026',
     title: 'Manifest GitHub auto-riparante e scritture più sicure',
     items: [
       { category: 'Fix', text: 'Un manifest.json rimasto bloccato con updating=true dopo una scrittura interrotta non mantiene più il gruppo in sincronizzazione conservativa per sempre: dopo cinque minuti viene riconosciuto come abbandonato e riparato automaticamente.' },
