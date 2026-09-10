@@ -15,6 +15,17 @@ const releases: Release[] = [
   {
     version: APP_VERSION,
     date: RELEASE_DATE,
+    title: 'Inizializzazione leghe concorrente e idempotente',
+    items: [
+      { category: 'Fix', text: 'Due SuperAdmin o due dispositivi che inizializzano quasi insieme Calendar e Rank della stessa lega non ricevono più un falso errore create-only quando l’altro writer ha già creato il documento canonico.' },
+      { category: 'Architettura', text: 'Dopo un conflitto ottimistico Fantazone rilegge sempre il Calendar o il Rank da GitHub: il writer che perde la race converge sul documento vincente invece di lasciare una inizializzazione apparentemente fallita.' },
+      { category: 'Fix', text: 'Il Calendar riletto dopo una race viene comunque validato contro il roster configurato; un documento concorrente incompatibile continua a fallire chiuso e non viene accettato soltanto perché esiste.' },
+      { category: 'Miglioria', text: 'Una inizializzazione parziale con Calendar già creato e Rank ancora mancante può completarsi nello stesso tentativo concorrente, riducendo i retry manuali nella gestione SuperAdmin.' },
+    ],
+  },
+  {
+    version: '0.3.10',
+    date: '10 settembre 2026',
     title: 'Campionato iniziale robusto alle scritture concorrenti',
     items: [
       { category: 'Fix', text: 'Due partecipanti che salvano quasi insieme la formazione del Campionato iniziale non ricevono più un falso errore soltanto perché entrambe le operazioni provano ad aggiornare lo stesso standings.json.' },

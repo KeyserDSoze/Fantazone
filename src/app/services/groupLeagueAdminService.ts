@@ -19,6 +19,7 @@ import {
 import {
   GROUP_RECALCULATION_WORKFLOW_PATH,
   GitHubClient,
+  RepositoryWriteConflictError,
 } from '@fantazone/github'
 
 export type GroupLeagueAdminRuntime = {
@@ -212,23 +213,39 @@ export async function initializeLeagueCalendarAndRank(
   if (calendar) {
     assertCalendarRosterCompatible(calendar, selectedTeams, type)
   } else {
-    calendar = createInitialLeagueCalendar({
+    const candidate = createInitialLeagueCalendar({
       year,
       leagueType: type,
       settings: annual.settings,
       teams: selectedTeams,
       seed: `${group.id}|${league.id}|${year}`,
     })
-    await runtime.calendarRepository.writeCalendar(league.id, year, calendar, `calendar: initialize ${league.id} ${year}`, { createOnly: true })
-    createdCalendar = true
+    try {
+      await runtime.calendarRepository.writeCalendar(league.id, year, candidate, `calendar: initialize ${league.id} ${year}`, { createOnly: true })
+      calendar = candidate
+      createdCalendar = true
+    } catch (error) {
+      if (!(error instanceof RepositoryWriteConflictError)) throw error
+      const concurrent = await runtime.calendarRepository.getCalendar(league.id, year, { refresh: true })
+      if (!concurrent) throw error
+      assertCalendarRosterCompatible(concurrent, selectedTeams, type)
+      calendar = concurrent
+    }
   }
 
-  const existingRank = await runtime.rankRepository.getRank(league.id, year, { refresh: true })
+  let existingRank = await runtime.rankRepository.getRank(league.id, year, { refresh: true })
   let createdRank = false
   if (!existingRank) {
     const rank = calculateRankFromCalendar(calendar, annual.settings, excludedRankRounds(type))
-    await runtime.rankRepository.writeRank(league.id, year, rank, `rank: initialize ${league.id} ${year}`, { createOnly: true })
-    createdRank = true
+    try {
+      await runtime.rankRepository.writeRank(league.id, year, rank, `rank: initialize ${league.id} ${year}`, { createOnly: true })
+      existingRank = rank
+      createdRank = true
+    } catch (error) {
+      if (!(error instanceof RepositoryWriteConflictError)) throw error
+      existingRank = await runtime.rankRepository.getRank(league.id, year, { refresh: true })
+      if (!existingRank) throw error
+    }
   }
 
   return { group: await runtime.refreshGroup(), leagueId: league.id, season: year, teamCount: selectedTeams.length, createdCalendar, createdRank }
