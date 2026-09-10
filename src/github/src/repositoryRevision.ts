@@ -9,11 +9,12 @@ import type { GroupRepositoryTarget } from './repositoryTarget'
 
 export const REPOSITORY_MANIFEST_PATH = 'manifest.json'
 export const REPOSITORY_REALTIME_PREFIX = 'realtime/'
+export const REPOSITORY_REVISION_STALE_AFTER_MS = 5 * 60 * 1000
 
-const REVISION_BEGIN_ATTEMPTS = 6
+const REVISION_BEGIN_ATTEMPTS = 10
 const REVISION_CLOSE_ATTEMPTS = 8
-const REVISION_RETRY_BASE_MS = 80
-const REVISION_RETRY_MAX_MS = 400
+const REVISION_RETRY_BASE_MS = 100
+const REVISION_RETRY_MAX_MS = 500
 
 export type RepositoryRevisionManifest = {
   schemaVersion: number
@@ -33,9 +34,14 @@ export type RepositoryRevisionManifest = {
  * Phase 1 advances the revision and marks the repository as `updating`. Phase 2,
  * after the document write succeeds, advances it again and marks it stable. A watcher
  * that happens to observe phase 1 must therefore invalidate conservatively instead of
- * accepting that revision as a stable snapshot. If a process/network failure leaves
- * the manifest in `updating`, repeated watcher checks remain safe and keep refreshing
- * stale documents rather than silently trusting them.
+ * accepting that revision as a stable snapshot.
+ *
+ * New writers serialize on a fresh `updating` marker instead of publishing through an
+ * in-flight revision. A marker older than the stale threshold is repaired with an
+ * optimistic-SHA write before new work proceeds. The same repair is exposed to the
+ * runtime watcher so a process/network failure cannot leave a repository permanently
+ * busy. Every repair re-reads the marker after conflicts, so it never closes a newer,
+ * fresh transition that raced with the repair attempt.
  */
 export class RepositoryRevisionContentClient implements RepositoryContentClient {
   private _lastRevision: number | null = null
@@ -88,11 +94,11 @@ export class RepositoryRevisionContentClient implements RepositoryContentClient 
     try {
       result = await this.client.putContent(owner, repo, path, text, message, sha, branch)
     } catch (error) {
-      // No canonical write was committed. Best-effort close the transition so a
-      // transient conflict does not leave the repository permanently marked busy.
+      // No canonical write was committed. Best-effort close only the transition that
+      // this writer actually started; a newer writer must retain ownership of its marker.
       if (startedRevision !== null) {
         try {
-          await this.transitionRevision(ref, false, REVISION_CLOSE_ATTEMPTS)
+          await this.transitionRevision(ref, false, REVISION_CLOSE_ATTEMPTS, startedRevision)
         } catch {
           // Leaving `updating: true` is conservative and therefore still sync-safe.
         }
@@ -102,16 +108,66 @@ export class RepositoryRevisionContentClient implements RepositoryContentClient 
 
     if (startedRevision !== null) {
       try {
-        await this.transitionRevision(ref, false, REVISION_CLOSE_ATTEMPTS)
+        await this.transitionRevision(ref, false, REVISION_CLOSE_ATTEMPTS, startedRevision)
       } catch {
         // The canonical document write has already been committed. Reporting the
-        // manifest-close race as a failure makes the UI claim that group.json was
-        // not written even though GitHub contains the new data. Keep the committed
-        // result and leave `updating: true`; pollers will refresh conservatively and
-        // a later successful revision transition will close the marker.
+        // manifest-close race as a failure makes the UI claim that the document was
+        // not written even though GitHub contains the new data. Pollers keep refreshing
+        // conservatively and can repair a genuinely stale marker later.
       }
     }
     return result
+  }
+
+  /**
+   * Repairs one stale `updating:true` marker and returns the stable revision that was
+   * published. Returns null when the manifest is absent, already stable or still fresh.
+   */
+  async repairStaleRevision(
+    ref: string | undefined = this.target.ref,
+    staleAfterMs = REPOSITORY_REVISION_STALE_AFTER_MS,
+  ): Promise<number | null> {
+    const now = this.now()
+    for (let attempt = 0; attempt < REVISION_CLOSE_ATTEMPTS; attempt += 1) {
+      const current = await this.client.tryGetContent(
+        this.target.owner,
+        this.target.repo,
+        REPOSITORY_MANIFEST_PATH,
+        ref,
+      )
+      if (!current) return null
+
+      const manifest = decodeRepositoryRevisionManifestText(current.content)
+      if (!isRepositoryRevisionManifestStale(manifest, now, staleAfterMs)) {
+        return null
+      }
+
+      const next: RepositoryRevisionManifest = {
+        ...manifest,
+        revision: manifest.revision + 1,
+        updatedAt: now.toISOString(),
+        updating: false,
+      }
+
+      try {
+        await this.client.putContent(
+          this.target.owner,
+          this.target.repo,
+          REPOSITORY_MANIFEST_PATH,
+          `${JSON.stringify(next, null, 2)}\n`,
+          `chore: repair stale repository revision ${next.revision}`,
+          current.sha,
+          ref,
+        )
+        this._lastRevision = next.revision
+        return next.revision
+      } catch (error) {
+        const retryable = error instanceof GitHubApiError && (error.status === 409 || error.status === 422)
+        if (!retryable || attempt === REVISION_CLOSE_ATTEMPTS - 1) throw error
+        await sleep(Math.min(REVISION_RETRY_BASE_MS * (attempt + 1), REVISION_RETRY_MAX_MS))
+      }
+    }
+    return null
   }
 
   private shouldTrack(owner: string, repo: string, path: string): boolean {
@@ -125,6 +181,7 @@ export class RepositoryRevisionContentClient implements RepositoryContentClient 
     ref: string | undefined,
     updating: boolean,
     maxAttempts: number,
+    expectedUpdatingRevision?: number,
   ): Promise<number | null> {
     for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
       const current = await this.client.tryGetContent(
@@ -138,6 +195,31 @@ export class RepositoryRevisionContentClient implements RepositoryContentClient 
       if (!current) return null
 
       const manifest = decodeRepositoryRevisionManifestText(current.content)
+
+      if (updating && manifest.updating === true) {
+        if (isRepositoryRevisionManifestStale(manifest, this.now())) {
+          await this.repairStaleRevision(ref)
+          continue
+        }
+        if (attempt === maxAttempts - 1) {
+          throw new GitHubApiError(409, `Repository revision ${manifest.revision} is already updating.`)
+        }
+        await sleep(Math.min(REVISION_RETRY_BASE_MS * (attempt + 1), REVISION_RETRY_MAX_MS))
+        continue
+      }
+
+      if (!updating) {
+        // Never close a transition that belongs to a newer writer. This matters when
+        // an older client or another process races with the writer after phase 1.
+        if (manifest.updating !== true) {
+          this._lastRevision = manifest.revision
+          return manifest.revision
+        }
+        if (expectedUpdatingRevision !== undefined && manifest.revision !== expectedUpdatingRevision) {
+          return null
+        }
+      }
+
       const next: RepositoryRevisionManifest = {
         ...manifest,
         revision: manifest.revision + 1,
@@ -185,6 +267,17 @@ export function decodeRepositoryRevisionManifest(value: unknown): RepositoryRevi
     throw new Error('manifest.json non contiene uno stato updating valido.')
   }
   return manifest as RepositoryRevisionManifest
+}
+
+export function isRepositoryRevisionManifestStale(
+  manifest: RepositoryRevisionManifest,
+  now: Date = new Date(),
+  staleAfterMs = REPOSITORY_REVISION_STALE_AFTER_MS,
+): boolean {
+  if (manifest.updating !== true) return false
+  const updatedAt = Date.parse(manifest.updatedAt)
+  if (!Number.isFinite(updatedAt)) return false
+  return now.getTime() - updatedAt >= Math.max(0, staleAfterMs)
 }
 
 function decodeRepositoryRevisionManifestText(content: string): RepositoryRevisionManifest {
