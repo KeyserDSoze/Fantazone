@@ -1,4 +1,6 @@
 import { getEvolutionCardCatalog, resolveFantazoneEvolutionSettings } from './evolution'
+import { getVerifiedEvolutionCardIds } from './evolutionCards'
+import type { EvolutionCardCommitment } from './evolutionModel'
 import type { LeagueSetting } from './group'
 
 export interface EvolutionCoachDeckCard {
@@ -76,6 +78,41 @@ export function isEvolutionCoachDeckSelectionAvailable(
     if ((availability[cardId] ?? 0) < quantity) return false
   }
   return true
+}
+
+/**
+ * Final authority for a revealed selection. A valid SHA-256 reveal is necessary but
+ * not sufficient: the selection must still belong to the enabled catalog, respect
+ * the per-match limit and have enough copies left in the owner's seasonal deck.
+ */
+export function getAuthorizedEvolutionCardIds(input: {
+  sealed: EvolutionCardCommitment | null | undefined
+  leagueId: string
+  year: number
+  serieADay: number
+  owner: string
+  settings: LeagueSetting
+  deck: EvolutionSeasonCoachDeckDocument | null | undefined
+  consumedCardIds: readonly string[]
+}): string[] | null {
+  const evolution = resolveFantazoneEvolutionSettings(input.settings)
+  if (!evolution.enabled || !evolution.coachCards.enabled) return null
+
+  const cardIds = getVerifiedEvolutionCardIds(input.sealed, {
+    leagueId: input.leagueId,
+    year: input.year,
+    serieADay: input.serieADay,
+    owner: input.owner,
+  })
+  if (!cardIds || cardIds.length === 0 || cardIds.length > evolution.coachCards.cardsPerMatch) return null
+
+  const catalog = new Set(getEvolutionCardCatalog(input.settings).map(card => card.id))
+  if (cardIds.some(cardId => !catalog.has(cardId))) return null
+
+  const unlimited = evolution.coachCards.cardsInSeasonDeck === 0
+  const availability = getEvolutionCoachDeckAvailability(input.deck, input.owner, input.consumedCardIds, unlimited)
+  if (!isEvolutionCoachDeckSelectionAvailable(availability, cardIds)) return null
+  return cardIds
 }
 
 function drawDeck(
