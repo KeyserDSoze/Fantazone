@@ -1,4 +1,5 @@
-import { type Point } from './calendar'
+import type { Point } from './calendar'
+import { getBuiltinEvolutionCards, getBuiltinEvolutionSkills } from './evolutionCatalog'
 import {
   createDefaultFantazoneEvolutionSettings,
   type EvolutionCardDefinition,
@@ -8,6 +9,7 @@ import {
   type EvolutionEffect,
   type EvolutionFootballEventType,
   type EvolutionMetric,
+  type EvolutionOperator,
   type EvolutionPlayerMatchState,
   type EvolutionPlayerSeasonState,
   type EvolutionPlayerSelector,
@@ -15,16 +17,15 @@ import {
   type EvolutionPlayerUsage,
   type EvolutionRole,
   type EvolutionRuleDefinition,
-  type EvolutionSkillDefinition,
   type EvolutionSeasonSkillDocument,
+  type EvolutionSkillDefinition,
   type FantazoneEvolutionSettings,
 } from './evolutionModel'
-import { getBuiltinEvolutionCards, getBuiltinEvolutionSkills } from './evolutionCatalog'
 import { DefaultVoteLeagueSetting, Role, type LeagueSetting, type VoteLeagueSetting } from './group'
-import { getPlayerKey, type RealPlayer } from './realPlayer'
 import type { RealDay, RealGame } from './realCalendar'
+import { getPlayerKey, type RealPlayer } from './realPlayer'
 import { FantaSoccerRole, type Player } from './team'
-import type { EnrichedTeamPlayer, TeamPointCalculation } from './teamCalculation'
+import type { TeamPointCalculation } from './teamCalculation'
 import { Behaviour, type Vote } from './vote'
 
 export type EvolutionSide = 'home' | 'away'
@@ -81,6 +82,7 @@ type RuntimePlayer = {
   player: Player
   key: string
   actualPosition: FantaSoccerRole
+  originalPosition: FantaSoccerRole
   roleSlot: number
   vote: Vote | null
   baseFantasyValue: number
@@ -116,8 +118,11 @@ export function resolveFantazoneEvolutionSettings(settings: LeagueSetting): Fant
     ...source,
     playerSkills: {
       ...defaults.playerSkills,
-      ...source.playerSkills,
-      rarityWeights: { ...defaults.playerSkills.rarityWeights, ...(source.playerSkills?.rarityWeights ?? {}) },
+      ...(source.playerSkills ?? {}),
+      rarityWeights: {
+        ...defaults.playerSkills.rarityWeights,
+        ...(source.playerSkills?.rarityWeights ?? {}),
+      },
       catalog: {
         ...defaults.playerSkills.catalog,
         ...(source.playerSkills?.catalog ?? {}),
@@ -127,7 +132,7 @@ export function resolveFantazoneEvolutionSettings(settings: LeagueSetting): Fant
     },
     coachCards: {
       ...defaults.coachCards,
-      ...source.coachCards,
+      ...(source.coachCards ?? {}),
       catalog: {
         ...defaults.coachCards.catalog,
         ...(source.coachCards?.catalog ?? {}),
@@ -137,38 +142,42 @@ export function resolveFantazoneEvolutionSettings(settings: LeagueSetting): Fant
     },
     families: {
       ...defaults.families,
-      ...source.families,
+      ...(source.families ?? {}),
       thresholds: [...(source.families?.thresholds ?? defaults.families.thresholds)].map(item => ({ ...item })),
       customRules: [...(source.families?.customRules ?? defaults.families.customRules)],
     },
-    morale: { ...defaults.morale, ...source.morale },
+    morale: { ...defaults.morale, ...(source.morale ?? {}) },
     momentum: {
       ...defaults.momentum,
-      ...source.momentum,
+      ...(source.momentum ?? {}),
       positiveEvents: [...(source.momentum?.positiveEvents ?? defaults.momentum.positiveEvents)],
     },
-    progressiveLineupLock: { ...defaults.progressiveLineupLock, ...source.progressiveLineupLock },
-    ruleEngine: { ...defaults.ruleEngine, ...source.ruleEngine },
+    progressiveLineupLock: { ...defaults.progressiveLineupLock, ...(source.progressiveLineupLock ?? {}) },
+    ruleEngine: { ...defaults.ruleEngine, ...(source.ruleEngine ?? {}) },
     customLeagueRules: [...(source.customLeagueRules ?? defaults.customLeagueRules)],
   }
+}
+
+export function isFantazoneEvolutionEnabled(settings: LeagueSetting): boolean {
+  return resolveFantazoneEvolutionSettings(settings).enabled
 }
 
 export function getEvolutionSkillCatalog(settings: LeagueSetting): EvolutionSkillDefinition[] {
   const evolution = resolveFantazoneEvolutionSettings(settings)
   const disabled = new Set(evolution.playerSkills.catalog.disabledSkillIds)
-  const builtin = getBuiltinEvolutionSkills(evolution.playerSkills.catalog.builtinVersion)
-    .filter(item => item.enabled !== false && !disabled.has(item.id))
-  const custom = evolution.playerSkills.catalog.customSkills.filter(item => item.enabled !== false)
-  return [...builtin, ...custom]
+  return [
+    ...getBuiltinEvolutionSkills(evolution.playerSkills.catalog.builtinVersion),
+    ...evolution.playerSkills.catalog.customSkills,
+  ].filter(skill => skill.enabled !== false && !disabled.has(skill.id))
 }
 
 export function getEvolutionCardCatalog(settings: LeagueSetting): EvolutionCardDefinition[] {
   const evolution = resolveFantazoneEvolutionSettings(settings)
   const disabled = new Set(evolution.coachCards.catalog.disabledCardIds)
-  const builtin = getBuiltinEvolutionCards(evolution.coachCards.catalog.builtinVersion)
-    .filter(item => item.enabled !== false && !disabled.has(item.id))
-  const custom = evolution.coachCards.catalog.customCards.filter(item => item.enabled !== false)
-  return [...builtin, ...custom]
+  return [
+    ...getBuiltinEvolutionCards(evolution.coachCards.catalog.builtinVersion),
+    ...evolution.coachCards.catalog.customCards,
+  ].filter(card => card.enabled !== false && !disabled.has(card.id))
 }
 
 export function assignEvolutionSkills(
@@ -180,33 +189,32 @@ export function assignEvolutionSkills(
 ): EvolutionSeasonSkillDocument {
   const evolution = resolveFantazoneEvolutionSettings(settings)
   const configuredSeed = evolution.playerSkills.deterministicSeed.trim()
-  const seed = seedOverride ?? configuredSeed || `${year}:${evolution.ruleEngine.deterministicRandomSeed}`
-  const catalog = getEvolutionSkillCatalog(settings)
-    .filter(item => item.power >= evolution.playerSkills.minPower && item.power <= evolution.playerSkills.maxPower)
+  const seed = seedOverride ?? (configuredSeed || `${year}:${evolution.ruleEngine.deterministicRandomSeed}`)
+  const catalog = getEvolutionSkillCatalog(settings).filter(skill =>
+    skill.power >= evolution.playerSkills.minPower && skill.power <= evolution.playerSkills.maxPower,
+  )
   const assignments: EvolutionPlayerSkillAssignment[] = []
 
   for (const player of [...players].sort((a, b) => getPlayerKey(a.name).localeCompare(getPlayerKey(b.name)))) {
-    const key = getPlayerKey(player.name)
-    if (!key) continue
+    const playerKey = getPlayerKey(player.name)
+    if (!playerKey) continue
     if (!evolution.enabled || !evolution.playerSkills.enabled || evolution.playerSkills.skillsPerPlayer <= 0) {
-      assignments.push({ playerKey: key, skillIds: [] })
+      assignments.push({ playerKey, skillIds: [] })
       continue
     }
+
     const role = roleToEvolutionRole(player.role)
-    const eligible = catalog.filter(item => item.roles.includes('any') || item.roles.includes(role))
-    const random = createSeededRandom(`${seed}:${key}`)
+    const available = catalog.filter(skill => skill.roles.includes('any') || skill.roles.includes(role))
+    const random = createSeededRandom(`${seed}:${playerKey}`)
     const skillIds: string[] = []
-    const available = [...eligible]
-    for (let index = 0; index < evolution.playerSkills.skillsPerPlayer && available.length > 0; index += 1) {
-      const selected = weightedSkillPick(available, evolution, random)
+    let pool = [...available]
+    for (let index = 0; index < evolution.playerSkills.skillsPerPlayer && pool.length > 0; index += 1) {
+      const selected = weightedSkillPick(pool, evolution, random)
       if (!selected) break
       skillIds.push(selected.id)
-      if (evolution.playerSkills.uniqueSkillPerPlayer) {
-        const at = available.findIndex(item => item.id === selected.id)
-        if (at >= 0) available.splice(at, 1)
-      }
+      if (evolution.playerSkills.uniqueSkillPerPlayer) pool = pool.filter(skill => skill.id !== selected.id)
     }
-    assignments.push({ playerKey: key, skillIds })
+    assignments.push({ playerKey, skillIds })
   }
 
   return { version: 1, year, seed, generatedAt, assignments }
@@ -217,7 +225,6 @@ export function calculateEvolutionMatch(input: EvolutionMatchCalculationInput): 
   const home = buildRuntimeSide('home', input.home, input.settings, input.homePlayerState)
   const away = buildRuntimeSide('away', input.away, input.settings, input.awayPlayerState)
   const trace: EvolutionRuleTrace[] = []
-
   if (!evolution.enabled) return finalResolution(home, away, trace)
 
   if (evolution.families.enabled) {
@@ -230,26 +237,37 @@ export function calculateEvolutionMatch(input: EvolutionMatchCalculationInput): 
   }
 
   const random = createSeededRandom(input.seed ?? evolution.ruleEngine.deterministicRandomSeed)
-  const skills = new Map(getEvolutionSkillCatalog(input.settings).map(item => [item.id, item] as const))
   if (evolution.playerSkills.enabled) {
-    applyAssignedSkills(home, away, input.homeSkillAssignments ?? [], skills, input.settings, random, trace)
-    applyAssignedSkills(away, home, input.awaySkillAssignments ?? [], skills, input.settings, random, trace)
+    const catalog = new Map(getEvolutionSkillCatalog(input.settings).map(skill => [skill.id, skill] as const))
+    applyAssignedSkills(home, away, input.homeSkillAssignments ?? [], catalog, input.settings, random, trace)
+    applyAssignedSkills(away, home, input.awaySkillAssignments ?? [], catalog, input.settings, random, trace)
   }
 
   if (evolution.coachCards.enabled) {
-    const cards = new Map(getEvolutionCardCatalog(input.settings).map(item => [item.id, item] as const))
-    applyCards(home, away, input.homeCards, cards, input.settings, random, trace)
-    applyCards(away, home, input.awayCards, cards, input.settings, random, trace)
+    const catalog = new Map(getEvolutionCardCatalog(input.settings).map(card => [card.id, card] as const))
+    applyCards(home, away, input.homeCards, catalog, input.settings, random, trace)
+    applyCards(away, home, input.awayCards, catalog, input.settings, random, trace)
   }
 
-  applyRuleSet(evolution.families.customRules, { owner: home, opponent: away, origin: null, settings: input.settings, random, trace })
-  applyRuleSet(evolution.families.customRules, { owner: away, opponent: home, origin: null, settings: input.settings, random, trace })
-  applyRuleSet(evolution.customLeagueRules, { owner: home, opponent: away, origin: null, settings: input.settings, random, trace })
-  applyRuleSet(evolution.customLeagueRules, { owner: away, opponent: home, origin: null, settings: input.settings, random, trace })
+  applyRuleSet(evolution.families.customRules, context(home, away, null, input.settings, random, trace))
+  applyRuleSet(evolution.families.customRules, context(away, home, null, input.settings, random, trace))
+  applyRuleSet(evolution.customLeagueRules, context(home, away, null, input.settings, random, trace))
+  applyRuleSet(evolution.customLeagueRules, context(away, home, null, input.settings, random, trace))
 
-  capModifiers(home, evolution.ruleEngine.maxAbsoluteTeamModifier, evolution.ruleEngine.maxAbsolutePlayerModifier)
-  capModifiers(away, evolution.ruleEngine.maxAbsoluteTeamModifier, evolution.ruleEngine.maxAbsolutePlayerModifier)
+  applyCaps(home, evolution.ruleEngine.maxAbsolutePlayerModifier, evolution.ruleEngine.maxAbsoluteTeamModifier)
+  applyCaps(away, evolution.ruleEngine.maxAbsolutePlayerModifier, evolution.ruleEngine.maxAbsoluteTeamModifier)
   return finalResolution(home, away, trace)
+}
+
+function context(
+  owner: RuntimeSide,
+  opponent: RuntimeSide,
+  origin: RuntimePlayer | null,
+  settings: LeagueSetting,
+  random: () => number,
+  trace: EvolutionRuleTrace[],
+): RuleContext {
+  return { owner, opponent, origin, settings, random, trace }
 }
 
 function weightedSkillPick(
@@ -257,41 +275,43 @@ function weightedSkillPick(
   evolution: FantazoneEvolutionSettings,
   random: () => number,
 ): EvolutionSkillDefinition | null {
-  const weighted = skills.map(item => ({
-    item,
-    weight: Math.max(0, item.weight) * Math.max(0, evolution.playerSkills.rarityWeights[item.rarity] ?? 0),
+  const entries = skills.map(skill => ({
+    skill,
+    weight: Math.max(0, skill.weight) * Math.max(0, evolution.playerSkills.rarityWeights[skill.rarity] ?? 0),
   }))
-  const total = weighted.reduce((sum, item) => sum + item.weight, 0)
+  const total = entries.reduce((sum, entry) => sum + entry.weight, 0)
   if (total <= 0) return skills[Math.floor(random() * skills.length)] ?? null
   let cursor = random() * total
-  for (const entry of weighted) {
+  for (const entry of entries) {
     cursor -= entry.weight
-    if (cursor <= 0) return entry.item
+    if (cursor <= 0) return entry.skill
   }
-  return weighted[weighted.length - 1]?.item ?? null
+  return entries[entries.length - 1]?.skill ?? null
 }
 
 function buildRuntimeSide(
   side: EvolutionSide,
   calculation: TeamPointCalculation,
   settings: LeagueSetting,
-  states: Record<string, EvolutionPlayerMatchState | undefined> | undefined,
+  states?: Record<string, EvolutionPlayerMatchState | undefined>,
 ): RuntimeSide {
-  const fieldByRole = new Map<Role, number>()
+  const roleSlots = new Map<Role, number>()
   const players = calculation.formation.map(enriched => {
     const key = getPlayerKey(enriched.current.name)
-    const isField = isFieldPosition(enriched.currentPosition)
-    const nextSlot = isField ? (fieldByRole.get(enriched.current.role) ?? 0) + 1 : 0
-    if (isField) fieldByRole.set(enriched.current.role, nextSlot)
+    const actualInField = isFieldPosition(enriched.currentPosition)
+    const slot = actualInField ? (roleSlots.get(enriched.current.role) ?? 0) + 1 : 0
+    if (actualInField) roleSlots.set(enriched.current.role, slot)
     const state = states?.[key]
+    const baseFantasyValue = actualInField && enriched.vote?.hasVote ? (enriched.finalValue?.value ?? 0) : 0
     const runtime: RuntimePlayer = {
       player: enriched.current,
       key,
       actualPosition: enriched.currentPosition,
-      roleSlot: nextSlot,
+      originalPosition: enriched.current.position,
+      roleSlot: slot,
       vote: enriched.vote,
-      baseFantasyValue: isField && enriched.vote?.hasVote ? (enriched.finalValue?.value ?? 0) : 0,
-      effectiveValue: isField && enriched.vote?.hasVote ? (enriched.finalValue?.value ?? 0) : 0,
+      baseFantasyValue,
+      effectiveValue: baseFantasyValue,
       morale: state?.morale ?? 0,
       previousPositiveBonus: state?.previousPositiveBonus ?? false,
       events: [],
@@ -325,23 +345,30 @@ function buildRuntimeEvents(player: RuntimePlayer, settings: LeagueSetting): Run
   if (vote.status === Behaviour.RedCard) definitions.push(['red-card', 1, voteSettings.redCard])
   if (vote.injured) definitions.push(['injury', 1, voteSettings.injury])
   if (vote.manOfTheMatch) definitions.push(['man-of-the-match', 1, voteSettings.manOfTheMatch])
-  if (vote.hasVote && player.player.role === Role.GoalKeeper && vote.sufferedGoal === 0 && settings.pointForCleanSheet > 0) {
+  if (vote.hasVote && player.player.role === Role.GoalKeeper && vote.sufferedGoal === 0 && settings.pointForCleanSheet !== 0) {
     definitions.push(['clean-sheet', 1, settings.pointForCleanSheet])
   }
 
-  const result: RuntimeEvent[] = []
-  for (const [type, count, value] of definitions) {
+  const events: RuntimeEvent[] = []
+  for (const [type, count, baseValue] of definitions) {
     for (let index = 0; index < Math.max(0, count); index += 1) {
-      result.push({ id: `${player.key}:${type}:${index + 1}`, type, baseValue: value, multiplier: 1, cancelled: false, player })
+      events.push({
+        id: `${player.key}:${type}:${index + 1}`,
+        type,
+        baseValue,
+        multiplier: 1,
+        cancelled: false,
+        player,
+      })
     }
   }
-  return result
+  return events
 }
 
 function applyFamilySynergy(side: RuntimeSide, evolution: FantazoneEvolutionSettings, trace: EvolutionRuleTrace[]): void {
   const eligible = evolution.families.scope === 'starting-eleven'
-    ? side.players.filter(player => isFieldPosition(player.actualPosition))
-    : side.players.filter(player => player.vote?.hasVote === true && isFieldPosition(player.actualPosition))
+    ? side.players.filter(player => isFieldPosition(player.originalPosition))
+    : side.players.filter(player => isFieldPosition(player.actualPosition) && player.vote?.hasVote === true)
   const byFamily = new Map<string, RuntimePlayer[]>()
   for (const player of eligible) {
     const family = normalize(player.player.team.name)
@@ -351,23 +378,24 @@ function applyFamilySynergy(side: RuntimeSide, evolution: FantazoneEvolutionSett
     byFamily.set(family, group)
   }
   const thresholds = [...evolution.families.thresholds].sort((a, b) => a.minPlayers - b.minPlayers)
-  for (const [family, players] of byFamily) {
-    const threshold = thresholds.filter(item => players.length >= item.minPlayers).at(-1)
+  for (const players of byFamily.values()) {
+    const matching = thresholds.filter(threshold => players.length >= threshold.minPlayers)
+    const threshold = matching[matching.length - 1]
     if (!threshold || threshold.bonusPerPlayer === 0) continue
     for (const player of players) {
-      addPlayerDelta(side, player, threshold.bonusPerPlayer)
+      addPlayerModifier(side, player, threshold.bonusPerPlayer, true)
       trace.push({
-        id: `family:${side.side}:${family}:${player.key}`,
+        id: `family:${side.side}:${normalize(player.player.team.name)}:${player.key}`,
         ruleId: `family-${threshold.minPlayers}`,
         source: 'synergy',
         name: `Famiglia ${player.player.team.name}`,
-        description: `${players.length} titolari della stessa squadra reale.`,
+        description: `${players.length} giocatori schierati della stessa squadra reale.`,
         side: side.side,
         targetSide: side.side,
         playerKey: player.key,
         amount: threshold.bonusPerPlayer,
         effect: 'add-score',
-        message: `${player.player.name}: famiglia ${player.player.team.name} ×${players.length}, ${signed(threshold.bonusPerPlayer)}.`,
+        message: `${player.player.name}: Famiglia ${player.player.team.name} ×${players.length}, ${signed(threshold.bonusPerPlayer)}.`,
       })
     }
   }
@@ -376,33 +404,35 @@ function applyFamilySynergy(side: RuntimeSide, evolution: FantazoneEvolutionSett
 function applyMoraleAndMomentum(side: RuntimeSide, evolution: FantazoneEvolutionSettings, trace: EvolutionRuleTrace[]): void {
   for (const player of side.players.filter(item => isFieldPosition(item.actualPosition))) {
     if (evolution.morale.enabled && player.morale < 0) {
-      const hasPositive = hasPositiveFootballBonus(player.vote, evolution.momentum.positiveEvents)
-      const cancelled = evolution.morale.cancelMatchPenaltyOnPositiveFootballBonus && hasPositive
-      if (!cancelled) addPlayerDelta(side, player, player.morale)
+      const positive = hasPositiveFootballBonus(player.vote, evolution.momentum.positiveEvents)
+      const neutralized = evolution.morale.cancelMatchPenaltyOnPositiveFootballBonus && positive
+      if (!neutralized) addPlayerModifier(side, player, player.morale)
       trace.push({
         id: `morale:${side.side}:${player.key}`,
-        ruleId: 'morale-current',
+        ruleId: neutralized ? 'morale-reaction' : 'morale-low',
         source: 'morale',
-        name: cancelled ? 'Reazione di morale' : 'Morale basso',
-        description: cancelled ? 'Un bonus reale neutralizza il malus di morale.' : 'Il giocatore entra in campo con morale negativo.',
+        name: neutralized ? 'Reazione di morale' : 'Morale basso',
+        description: neutralized
+          ? 'Il giocatore partiva con morale basso, ma un bonus reale neutralizza il malus.'
+          : 'Il giocatore entra nella partita con morale negativo.',
         side: side.side,
         targetSide: side.side,
         playerKey: player.key,
-        amount: cancelled ? 0 : player.morale,
+        amount: neutralized ? 0 : player.morale,
         effect: 'add-score',
-        message: cancelled
-          ? `${player.player.name}: morale ${player.morale}, ma il bonus reale neutralizza il malus.`
+        message: neutralized
+          ? `${player.player.name}: morale ${player.morale}, neutralizzato da un bonus reale.`
           : `${player.player.name}: morale ${player.morale}.`,
       })
     }
     if (evolution.momentum.enabled && player.previousPositiveBonus && evolution.momentum.nextMatchBonus !== 0) {
-      addPlayerDelta(side, player, evolution.momentum.nextMatchBonus)
+      addPlayerModifier(side, player, evolution.momentum.nextMatchBonus)
       trace.push({
         id: `momentum:${side.side}:${player.key}`,
         ruleId: 'momentum-previous-positive-bonus',
         source: 'momentum',
         name: 'Stato di forma',
-        description: 'Bonus ottenuto perché il giocatore aveva prodotto un bonus reale nella partita precedente.',
+        description: 'Bonus ottenuto per un bonus reale prodotto nella partita precedente.',
         side: side.side,
         targetSide: side.side,
         playerKey: player.key,
@@ -423,13 +453,12 @@ function applyAssignedSkills(
   random: () => number,
   trace: EvolutionRuleTrace[],
 ): void {
-  const byPlayer = new Map(assignments.map(item => [item.playerKey, item.skillIds] as const))
+  const byPlayer = new Map(assignments.map(assignment => [assignment.playerKey, assignment.skillIds] as const))
   for (const player of owner.players.filter(item => isFieldPosition(item.actualPosition))) {
-    const ids = byPlayer.get(player.key) ?? []
-    for (const id of ids) {
-      const definition = catalog.get(id)
-      if (!definition || definition.enabled === false) continue
-      applyRuleSet(definition.rules, { owner, opponent, origin: player, settings, random, trace })
+    for (const skillId of byPlayer.get(player.key) ?? []) {
+      const skill = catalog.get(skillId)
+      if (!skill) continue
+      applyRuleSet(skill.rules, context(owner, opponent, player, settings, random, trace))
     }
   }
 }
@@ -444,102 +473,105 @@ function applyCards(
   trace: EvolutionRuleTrace[],
 ): void {
   if (!selection) return
-  const evolution = resolveFantazoneEvolutionSettings(settings)
-  for (const cardId of selection.cardIds.slice(0, Math.max(0, evolution.coachCards.cardsPerMatch))) {
+  const maxCards = resolveFantazoneEvolutionSettings(settings).coachCards.cardsPerMatch
+  for (const cardId of selection.cardIds.slice(0, Math.max(0, maxCards))) {
     const card = catalog.get(cardId)
-    if (!card || card.enabled === false) continue
-    applyRuleSet(card.rules, { owner, opponent, origin: null, settings, random, trace })
+    if (!card) continue
+    applyRuleSet(card.rules, context(owner, opponent, null, settings, random, trace))
   }
 }
 
-function applyRuleSet(rules: EvolutionRuleDefinition[], context: RuleContext): void {
-  const applicable = rules
-    .filter(rule => rule.enabled !== false && evaluateConditionGroup(rule.conditions, context))
+function applyRuleSet(rules: EvolutionRuleDefinition[], ctx: RuleContext): void {
+  const matching = rules
+    .filter(rule => rule.enabled !== false && evaluateGroup(rule.conditions, ctx))
     .sort((a, b) => a.priority - b.priority || a.id.localeCompare(b.id))
-  const selected = resolveStacking(applicable)
-  for (const rule of selected) {
-    for (const effect of rule.effects) applyEffect(rule, effect, context)
+  for (const rule of resolveStacking(matching)) {
+    const max = rule.stacking.maxApplicationsPerMatch
+    const effects = max == null ? rule.effects : rule.effects.slice(0, Math.max(0, max))
+    for (const effect of effects) applyEffect(rule, effect, ctx)
   }
 }
 
 function resolveStacking(rules: EvolutionRuleDefinition[]): EvolutionRuleDefinition[] {
-  const output: EvolutionRuleDefinition[] = []
-  const grouped = new Map<string, EvolutionRuleDefinition[]>()
+  const direct: EvolutionRuleDefinition[] = []
+  const groups = new Map<string, EvolutionRuleDefinition[]>()
   for (const rule of rules) {
     const group = rule.stacking.group
     if (!group || rule.stacking.mode === 'stack') {
-      output.push(rule)
+      direct.push(rule)
       continue
     }
-    const items = grouped.get(group) ?? []
-    items.push(rule)
-    grouped.set(group, items)
+    groups.set(group, [...(groups.get(group) ?? []), rule])
   }
-  for (const items of grouped.values()) {
-    const mode = items[0]?.stacking.mode ?? 'stack'
-    if (mode === 'last') output.push(items[items.length - 1])
-    else if (mode === 'max') output.push([...items].sort((a, b) => effectMagnitude(b) - effectMagnitude(a))[0])
-    else if (mode === 'min') output.push([...items].sort((a, b) => effectMagnitude(a) - effectMagnitude(b))[0])
-    else output.push(items[0])
+  for (const items of groups.values()) {
+    const mode = items[0]?.stacking.mode ?? 'first'
+    if (mode === 'last') direct.push(items[items.length - 1])
+    else if (mode === 'max') direct.push([...items].sort((a, b) => effectMagnitude(b) - effectMagnitude(a))[0])
+    else if (mode === 'min') direct.push([...items].sort((a, b) => effectMagnitude(a) - effectMagnitude(b))[0])
+    else direct.push(items[0])
   }
-  return output.filter(Boolean).sort((a, b) => a.priority - b.priority || a.id.localeCompare(b.id))
+  return direct.filter((value): value is EvolutionRuleDefinition => Boolean(value))
+    .sort((a, b) => a.priority - b.priority || a.id.localeCompare(b.id))
 }
 
 function effectMagnitude(rule: EvolutionRuleDefinition): number {
   return rule.effects.reduce((sum, effect) => {
     if (effect.type === 'add-score' || effect.type === 'set-player-score') return sum + Math.abs(effect.value)
     if (effect.type === 'multiply-event') return sum + Math.abs(effect.factor - 1)
-    return sum + effect.quantity
+    return sum + Math.abs(effect.quantity)
   }, 0)
 }
 
-function evaluateConditionGroup(group: EvolutionConditionGroup | undefined, context: RuleContext): boolean {
+function evaluateGroup(group: EvolutionConditionGroup | undefined, ctx: RuleContext): boolean {
   if (!group) return true
-  if (group.all && !group.all.every(item => isConditionGroup(item) ? evaluateConditionGroup(item, context) : evaluateCondition(item, context))) return false
-  if (group.any && !group.any.some(item => isConditionGroup(item) ? evaluateConditionGroup(item, context) : evaluateCondition(item, context))) return false
+  if (group.all && !group.all.every(item => isGroup(item) ? evaluateGroup(item, ctx) : evaluateCondition(item, ctx))) return false
+  if (group.any && !group.any.some(item => isGroup(item) ? evaluateGroup(item, ctx) : evaluateCondition(item, ctx))) return false
   if (group.not) {
-    const value = isConditionGroup(group.not) ? evaluateConditionGroup(group.not, context) : evaluateCondition(group.not, context)
-    if (value) return false
+    const result = isGroup(group.not) ? evaluateGroup(group.not, ctx) : evaluateCondition(group.not, ctx)
+    if (result) return false
   }
   return true
 }
 
-function isConditionGroup(value: EvolutionCondition | EvolutionConditionGroup): value is EvolutionConditionGroup {
+function isGroup(value: EvolutionCondition | EvolutionConditionGroup): value is EvolutionConditionGroup {
   return !('metric' in value)
 }
 
-function evaluateCondition(condition: EvolutionCondition, context: RuleContext): boolean {
+function evaluateCondition(condition: EvolutionCondition, ctx: RuleContext): boolean {
   const subject = condition.subject ?? 'self'
   if (condition.metric === 'matching-player-count') {
-    const side = subject === 'opponent' ? context.opponent : context.owner
-    const count = selectPlayers(side, condition.selector, context, null).length
-    return compare(count, condition.operator, condition.value)
+    const side = subject === 'opponent' ? ctx.opponent : ctx.owner
+    return compare(selectPlayers(side, condition.selector, ctx).length, condition.operator, condition.value)
   }
   if (subject === 'match') return false
   if (subject === 'team' || subject === 'opponent') {
-    const side = subject === 'opponent' ? context.opponent : context.owner
+    const side = subject === 'opponent' ? ctx.opponent : ctx.owner
     return compare(readSideMetric(side, condition.metric), condition.operator, condition.value)
   }
-  if (!context.origin) return false
-  return compare(readPlayerMetric(context.origin, context.owner, condition.metric), condition.operator, condition.value)
+  if (!ctx.origin) return false
+  return compare(readPlayerMetric(ctx.origin, ctx.owner, condition.metric), condition.operator, condition.value)
 }
 
 function readSideMetric(side: RuntimeSide, metric: EvolutionMetric): number | string | boolean | null {
-  const field = side.players.filter(player => isFieldPosition(player.actualPosition))
+  const starters = side.players.filter(player => isFieldPosition(player.originalPosition))
+  const active = side.players.filter(player => isFieldPosition(player.actualPosition))
   switch (metric) {
     case 'team-formation': return side.formation
-    case 'starters-count': return field.length
-    case 'starters-played-count': return field.filter(player => player.vote?.hasVote === true).length
-    case 'goals': return field.reduce((sum, player) => sum + (player.vote?.goal ?? 0), 0)
-    case 'penalty-goals': return field.reduce((sum, player) => sum + (player.vote?.penalty ?? 0), 0)
-    case 'assists': return field.reduce((sum, player) => sum + (player.vote?.assist ?? 0), 0)
-    case 'suffered-goals': return field.reduce((sum, player) => sum + (player.vote?.sufferedGoal ?? 0), 0)
-    case 'saved-penalties': return field.reduce((sum, player) => sum + (player.vote?.stoppedPenalty ?? 0), 0)
-    case 'missed-penalties': return field.reduce((sum, player) => sum + (player.vote?.wrongedPenalty ?? 0), 0)
-    case 'own-goals': return field.reduce((sum, player) => sum + (player.vote?.ownGoal ?? 0), 0)
+    case 'starters-count': return starters.length
+    case 'starters-played-count': return starters.filter(player => player.vote?.hasVote === true).length
+    case 'goals': return active.reduce((sum, player) => sum + (player.vote?.goal ?? 0), 0)
+    case 'penalty-goals': return active.reduce((sum, player) => sum + (player.vote?.penalty ?? 0), 0)
+    case 'assists': return active.reduce((sum, player) => sum + (player.vote?.assist ?? 0), 0)
+    case 'suffered-goals': return active.reduce((sum, player) => sum + (player.vote?.sufferedGoal ?? 0), 0)
+    case 'saved-penalties': return active.reduce((sum, player) => sum + (player.vote?.stoppedPenalty ?? 0), 0)
+    case 'missed-penalties': return active.reduce((sum, player) => sum + (player.vote?.wrongedPenalty ?? 0), 0)
+    case 'own-goals': return active.reduce((sum, player) => sum + (player.vote?.ownGoal ?? 0), 0)
     case 'same-family-starters': {
       const counts = new Map<string, number>()
-      for (const player of field) counts.set(normalize(player.player.team.name), (counts.get(normalize(player.player.team.name)) ?? 0) + 1)
+      for (const player of starters) {
+        const family = normalize(player.player.team.name)
+        counts.set(family, (counts.get(family) ?? 0) + 1)
+      }
       return Math.max(0, ...counts.values())
     }
     default: return null
@@ -565,18 +597,24 @@ function readPlayerMetric(player: RuntimePlayer, side: RuntimeSide, metric: Evol
     case 'red-card': return vote?.status === Behaviour.RedCard
     case 'injured': return vote?.injured === true
     case 'role': return roleToEvolutionRole(player.player.role)
-    case 'fantasy-position': return player.player.position
+    case 'fantasy-position': return player.originalPosition
     case 'role-slot': return player.roleSlot
     case 'real-team': return player.player.team.name
     case 'team-formation': return side.formation
     case 'morale': return player.morale
     case 'previous-positive-bonus': return player.previousPositiveBonus
-    case 'same-family-starters': return side.players.filter(item => isFieldPosition(item.actualPosition) && normalize(item.player.team.name) === normalize(player.player.team.name)).length
+    case 'same-family-starters': return side.players.filter(item =>
+      isFieldPosition(item.originalPosition) && normalize(item.player.team.name) === normalize(player.player.team.name),
+    ).length
     default: return null
   }
 }
 
-function compare(actual: number | string | boolean | null, operator: EvolutionCondition['operator'], expected: EvolutionCondition['value']): boolean {
+function compare(
+  actual: number | string | boolean | null,
+  operator: EvolutionOperator,
+  expected: number | string | boolean | Array<number | string | boolean>,
+): boolean {
   if (operator === 'in' || operator === 'not-in') {
     const values = Array.isArray(expected) ? expected : [expected]
     const included = values.some(value => value === actual)
@@ -592,122 +630,123 @@ function compare(actual: number | string | boolean | null, operator: EvolutionCo
   return false
 }
 
-function applyEffect(rule: EvolutionRuleDefinition, effect: EvolutionEffect, context: RuleContext): void {
+function applyEffect(rule: EvolutionRuleDefinition, effect: EvolutionEffect, ctx: RuleContext): void {
   if (effect.type === 'add-score') {
     if (effect.target === 'self') {
-      if (context.origin) applyPlayerScoreEffect(rule, effect, context.owner, context.origin, effect.value, context)
+      if (ctx.origin) applyPlayerScore(rule, effect, ctx.owner, ctx.origin, effect.value, ctx)
       return
     }
+    const side = effect.target === 'opponent' ? ctx.opponent : ctx.owner
     if (effect.selector) {
-      const side = effect.target === 'opponent' ? context.opponent : context.owner
-      for (const player of selectPlayers(side, effect.selector, context, context.origin)) {
-        applyPlayerScoreEffect(rule, effect, side, player, effect.value, context)
+      for (const player of selectPlayers(side, effect.selector, ctx)) {
+        applyPlayerScore(rule, effect, side, player, effect.value, ctx)
       }
-      return
+    } else {
+      side.scoreDelta += effect.value
+      pushTrace(rule, effect, ctx, side, null, effect.value, `${rule.name}: ${side.side === ctx.owner.side ? 'squadra' : 'avversario'} ${signed(effect.value)}.`)
     }
-    const side = effect.target === 'opponent' ? context.opponent : context.owner
-    side.scoreDelta += effect.value
-    pushTrace(rule, effect, context, side, null, effect.value, `${rule.name}: ${sideLabel(side, context)} ${signed(effect.value)}.`)
     return
   }
 
   if (effect.type === 'set-player-score') {
-    const side = effect.target === 'opponent' ? context.opponent : context.owner
-    const players = effect.target === 'self'
-      ? (context.origin ? [context.origin] : [])
-      : selectPlayers(side, effect.selector, context, context.origin)
-    for (const player of players) {
+    const side = effect.target === 'opponent' ? ctx.opponent : ctx.owner
+    const targets = effect.target === 'self' && ctx.origin
+      ? [ctx.origin]
+      : selectPlayers(side, effect.selector, ctx)
+    for (const player of targets) {
       const before = player.effectiveValue
-      const next = effect.mode === 'at-most'
-        ? Math.min(before, effect.value)
-        : effect.mode === 'at-least'
-          ? Math.max(before, effect.value)
+      const next = effect.mode === 'at-least'
+        ? Math.max(before, effect.value)
+        : effect.mode === 'at-most'
+          ? Math.min(before, effect.value)
           : effect.value
-      applyPlayerScoreEffect(rule, effect, side, player, next - before, context)
+      applyPlayerScore(rule, effect, side, player, next - before, ctx)
     }
     return
   }
 
   if (effect.type === 'cancel-event' || effect.type === 'multiply-event') {
-    const side = effect.target === 'opponent' ? context.opponent : context.owner
-    const players = effect.target === 'self'
-      ? (context.origin ? [context.origin] : [])
-      : selectPlayers(side, effect.selector, context, context.origin)
-    const events = selectEvents(players, effect.eventType, effect.selector, context.random)
+    const side = effect.target === 'opponent' ? ctx.opponent : ctx.owner
+    const targets = effect.target === 'self' && ctx.origin
+      ? [ctx.origin]
+      : selectPlayers(side, effect.selector, ctx)
+    const events = selectEvents(targets, effect.eventType, effect.selector, ctx.random)
     const quantity = effect.type === 'cancel-event' ? effect.quantity : (effect.quantity ?? events.length)
     for (const event of events.slice(0, Math.max(0, quantity))) {
       const before = eventValue(event)
       if (effect.type === 'cancel-event') event.cancelled = true
       else event.multiplier *= effect.factor
       const delta = eventValue(event) - before
-      if (isFieldPosition(event.player.actualPosition)) {
-        event.player.effectiveValue += delta
-        side.scoreDelta += delta
-      }
-      pushTrace(rule, effect, context, side, event.player, delta, `${rule.name}: ${event.player.player.name}, ${event.type} ${effect.type === 'cancel-event' ? 'annullato' : `×${effect.factor}`}, ${signed(delta)}.`)
+      addPlayerModifier(side, event.player, delta)
+      pushTrace(
+        rule,
+        effect,
+        ctx,
+        side,
+        event.player,
+        delta,
+        `${rule.name}: ${event.player.player.name}, ${event.type} ${effect.type === 'cancel-event' ? 'annullato' : `×${effect.factor}`}, ${signed(delta)}.`,
+      )
     }
     return
   }
 
-  if (effect.type === 'add-event') {
-    const side = effect.target === 'opponent' ? context.opponent : context.owner
-    const players = effect.target === 'self'
-      ? (context.origin ? [context.origin] : [])
-      : selectPlayers(side, effect.selector, context, context.origin)
-    const targets = players.length > 0 ? players : (effect.target === 'self' ? [] : side.players.filter(player => isFieldPosition(player.actualPosition)))
-    const quantity = Math.max(0, effect.quantity)
-    for (let index = 0; index < quantity; index += 1) {
-      const player = targets[index % targets.length]
-      if (!player) break
-      const event: RuntimeEvent = {
-        id: `${player.key}:virtual:${effect.eventType}:${player.events.length + 1}`,
-        type: effect.eventType,
-        baseValue: eventScore(effect.eventType, player.player.role, context.settings),
-        multiplier: 1,
-        cancelled: false,
-        player,
-      }
-      player.events.push(event)
-      const delta = eventValue(event)
-      if (isFieldPosition(player.actualPosition)) {
-        player.effectiveValue += delta
-        side.scoreDelta += delta
-      }
-      pushTrace(rule, effect, context, side, player, delta, `${rule.name}: ${effect.eventType} assegnato a ${player.player.name}, ${signed(delta)}.`)
+  const side = effect.target === 'opponent' ? ctx.opponent : ctx.owner
+  const targets = effect.target === 'self' && ctx.origin
+    ? [ctx.origin]
+    : selectPlayers(side, effect.selector, ctx)
+  for (let index = 0; index < Math.max(0, effect.quantity); index += 1) {
+    const player = targets[index % targets.length]
+    if (!player) break
+    const event: RuntimeEvent = {
+      id: `${player.key}:virtual:${effect.eventType}:${player.events.length + 1}`,
+      type: effect.eventType,
+      baseValue: eventScore(effect.eventType, player.player.role, ctx.settings),
+      multiplier: 1,
+      cancelled: false,
+      player,
     }
+    player.events.push(event)
+    const delta = eventValue(event)
+    addPlayerModifier(side, player, delta)
+    pushTrace(rule, effect, ctx, side, player, delta, `${rule.name}: ${effect.eventType} assegnato a ${player.player.name}, ${signed(delta)}.`)
   }
 }
 
-function applyPlayerScoreEffect(
+function applyPlayerScore(
   rule: EvolutionRuleDefinition,
   effect: EvolutionEffect,
   side: RuntimeSide,
   player: RuntimePlayer,
   delta: number,
-  context: RuleContext,
+  ctx: RuleContext,
 ): void {
   if (delta === 0) return
+  addPlayerModifier(side, player, delta)
+  pushTrace(rule, effect, ctx, side, player, delta, `${rule.name}: ${player.player.name} ${signed(delta)}.`)
+}
+
+function addPlayerModifier(side: RuntimeSide, player: RuntimePlayer, delta: number, countEvenIfNotActualField = false): void {
   player.effectiveValue += delta
-  if (isFieldPosition(player.actualPosition)) side.scoreDelta += delta
-  pushTrace(rule, effect, context, side, player, delta, `${rule.name}: ${player.player.name} ${signed(delta)}.`)
+  if (countEvenIfNotActualField || isFieldPosition(player.actualPosition)) side.scoreDelta += delta
 }
 
 function pushTrace(
   rule: EvolutionRuleDefinition,
   effect: EvolutionEffect,
-  context: RuleContext,
+  ctx: RuleContext,
   targetSide: RuntimeSide,
   player: RuntimePlayer | null,
   amount: number,
   message: string,
 ): void {
-  context.trace.push({
-    id: `${rule.id}:${context.trace.length + 1}`,
+  ctx.trace.push({
+    id: `${rule.id}:${ctx.trace.length + 1}`,
     ruleId: rule.id,
     source: rule.source,
     name: rule.name,
     description: rule.description,
-    side: context.owner.side,
+    side: ctx.owner.side,
     targetSide: targetSide.side,
     playerKey: player?.key ?? null,
     amount,
@@ -716,55 +755,65 @@ function pushTrace(
   })
 }
 
-function selectPlayers(
-  side: RuntimeSide,
-  selector: EvolutionPlayerSelector | undefined,
-  context: RuleContext,
-  origin: RuntimePlayer | null,
-): RuntimePlayer[] {
+function selectPlayers(side: RuntimeSide, selector: EvolutionPlayerSelector | undefined, ctx: RuleContext): RuntimePlayer[] {
   let players = [...side.players]
-  if (selector?.roles?.length) players = players.filter(player => selector.roles!.includes(roleToEvolutionRole(player.player.role)))
-  if (selector?.fantasyPositions?.length) players = players.filter(player => selector.fantasyPositions!.includes(player.player.position))
+  if (selector?.roles?.length) {
+    players = players.filter(player => selector.roles!.includes(roleToEvolutionRole(player.player.role)))
+  }
+  if (selector?.fantasyPositions?.length) {
+    players = players.filter(player => selector.fantasyPositions!.includes(player.originalPosition))
+  }
   if (selector?.realTeams?.length) {
-    const names = selector.realTeams.map(normalize)
-    players = players.filter(player => names.includes(normalize(player.player.team.name)))
+    const teams = selector.realTeams.map(normalize)
+    players = players.filter(player => teams.includes(normalize(player.player.team.name)))
   }
   if (selector?.where) {
-    players = players.filter(player => evaluateConditionGroup(selector.where, {
-      ...context,
+    players = players.filter(player => evaluateGroup(selector.where, {
+      ...ctx,
       owner: side,
-      opponent: side.side === context.owner.side ? context.opponent : context.owner,
+      opponent: side.side === ctx.owner.side ? ctx.opponent : ctx.owner,
       origin: player,
     }))
   }
-  const strategy = selector?.strategy ?? 'first'
-  players.sort((a, b) => comparePlayers(a, b, strategy, context.random))
-  const quantity = selector?.quantity
-  if (quantity != null) players = players.slice(0, Math.max(0, quantity))
-  if (!selector && origin && side.side === context.owner.side) return [origin]
-  return players
+  players = orderPlayers(players, selector?.strategy ?? 'first', ctx.random)
+  return selector?.quantity == null ? players : players.slice(0, Math.max(0, selector.quantity))
 }
 
-function comparePlayers(a: RuntimePlayer, b: RuntimePlayer, strategy: NonNullable<EvolutionPlayerSelector['strategy']>, random: () => number): number {
-  if (strategy === 'last') return b.key.localeCompare(a.key)
-  if (strategy === 'highest-raw-vote') return (b.vote?.value ?? -1000) - (a.vote?.value ?? -1000) || a.key.localeCompare(b.key)
-  if (strategy === 'lowest-raw-vote') return (a.vote?.value ?? 1000) - (b.vote?.value ?? 1000) || a.key.localeCompare(b.key)
-  if (strategy === 'highest-fantasy-value') return b.effectiveValue - a.effectiveValue || a.key.localeCompare(b.key)
-  if (strategy === 'lowest-fantasy-value') return a.effectiveValue - b.effectiveValue || a.key.localeCompare(b.key)
-  if (strategy === 'random') return random() - 0.5
-  return a.key.localeCompare(b.key)
+function orderPlayers(players: RuntimePlayer[], strategy: NonNullable<EvolutionPlayerSelector['strategy']>, random: () => number): RuntimePlayer[] {
+  if (strategy === 'random') {
+    return players.map(player => ({ player, order: random() })).sort((a, b) => a.order - b.order).map(item => item.player)
+  }
+  return [...players].sort((a, b) => {
+    if (strategy === 'last') return b.key.localeCompare(a.key)
+    if (strategy === 'highest-raw-vote') return (b.vote?.value ?? -1000) - (a.vote?.value ?? -1000) || a.key.localeCompare(b.key)
+    if (strategy === 'lowest-raw-vote') return (a.vote?.value ?? 1000) - (b.vote?.value ?? 1000) || a.key.localeCompare(b.key)
+    if (strategy === 'highest-fantasy-value') return b.effectiveValue - a.effectiveValue || a.key.localeCompare(b.key)
+    if (strategy === 'lowest-fantasy-value') return a.effectiveValue - b.effectiveValue || a.key.localeCompare(b.key)
+    return a.key.localeCompare(b.key)
+  })
 }
 
-function selectEvents(players: RuntimePlayer[], type: EvolutionFootballEventType, selector: EvolutionPlayerSelector | undefined, random: () => number): RuntimeEvent[] {
-  const events = players.flatMap(player => player.events.filter(event => event.type === type && !event.cancelled))
+function selectEvents(
+  players: RuntimePlayer[],
+  type: EvolutionFootballEventType,
+  selector: EvolutionPlayerSelector | undefined,
+  random: () => number,
+): RuntimeEvent[] {
+  let events = players.flatMap(player => player.events.filter(event => event.type === type && !event.cancelled))
   const strategy = selector?.strategy ?? 'first'
-  if (strategy === 'highest-fantasy-value') return events.sort((a, b) => b.player.effectiveValue - a.player.effectiveValue || a.id.localeCompare(b.id))
-  if (strategy === 'lowest-fantasy-value') return events.sort((a, b) => a.player.effectiveValue - b.player.effectiveValue || a.id.localeCompare(b.id))
-  if (strategy === 'highest-raw-vote') return events.sort((a, b) => (b.player.vote?.value ?? -1000) - (a.player.vote?.value ?? -1000) || a.id.localeCompare(b.id))
-  if (strategy === 'lowest-raw-vote') return events.sort((a, b) => (a.player.vote?.value ?? 1000) - (b.player.vote?.value ?? 1000) || a.id.localeCompare(b.id))
-  if (strategy === 'last') return events.sort((a, b) => b.id.localeCompare(a.id))
-  if (strategy === 'random') return events.sort(() => random() - 0.5)
-  return events.sort((a, b) => a.id.localeCompare(b.id))
+  if (strategy === 'random') {
+    events = events.map(event => ({ event, order: random() })).sort((a, b) => a.order - b.order).map(item => item.event)
+  } else {
+    events.sort((a, b) => {
+      if (strategy === 'last') return b.id.localeCompare(a.id)
+      if (strategy === 'highest-raw-vote') return (b.player.vote?.value ?? -1000) - (a.player.vote?.value ?? -1000) || a.id.localeCompare(b.id)
+      if (strategy === 'lowest-raw-vote') return (a.player.vote?.value ?? 1000) - (b.player.vote?.value ?? 1000) || a.id.localeCompare(b.id)
+      if (strategy === 'highest-fantasy-value') return b.player.effectiveValue - a.player.effectiveValue || a.id.localeCompare(b.id)
+      if (strategy === 'lowest-fantasy-value') return a.player.effectiveValue - b.player.effectiveValue || a.id.localeCompare(b.id)
+      return a.id.localeCompare(b.id)
+    })
+  }
+  return events
 }
 
 function finalResolution(home: RuntimeSide, away: RuntimeSide, trace: EvolutionRuleTrace[]): EvolutionMatchResolution {
@@ -783,14 +832,14 @@ function finalResolution(home: RuntimeSide, away: RuntimeSide, trace: EvolutionR
   }
 }
 
-function capModifiers(side: RuntimeSide, teamCap: number | null, playerCap: number | null): void {
+function applyCaps(side: RuntimeSide, playerCap: number | null, teamCap: number | null): void {
   if (playerCap != null && Number.isFinite(playerCap) && playerCap >= 0) {
     for (const player of side.players) {
       const delta = player.effectiveValue - player.baseFantasyValue
       const capped = Math.max(-playerCap, Math.min(playerCap, delta))
-      const adjustment = capped - delta
-      player.effectiveValue += adjustment
-      if (isFieldPosition(player.actualPosition)) side.scoreDelta += adjustment
+      const correction = capped - delta
+      player.effectiveValue += correction
+      if (isFieldPosition(player.actualPosition)) side.scoreDelta += correction
     }
   }
   if (teamCap != null && Number.isFinite(teamCap) && teamCap >= 0) {
@@ -818,6 +867,7 @@ export function advanceEvolutionPlayerSeasonState(
   const evolution = resolveFantazoneEvolutionSettings(settings)
   const played = usage === 'starter' || usage === 'subbed-in'
   const positive = hasPositiveFootballBonus(vote, evolution.momentum.positiveEvents)
+
   if (played) {
     return {
       ...previous,
@@ -833,6 +883,7 @@ export function advanceEvolutionPlayerSeasonState(
   let consecutiveBenchUnused = usage === 'bench-unused' ? previous.consecutiveBenchUnused + 1 : 0
   let consecutiveUnusedMixed = previous.consecutiveUnusedMixed + 1
   let morale = previous.morale
+
   if (evolution.morale.enabled) {
     const tribuneHit = usage === 'tribune' && consecutiveTribune >= evolution.morale.tribuneConsecutiveDays
     const benchHit = usage === 'bench-unused' && consecutiveBenchUnused >= evolution.morale.benchUnusedConsecutiveDays
@@ -844,6 +895,7 @@ export function advanceEvolutionPlayerSeasonState(
       consecutiveUnusedMixed = 0
     }
   }
+
   return {
     ...previous,
     morale,
@@ -868,7 +920,7 @@ export function isEvolutionCardSelectionLocked(day: RealDay | null | undefined, 
 
 export function shouldRevealEvolutionCards(day: RealDay | null | undefined, settings: LeagueSetting, now = new Date()): boolean {
   const evolution = resolveFantazoneEvolutionSettings(settings)
-  if (!evolution.enabled || !evolution.coachCards.enabled || !day || !evolution.coachCards.revealAtFirstKickoff) return false
+  if (!evolution.enabled || !evolution.coachCards.enabled || !evolution.coachCards.revealAtFirstKickoff || !day) return false
   const first = firstKickoff(day)
   return first != null && now.getTime() >= first
 }
@@ -882,6 +934,7 @@ export function getEvolutionLockedPlayerKeys(
   const evolution = resolveFantazoneEvolutionSettings(settings)
   const locked = new Set<string>()
   if (!evolution.enabled || !evolution.progressiveLineupLock.enabled || !day) return locked
+
   const lockedTeams = new Set<string>()
   for (const game of day.games) {
     if (game.delayed && evolution.progressiveLineupLock.keepDelayedMatchesEditable) continue
@@ -896,13 +949,9 @@ export function getEvolutionLockedPlayerKeys(
   return locked
 }
 
-export function isFantazoneEvolutionEnabled(settings: LeagueSetting): boolean {
-  return resolveFantazoneEvolutionSettings(settings).enabled
-}
-
 function firstKickoff(day: RealDay): number | null {
   const values = day.games.map(parseKickoff).filter((value): value is number => value != null)
-  return values.length ? Math.min(...values) : null
+  return values.length === 0 ? null : Math.min(...values)
 }
 
 function parseKickoff(game: RealGame): number | null {
@@ -921,10 +970,9 @@ function roleToEvolutionRole(role: Role): EvolutionRole {
 
 function formationOf(players: RuntimePlayer[]): string {
   const field = players.filter(player => isFieldPosition(player.actualPosition))
-  const defenders = field.filter(player => player.player.role === Role.Defensor).length
-  const midfielders = field.filter(player => player.player.role === Role.Midfielder).length
-  const forwards = field.filter(player => player.player.role === Role.Forward).length
-  return `${defenders}-${midfielders}-${forwards}`
+  return [Role.Defensor, Role.Midfielder, Role.Forward]
+    .map(role => field.filter(player => player.player.role === role).length)
+    .join('-')
 }
 
 function isFieldPosition(position: FantaSoccerRole): boolean {
@@ -989,8 +1037,4 @@ function normalize(value: string): string {
 
 function signed(value: number): string {
   return `${value >= 0 ? '+' : ''}${Number(value.toFixed(2))}`
-}
-
-function sideLabel(side: RuntimeSide, context: RuleContext): string {
-  return side.side === context.owner.side ? 'squadra' : 'avversario'
 }
