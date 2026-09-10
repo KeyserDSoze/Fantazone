@@ -6,6 +6,9 @@ import { FantaSoccerRole, PlayerInTeamStatus, type Team } from './team'
 
 const LIVE_TAIL_MS = 4 * 60 * 60 * 1000
 
+type LiveWindowSettings = Pick<LeagueSetting, 'liveFormationChanges'> & Partial<Pick<LeagueSetting, 'evolution'>>
+type LiveValidationSettings = Pick<LeagueSetting, 'liveFormationChanges' | 'allowLiveModuleChange'> & Partial<Pick<LeagueSetting, 'evolution'>>
+
 export type LiveFormationWindow = {
   serieADay: number
   day: RealDay
@@ -29,11 +32,11 @@ export type LiveFormationValidationContext = {
  */
 export function getLiveFormationWindow(
   calendar: RealCalendar | null | undefined,
-  settings: LeagueSetting,
+  settings: LiveWindowSettings,
   now = new Date(),
 ): LiveFormationWindow | null {
   if (!calendar) return null
-  const evolution = resolveFantazoneEvolutionSettings(settings)
+  const evolution = resolveFantazoneEvolutionSettings(settings as LeagueSetting)
   const limitedChanges = (settings.liveFormationChanges ?? 0) > 0
   const progressiveLineupLock = evolution.enabled && evolution.progressiveLineupLock.enabled
   if (!limitedChanges && !progressiveLineupLock) return null
@@ -64,27 +67,18 @@ export function getLiveFormationWindow(
 
 /**
  * Validates a live update against the repository copy, never client metadata.
- *
- * Legacy N changes:
- * - one position swap = two changed players;
- * - consumes one FormationChanges unit;
- * - optional module lock.
- *
- * Evolution progressive lock:
- * - any player whose real match has kicked off is immutable;
- * - players from future matches can still move;
- * - when N changes is also enabled, both constraints must pass;
- * - without N changes there is no artificial change counter.
+ * Legacy limited changes and Evolution progressive locks can be enabled together
+ * or independently.
  */
 export function validateLiveFormationChange(
   before: Team,
   after: Team,
-  settings: LeagueSetting,
+  settings: LiveValidationSettings,
   context: LiveFormationValidationContext = {},
 ): LiveFormationValidation {
   const limit = settings.liveFormationChanges ?? 0
   const used = before.formationChanges ?? 0
-  const evolution = resolveFantazoneEvolutionSettings(settings)
+  const evolution = resolveFantazoneEvolutionSettings(settings as LeagueSetting)
   const progressive = evolution.enabled && evolution.progressiveLineupLock.enabled
   const beforeByKey = new Map(before.players
     .filter(player => player.status === PlayerInTeamStatus.Active)
@@ -100,7 +94,12 @@ export function validateLiveFormationChange(
     if (!context.realDay) {
       return { valid: false, error: 'Il calendario reale della giornata è necessario per verificare il lock progressivo.' }
     }
-    const locked = getEvolutionLockedPlayerKeys(before.players, context.realDay, settings, context.now ?? new Date())
+    const locked = getEvolutionLockedPlayerKeys(
+      before.players,
+      context.realDay,
+      settings as LeagueSetting,
+      context.now ?? new Date(),
+    )
     const lockedChange = changed.find(entry => locked.has(entry.key))
     if (lockedChange) {
       return {
