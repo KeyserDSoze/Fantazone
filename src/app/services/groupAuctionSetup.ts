@@ -2,11 +2,14 @@ import {
   AuctionKind,
   AuctionType,
   Role,
+  assignEvolutionSkills,
   createAuctionCheckpoint,
   createEmptyStatPlayer,
   getPlayerKey,
+  resolveFantazoneEvolutionSettings,
   type AuctionCheckpoint,
   type AuctionTeams,
+  type EvolutionSeasonSkillDocument,
   type Group,
   type RealPlayer,
   type StatPlayer,
@@ -24,6 +27,7 @@ export type AuctionSetupContext = {
   checkpoint: AuctionCheckpoint
   players: StatPlayer[]
   teams: AuctionTeams
+  evolutionSkills: EvolutionSeasonSkillDocument | null
 }
 
 export type CreateGroupAuctionInput = {
@@ -61,6 +65,9 @@ export class GroupAuctionSetupService {
 
     const teams = await this.loadLeagueTeams(group, input.leagueId, input.season, input.kind)
     const players = await this.loadAuctionPlayers(input.season)
+    // Skills are season-owned data, not auction-owned data. Generate them exactly once
+    // before the first player can be shown so every participant sees the same skill.
+    const evolutionSkills = await this.ensureEvolutionSkills(input.leagueId, input.season, players)
     const queues = buildAuctionPlayerQueues(players, teams, input.type, this.random)
     const createdAt = this.now()
     const checkpoint = createAuctionCheckpoint({
@@ -82,12 +89,13 @@ export class GroupAuctionSetupService {
       { group, leagueId: input.leagueId, season: input.season, players, teams, now: this.now },
     )
     await this.runtime.auctionDiscovery.activateCheckpoint(session.checkpoint)
-    return { session, context: { checkpoint: session.checkpoint, players, teams: session.currentTeams } }
+    return { session, context: { checkpoint: session.checkpoint, players, teams: session.currentTeams, evolutionSkills } }
   }
 
   async resumeAuction(checkpoint: AuctionCheckpoint): Promise<{ session: GroupAuctionHostSession; context: AuctionSetupContext }> {
     const players = await this.loadAuctionPlayers(checkpoint.leagueKey.year)
     const teams = await this.loadLeagueTeams(this.runtime.group, checkpoint.leagueKey.league, checkpoint.leagueKey.year, checkpoint.kind)
+    const evolutionSkills = await this.ensureEvolutionSkills(checkpoint.leagueKey.league, checkpoint.leagueKey.year, players)
     const snapshot = await this.runtime.auctionRepository.getCheckpoint(checkpoint.leagueKey.year, checkpoint.id, { refresh: true })
     if (!snapshot) throw new Error(`Checkpoint asta '${checkpoint.id}' non disponibile.`)
     const session = GroupAuctionHostSession.resume(
@@ -95,7 +103,7 @@ export class GroupAuctionSetupService {
       snapshot,
       { group: this.runtime.group, leagueId: checkpoint.leagueKey.league, season: checkpoint.leagueKey.year, players, teams, now: this.now },
     )
-    return { session, context: { checkpoint: session.checkpoint, players, teams: session.currentTeams } }
+    return { session, context: { checkpoint: session.checkpoint, players, teams: session.currentTeams, evolutionSkills } }
   }
 
   async loadAuctionPlayers(season: number): Promise<StatPlayer[]> {
@@ -104,6 +112,36 @@ export class GroupAuctionSetupService {
     const master = await this.realPlayersRepository.getPlayers(season, { refresh: true })
     if (!master) throw new Error(`Master giocatori Serie A ${season} non disponibile.`)
     return master.players.filter(isAuctionPlayer).map(createEmptyStatPlayer)
+  }
+
+  private async ensureEvolutionSkills(
+    leagueId: string,
+    season: number,
+    players: readonly Pick<RealPlayer, 'name' | 'role'>[],
+  ): Promise<EvolutionSeasonSkillDocument | null> {
+    const league = this.runtime.group.leagues.find(item => item.id === leagueId)
+    const annual = league?.years.find(item => item.year === season)
+    if (!annual) return null
+    const evolution = resolveFantazoneEvolutionSettings(annual.settings)
+    if (!evolution.enabled || !evolution.playerSkills.enabled) return null
+
+    const existing = await this.runtime.evolutionRepository.getSkills(leagueId, season, { refresh: true })
+    if (existing) return existing
+
+    const generated = assignEvolutionSkills(
+      [...players],
+      annual.settings,
+      season,
+      this.now().toISOString(),
+    )
+    await this.runtime.evolutionRepository.writeSkills(
+      leagueId,
+      season,
+      generated,
+      `feat: initialize Fantazone Evolution skills ${leagueId} ${season}`,
+      { createOnly: true },
+    )
+    return generated
   }
 
   private async loadLeagueTeams(group: Group, leagueId: string, season: number, kind: AuctionKind): Promise<Map<string, { basketId: string; team: Team }>> {
@@ -190,7 +228,7 @@ function createAuctionId(groupId: string, leagueId: string, season: number, date
 function isAuctionPlayer(player: RealPlayer): boolean { return player.role !== Role.Undefined && player.isActive && player.visible }
 function auctionRoles(): Array<Role.GoalKeeper | Role.Defensor | Role.Midfielder | Role.Forward> { return [Role.GoalKeeper, Role.Defensor, Role.Midfielder, Role.Forward] }
 function letterDistance(name: string, start: number): number { const first = name.trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().charCodeAt(0) - 65; return first < 0 || first > 25 ? 26 : (first - start + 26) % 26 }
-function shuffle<T>(values: T[], random: () => number): T[] { for (let index = values.length - 1; index > 0; index -= 1) { const target = Math.floor(clampRandom(random()) * (index + 1)); [values[index], values[target]] = [values[target], values[index]] } return values }
+function shuffle<T>(values: T[], random: () => number = Math.random): T[] { for (let index = values.length - 1; index > 0; index -= 1) { const target = Math.floor(clampRandom(random()) * (index + 1)); [values[index], values[target]] = [values[target], values[index]] } return values }
 function clampRandom(value: number): number { if (!Number.isFinite(value)) return 0; return Math.max(0, Math.min(0.999999999999, value)) }
 function safeSegment(value: string): string { return value.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'auction' }
 function normalizeEmail(value: string): string { return value.trim().toLowerCase() }
