@@ -195,6 +195,8 @@ export interface EvolutionCoachCardSettings {
   cardsInSeasonDeck: number
   lockMinutesBeforeFirstKickoff: number
   revealAtFirstKickoff: boolean
+  /** A reveal committed after this grace window is forfeited by definitive jobs. */
+  revealGraceSecondsAfterFirstKickoff: number
   catalog: EvolutionCardCatalogSettings
 }
 
@@ -329,6 +331,7 @@ export const DefaultFantazoneEvolutionSettings: Readonly<FantazoneEvolutionSetti
     cardsInSeasonDeck: 20,
     lockMinutesBeforeFirstKickoff: 0,
     revealAtFirstKickoff: true,
+    revealGraceSecondsAfterFirstKickoff: 120,
     catalog: { builtinVersion: 1, disabledCardIds: [], customCards: [] },
   },
   families: {
