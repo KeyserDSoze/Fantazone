@@ -99,9 +99,12 @@ export class GroupFormationWriter {
     if (!annualLeague) throw new FormationLockedError()
 
     if (wrapper.isLiveFormationWindow) {
-      const daySnapshot = await this.teams.getTeamDaySnapshot(
-        annual.basketId, input.season, wrapper.serieADay, canonicalOwner, { refresh: true },
-      )
+      const [daySnapshot, realCalendar] = await Promise.all([
+        this.teams.getTeamDaySnapshot(
+          annual.basketId, input.season, wrapper.serieADay, canonicalOwner, { refresh: true },
+        ),
+        this.realCalendars.getCalendar(input.season, { refresh: true }),
+      ])
       const fallbackSnapshot = daySnapshot ? null : await this.teams.getTeamSnapshot(
         annual.basketId, input.season, canonicalOwner, { refresh: true },
       )
@@ -115,7 +118,11 @@ export class GroupFormationWriter {
         formationChanges: base.formationChanges ?? 0,
       }
       const positioned = applyFormationPositions(canonical, input.positions)
-      const liveValidation = validateLiveFormationChange(canonical, positioned, annualLeague.settings)
+      const realDay = realCalendar?.days.find(day => day.serieADay === wrapper.serieADay) ?? null
+      const liveValidation = validateLiveFormationChange(canonical, positioned, annualLeague.settings, {
+        realDay,
+        now: operationNow,
+      })
       if (!liveValidation.valid) throw new FormationValidationError([liveValidation.error])
       const validation = validateFormation(positioned)
       if (!validation.valid) throw new FormationValidationError(validation.errors)
