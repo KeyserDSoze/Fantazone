@@ -862,7 +862,7 @@
         "sufferedGoal": 0,
         "wrongedPenalty": 0,
         "ownGoal": 0,
-        "status": 1,
+        "status": 0,
         "manOfTheMatch": false,
         "hasVote": true,
         "isOut": false,
@@ -2439,7 +2439,7 @@
       }
     },
     {
-      "name": "Fini ",
+      "name": "Fini",
       "team": {
         "name": "Frosinone",
         "abbreviation": "fro"
@@ -5354,7 +5354,7 @@
       "name": "Thiam",
       "team": {
         "name": "Monza",
-        "abbreviation": "mon"
+        "abbreviation": "monz"
       },
       "role": 0,
       "isActive": true,
@@ -5382,7 +5382,7 @@
       "name": "Carboni A.",
       "team": {
         "name": "Monza",
-        "abbreviation": "mon"
+        "abbreviation": "monz"
       },
       "role": 1,
       "isActive": true,
@@ -5410,7 +5410,7 @@
       "name": "Birindelli",
       "team": {
         "name": "Monza",
-        "abbreviation": "mon"
+        "abbreviation": "monz"
       },
       "role": 1,
       "isActive": true,
@@ -5438,7 +5438,7 @@
       "name": "Lucchesi",
       "team": {
         "name": "Monza",
-        "abbreviation": "mon"
+        "abbreviation": "monz"
       },
       "role": 1,
       "isActive": true,
@@ -5466,7 +5466,7 @@
       "name": "Kouadio",
       "team": {
         "name": "Monza",
-        "abbreviation": "mon"
+        "abbreviation": "monz"
       },
       "role": 1,
       "isActive": true,
@@ -5494,7 +5494,7 @@
       "name": "Bakoune",
       "team": {
         "name": "Monza",
-        "abbreviation": "mon"
+        "abbreviation": "monz"
       },
       "role": 1,
       "isActive": true,
@@ -5522,7 +5522,7 @@
       "name": "Mangas",
       "team": {
         "name": "Monza",
-        "abbreviation": "mon"
+        "abbreviation": "monz"
       },
       "role": 1,
       "isActive": true,
@@ -5550,7 +5550,7 @@
       "name": "Maye",
       "team": {
         "name": "Monza",
-        "abbreviation": "mon"
+        "abbreviation": "monz"
       },
       "role": 1,
       "isActive": true,
@@ -5578,7 +5578,7 @@
       "name": "Colpani",
       "team": {
         "name": "Monza",
-        "abbreviation": "mon"
+        "abbreviation": "monz"
       },
       "role": 2,
       "isActive": true,
@@ -5606,7 +5606,7 @@
       "name": "Folorunsho",
       "team": {
         "name": "Monza",
-        "abbreviation": "mon"
+        "abbreviation": "monz"
       },
       "role": 2,
       "isActive": true,
@@ -5634,7 +5634,7 @@
       "name": "Forson O.",
       "team": {
         "name": "Monza",
-        "abbreviation": "mon"
+        "abbreviation": "monz"
       },
       "role": 2,
       "isActive": true,
@@ -5662,7 +5662,7 @@
       "name": "Akinsanmiro",
       "team": {
         "name": "Monza",
-        "abbreviation": "mon"
+        "abbreviation": "monz"
       },
       "role": 2,
       "isActive": true,
@@ -5690,7 +5690,7 @@
       "name": "Colombo L.",
       "team": {
         "name": "Monza",
-        "abbreviation": "mon"
+        "abbreviation": "monz"
       },
       "role": 2,
       "isActive": true,
@@ -5718,7 +5718,7 @@
       "name": "Mout",
       "team": {
         "name": "Monza",
-        "abbreviation": "mon"
+        "abbreviation": "monz"
       },
       "role": 2,
       "isActive": true,
@@ -5746,7 +5746,7 @@
       "name": "Mota",
       "team": {
         "name": "Monza",
-        "abbreviation": "mon"
+        "abbreviation": "monz"
       },
       "role": 3,
       "isActive": true,
@@ -5774,7 +5774,7 @@
       "name": "Robinson J.",
       "team": {
         "name": "Monza",
-        "abbreviation": "mon"
+        "abbreviation": "monz"
       },
       "role": 3,
       "isActive": true,
@@ -8927,6 +8927,34 @@
         "wrongedPenalty": 0,
         "ownGoal": 0,
         "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": true,
+        "injured": false
+      }
+    },
+    {
+      "name": "Fantacalcio® Serie A Enilive",
+      "team": {
+        "name": "Venezia",
+        "abbreviation": "ven"
+      },
+      "role": -1,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": -1,
+        "value": 5.5,
+        "isFinal": true,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 1,
         "manOfTheMatch": false,
         "hasVote": true,
         "isOut": false,
