@@ -15,6 +15,17 @@ const releases: Release[] = [
   {
     version: APP_VERSION,
     date: RELEASE_DATE,
+    title: 'Campionato iniziale robusto alle scritture concorrenti',
+    items: [
+      { category: 'Fix', text: 'Due partecipanti che salvano quasi insieme la formazione del Campionato iniziale non ricevono più un falso errore soltanto perché entrambe le operazioni provano ad aggiornare lo stesso standings.json.' },
+      { category: 'Architettura', text: 'Dopo un conflitto ottimistico la classifica non ritenta un payload ormai vecchio: viene ricalcolata da capo rileggendo TeamDay, rose e voti correnti, così i writer convergono sullo stato GitHub più recente.' },
+      { category: 'Fix', text: 'Anche la creazione concorrente dello snapshot della rosa dell’anno precedente è idempotente: chi perde la create-only race rilegge il repository e prosegue quando lo snapshot vincente è già presente.' },
+      { category: 'Miglioria', text: 'Una TeamDay del Campionato iniziale già committata resta un salvataggio riuscito anche se, dopo i retry previsti, persiste esclusivamente una race sulla classifica derivata; errori di rete, autorizzazione o dominio continuano invece a essere propagati.' },
+    ],
+  },
+  {
+    version: '0.3.9',
+    date: '10 settembre 2026',
     title: 'Formazioni offline sicure dopo il calcio d’inizio',
     items: [
       { category: 'Fix', text: 'Una formazione salvata offline prima del kickoff non resta più bloccata nell’outbox se la connessione torna quando la partita originaria è già iniziata o conclusa.' },
