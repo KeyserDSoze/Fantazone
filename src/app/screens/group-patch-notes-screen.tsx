@@ -15,6 +15,22 @@ const releases: Release[] = [
   {
     version: APP_VERSION,
     date: RELEASE_DATE,
+    title: 'Fantazone Evolution: skill, carte e strategia matchday',
+    items: [
+      { category: 'Nuovo', text: 'Arriva Fantazone Evolution come modalità annuale opt-in: skill stagionali dei calciatori, sinergie di famiglia, carte allenatore, morale, momentum e lock progressivo convergono nello stesso rule engine parametrico.' },
+      { category: 'Nuovo', text: 'Le skill vengono assegnate deterministicamente prima dell’asta e sono visibili durante la sessione con nome, rarità, potenza e descrizione, così cambiano realmente la valutazione dei giocatori.' },
+      { category: 'Nuovo', text: 'La schermata Formazione consente di scegliere le carte della partita con commit-reveal SHA-256: prima del kickoff nel repository condiviso resta soltanto l’hash, mentre scelta e nonce rimangono sul dispositivo fino al reveal.' },
+      { category: 'Nuovo', text: 'Le carte possono usare un vero deck stagionale per allenatore: ogni copia viene consumata dopo una reveal valida, la UI mostra le quantità residue e cardsInSeasonDeck=0 mantiene la modalità catalogo illimitato.' },
+      { category: 'Architettura', text: 'Il ricalcolo definitivo non si fida del JSON del deck: ricostruisce in memoria il mazzo canonico da lega, stagione, settings e owner e applica soltanto reveal crittograficamente valide, presenti nel catalogo, entro il limite per match e ancora disponibili.' },
+      { category: 'Miglioria', text: 'Morale e momentum vengono ricostruiti deterministicamente dalle TeamDay e dai voti ufficiali precedenti, evitando doppi incrementi o streak alterate quando una vecchia giornata viene ricalcolata.' },
+      { category: 'Nuovo', text: 'Il lock progressivo blocca il singolo calciatore quando inizia la sua partita reale e può convivere con il limite N di modifiche live; con il solo lock progressivo attivo la formazione resta modificabile per tutti i giocatori non ancora partiti.' },
+      { category: 'Architettura', text: 'Ogni effetto Evolution produce una trace spiegabile per partita senza riscrivere gli eventi reali: bonus, malus, carte, skill e neutralizzazioni restano distinguibili dal dato calcistico originale.' },
+      { category: 'Fix', text: 'Corretto un edge case del calcolo definitivo: una TeamDay mancante in casa resta a zero assoluto e non riceve più per errore il bonus campo.' },
+    ],
+  },
+  {
+    version: '0.3.8',
+    date: '10 settembre 2026',
     title: 'Manifest GitHub auto-riparante e scritture più sicure',
     items: [
       { category: 'Fix', text: 'Un manifest.json rimasto bloccato con updating=true dopo una scrittura interrotta non mantiene più il gruppo in sincronizzazione conservativa per sempre: dopo cinque minuti viene riconosciuto come abbandonato e riparato automaticamente.' },
