@@ -67,8 +67,12 @@ function calculateGame(
   })
   if (evolution.trace.length > 0) input.onEvolutionTrace?.(game.id, evolution.trace)
 
-  const home = addHomeAdvantage(evolution.home.point, input.settings.pointInHome)
-  const away = evolution.away.point
+  // A missing immutable TeamDay is an authoritative zero exactly like the classic
+  // calculator: neither home advantage nor an Evolution rule may manufacture points.
+  const home = homeTeam?.players
+    ? addHomeAdvantage(evolution.home.point, input.settings.pointInHome)
+    : zeroPoint()
+  const away = awayTeam?.players ? evolution.away.point : zeroPoint()
   const result: GameResult = {
     home,
     away,
