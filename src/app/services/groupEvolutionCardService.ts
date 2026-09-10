@@ -1,13 +1,19 @@
 import {
   GroupHelper,
+  assignEvolutionCoachDecks,
   createEvolutionCardCommitment,
   getEvolutionCardCatalog,
+  getEvolutionCoachDeckAvailability,
+  getVerifiedEvolutionCardIds,
   isEvolutionCardSelectionLocked,
+  isEvolutionCoachDeckSelectionAvailable,
   revealEvolutionCardCommitment,
   resolveFantazoneEvolutionSettings,
   shouldRevealEvolutionCards,
   type AuthenticatedGroupSession,
   type EvolutionCardCommitment,
+  type EvolutionSeasonCoachDeckDocument,
+  type Group,
   type LeagueSetting,
   type RealDay,
 } from '@fantazone/domain'
@@ -46,8 +52,19 @@ export class GroupEvolutionCardService {
     private readonly now: () => Date = () => new Date(),
   ) {}
 
+  async getCardAvailability(input: Omit<CommitEvolutionCardsInput, 'cardIds'>): Promise<Record<string, number> | null> {
+    const { group, settings, owner, leagueOwners } = await this.authorize({ ...input, cardIds: [] })
+    void group
+    const evolution = resolveFantazoneEvolutionSettings(settings)
+    if (!evolution.enabled || !evolution.coachCards.enabled) return {}
+    if (evolution.coachCards.cardsInSeasonDeck === 0) return null
+    const deck = await this.ensureCoachDeck(input.leagueId, input.season, settings, leagueOwners)
+    const consumed = await this.getConsumedCardIds(input, owner, input.serieADay - 1)
+    return getEvolutionCoachDeckAvailability(deck, owner, consumed, false)
+  }
+
   async commitCards(input: CommitEvolutionCardsInput): Promise<EvolutionCardCommitResult> {
-    const { settings, day, owner } = await this.authorize(input)
+    const { settings, day, owner, leagueOwners } = await this.authorize(input)
     const evolution = resolveFantazoneEvolutionSettings(settings)
     if (!evolution.enabled || !evolution.coachCards.enabled) throw new Error('Le carte Fantazone Evolution non sono abilitate in questa lega.')
     if (isEvolutionCardSelectionLocked(day, settings, this.now())) {
@@ -59,9 +76,18 @@ export class GroupEvolutionCardService {
     if (cardIds.length > evolution.coachCards.cardsPerMatch) {
       throw new Error(`Puoi schierare al massimo ${evolution.coachCards.cardsPerMatch} carte per partita.`)
     }
-    const available = new Set(getEvolutionCardCatalog(settings).map(card => card.id))
-    const unknown = cardIds.find(card => !available.has(card))
+    const catalog = new Set(getEvolutionCardCatalog(settings).map(card => card.id))
+    const unknown = cardIds.find(card => !catalog.has(card))
     if (unknown) throw new Error(`Carta Evolution non disponibile: ${unknown}.`)
+
+    if (evolution.coachCards.cardsInSeasonDeck > 0) {
+      const deck = await this.ensureCoachDeck(input.leagueId, input.season, settings, leagueOwners)
+      const consumed = await this.getConsumedCardIds(input, owner, input.serieADay - 1)
+      const availability = getEvolutionCoachDeckAvailability(deck, owner, consumed, false)
+      if (!isEvolutionCoachDeckSelectionAvailable(availability, cardIds)) {
+        throw new Error('Una o più carte selezionate non sono più disponibili nel tuo deck stagionale.')
+      }
+    }
 
     const now = this.now()
     const nonce = createEvolutionCardNonce()
@@ -89,8 +115,8 @@ export class GroupEvolutionCardService {
     }
 
     await this.updateCardsDocument(input.leagueId, input.season, input.serieADay, owner, commitment)
-    // Persist the plaintext only after the public commitment succeeds. If this local write
-    // fails, no forged reveal can be manufactured from the repository alone.
+    // Persist plaintext only after the public hash succeeds. The shared repository never
+    // needs the card choice before reveal.
     await saveEvolutionCardSecret(this.runtime.connection.repository.full_name, secret)
     return { commitment, secret }
   }
@@ -171,6 +197,83 @@ export class GroupEvolutionCardService {
     return this.revealCards(input)
   }
 
+  private async getConsumedCardIds(
+    input: Omit<CommitEvolutionCardsInput, 'cardIds'>,
+    owner: string,
+    throughDay: number,
+  ): Promise<string[]> {
+    const consumed: string[] = []
+    for (let day = 1; day <= Math.min(38, throughDay); day += 1) {
+      let document = await this.runtime.evolutionRepository.getCards(input.leagueId, input.season, day, { refresh: true })
+      let sealed = document?.commitments[normalize(owner)]
+      if (!sealed) continue
+
+      if (!sealed.reveal) {
+        const localSecret = await readEvolutionCardSecret(
+          this.runtime.connection.repository.full_name,
+          input.leagueId,
+          input.season,
+          day,
+          owner,
+        )
+        if (localSecret) {
+          await this.revealCards({ ...input, serieADay: day, owner })
+          document = await this.runtime.evolutionRepository.getCards(input.leagueId, input.season, day, { refresh: true })
+          sealed = document?.commitments[normalize(owner)]
+        }
+      }
+
+      if (!sealed?.reveal) {
+        throw new Error(`Prima di scegliere nuove carte devi completare il reveal della giornata ${day}.`)
+      }
+      const verified = getVerifiedEvolutionCardIds(sealed, {
+        leagueId: input.leagueId,
+        year: input.season,
+        serieADay: day,
+        owner,
+      })
+      if (!verified) throw new Error(`Il reveal Evolution della giornata ${day} non è valido.`)
+      consumed.push(...verified)
+    }
+    return consumed
+  }
+
+  private async ensureCoachDeck(
+    leagueId: string,
+    season: number,
+    settings: LeagueSetting,
+    owners: string[],
+  ): Promise<EvolutionSeasonCoachDeckDocument> {
+    const normalizedOwners = [...new Set(owners.map(normalize).filter(Boolean))]
+    for (let attempt = 0; attempt < WRITE_ATTEMPTS; attempt += 1) {
+      const snapshot = await this.runtime.evolutionRepository.getCoachDeckSnapshot(leagueId, season, { refresh: true })
+      const existingOwners = new Set(snapshot?.value.decks.map(deck => normalize(deck.owner)) ?? [])
+      if (snapshot && normalizedOwners.every(owner => existingOwners.has(owner))) return snapshot.value
+
+      const document = assignEvolutionCoachDecks(
+        leagueId,
+        normalizedOwners,
+        settings,
+        season,
+        snapshot?.value.generatedAt ?? this.now().toISOString(),
+        snapshot?.value.seed,
+      )
+      try {
+        await this.runtime.evolutionRepository.writeCoachDeck(
+          leagueId,
+          season,
+          document,
+          `feat: initialize Fantazone Evolution coach decks ${leagueId} ${season}`,
+          snapshot ? { expectedSha: snapshot.sha } : { createOnly: true },
+        )
+        return document
+      } catch (error) {
+        if (!(error instanceof RepositoryWriteConflictError) || attempt === WRITE_ATTEMPTS - 1) throw error
+      }
+    }
+    throw new Error('Impossibile inizializzare i deck Fantazone Evolution.')
+  }
+
   private async updateCardsDocument(
     leagueId: string,
     season: number,
@@ -200,14 +303,23 @@ export class GroupEvolutionCardService {
     }
   }
 
-  private async authorize(input: CommitEvolutionCardsInput): Promise<{ settings: LeagueSetting; day: RealDay; owner: string }> {
+  private async authorize(input: CommitEvolutionCardsInput): Promise<{
+    group: Group
+    settings: LeagueSetting
+    day: RealDay
+    owner: string
+    leagueOwners: string[]
+  }> {
     const group = await this.runtime.refreshGroup()
     const league = group.leagues.find(item => item.id === input.leagueId)
     const annual = league?.years.find(item => item.year === input.season)
     if (!league || !annual) throw new Error('Lega/stagione non disponibile per le carte Evolution.')
 
-    const ownerEntry = findTeam(group, input.season, input.owner)
-    if (!ownerEntry) throw new Error('Squadra non trovata per le carte Evolution.')
+    const leagueTeams = league.basketsId.flatMap(basketId =>
+      group.baskets.find(item => item.id === basketId)?.years.find(item => item.year === input.season)?.teams ?? [],
+    )
+    const ownerEntry = leagueTeams.find(item => normalize(item.owner) === normalize(input.owner))
+    if (!ownerEntry) throw new Error('Squadra non trovata nella lega selezionata per le carte Evolution.')
     if (!GroupHelper.isOwner(ownerEntry, input.session.identity.email)) {
       throw new Error('Puoi scegliere le carte solo per una squadra di cui sei owner o co-owner.')
     }
@@ -215,17 +327,14 @@ export class GroupEvolutionCardService {
     const realCalendar = await this.runtime.realCalendarRepository.getCalendar(input.season, { refresh: true })
     const day = realCalendar?.days.find(item => item.serieADay === input.serieADay)
     if (!day) throw new Error(`Giornata Serie A ${input.serieADay} non disponibile.`)
-    return { settings: annual.settings, day, owner: ownerEntry.owner }
+    return {
+      group,
+      settings: annual.settings,
+      day,
+      owner: ownerEntry.owner,
+      leagueOwners: leagueTeams.map(team => team.owner),
+    }
   }
-}
-
-function findTeam(group: GroupSessionRuntime['group'], season: number, owner: string) {
-  const target = normalize(owner)
-  for (const basket of group.baskets) {
-    const team = basket.years.find(item => item.year === season)?.teams.find(item => normalize(item.owner) === target)
-    if (team) return team
-  }
-  return null
 }
 
 function firstKickoff(day: RealDay): Date | null {
