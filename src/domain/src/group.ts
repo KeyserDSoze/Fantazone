@@ -1,3 +1,5 @@
+import { createDefaultFantazoneEvolutionSettings, type FantazoneEvolutionSettings } from './evolutionModel'
+
 export enum Role {
   Undefined = -1,
   GoalKeeper = 0,
@@ -135,6 +137,8 @@ export interface LeagueSetting {
   liveFormationChanges: number
   allowLiveModuleChange: boolean
   openingCompetition: OpeningCompetitionSettings
+  /** Optional at the persistence boundary for legacy repositories; runtime helpers always resolve full defaults. */
+  evolution: FantazoneEvolutionSettings
 }
 
 export interface AnnualLeague {
@@ -337,6 +341,7 @@ export const DefaultLeagueSetting: LeagueSetting = {
     ...DefaultOpeningCompetitionSettings,
     prizes: DefaultOpeningCompetitionSettings.prizes.map(prize => ({ ...prize })),
   },
+  evolution: createDefaultFantazoneEvolutionSettings(),
 }
 
 export interface EnhancedGroup extends Group {

@@ -1,8 +1,10 @@
 import assert from 'node:assert/strict'
+import { execFile } from 'node:child_process'
 import { mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises'
-import { dirname, join } from 'node:path'
 import { tmpdir } from 'node:os'
+import { dirname, join } from 'node:path'
 import test from 'node:test'
+import { promisify } from 'node:util'
 import {
   DefaultLeagueSetting,
   FantaSoccerRole,
@@ -10,10 +12,15 @@ import {
   LeagueType,
   PlayerInTeamStatus,
   Role,
+  createDefaultFantazoneEvolutionSettings,
   createEmptyVote,
+  createEvolutionCardCommitment,
+  getBuiltinEvolutionCards,
+  revealEvolutionCardCommitment,
   type Calendar,
   type Group,
   type LeagueSetting,
+  type RealCalendar,
   type Team,
   type VotedRealPlayers,
 } from '../../src/domain/src/index'
@@ -22,6 +29,8 @@ import {
   calendarDocumentPath,
   dailyRankDocumentPath,
   dayTeamDocumentPath,
+  evolutionCardsPath,
+  realCalendarDocumentPath,
   seasonRankDocumentPath,
   serieAVoteDocumentPath,
 } from '../../src/github/src/index'
@@ -31,12 +40,16 @@ import {
   recalculateGroupDay,
 } from '../../src/jobs/src/groupRecalculation'
 
+const execFileAsync = promisify(execFile)
 const SEASON = 15
 const DAY = 7
 const HOME = 'home@test.local'
 const AWAY = 'away@test.local'
 const BASKET = 'main'
 const LEAGUE = 'league-a'
+const TEST_CARD = 'test-card-fixed-team-bonus'
+const FIRST_KICKOFF = '2026-09-12T16:00:00.000Z'
+const SECOND_KICKOFF = '2026-09-19T16:00:00.000Z'
 
 const settings: LeagueSetting = {
   ...DefaultLeagueSetting,
@@ -84,6 +97,14 @@ const calendar: Calendar = {
       fantasyDay(DAY + 1, null),
     ],
   },
+}
+
+const realCalendar: RealCalendar = {
+  year: SEASON,
+  days: [
+    realDay(DAY, FIRST_KICKOFF),
+    realDay(DAY + 1, SECOND_KICKOFF),
+  ],
 }
 
 const homeTeam = team('Home', HOME, 'Home player')
@@ -139,6 +160,57 @@ test('explicit recalculate-day fails closed when official votes are missing', as
   assert.equal(persisted.rounds.Regular[0].games[0].result, null)
 })
 
+test('definitive recalculation applies the only deck copy once and rejects a second valid reveal after exhaustion', async () => {
+  const { groupRoot, platformRoot } = await fixtureRoots()
+  const evolutionSettings = settingsWithSingleCardDeck()
+  const evolutionGroup = structuredClone(group)
+  evolutionGroup.leagues[0].years[0].settings = evolutionSettings
+  await writeJson(join(groupRoot, GROUP_DOCUMENT_PATH), evolutionGroup)
+  await writeJson(join(platformRoot, realCalendarDocumentPath(SEASON)), realCalendar)
+  await writeJson(join(platformRoot, serieAVoteDocumentPath('official', SEASON, DAY + 1)), {
+    ...official,
+    serieADay: DAY + 1,
+  })
+
+  await initializeGit(groupRoot, '2026-09-12T12:00:00.000Z')
+  await writeJson(join(groupRoot, evolutionCardsPath(LEAGUE, SEASON, DAY)), sealedCardsDocument(DAY))
+  await writeJson(join(groupRoot, evolutionCardsPath(LEAGUE, SEASON, DAY + 1)), sealedCardsDocument(DAY + 1))
+  await commitAll(groupRoot, 'seal Evolution cards', '2026-09-12T15:00:00.000Z')
+
+  await writeJson(join(groupRoot, evolutionCardsPath(LEAGUE, SEASON, DAY)), revealedCardsDocument(DAY, '2026-09-12T16:00:30.000Z'))
+  await commitAll(groupRoot, 'reveal first Evolution card', '2026-09-12T16:00:30.000Z')
+  await writeJson(join(groupRoot, evolutionCardsPath(LEAGUE, SEASON, DAY + 1)), revealedCardsDocument(DAY + 1, '2026-09-19T16:00:30.000Z'))
+  await commitAll(groupRoot, 'reveal second Evolution card', '2026-09-19T16:00:30.000Z')
+
+  await recalculateGroupAll({ groupRepoRoot: groupRoot, platformRepoRoot: platformRoot, season: SEASON })
+
+  const persisted = await readJson<Calendar>(join(groupRoot, calendarDocumentPath(LEAGUE, SEASON)))
+  const first = persisted.rounds.Regular[0].games[0].result
+  const second = persisted.rounds.Regular[1].games[0].result
+  assert.ok(first)
+  assert.ok(second)
+  assert.equal(first.home.value, 84, 'first timely reveal consumes and applies the only +10 card copy')
+  assert.equal(second.home.value, 74, 'second timely and cryptographically valid reveal is ignored because the deck copy is exhausted')
+})
+
+test('definitive recalculation ignores a reveal first committed after the configured grace window', async () => {
+  const { groupRoot, platformRoot } = await fixtureRoots()
+  const evolutionGroup = structuredClone(group)
+  evolutionGroup.leagues[0].years[0].settings = settingsWithSingleCardDeck()
+  await writeJson(join(groupRoot, GROUP_DOCUMENT_PATH), evolutionGroup)
+  await writeJson(join(platformRoot, realCalendarDocumentPath(SEASON)), realCalendar)
+
+  await initializeGit(groupRoot, '2026-09-12T12:00:00.000Z')
+  await writeJson(join(groupRoot, evolutionCardsPath(LEAGUE, SEASON, DAY)), sealedCardsDocument(DAY))
+  await commitAll(groupRoot, 'seal card before kickoff', '2026-09-12T15:00:00.000Z')
+  await writeJson(join(groupRoot, evolutionCardsPath(LEAGUE, SEASON, DAY)), revealedCardsDocument(DAY, '2026-09-12T16:10:00.000Z'))
+  await commitAll(groupRoot, 'late selective reveal', '2026-09-12T16:10:00.000Z')
+
+  await recalculateGroupDay({ groupRepoRoot: groupRoot, platformRepoRoot: platformRoot, season: SEASON, day: DAY })
+  const persisted = await readJson<Calendar>(join(groupRoot, calendarDocumentPath(LEAGUE, SEASON)))
+  assert.equal(persisted.rounds.Regular[0].games[0].result?.home.value, 74)
+})
+
 test('rank exclusions preserve legacy Cup and NewCup group-stage ranking boundaries', () => {
   assert.deepEqual(excludedRankRounds(LeagueType.Cup), ['Finals'])
   assert.deepEqual(excludedRankRounds(LeagueType.NewCup), ['Finals', 'Europa League', 'Supercoppa'])
@@ -159,6 +231,114 @@ async function fixtureRoots(options: { withOfficial?: boolean } = {}) {
     await writeJson(join(platformRoot, serieAVoteDocumentPath('official', SEASON, DAY)), official)
   }
   return { groupRoot, platformRoot }
+}
+
+function settingsWithSingleCardDeck(): LeagueSetting {
+  const evolution = createDefaultFantazoneEvolutionSettings()
+  evolution.enabled = true
+  evolution.playerSkills.enabled = false
+  evolution.families.enabled = false
+  evolution.morale.enabled = false
+  evolution.momentum.enabled = false
+  evolution.coachCards.enabled = true
+  evolution.coachCards.cardsPerMatch = 1
+  evolution.coachCards.cardsInSeasonDeck = 1
+  evolution.coachCards.revealGraceSecondsAfterFirstKickoff = 120
+  evolution.coachCards.catalog.disabledCardIds = getBuiltinEvolutionCards().map(card => card.id)
+  evolution.coachCards.catalog.customCards = [{
+    id: TEST_CARD,
+    name: 'Test +10',
+    description: 'Adds ten points to the team for deterministic deck tests.',
+    category: 'team',
+    rarity: 'common',
+    power: 10,
+    weight: 1,
+    rules: [{
+      id: `${TEST_CARD}-rule`,
+      name: 'Fixed team bonus',
+      description: 'Always adds ten team points.',
+      source: 'coach-card',
+      trigger: 'team-finalized',
+      effects: [{ type: 'add-score', target: 'team', value: 10 }],
+      priority: 200,
+      stacking: { mode: 'stack' },
+    }],
+  }]
+  return { ...settings, evolution }
+}
+
+function sealedCardsDocument(serieADay: number) {
+  const commitment = cardCommitment(serieADay)
+  return {
+    version: 2 as const,
+    leagueId: LEAGUE,
+    year: SEASON,
+    serieADay,
+    commitments: { [HOME]: commitment },
+  }
+}
+
+function revealedCardsDocument(serieADay: number, revealedAt: string) {
+  const commitment = cardCommitment(serieADay)
+  const identity = { leagueId: LEAGUE, year: SEASON, serieADay, owner: HOME }
+  const revealed = revealEvolutionCardCommitment(commitment, {
+    ...identity,
+    cardIds: [TEST_CARD],
+    nonce: cardNonce(serieADay),
+    revealedAt,
+  })
+  return {
+    version: 2 as const,
+    leagueId: LEAGUE,
+    year: SEASON,
+    serieADay,
+    commitments: { [HOME]: revealed },
+  }
+}
+
+function cardCommitment(serieADay: number) {
+  return createEvolutionCardCommitment({
+    leagueId: LEAGUE,
+    year: SEASON,
+    serieADay,
+    owner: HOME,
+    cardIds: [TEST_CARD],
+    nonce: cardNonce(serieADay),
+    committedAt: '1999-01-01T00:00:00.000Z',
+  })
+}
+
+function cardNonce(serieADay: number): string {
+  return `day-${serieADay}-0123456789abcdef`
+}
+
+async function initializeGit(root: string, date: string): Promise<void> {
+  await execFileAsync('git', ['-C', root, 'init', '-b', 'main'])
+  await execFileAsync('git', ['-C', root, 'config', 'user.name', 'Fantazone test'])
+  await execFileAsync('git', ['-C', root, 'config', 'user.email', 'test@fantazone.local'])
+  await commitAll(root, 'fixture base', date)
+}
+
+async function commitAll(root: string, message: string, date: string): Promise<void> {
+  await execFileAsync('git', ['-C', root, 'add', '-A'])
+  await execFileAsync('git', ['-C', root, 'commit', '-m', message], {
+    env: { ...process.env, GIT_AUTHOR_DATE: date, GIT_COMMITTER_DATE: date },
+  })
+}
+
+function realDay(serieADay: number, kickoff: string) {
+  return {
+    year: SEASON,
+    serieADay,
+    games: [{
+      home: { name: 'Roma', abbreviation: 'ROM' },
+      away: { name: 'Milan', abbreviation: 'MIL' },
+      date: kickoff,
+      homeGoals: null,
+      awayGoals: null,
+      delayed: false,
+    }],
+  }
 }
 
 function fantasyDay(serieADay: number, result: Calendar['rounds'][string][number]['games'][number]['result']) {

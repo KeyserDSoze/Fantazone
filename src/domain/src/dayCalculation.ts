@@ -1,11 +1,27 @@
 import { GameResultHelper, type CalendarDay, type CalendarGame, type GameResult, type Point } from './calendar'
+import { calculateEvolutionMatch, type EvolutionRuleTrace } from './evolution'
+import type {
+  EvolutionCardSelection,
+  EvolutionPlayerMatchState,
+  EvolutionPlayerSkillAssignment,
+} from './evolutionModel'
 import { type LeagueSetting, type LeagueType } from './group'
 import { TeamHelper, type Team } from './team'
-import { calculateTeamPoint } from './teamCalculation'
+import { calculateTeamPoint, type TeamPointCalculation } from './teamCalculation'
 import type { VotedRealPlayers } from './vote'
 
 export type DefinitiveDayMode = 'force' | 'missing-only'
 export type TeamsByOwner = ReadonlyMap<string, Team | null | undefined>
+
+export interface DefinitiveDayEvolutionGameContext {
+  homeSkillAssignments?: EvolutionPlayerSkillAssignment[]
+  awaySkillAssignments?: EvolutionPlayerSkillAssignment[]
+  homeCards?: EvolutionCardSelection | null
+  awayCards?: EvolutionCardSelection | null
+  homePlayerState?: Record<string, EvolutionPlayerMatchState | undefined>
+  awayPlayerState?: Record<string, EvolutionPlayerMatchState | undefined>
+  seed?: string
+}
 
 export interface DefinitiveDayCalculationInput {
   day: CalendarDay
@@ -14,11 +30,14 @@ export interface DefinitiveDayCalculationInput {
   leagueType: LeagueType
   settings: LeagueSetting
   mode?: DefinitiveDayMode
+  /** Optional match-owned Evolution state. Families and league rules still work without it. */
+  evolutionByGameId?: ReadonlyMap<string, DefinitiveDayEvolutionGameContext | undefined>
+  onEvolutionTrace?: (gameId: string, trace: EvolutionRuleTrace[]) => void
 }
 
 /**
- * Pure port of GroupsManagerJob.CalculateDayAsync.
- * Definitive results use official votes only: live votes are intentionally not an input.
+ * Pure definitive calculation. Real football votes remain immutable inputs; Evolution
+ * adds explainable modifiers after normal fantasy scoring and before fantasy goals.
  */
 export function calculateDefinitiveDay(input: DefinitiveDayCalculationInput): CalendarDay {
   const mode = input.mode ?? 'force'
@@ -37,11 +56,23 @@ function calculateGame(
 
   const homeTeam = input.teamsByOwner.get(game.homeOwner) ?? null
   const awayTeam = input.teamsByOwner.get(game.awayOwner) ?? null
-  const home = homeTeam?.players
-    ? addHomeAdvantage(calculatePoint(homeTeam, input), input.settings.pointInHome)
-    : zeroPoint()
-  const away = awayTeam?.players ? calculatePoint(awayTeam, input) : zeroPoint()
+  const homeBase = homeTeam?.players ? calculatePoint(homeTeam, input) : zeroCalculation()
+  const awayBase = awayTeam?.players ? calculatePoint(awayTeam, input) : zeroCalculation()
+  const evolutionContext = input.evolutionByGameId?.get(game.id)
+  const evolution = calculateEvolutionMatch({
+    home: homeBase,
+    away: awayBase,
+    settings: input.settings,
+    ...evolutionContext,
+  })
+  if (evolution.trace.length > 0) input.onEvolutionTrace?.(game.id, evolution.trace)
 
+  // A missing immutable TeamDay is an authoritative zero exactly like the classic
+  // calculator: neither home advantage nor an Evolution rule may manufacture points.
+  const home = homeTeam?.players
+    ? addHomeAdvantage(evolution.home.point, input.settings.pointInHome)
+    : zeroPoint()
+  const away = awayTeam?.players ? evolution.away.point : zeroPoint()
   const result: GameResult = {
     home,
     away,
@@ -56,14 +87,18 @@ function calculateGame(
   return game
 }
 
-function calculatePoint(team: Team, input: DefinitiveDayCalculationInput): Point {
+function calculatePoint(team: Team, input: DefinitiveDayCalculationInput): TeamPointCalculation {
   return calculateTeamPoint({
     players: TeamHelper.getActivePlayers(team),
     officialVotes: input.officialVotes,
     liveVotes: null,
     leagueType: input.leagueType,
     settings: input.settings,
-  }).point
+  })
+}
+
+function zeroCalculation(): TeamPointCalculation {
+  return { point: zeroPoint(), formation: [] }
 }
 
 function addHomeAdvantage(point: Point, advantage: number): Point {

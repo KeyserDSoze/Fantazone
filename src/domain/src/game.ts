@@ -35,6 +35,7 @@ export interface GameWrapper {
   liveFormationDeadline: string | null
   liveFormationChangesAllowed: number
   allowLiveModuleChange: boolean
+  progressiveLineupLock: boolean
   requiresScoreCalculation: boolean
 }
 
