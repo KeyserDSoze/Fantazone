@@ -1,13 +1,26 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 import {
+  FantaSoccerRole,
   GroupHelper,
   LeagueType,
+  PlayerInTeamStatus,
+  advanceEvolutionPlayerSeasonState,
   calculateDefinitiveDay,
   calculateRankFromCalendar,
+  calculateTeamPoint,
+  createEvolutionPlayerSeasonState,
   getCurrentSeasonYear,
+  getEvolutionPlayerMatchState,
+  getPlayerKey,
+  getVerifiedEvolutionCardIds,
   progressLeagueCalendar,
+  resolveFantazoneEvolutionSettings,
   type Calendar,
+  type DefinitiveDayEvolutionGameContext,
+  type EvolutionPlayerSeasonState,
+  type EvolutionRuleTrace,
+  type EvolutionSeasonSkillDocument,
   type Group,
   type LeagueSetting,
   type Rank,
@@ -20,9 +33,16 @@ import {
   dailyRankDocumentPath,
   dayTeamDocumentPath,
   decodeVotedRealPlayers,
+  evolutionCardsPath,
+  evolutionPlayerStatePath,
+  evolutionSkillsPath,
+  evolutionTracePath,
   isGroupDocument,
   seasonRankDocumentPath,
   serieAVoteDocumentPath,
+  type EvolutionCardsDocument,
+  type EvolutionPlayerStateDocument,
+  type EvolutionTraceDocument,
 } from '@fantazone/github'
 
 export type GroupRecalculationOptions = {
@@ -79,6 +99,10 @@ async function recalculateGroup(
     if (!annual) continue
     const settings = annual.settings
     const leagueType = GroupHelper.getAnnualType(league, season)
+    const evolution = resolveFantazoneEvolutionSettings(settings)
+    const skillDocument = evolution.enabled && evolution.playerSkills.enabled
+      ? await readOptionalJson<EvolutionSeasonSkillDocument>(resolve(options.groupRepoRoot, evolutionSkillsPath(league.id, season)))
+      : null
     const candidateDays = uniqueSerieADays(calendar)
       .filter(day => options.requiredDay == null || day === options.requiredDay)
     if (options.requiredDay != null && !candidateDays.includes(options.requiredDay)) continue
@@ -95,12 +119,32 @@ async function recalculateGroup(
         continue
       }
 
+      const cards = evolution.enabled && evolution.coachCards.enabled
+        ? await readOptionalJson<EvolutionCardsDocument>(resolve(options.groupRepoRoot, evolutionCardsPath(league.id, season, serieADay)))
+        : null
+      const stateBefore = evolution.enabled
+        ? await rebuildEvolutionStatesForLeague(
+            options.groupRepoRoot,
+            options.platformRepoRoot,
+            group,
+            league.id,
+            season,
+            serieADay - 1,
+            settings,
+            leagueType,
+          )
+        : new Map<string, EvolutionPlayerStateDocument>()
+      const traces = new Map<string, EvolutionRuleTrace[]>()
       let changed = false
+
       for (const [roundKey, days] of Object.entries(calendar.rounds)) {
         for (let index = 0; index < days.length; index += 1) {
           const day = days[index]
           if (day.serieADay !== serieADay) continue
           const teamsByOwner = await loadTeamsForDay(options.groupRepoRoot, group, season, day)
+          const evolutionByGameId = evolution.enabled
+            ? buildEvolutionGameContexts(day, league.id, season, skillDocument, cards, stateBefore)
+            : undefined
           days[index] = calculateDefinitiveDay({
             day,
             teamsByOwner,
@@ -108,12 +152,36 @@ async function recalculateGroup(
             leagueType,
             settings,
             mode: 'force',
+            evolutionByGameId,
+            onEvolutionTrace: (gameId, trace) => traces.set(gameId, trace),
           })
           changed = true
         }
         calendar.rounds[roundKey] = days
       }
-      if (changed) calculatedSerieADays.push(serieADay)
+
+      if (changed) {
+        calculatedSerieADays.push(serieADay)
+        if (evolution.enabled) {
+          await writeEvolutionTraces(options.groupRepoRoot, league.id, season, serieADay, traces, options.now ?? new Date())
+          const stateAfter = await rebuildEvolutionStatesForLeague(
+            options.groupRepoRoot,
+            options.platformRepoRoot,
+            group,
+            league.id,
+            season,
+            serieADay,
+            settings,
+            leagueType,
+          )
+          for (const document of stateAfter.values()) {
+            await writeJson(
+              resolve(options.groupRepoRoot, evolutionPlayerStatePath(league.id, season, document.owner)),
+              document,
+            )
+          }
+        }
+      }
     }
 
     const excludedRounds = excludedRankRounds(leagueType)
@@ -145,6 +213,152 @@ async function recalculateGroup(
   }
 
   return { season, leagues: results }
+}
+
+function buildEvolutionGameContexts(
+  day: Calendar['rounds'][string][number],
+  leagueId: string,
+  season: number,
+  skills: EvolutionSeasonSkillDocument | null,
+  cards: EvolutionCardsDocument | null,
+  stateByOwner: Map<string, EvolutionPlayerStateDocument>,
+): Map<string, DefinitiveDayEvolutionGameContext> {
+  const result = new Map<string, DefinitiveDayEvolutionGameContext>()
+  for (const game of day.games) {
+    const homeOwner = normalizeOwner(game.homeOwner)
+    const awayOwner = normalizeOwner(game.awayOwner)
+    result.set(game.id, {
+      homeSkillAssignments: skills?.assignments ?? [],
+      awaySkillAssignments: skills?.assignments ?? [],
+      homeCards: revealedCardSelection(cards, leagueId, season, day.serieADay, game.homeOwner),
+      awayCards: revealedCardSelection(cards, leagueId, season, day.serieADay, game.awayOwner),
+      homePlayerState: playerMatchState(stateByOwner.get(homeOwner)),
+      awayPlayerState: playerMatchState(stateByOwner.get(awayOwner)),
+      seed: `${leagueId}:${season}:${day.serieADay}:${game.id}`,
+    })
+  }
+  return result
+}
+
+function revealedCardSelection(
+  cards: EvolutionCardsDocument | null,
+  leagueId: string,
+  year: number,
+  serieADay: number,
+  owner: string,
+) {
+  const sealed = cards?.commitments?.[normalizeOwner(owner)]
+  const cardIds = getVerifiedEvolutionCardIds(sealed, { leagueId, year, serieADay, owner })
+  if (!sealed || !sealed.reveal || !cardIds) return null
+  return {
+    cardIds,
+    selectedAt: sealed.committedAt,
+    lockedAt: sealed.lockedAt,
+    revealedAt: sealed.reveal.revealedAt,
+  }
+}
+
+function playerMatchState(document: EvolutionPlayerStateDocument | undefined) {
+  if (!document) return undefined
+  return Object.fromEntries(document.players.map(state => [state.playerKey, getEvolutionPlayerMatchState(state)]))
+}
+
+async function rebuildEvolutionStatesForLeague(
+  groupRepoRoot: string,
+  platformRepoRoot: string,
+  group: Group,
+  leagueId: string,
+  season: number,
+  throughSerieADay: number,
+  settings: LeagueSetting,
+  leagueType: LeagueType,
+): Promise<Map<string, EvolutionPlayerStateDocument>> {
+  const league = group.leagues.find(item => item.id === leagueId)
+  const owners = new Map<string, { owner: string; basketId: string }>()
+  for (const basketId of league?.basketsId ?? []) {
+    const yearly = group.baskets.find(item => item.id === basketId)?.years.find(item => item.year === season)
+    for (const team of yearly?.teams ?? []) owners.set(normalizeOwner(team.owner), { owner: team.owner, basketId })
+  }
+
+  const states = new Map<string, Map<string, EvolutionPlayerSeasonState>>()
+  for (const owner of owners.keys()) states.set(owner, new Map())
+  if (throughSerieADay <= 0) {
+    return new Map([...owners].map(([key, value]) => [key, stateDocument(leagueId, season, value.owner, 0, states.get(key)!)]))
+  }
+
+  for (let day = 1; day <= Math.min(38, throughSerieADay); day += 1) {
+    const votes = await readOfficialVotes(platformRepoRoot, season, day)
+    if (!votes) continue
+    for (const [ownerKey, owner] of owners) {
+      const team = await readOptionalJson<Team>(resolve(groupRepoRoot, dayTeamDocumentPath(owner.basketId, season, day, owner.owner)))
+      if (!team) continue
+      const calculation = calculateTeamPoint({
+        players: team.players.filter(player => player.status === PlayerInTeamStatus.Active),
+        officialVotes: votes,
+        liveVotes: null,
+        leagueType,
+        settings,
+      })
+      const resolvedByKey = new Map(calculation.formation.map(player => [getPlayerKey(player.current.name), player] as const))
+      const ownerStates = states.get(ownerKey)!
+      for (const player of team.players.filter(item => item.status === PlayerInTeamStatus.Active)) {
+        const key = getPlayerKey(player.name)
+        if (!key) continue
+        const resolved = resolvedByKey.get(key)
+        const played = Boolean(resolved?.vote?.hasVote && resolved.currentPosition >= FantaSoccerRole.GoalKeeper && resolved.currentPosition <= FantaSoccerRole.Forward)
+        const originallyStarter = player.position >= FantaSoccerRole.GoalKeeper && player.position <= FantaSoccerRole.Forward
+        const usage = played
+          ? (originallyStarter ? 'starter' : 'subbed-in')
+          : player.position === FantaSoccerRole.Tribune ? 'tribune' : 'bench-unused'
+        const previous = ownerStates.get(key) ?? createEvolutionPlayerSeasonState(key)
+        ownerStates.set(key, advanceEvolutionPlayerSeasonState(previous, usage, resolved?.vote, settings))
+      }
+    }
+  }
+
+  return new Map([...owners].map(([key, value]) => [
+    key,
+    stateDocument(leagueId, season, value.owner, Math.min(38, throughSerieADay), states.get(key)!),
+  ]))
+}
+
+function stateDocument(
+  leagueId: string,
+  year: number,
+  owner: string,
+  updatedThroughDay: number,
+  states: Map<string, EvolutionPlayerSeasonState>,
+): EvolutionPlayerStateDocument {
+  return {
+    version: 1,
+    leagueId,
+    year,
+    owner,
+    updatedThroughDay,
+    players: [...states.values()].sort((a, b) => a.playerKey.localeCompare(b.playerKey)),
+  }
+}
+
+async function writeEvolutionTraces(
+  groupRepoRoot: string,
+  leagueId: string,
+  year: number,
+  serieADay: number,
+  traces: Map<string, EvolutionRuleTrace[]>,
+  calculatedAt: Date,
+): Promise<void> {
+  for (const [gameId, trace] of traces) {
+    const document: EvolutionTraceDocument = {
+      version: 1,
+      leagueId,
+      year,
+      serieADay,
+      gameId,
+      calculatedAt: calculatedAt.toISOString(),
+      trace,
+    }
+    await writeJson(resolve(groupRepoRoot, evolutionTracePath(leagueId, year, serieADay, gameId)), document)
+  }
 }
 
 async function loadTeamsForDay(
@@ -259,6 +473,10 @@ async function writeJson(path: string, value: unknown): Promise<void> {
 
 function assertSeason(season: number): void {
   if (!Number.isInteger(season) || season < 1) throw new Error('Season must be a positive integer')
+}
+
+function normalizeOwner(value: string): string {
+  return value.trim().toLowerCase()
 }
 
 function isFileNotFound(error: unknown): boolean {
