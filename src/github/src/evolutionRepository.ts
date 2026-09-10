@@ -2,6 +2,7 @@ import type {
   EvolutionCardCommitment,
   EvolutionPlayerSeasonState,
   EvolutionRuleTrace,
+  EvolutionSeasonCoachDeckDocument,
   EvolutionSeasonSkillDocument,
 } from '@fantazone/domain'
 import {
@@ -74,6 +75,33 @@ export class GitHubEvolutionRepository {
   ): Promise<string> {
     validateSeasonDocument(document, year)
     return (await this.store.writeJson(this.location(evolutionSkillsPath(leagueId, year)), document, message, options)).sha
+  }
+
+  async getCoachDeck(
+    leagueId: string,
+    year: number,
+    options: RepositoryJsonReadOptions = {},
+  ): Promise<EvolutionSeasonCoachDeckDocument | null> {
+    return (await this.getCoachDeckSnapshot(leagueId, year, options))?.value ?? null
+  }
+
+  async getCoachDeckSnapshot(
+    leagueId: string,
+    year: number,
+    options: RepositoryJsonReadOptions = {},
+  ): Promise<RepositoryJsonSnapshot<EvolutionSeasonCoachDeckDocument> | null> {
+    return this.store.tryReadJson<EvolutionSeasonCoachDeckDocument>(this.location(evolutionCoachDeckPath(leagueId, year)), options)
+  }
+
+  async writeCoachDeck(
+    leagueId: string,
+    year: number,
+    document: EvolutionSeasonCoachDeckDocument,
+    message = 'feat: initialize Evolution coach decks',
+    options: RepositoryJsonWriteOptions = {},
+  ): Promise<string> {
+    validateCoachDeckDocument(document, leagueId, year)
+    return (await this.store.writeJson(this.location(evolutionCoachDeckPath(leagueId, year)), document, message, options)).sha
   }
 
   async getCards(
@@ -179,6 +207,11 @@ export function evolutionSkillsPath(leagueId: string, year: number): string {
   return `data/groups/seasons/${year}/evolution/${encodeURIComponent(leagueId.trim())}/skills.json`
 }
 
+export function evolutionCoachDeckPath(leagueId: string, year: number): string {
+  validateLeagueSeason(leagueId, year)
+  return `data/groups/seasons/${year}/evolution/${encodeURIComponent(leagueId.trim())}/coach-decks.json`
+}
+
 export function evolutionCardsPath(leagueId: string, year: number, serieADay: number): string {
   validateLeagueSeason(leagueId, year)
   validateDay(serieADay)
@@ -201,6 +234,26 @@ export function evolutionTracePath(leagueId: string, year: number, serieADay: nu
 function validateSeasonDocument(document: EvolutionSeasonSkillDocument, year: number): void {
   if (document.version !== 1 || document.year !== year || !document.seed.trim() || !Array.isArray(document.assignments)) {
     throw new Error('Invalid Evolution seasonal skill document')
+  }
+}
+
+function validateCoachDeckDocument(document: EvolutionSeasonCoachDeckDocument, leagueId: string, year: number): void {
+  if (document.version !== 1 || document.leagueId !== leagueId || document.year !== year || !document.seed.trim() || !Number.isFinite(Date.parse(document.generatedAt)) || !Array.isArray(document.decks)) {
+    throw new Error('Invalid Evolution coach-deck document')
+  }
+  const owners = new Set<string>()
+  for (const deck of document.decks) {
+    const owner = normalizeOwner(deck.owner)
+    validateOwner(owner)
+    if (owners.has(owner) || !Array.isArray(deck.cards)) throw new Error(`Invalid duplicate Evolution coach deck for ${owner}`)
+    owners.add(owner)
+    const cards = new Set<string>()
+    for (const card of deck.cards) {
+      if (!card.cardId?.trim() || cards.has(card.cardId) || !Number.isInteger(card.quantity) || card.quantity < 1) {
+        throw new Error(`Invalid Evolution coach-deck card for ${owner}`)
+      }
+      cards.add(card.cardId)
+    }
   }
 }
 
