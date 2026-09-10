@@ -125,7 +125,12 @@ export class GroupEvolutionCardService {
     const { settings, day, owner } = await this.authorize({ ...input, cardIds: [] })
     const evolution = resolveFantazoneEvolutionSettings(settings)
     if (!evolution.enabled || !evolution.coachCards.enabled) throw new Error('Le carte Fantazone Evolution non sono abilitate in questa lega.')
-    const canReveal = !evolution.coachCards.revealAtFirstKickoff || shouldRevealEvolutionCards(day, settings, this.now())
+    const now = this.now()
+    const deadline = cardRevealDeadline(day, evolution.coachCards.revealGraceSecondsAfterFirstKickoff)
+    if (deadline && now.getTime() > deadline.getTime()) {
+      throw new Error('La finestra di reveal delle carte Evolution è scaduta: la scelta è forfeited e non può più influire sul risultato.')
+    }
+    const canReveal = !evolution.coachCards.revealAtFirstKickoff || shouldRevealEvolutionCards(day, settings, now)
     if (!canReveal) throw new Error('Le carte restano sigillate fino al calcio d’inizio della giornata.')
 
     const secret = await readEvolutionCardSecret(
@@ -158,7 +163,7 @@ export class GroupEvolutionCardService {
         owner,
         cardIds: secret.cardIds,
         nonce: secret.nonce,
-        revealedAt: this.now().toISOString(),
+        revealedAt: now.toISOString(),
       })
       const document: EvolutionCardsDocument = {
         ...snapshot.value,
@@ -191,9 +196,21 @@ export class GroupEvolutionCardService {
       input.owner,
     )
     if (!secret) return null
-    const { settings, day } = await this.authorize({ ...input, cardIds: [] })
+    const { settings, day, owner } = await this.authorize({ ...input, cardIds: [] })
     const evolution = resolveFantazoneEvolutionSettings(settings)
-    if (evolution.coachCards.revealAtFirstKickoff && !shouldRevealEvolutionCards(day, settings, this.now())) return null
+    const now = this.now()
+    const deadline = cardRevealDeadline(day, evolution.coachCards.revealGraceSecondsAfterFirstKickoff)
+    if (deadline && now.getTime() > deadline.getTime()) {
+      await deleteEvolutionCardSecret(
+        this.runtime.connection.repository.full_name,
+        input.leagueId,
+        input.season,
+        input.serieADay,
+        owner,
+      )
+      throw new Error('La finestra di reveal Evolution è scaduta: la carta è forfeited.')
+    }
+    if (evolution.coachCards.revealAtFirstKickoff && !shouldRevealEvolutionCards(day, settings, now)) return null
     return this.revealCards(input)
   }
 
@@ -219,22 +236,25 @@ export class GroupEvolutionCardService {
           owner,
         )
         if (localSecret) {
-          await this.revealCards({ ...input, serieADay: day, owner })
-          document = await this.runtime.evolutionRepository.getCards(input.leagueId, input.season, day, { refresh: true })
-          sealed = document?.commitments[normalize(owner)]
+          try {
+            await this.revealCards({ ...input, serieADay: day, owner })
+            document = await this.runtime.evolutionRepository.getCards(input.leagueId, input.season, day, { refresh: true })
+            sealed = document?.commitments[normalize(owner)]
+          } catch {
+            // A past card that can no longer be revealed is forfeited. It must not block
+            // future matchdays or consume a valid copy from the deck.
+          }
         }
       }
 
-      if (!sealed?.reveal) {
-        throw new Error(`Prima di scegliere nuove carte devi completare il reveal della giornata ${day}.`)
-      }
+      if (!sealed?.reveal) continue
       const verified = getVerifiedEvolutionCardIds(sealed, {
         leagueId: input.leagueId,
         year: input.season,
         serieADay: day,
         owner,
       })
-      if (!verified) throw new Error(`Il reveal Evolution della giornata ${day} non è valido.`)
+      if (!verified) continue
       const authorized = getAuthorizedEvolutionCardIds({
         sealed,
         leagueId: input.leagueId,
@@ -371,6 +391,11 @@ function firstKickoff(day: RealDay): Date | null {
 function cardLockAt(day: RealDay, minutesBefore: number): Date | null {
   const first = firstKickoff(day)
   return first ? new Date(first.getTime() - Math.max(0, minutesBefore) * 60_000) : null
+}
+
+function cardRevealDeadline(day: RealDay, graceSeconds: number): Date | null {
+  const first = firstKickoff(day)
+  return first ? new Date(first.getTime() + Math.max(0, graceSeconds) * 1_000) : null
 }
 
 function normalize(value: string | null | undefined): string {
