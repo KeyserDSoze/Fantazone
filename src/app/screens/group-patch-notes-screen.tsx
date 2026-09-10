@@ -15,6 +15,17 @@ const releases: Release[] = [
   {
     version: APP_VERSION,
     date: RELEASE_DATE,
+    title: 'Manifest GitHub auto-riparante e scritture più sicure',
+    items: [
+      { category: 'Fix', text: 'Un manifest.json rimasto bloccato con updating=true dopo una scrittura interrotta non mantiene più il gruppo in sincronizzazione conservativa per sempre: dopo cinque minuti viene riconosciuto come abbandonato e riparato automaticamente.' },
+      { category: 'Architettura', text: 'La riparazione del manifest usa sempre lo SHA corrente e, in caso di conflitto, rilegge lo stato da GitHub prima di decidere: una revisione più nuova e ancora realmente in corso non viene mai chiusa da un tentativo nato su uno stato vecchio.' },
+      { category: 'Fix', text: 'La chiusura di una revisione ricorda ora quale fase di aggiornamento aveva aperto: se nel frattempo compare una revisione più nuova, il writer precedente non può dichiararla stabile per errore.' },
+      { category: 'Miglioria', text: 'Le scritture applicative vedono un marker updating fresco come un lock cooperativo e attendono invece di sovrapporre una seconda transizione, riducendo race e falsi stati stabili senza introdurre un backend.' },
+    ],
+  },
+  {
+    version: '0.3.7',
+    date: '10 settembre 2026',
     title: 'Classifica Serie A derivata e live più completo',
     items: [
       { category: 'Nuovo', text: 'La schermata Live mostra ora anche la classifica completa della Serie A con giocate, vittorie, pareggi, sconfitte, gol fatti/subiti, differenza reti e punti.' },
