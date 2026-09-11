@@ -26731,6 +26731,51 @@
           "positiveness": -2
         }
       ]
+    },
+    {
+      "name": "Libra",
+      "team": {
+        "name": "Bologna",
+        "abbreviation": "bol"
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true,
+      "summatory": 6,
+      "fantaSummatory": 6,
+      "withVote": 1,
+      "withoutVote": 0,
+      "noPlayed": 2,
+      "withSpecial": 0,
+      "goals": 0,
+      "penalties": 0,
+      "assists": 0,
+      "stoppedPenalties": 0,
+      "sufferedGoals": 0,
+      "wrongedPenalties": 0,
+      "ownGoals": 0,
+      "yellowCards": 0,
+      "redCards": 0,
+      "enoughVotes": 1,
+      "manOfTheMatch": 0,
+      "injured": 0,
+      "games": [
+        {
+          "serieADay": 3,
+          "vote": 6,
+          "positiveness": 0
+        },
+        {
+          "serieADay": 2,
+          "vote": null,
+          "positiveness": -2
+        },
+        {
+          "serieADay": 1,
+          "vote": null,
+          "positiveness": -2
+        }
+      ]
     }
   ]
 }
