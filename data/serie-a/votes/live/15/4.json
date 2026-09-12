@@ -2085,7 +2085,7 @@
       "visible": true,
       "vote": {
         "role": 0,
-        "value": 6,
+        "value": 6.5,
         "isFinal": false,
         "goal": 0,
         "penalty": 0,
@@ -2459,7 +2459,7 @@
         "wrongedPenalty": 0,
         "ownGoal": 0,
         "status": 0,
-        "manOfTheMatch": false,
+        "manOfTheMatch": true,
         "hasVote": true,
         "isOut": false,
         "isIn": true,
