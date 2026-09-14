@@ -6297,7 +6297,7 @@
         "status": 0,
         "manOfTheMatch": false,
         "hasVote": true,
-        "isOut": false,
+        "isOut": true,
         "isIn": false,
         "injured": false
       }
@@ -6373,7 +6373,7 @@
         "isFinal": false,
         "goal": 0,
         "penalty": 0,
-        "assist": 0,
+        "assist": 1,
         "stoppedPenalty": 0,
         "sufferedGoal": 0,
         "wrongedPenalty": 0,
@@ -6425,7 +6425,7 @@
       "visible": true,
       "vote": {
         "role": 1,
-        "value": 7,
+        "value": 7.5,
         "isFinal": false,
         "goal": 1,
         "penalty": 0,
@@ -6453,9 +6453,9 @@
       "visible": true,
       "vote": {
         "role": 3,
-        "value": 6.5,
+        "value": 7,
         "isFinal": false,
-        "goal": 0,
+        "goal": 1,
         "penalty": 0,
         "assist": 0,
         "stoppedPenalty": 0,
@@ -6493,7 +6493,7 @@
         "status": 0,
         "manOfTheMatch": false,
         "hasVote": true,
-        "isOut": false,
+        "isOut": true,
         "isIn": false,
         "injured": false
       }
@@ -6515,7 +6515,7 @@
         "penalty": 0,
         "assist": 0,
         "stoppedPenalty": 0,
-        "sufferedGoal": 4,
+        "sufferedGoal": 5,
         "wrongedPenalty": 0,
         "ownGoal": 0,
         "status": 0,
@@ -6537,7 +6537,7 @@
       "visible": true,
       "vote": {
         "role": 1,
-        "value": 6.5,
+        "value": 6,
         "isFinal": false,
         "goal": 1,
         "penalty": 0,
@@ -6565,7 +6565,7 @@
       "visible": true,
       "vote": {
         "role": 1,
-        "value": 5.5,
+        "value": 4.5,
         "isFinal": false,
         "goal": 0,
         "penalty": 0,
@@ -6633,7 +6633,7 @@
         "status": 0,
         "manOfTheMatch": false,
         "hasVote": true,
-        "isOut": false,
+        "isOut": true,
         "isIn": false,
         "injured": false
       }
@@ -6649,7 +6649,7 @@
       "visible": true,
       "vote": {
         "role": 2,
-        "value": 5.5,
+        "value": 5,
         "isFinal": false,
         "goal": 0,
         "penalty": 0,
@@ -6689,7 +6689,7 @@
         "status": 0,
         "manOfTheMatch": false,
         "hasVote": true,
-        "isOut": false,
+        "isOut": true,
         "isIn": false,
         "injured": false
       }
@@ -6705,7 +6705,7 @@
       "visible": true,
       "vote": {
         "role": 1,
-        "value": 5.5,
+        "value": 5,
         "isFinal": false,
         "goal": 0,
         "penalty": 0,
@@ -6761,7 +6761,7 @@
       "visible": true,
       "vote": {
         "role": 2,
-        "value": 7,
+        "value": 6.5,
         "isFinal": false,
         "goal": 1,
         "penalty": 0,
@@ -8609,7 +8609,7 @@
       "visible": true,
       "vote": {
         "role": 2,
-        "value": 6,
+        "value": 6.5,
         "isFinal": false,
         "goal": 0,
         "penalty": 0,
@@ -8665,7 +8665,119 @@
       "visible": true,
       "vote": {
         "role": 3,
+        "value": 5.5,
+        "isFinal": false,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": true,
+        "injured": false
+      }
+    },
+    {
+      "name": "Bonny",
+      "team": {
+        "name": "Inter",
+        "abbreviation": "int"
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 3,
+        "value": 7,
+        "isFinal": false,
+        "goal": 1,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": true,
+        "injured": false
+      }
+    },
+    {
+      "name": "Dimarco",
+      "team": {
+        "name": "Inter",
+        "abbreviation": "int"
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 1,
         "value": 6,
+        "isFinal": false,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": true,
+        "injured": false
+      }
+    },
+    {
+      "name": "Chakvetadze",
+      "team": {
+        "name": "Udinese",
+        "abbreviation": "udi"
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 2,
+        "value": 5.5,
+        "isFinal": false,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": true,
+        "injured": false
+      }
+    },
+    {
+      "name": "Bertola",
+      "team": {
+        "name": "Udinese",
+        "abbreviation": "udi"
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 1,
+        "value": 5.5,
         "isFinal": false,
         "goal": 0,
         "penalty": 0,
