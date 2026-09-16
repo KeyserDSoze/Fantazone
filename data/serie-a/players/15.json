@@ -22,6 +22,16 @@
       "visible": true
     },
     {
+      "name": "Paz N.",
+      "team": {
+        "name": "Como",
+        "abbreviation": "com"
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
       "name": "Dimarco",
       "team": {
         "name": "Inter",
@@ -32,12 +42,12 @@
       "visible": true
     },
     {
-      "name": "Paz N.",
+      "name": "Thuram",
       "team": {
-        "name": "Como",
-        "abbreviation": "com"
+        "name": "Inter",
+        "abbreviation": "int"
       },
-      "role": 2,
+      "role": 3,
       "isActive": true,
       "visible": true
     },
@@ -58,16 +68,6 @@
         "abbreviation": "int"
       },
       "role": 2,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "Thuram",
-      "team": {
-        "name": "Inter",
-        "abbreviation": "int"
-      },
-      "role": 3,
       "isActive": true,
       "visible": true
     },
@@ -132,16 +132,6 @@
       "visible": true
     },
     {
-      "name": "Woltemade",
-      "team": {
-        "name": "Juventus",
-        "abbreviation": "juv"
-      },
-      "role": 3,
-      "isActive": true,
-      "visible": true
-    },
-    {
       "name": "Rabiot",
       "team": {
         "name": "Milan",
@@ -152,12 +142,12 @@
       "visible": true
     },
     {
-      "name": "Baturina",
+      "name": "Woltemade",
       "team": {
-        "name": "Como",
-        "abbreviation": "com"
+        "name": "Juventus",
+        "abbreviation": "juv"
       },
-      "role": 2,
+      "role": 3,
       "isActive": true,
       "visible": true
     },
@@ -182,16 +172,6 @@
       "visible": true
     },
     {
-      "name": "Mora",
-      "team": {
-        "name": "Roma",
-        "abbreviation": "rom"
-      },
-      "role": 2,
-      "isActive": true,
-      "visible": true
-    },
-    {
       "name": "Scamacca",
       "team": {
         "name": "Atalanta",
@@ -202,37 +182,7 @@
       "visible": true
     },
     {
-      "name": "Berardi",
-      "team": {
-        "name": "Sassuolo",
-        "abbreviation": "sas"
-      },
-      "role": 3,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "Davis K.",
-      "team": {
-        "name": "Udinese",
-        "abbreviation": "udi"
-      },
-      "role": 3,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "Krstovic",
-      "team": {
-        "name": "Atalanta",
-        "abbreviation": "ata"
-      },
-      "role": 3,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "Da Cunha",
+      "name": "Baturina",
       "team": {
         "name": "Como",
         "abbreviation": "com"
@@ -242,12 +192,12 @@
       "visible": true
     },
     {
-      "name": "Leao",
+      "name": "Mora",
       "team": {
-        "name": "Milan",
-        "abbreviation": "mil"
+        "name": "Roma",
+        "abbreviation": "rom"
       },
-      "role": 3,
+      "role": 2,
       "isActive": true,
       "visible": true
     },
@@ -262,52 +212,22 @@
       "visible": true
     },
     {
-      "name": "Wesley",
+      "name": "Davis K.",
       "team": {
-        "name": "Roma",
-        "abbreviation": "rom"
-      },
-      "role": 1,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "Molina N.",
-      "team": {
-        "name": "Roma",
-        "abbreviation": "rom"
-      },
-      "role": 1,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "Carnesecchi",
-      "team": {
-        "name": "Atalanta",
-        "abbreviation": "ata"
-      },
-      "role": 0,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "De Ketelaere",
-      "team": {
-        "name": "Atalanta",
-        "abbreviation": "ata"
+        "name": "Udinese",
+        "abbreviation": "udi"
       },
       "role": 3,
       "isActive": true,
       "visible": true
     },
     {
-      "name": "Martinez Jo.",
+      "name": "Da Cunha",
       "team": {
-        "name": "Inter",
-        "abbreviation": "int"
+        "name": "Como",
+        "abbreviation": "com"
       },
-      "role": 0,
+      "role": 2,
       "isActive": true,
       "visible": true
     },
@@ -326,6 +246,56 @@
       "team": {
         "name": "Inter",
         "abbreviation": "int"
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Leao",
+      "team": {
+        "name": "Milan",
+        "abbreviation": "mil"
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Wesley",
+      "team": {
+        "name": "Roma",
+        "abbreviation": "rom"
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Berardi",
+      "team": {
+        "name": "Sassuolo",
+        "abbreviation": "sas"
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Molina N.",
+      "team": {
+        "name": "Roma",
+        "abbreviation": "rom"
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Krstovic",
+      "team": {
+        "name": "Atalanta",
+        "abbreviation": "ata"
       },
       "role": 3,
       "isActive": true,
@@ -352,12 +322,52 @@
       "visible": true
     },
     {
+      "name": "Carnesecchi",
+      "team": {
+        "name": "Atalanta",
+        "abbreviation": "ata"
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "De Ketelaere",
+      "team": {
+        "name": "Atalanta",
+        "abbreviation": "ata"
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
       "name": "Dovbyk",
       "team": {
         "name": "Bologna",
         "abbreviation": "bol"
       },
       "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Atta",
+      "team": {
+        "name": "Fiorentina",
+        "abbreviation": "fio"
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Martinez Jo.",
+      "team": {
+        "name": "Inter",
+        "abbreviation": "int"
+      },
+      "role": 0,
       "isActive": true,
       "visible": true
     },
@@ -392,10 +402,30 @@
       "visible": true
     },
     {
+      "name": "Pellegrino M.",
+      "team": {
+        "name": "Fiorentina",
+        "abbreviation": "fio"
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
       "name": "Dybala",
       "team": {
         "name": "Roma",
         "abbreviation": "rom"
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Laurientè",
+      "team": {
+        "name": "Sassuolo",
+        "abbreviation": "sas"
       },
       "role": 3,
       "isActive": true,
@@ -422,32 +452,12 @@
       "visible": true
     },
     {
-      "name": "Atta",
-      "team": {
-        "name": "Fiorentina",
-        "abbreviation": "fio"
-      },
-      "role": 2,
-      "isActive": true,
-      "visible": true
-    },
-    {
       "name": "Akanji",
       "team": {
         "name": "Inter",
         "abbreviation": "int"
       },
       "role": 1,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "Maignan",
-      "team": {
-        "name": "Milan",
-        "abbreviation": "mil"
-      },
-      "role": 0,
       "isActive": true,
       "visible": true
     },
@@ -466,16 +476,6 @@
       "team": {
         "name": "Roma",
         "abbreviation": "rom"
-      },
-      "role": 3,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "Laurientè",
-      "team": {
-        "name": "Sassuolo",
-        "abbreviation": "sas"
       },
       "role": 3,
       "isActive": true,
@@ -502,22 +502,12 @@
       "visible": true
     },
     {
-      "name": "Kalulu",
-      "team": {
-        "name": "Juventus",
-        "abbreviation": "juv"
-      },
-      "role": 1,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "Pavlovic",
+      "name": "Maignan",
       "team": {
         "name": "Milan",
         "abbreviation": "mil"
       },
-      "role": 1,
+      "role": 0,
       "isActive": true,
       "visible": true
     },
@@ -536,16 +526,6 @@
       "team": {
         "name": "Napoli",
         "abbreviation": "nap"
-      },
-      "role": 3,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "Pellegrino M.",
-      "team": {
-        "name": "Fiorentina",
-        "abbreviation": "fio"
       },
       "role": 3,
       "isActive": true,
@@ -572,22 +552,22 @@
       "visible": true
     },
     {
+      "name": "Mastantuono",
+      "team": {
+        "name": "Fiorentina",
+        "abbreviation": "fio"
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
       "name": "Beto",
       "team": {
         "name": "Fiorentina",
         "abbreviation": "fio"
       },
       "role": 3,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "Ederson D.S.",
-      "team": {
-        "name": "Atalanta",
-        "abbreviation": "ata"
-      },
-      "role": 2,
       "isActive": true,
       "visible": true
     },
@@ -612,6 +592,16 @@
       "visible": true
     },
     {
+      "name": "Esposito Se.",
+      "team": {
+        "name": "Sassuolo",
+        "abbreviation": "sas"
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
       "name": "Gudmundsson A.",
       "team": {
         "name": "Lazio",
@@ -622,10 +612,20 @@
       "visible": true
     },
     {
-      "name": "Bisseck",
+      "name": "Zielinski",
       "team": {
         "name": "Inter",
         "abbreviation": "int"
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Kalulu",
+      "team": {
+        "name": "Juventus",
+        "abbreviation": "juv"
       },
       "role": 1,
       "isActive": true,
@@ -652,7 +652,7 @@
       "visible": true
     },
     {
-      "name": "Gila",
+      "name": "Pavlovic",
       "team": {
         "name": "Milan",
         "abbreviation": "mil"
@@ -672,22 +672,32 @@
       "visible": true
     },
     {
-      "name": "Vlasic",
-      "team": {
-        "name": "Torino",
-        "abbreviation": "tor"
-      },
-      "role": 2,
-      "isActive": true,
-      "visible": true
-    },
-    {
       "name": "Solet",
       "team": {
         "name": "Udinese",
         "abbreviation": "udi"
       },
       "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Ekkelenkamp",
+      "team": {
+        "name": "Udinese",
+        "abbreviation": "udi"
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Moreira",
+      "team": {
+        "name": "Milan",
+        "abbreviation": "mil"
+      },
+      "role": 2,
       "isActive": true,
       "visible": true
     },
@@ -702,12 +712,32 @@
       "visible": true
     },
     {
-      "name": "Esposito Se.",
+      "name": "Ederson D.S.",
       "team": {
-        "name": "Sassuolo",
-        "abbreviation": "sas"
+        "name": "Atalanta",
+        "abbreviation": "ata"
       },
-      "role": 3,
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Ramon",
+      "team": {
+        "name": "Como",
+        "abbreviation": "com"
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Bisseck",
+      "team": {
+        "name": "Inter",
+        "abbreviation": "int"
+      },
+      "role": 1,
       "isActive": true,
       "visible": true
     },
@@ -722,12 +752,12 @@
       "visible": true
     },
     {
-      "name": "Zielinski",
+      "name": "Gila",
       "team": {
-        "name": "Inter",
-        "abbreviation": "int"
+        "name": "Milan",
+        "abbreviation": "mil"
       },
-      "role": 2,
+      "role": 1,
       "isActive": true,
       "visible": true
     },
@@ -752,16 +782,6 @@
       "visible": true
     },
     {
-      "name": "Hermoso",
-      "team": {
-        "name": "Roma",
-        "abbreviation": "rom"
-      },
-      "role": 1,
-      "isActive": true,
-      "visible": true
-    },
-    {
       "name": "N'Dicka",
       "team": {
         "name": "Roma",
@@ -772,40 +792,20 @@
       "visible": true
     },
     {
-      "name": "Pinamonti",
-      "team": {
-        "name": "Lazio",
-        "abbreviation": "laz"
-      },
-      "role": 3,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "Adams C.",
+      "name": "Vlasic",
       "team": {
         "name": "Torino",
         "abbreviation": "tor"
-      },
-      "role": 3,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "Ekkelenkamp",
-      "team": {
-        "name": "Udinese",
-        "abbreviation": "udi"
       },
       "role": 2,
       "isActive": true,
       "visible": true
     },
     {
-      "name": "Kevin Carlos",
+      "name": "Adams A.",
       "team": {
-        "name": "Cagliari",
-        "abbreviation": "cag"
+        "name": "Venezia",
+        "abbreviation": "ven"
       },
       "role": 3,
       "isActive": true,
@@ -818,36 +818,6 @@
         "abbreviation": "int"
       },
       "role": 2,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "Kessiè",
-      "team": {
-        "name": "Atalanta",
-        "abbreviation": "ata"
-      },
-      "role": 2,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "Goncalves P.",
-      "team": {
-        "name": "Fiorentina",
-        "abbreviation": "fio"
-      },
-      "role": 2,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "Scalvini",
-      "team": {
-        "name": "Atalanta",
-        "abbreviation": "ata"
-      },
-      "role": 1,
       "isActive": true,
       "visible": true
     },
@@ -902,16 +872,6 @@
       "visible": true
     },
     {
-      "name": "Colombo",
-      "team": {
-        "name": "Genoa",
-        "abbreviation": "gen"
-      },
-      "role": 3,
-      "isActive": true,
-      "visible": true
-    },
-    {
       "name": "Frattesi",
       "team": {
         "name": "Lazio",
@@ -942,47 +902,57 @@
       "visible": true
     },
     {
-      "name": "Saelemaekers",
+      "name": "Hermoso",
       "team": {
-        "name": "Milan",
-        "abbreviation": "mil"
+        "name": "Roma",
+        "abbreviation": "rom"
       },
-      "role": 2,
+      "role": 1,
       "isActive": true,
       "visible": true
     },
     {
-      "name": "Meret",
+      "name": "Bowie",
       "team": {
-        "name": "Napoli",
-        "abbreviation": "nap"
-      },
-      "role": 0,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "Adams A.",
-      "team": {
-        "name": "Venezia",
-        "abbreviation": "ven"
+        "name": "Sassuolo",
+        "abbreviation": "sas"
       },
       "role": 3,
       "isActive": true,
       "visible": true
     },
     {
-      "name": "Mastantuono",
+      "name": "Pinamonti",
       "team": {
-        "name": "Fiorentina",
-        "abbreviation": "fio"
+        "name": "Lazio",
+        "abbreviation": "laz"
       },
-      "role": 2,
+      "role": 3,
       "isActive": true,
       "visible": true
     },
     {
-      "name": "Tourè E.",
+      "name": "Adams C.",
+      "team": {
+        "name": "Torino",
+        "abbreviation": "tor"
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Kevin Carlos",
+      "team": {
+        "name": "Cagliari",
+        "abbreviation": "cag"
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Romero D.",
       "team": {
         "name": "Parma",
         "abbreviation": "par"
@@ -1002,12 +972,32 @@
       "visible": true
     },
     {
-      "name": "Moreira",
+      "name": "Kessiè",
       "team": {
-        "name": "Milan",
-        "abbreviation": "mil"
+        "name": "Atalanta",
+        "abbreviation": "ata"
       },
       "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Goncalves P.",
+      "team": {
+        "name": "Fiorentina",
+        "abbreviation": "fio"
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Scalvini",
+      "team": {
+        "name": "Atalanta",
+        "abbreviation": "ata"
+      },
+      "role": 1,
       "isActive": true,
       "visible": true
     },
@@ -1042,16 +1032,6 @@
       "visible": true
     },
     {
-      "name": "Ramon",
-      "team": {
-        "name": "Como",
-        "abbreviation": "com"
-      },
-      "role": 1,
-      "isActive": true,
-      "visible": true
-    },
-    {
       "name": "De Gea",
       "team": {
         "name": "Fiorentina",
@@ -1082,12 +1062,72 @@
       "visible": true
     },
     {
+      "name": "Colombo",
+      "team": {
+        "name": "Genoa",
+        "abbreviation": "gen"
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Diouf",
+      "team": {
+        "name": "Inter",
+        "abbreviation": "int"
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Cancellieri",
+      "team": {
+        "name": "Lazio",
+        "abbreviation": "laz"
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
       "name": "Dia",
       "team": {
         "name": "Lazio",
         "abbreviation": "laz"
       },
       "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Saelemaekers",
+      "team": {
+        "name": "Milan",
+        "abbreviation": "mil"
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Meret",
+      "team": {
+        "name": "Napoli",
+        "abbreviation": "nap"
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Lobotka",
+      "team": {
+        "name": "Napoli",
+        "abbreviation": "nap"
+      },
+      "role": 2,
       "isActive": true,
       "visible": true
     },
@@ -1142,30 +1182,20 @@
       "visible": true
     },
     {
-      "name": "Bowie",
+      "name": "Yeboah J.",
       "team": {
-        "name": "Sassuolo",
-        "abbreviation": "sas"
+        "name": "Venezia",
+        "abbreviation": "ven"
       },
       "role": 3,
       "isActive": true,
       "visible": true
     },
     {
-      "name": "Kamara H.",
+      "name": "Tourè E.",
       "team": {
-        "name": "Udinese",
-        "abbreviation": "udi"
-      },
-      "role": 1,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "Yeboah J.",
-      "team": {
-        "name": "Venezia",
-        "abbreviation": "ven"
+        "name": "Parma",
+        "abbreviation": "par"
       },
       "role": 3,
       "isActive": true,
@@ -1182,22 +1212,12 @@
       "visible": true
     },
     {
-      "name": "Romero D.",
+      "name": "Maldini",
       "team": {
-        "name": "Parma",
-        "abbreviation": "par"
+        "name": "Cagliari",
+        "abbreviation": "cag"
       },
       "role": 3,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "Miranda J.",
-      "team": {
-        "name": "Bologna",
-        "abbreviation": "bol"
-      },
-      "role": 1,
       "isActive": true,
       "visible": true
     },
@@ -1222,7 +1242,27 @@
       "visible": true
     },
     {
+      "name": "Calò",
+      "team": {
+        "name": "Frosinone",
+        "abbreviation": "fro"
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
       "name": "Ghedjemis",
+      "team": {
+        "name": "Frosinone",
+        "abbreviation": "fro"
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Kvernadze",
       "team": {
         "name": "Frosinone",
         "abbreviation": "fro"
@@ -1242,22 +1282,12 @@
       "visible": true
     },
     {
-      "name": "Diouf",
+      "name": "Carlos Augusto",
       "team": {
         "name": "Inter",
         "abbreviation": "int"
       },
-      "role": 2,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "Sucic P.",
-      "team": {
-        "name": "Inter",
-        "abbreviation": "int"
-      },
-      "role": 2,
+      "role": 1,
       "isActive": true,
       "visible": true
     },
@@ -1272,30 +1302,10 @@
       "visible": true
     },
     {
-      "name": "Locatelli",
-      "team": {
-        "name": "Juventus",
-        "abbreviation": "juv"
-      },
-      "role": 2,
-      "isActive": true,
-      "visible": true
-    },
-    {
       "name": "Thuram K.",
       "team": {
         "name": "Juventus",
         "abbreviation": "juv"
-      },
-      "role": 2,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "Cancellieri",
-      "team": {
-        "name": "Lazio",
-        "abbreviation": "laz"
       },
       "role": 2,
       "isActive": true,
@@ -1318,6 +1328,36 @@
         "abbreviation": "laz"
       },
       "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Tiago Gabriel",
+      "team": {
+        "name": "Lecce",
+        "abbreviation": "lec"
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Coulibaly L.",
+      "team": {
+        "name": "Lecce",
+        "abbreviation": "lec"
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Mangas",
+      "team": {
+        "name": "Monza",
+        "abbreviation": "monz"
+      },
+      "role": 1,
       "isActive": true,
       "visible": true
     },
@@ -1372,6 +1412,16 @@
       "visible": true
     },
     {
+      "name": "Adzic",
+      "team": {
+        "name": "Sassuolo",
+        "abbreviation": "sas"
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
       "name": "Volpato",
       "team": {
         "name": "Sassuolo",
@@ -1392,17 +1442,7 @@
       "visible": true
     },
     {
-      "name": "Okoye",
-      "team": {
-        "name": "Udinese",
-        "abbreviation": "udi"
-      },
-      "role": 0,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "Vojvoda",
+      "name": "Kamara H.",
       "team": {
         "name": "Udinese",
         "abbreviation": "udi"
@@ -1436,6 +1476,16 @@
       "team": {
         "name": "Genoa",
         "abbreviation": "gen"
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Bobcek",
+      "team": {
+        "name": "Frosinone",
+        "abbreviation": "fro"
       },
       "role": 3,
       "isActive": true,
@@ -1482,17 +1532,17 @@
       "visible": true
     },
     {
-      "name": "Ferguson",
+      "name": "Miranda J.",
       "team": {
         "name": "Bologna",
         "abbreviation": "bol"
       },
-      "role": 2,
+      "role": 1,
       "isActive": true,
       "visible": true
     },
     {
-      "name": "Odgaard",
+      "name": "Ferguson",
       "team": {
         "name": "Bologna",
         "abbreviation": "bol"
@@ -1532,6 +1582,16 @@
       "visible": true
     },
     {
+      "name": "Adopo",
+      "team": {
+        "name": "Cagliari",
+        "abbreviation": "cag"
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
       "name": "Romano",
       "team": {
         "name": "Cagliari",
@@ -1542,42 +1602,52 @@
       "visible": true
     },
     {
-      "name": "Fazzini",
+      "name": "Kaiki",
       "team": {
-        "name": "Cagliari",
-        "abbreviation": "cag"
-      },
-      "role": 2,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "Bracaglia",
-      "team": {
-        "name": "Frosinone",
-        "abbreviation": "fro"
+        "name": "Como",
+        "abbreviation": "com"
       },
       "role": 1,
       "isActive": true,
       "visible": true
     },
     {
-      "name": "Calò",
+      "name": "Dragusin",
       "team": {
-        "name": "Frosinone",
-        "abbreviation": "fro"
+        "name": "Fiorentina",
+        "abbreviation": "fio"
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Jimenez A.",
+      "team": {
+        "name": "Fiorentina",
+        "abbreviation": "fio"
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Fagioli",
+      "team": {
+        "name": "Fiorentina",
+        "abbreviation": "fio"
       },
       "role": 2,
       "isActive": true,
       "visible": true
     },
     {
-      "name": "Kvernadze",
+      "name": "Ndour",
       "team": {
-        "name": "Frosinone",
-        "abbreviation": "fro"
+        "name": "Fiorentina",
+        "abbreviation": "fio"
       },
-      "role": 3,
+      "role": 2,
       "isActive": true,
       "visible": true
     },
@@ -1592,12 +1662,32 @@
       "visible": true
     },
     {
-      "name": "Celik",
+      "name": "Vitinha O.",
       "team": {
-        "name": "Juventus",
-        "abbreviation": "juv"
+        "name": "Genoa",
+        "abbreviation": "gen"
       },
-      "role": 1,
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Sucic P.",
+      "team": {
+        "name": "Inter",
+        "abbreviation": "int"
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Bonny",
+      "team": {
+        "name": "Inter",
+        "abbreviation": "int"
+      },
+      "role": 3,
       "isActive": true,
       "visible": true
     },
@@ -1608,6 +1698,26 @@
         "abbreviation": "juv"
       },
       "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Locatelli",
+      "team": {
+        "name": "Juventus",
+        "abbreviation": "juv"
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Zhegrova",
+      "team": {
+        "name": "Juventus",
+        "abbreviation": "juv"
+      },
+      "role": 2,
       "isActive": true,
       "visible": true
     },
@@ -1632,22 +1742,22 @@
       "visible": true
     },
     {
+      "name": "Noslin",
+      "team": {
+        "name": "Lazio",
+        "abbreviation": "laz"
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
       "name": "Falcone",
       "team": {
         "name": "Lecce",
         "abbreviation": "lec"
       },
       "role": 0,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "Tiago Gabriel",
-      "team": {
-        "name": "Lecce",
-        "abbreviation": "lec"
-      },
-      "role": 1,
       "isActive": true,
       "visible": true
     },
@@ -1702,16 +1812,6 @@
       "visible": true
     },
     {
-      "name": "Lobotka",
-      "team": {
-        "name": "Napoli",
-        "abbreviation": "nap"
-      },
-      "role": 2,
-      "isActive": true,
-      "visible": true
-    },
-    {
       "name": "Delprato",
       "team": {
         "name": "Parma",
@@ -1722,12 +1822,12 @@
       "visible": true
     },
     {
-      "name": "Koulierakis",
+      "name": "Pisilli",
       "team": {
         "name": "Roma",
         "abbreviation": "rom"
       },
-      "role": 1,
+      "role": 2,
       "isActive": true,
       "visible": true
     },
@@ -1752,10 +1852,20 @@
       "visible": true
     },
     {
-      "name": "Ismajli",
+      "name": "Okoye",
       "team": {
-        "name": "Torino",
-        "abbreviation": "tor"
+        "name": "Udinese",
+        "abbreviation": "udi"
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Vojvoda",
+      "team": {
+        "name": "Udinese",
+        "abbreviation": "udi"
       },
       "role": 1,
       "isActive": true,
@@ -1782,32 +1892,12 @@
       "visible": true
     },
     {
-      "name": "Bobcek",
-      "team": {
-        "name": "Frosinone",
-        "abbreviation": "fro"
-      },
-      "role": 3,
-      "isActive": true,
-      "visible": true
-    },
-    {
       "name": "Theate",
       "team": {
         "name": "Bologna",
         "abbreviation": "bol"
       },
       "role": 1,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "Hutchinson",
-      "team": {
-        "name": "Milan",
-        "abbreviation": "mil"
-      },
-      "role": 2,
       "isActive": true,
       "visible": true
     },
@@ -1828,16 +1918,6 @@
         "abbreviation": "par"
       },
       "role": 1,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "Mbangula",
-      "team": {
-        "name": "Bologna",
-        "abbreviation": "bol"
-      },
-      "role": 2,
       "isActive": true,
       "visible": true
     },
@@ -1892,12 +1972,22 @@
       "visible": true
     },
     {
-      "name": "Maldini",
+      "name": "Pobega",
       "team": {
-        "name": "Cagliari",
-        "abbreviation": "cag"
+        "name": "Bologna",
+        "abbreviation": "bol"
       },
-      "role": 3,
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Odgaard",
+      "team": {
+        "name": "Bologna",
+        "abbreviation": "bol"
+      },
+      "role": 2,
       "isActive": true,
       "visible": true
     },
@@ -1912,12 +2002,12 @@
       "visible": true
     },
     {
-      "name": "Adopo",
+      "name": "Zè Pedro",
       "team": {
         "name": "Cagliari",
         "abbreviation": "cag"
       },
-      "role": 2,
+      "role": 1,
       "isActive": true,
       "visible": true
     },
@@ -1932,6 +2022,26 @@
       "visible": true
     },
     {
+      "name": "Fazzini",
+      "team": {
+        "name": "Cagliari",
+        "abbreviation": "cag"
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Mendy P.",
+      "team": {
+        "name": "Cagliari",
+        "abbreviation": "cag"
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
       "name": "Valle",
       "team": {
         "name": "Como",
@@ -1942,52 +2052,12 @@
       "visible": true
     },
     {
-      "name": "Caqueret",
+      "name": "Bracaglia",
       "team": {
-        "name": "Como",
-        "abbreviation": "com"
-      },
-      "role": 2,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "Dragusin",
-      "team": {
-        "name": "Fiorentina",
-        "abbreviation": "fio"
+        "name": "Frosinone",
+        "abbreviation": "fro"
       },
       "role": 1,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "Jimenez A.",
-      "team": {
-        "name": "Fiorentina",
-        "abbreviation": "fio"
-      },
-      "role": 1,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "Fagioli",
-      "team": {
-        "name": "Fiorentina",
-        "abbreviation": "fio"
-      },
-      "role": 2,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "Ndour",
-      "team": {
-        "name": "Fiorentina",
-        "abbreviation": "fio"
-      },
-      "role": 2,
       "isActive": true,
       "visible": true
     },
@@ -2022,32 +2092,12 @@
       "visible": true
     },
     {
-      "name": "Vitinha O.",
+      "name": "Celik",
       "team": {
-        "name": "Genoa",
-        "abbreviation": "gen"
-      },
-      "role": 3,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "Carlos Augusto",
-      "team": {
-        "name": "Inter",
-        "abbreviation": "int"
+        "name": "Juventus",
+        "abbreviation": "juv"
       },
       "role": 1,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "Bonny",
-      "team": {
-        "name": "Inter",
-        "abbreviation": "int"
-      },
-      "role": 3,
       "isActive": true,
       "visible": true
     },
@@ -2072,42 +2122,12 @@
       "visible": true
     },
     {
-      "name": "Rovella",
-      "team": {
-        "name": "Lazio",
-        "abbreviation": "laz"
-      },
-      "role": 2,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "Coulibaly L.",
+      "name": "Stulic",
       "team": {
         "name": "Lecce",
         "abbreviation": "lec"
       },
-      "role": 2,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "Gabbia",
-      "team": {
-        "name": "Milan",
-        "abbreviation": "mil"
-      },
-      "role": 1,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "Mangas",
-      "team": {
-        "name": "Monza",
-        "abbreviation": "monz"
-      },
-      "role": 1,
+      "role": 3,
       "isActive": true,
       "visible": true
     },
@@ -2152,22 +2172,12 @@
       "visible": true
     },
     {
-      "name": "Pisilli",
+      "name": "Koulierakis",
       "team": {
         "name": "Roma",
         "abbreviation": "rom"
       },
-      "role": 2,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "Muric",
-      "team": {
-        "name": "Sassuolo",
-        "abbreviation": "sas"
-      },
-      "role": 0,
+      "role": 1,
       "isActive": true,
       "visible": true
     },
@@ -2192,7 +2202,7 @@
       "visible": true
     },
     {
-      "name": "Adzic",
+      "name": "Matic",
       "team": {
         "name": "Sassuolo",
         "abbreviation": "sas"
@@ -2208,6 +2218,46 @@
         "abbreviation": "tor"
       },
       "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Ismajli",
+      "team": {
+        "name": "Torino",
+        "abbreviation": "tor"
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Cacciamani",
+      "team": {
+        "name": "Torino",
+        "abbreviation": "tor"
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Unai Gomez",
+      "team": {
+        "name": "Udinese",
+        "abbreviation": "udi"
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Busio",
+      "team": {
+        "name": "Venezia",
+        "abbreviation": "ven"
+      },
+      "role": 2,
       "isActive": true,
       "visible": true
     },
@@ -2232,20 +2282,40 @@
       "visible": true
     },
     {
-      "name": "Cissè A.",
+      "name": "Fortini",
       "team": {
-        "name": "Milan",
-        "abbreviation": "mil"
+        "name": "Torino",
+        "abbreviation": "tor"
       },
-      "role": 2,
+      "role": 1,
       "isActive": true,
       "visible": true
     },
     {
-      "name": "Elmas",
+      "name": "Leysen F.",
       "team": {
-        "name": "Atalanta",
-        "abbreviation": "ata"
+        "name": "Sassuolo",
+        "abbreviation": "sas"
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Balerdi",
+      "team": {
+        "name": "Roma",
+        "abbreviation": "rom"
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Hutchinson",
+      "team": {
+        "name": "Milan",
+        "abbreviation": "mil"
       },
       "role": 2,
       "isActive": true,
@@ -2272,12 +2342,42 @@
       "visible": true
     },
     {
+      "name": "Zeballos",
+      "team": {
+        "name": "Monza",
+        "abbreviation": "monz"
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Mbangula",
+      "team": {
+        "name": "Bologna",
+        "abbreviation": "bol"
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
       "name": "Gnonto",
       "team": {
         "name": "Fiorentina",
         "abbreviation": "fio"
       },
       "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Braganca",
+      "team": {
+        "name": "Torino",
+        "abbreviation": "tor"
+      },
+      "role": 2,
       "isActive": true,
       "visible": true
     },
@@ -2312,6 +2412,26 @@
       "visible": true
     },
     {
+      "name": "Bernasconi",
+      "team": {
+        "name": "Atalanta",
+        "abbreviation": "ata"
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Heggem",
+      "team": {
+        "name": "Bologna",
+        "abbreviation": "bol"
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
       "name": "Holm",
       "team": {
         "name": "Bologna",
@@ -2332,36 +2452,6 @@
       "visible": true
     },
     {
-      "name": "Pobega",
-      "team": {
-        "name": "Bologna",
-        "abbreviation": "bol"
-      },
-      "role": 2,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "Kofler",
-      "team": {
-        "name": "Cagliari",
-        "abbreviation": "cag"
-      },
-      "role": 1,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "Zè Pedro",
-      "team": {
-        "name": "Cagliari",
-        "abbreviation": "cag"
-      },
-      "role": 1,
-      "isActive": true,
-      "visible": true
-    },
-    {
       "name": "Mutandwa",
       "team": {
         "name": "Cagliari",
@@ -2372,7 +2462,7 @@
       "visible": true
     },
     {
-      "name": "Kaiki",
+      "name": "Kempf",
       "team": {
         "name": "Como",
         "abbreviation": "com"
@@ -2392,6 +2482,16 @@
       "visible": true
     },
     {
+      "name": "Caqueret",
+      "team": {
+        "name": "Como",
+        "abbreviation": "com"
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
       "name": "Liberali",
       "team": {
         "name": "Como",
@@ -2402,12 +2502,32 @@
       "visible": true
     },
     {
+      "name": "Viery",
+      "team": {
+        "name": "Fiorentina",
+        "abbreviation": "fio"
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
       "name": "Oulai",
       "team": {
         "name": "Fiorentina",
         "abbreviation": "fio"
       },
       "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Palmisani",
+      "team": {
+        "name": "Frosinone",
+        "abbreviation": "fro"
+      },
+      "role": 0,
       "isActive": true,
       "visible": true
     },
@@ -2482,16 +2602,6 @@
       "visible": true
     },
     {
-      "name": "Zhegrova",
-      "team": {
-        "name": "Juventus",
-        "abbreviation": "juv"
-      },
-      "role": 2,
-      "isActive": true,
-      "visible": true
-    },
-    {
       "name": "Boga",
       "team": {
         "name": "Juventus",
@@ -2512,16 +2622,6 @@
       "visible": true
     },
     {
-      "name": "Pedraza",
-      "team": {
-        "name": "Lazio",
-        "abbreviation": "laz"
-      },
-      "role": 1,
-      "isActive": true,
-      "visible": true
-    },
-    {
       "name": "Marusic",
       "team": {
         "name": "Lazio",
@@ -2532,12 +2632,32 @@
       "visible": true
     },
     {
-      "name": "Noslin",
+      "name": "Rovella",
       "team": {
         "name": "Lazio",
         "abbreviation": "laz"
       },
-      "role": 3,
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Veiga D.",
+      "team": {
+        "name": "Lecce",
+        "abbreviation": "lec"
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Gallo",
+      "team": {
+        "name": "Lecce",
+        "abbreviation": "lec"
+      },
+      "role": 1,
       "isActive": true,
       "visible": true
     },
@@ -2552,12 +2672,12 @@
       "visible": true
     },
     {
-      "name": "Stulic",
+      "name": "Gabbia",
       "team": {
-        "name": "Lecce",
-        "abbreviation": "lec"
+        "name": "Milan",
+        "abbreviation": "mil"
       },
-      "role": 3,
+      "role": 1,
       "isActive": true,
       "visible": true
     },
@@ -2578,6 +2698,16 @@
         "abbreviation": "mil"
       },
       "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Birindelli",
+      "team": {
+        "name": "Monza",
+        "abbreviation": "monz"
+      },
+      "role": 1,
       "isActive": true,
       "visible": true
     },
@@ -2622,12 +2752,22 @@
       "visible": true
     },
     {
-      "name": "Matic",
+      "name": "Keita M.",
+      "team": {
+        "name": "Parma",
+        "abbreviation": "par"
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Muric",
       "team": {
         "name": "Sassuolo",
         "abbreviation": "sas"
       },
-      "role": 2,
+      "role": 0,
       "isActive": true,
       "visible": true
     },
@@ -2642,7 +2782,7 @@
       "visible": true
     },
     {
-      "name": "Cacciamani",
+      "name": "Fitz-Jim",
       "team": {
         "name": "Torino",
         "abbreviation": "tor"
@@ -2652,7 +2792,7 @@
       "visible": true
     },
     {
-      "name": "Fitz-Jim",
+      "name": "Gineitis",
       "team": {
         "name": "Torino",
         "abbreviation": "tor"
@@ -2702,22 +2842,22 @@
       "visible": true
     },
     {
-      "name": "Unai Gomez",
+      "name": "Gueye",
       "team": {
         "name": "Udinese",
         "abbreviation": "udi"
       },
-      "role": 2,
+      "role": 3,
       "isActive": true,
       "visible": true
     },
     {
-      "name": "Stankovic F.",
+      "name": "Hainaut",
       "team": {
         "name": "Venezia",
         "abbreviation": "ven"
       },
-      "role": 0,
+      "role": 1,
       "isActive": true,
       "visible": true
     },
@@ -2732,7 +2872,7 @@
       "visible": true
     },
     {
-      "name": "Busio",
+      "name": "Perez K.",
       "team": {
         "name": "Venezia",
         "abbreviation": "ven"
@@ -2762,22 +2902,22 @@
       "visible": true
     },
     {
-      "name": "Fortini",
+      "name": "Cissè A.",
       "team": {
-        "name": "Torino",
-        "abbreviation": "tor"
+        "name": "Milan",
+        "abbreviation": "mil"
       },
-      "role": 1,
+      "role": 2,
       "isActive": true,
       "visible": true
     },
     {
-      "name": "Leysen F.",
+      "name": "Elmas",
       "team": {
-        "name": "Sassuolo",
-        "abbreviation": "sas"
+        "name": "Atalanta",
+        "abbreviation": "ata"
       },
-      "role": 1,
+      "role": 2,
       "isActive": true,
       "visible": true
     },
@@ -2802,16 +2942,6 @@
       "visible": true
     },
     {
-      "name": "Balerdi",
-      "team": {
-        "name": "Roma",
-        "abbreviation": "rom"
-      },
-      "role": 1,
-      "isActive": true,
-      "visible": true
-    },
-    {
       "name": "Caleta-Car",
       "team": {
         "name": "Sassuolo",
@@ -2822,32 +2952,12 @@
       "visible": true
     },
     {
-      "name": "Zeballos",
-      "team": {
-        "name": "Monza",
-        "abbreviation": "monz"
-      },
-      "role": 3,
-      "isActive": true,
-      "visible": true
-    },
-    {
       "name": "Sugawara",
       "team": {
         "name": "Cagliari",
         "abbreviation": "cag"
       },
       "role": 1,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "Braganca",
-      "team": {
-        "name": "Torino",
-        "abbreviation": "tor"
-      },
-      "role": 2,
       "isActive": true,
       "visible": true
     },
@@ -2872,16 +2982,6 @@
       "visible": true
     },
     {
-      "name": "Bernasconi",
-      "team": {
-        "name": "Atalanta",
-        "abbreviation": "ata"
-      },
-      "role": 1,
-      "isActive": true,
-      "visible": true
-    },
-    {
       "name": "Sulemana K.",
       "team": {
         "name": "Atalanta",
@@ -2892,10 +2992,10 @@
       "visible": true
     },
     {
-      "name": "Heggem",
+      "name": "Kofler",
       "team": {
-        "name": "Bologna",
-        "abbreviation": "bol"
+        "name": "Cagliari",
+        "abbreviation": "cag"
       },
       "role": 1,
       "isActive": true,
@@ -2912,6 +3012,16 @@
       "visible": true
     },
     {
+      "name": "Deiola",
+      "team": {
+        "name": "Cagliari",
+        "abbreviation": "cag"
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
       "name": "Felici",
       "team": {
         "name": "Cagliari",
@@ -2922,52 +3032,12 @@
       "visible": true
     },
     {
-      "name": "Mendy P.",
-      "team": {
-        "name": "Cagliari",
-        "abbreviation": "cag"
-      },
-      "role": 3,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "Kempf",
-      "team": {
-        "name": "Como",
-        "abbreviation": "com"
-      },
-      "role": 1,
-      "isActive": true,
-      "visible": true
-    },
-    {
       "name": "Valdepenas",
       "team": {
         "name": "Fiorentina",
         "abbreviation": "fio"
       },
       "role": 1,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "Viery",
-      "team": {
-        "name": "Fiorentina",
-        "abbreviation": "fio"
-      },
-      "role": 1,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "Palmisani",
-      "team": {
-        "name": "Frosinone",
-        "abbreviation": "fro"
-      },
-      "role": 0,
       "isActive": true,
       "visible": true
     },
@@ -2992,30 +3062,10 @@
       "visible": true
     },
     {
-      "name": "Meichtry",
-      "team": {
-        "name": "Genoa",
-        "abbreviation": "gen"
-      },
-      "role": 2,
-      "isActive": true,
-      "visible": true
-    },
-    {
       "name": "Messias",
       "team": {
         "name": "Genoa",
         "abbreviation": "gen"
-      },
-      "role": 2,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "Luis Henrique",
-      "team": {
-        "name": "Inter",
-        "abbreviation": "int"
       },
       "role": 2,
       "isActive": true,
@@ -3042,27 +3092,17 @@
       "visible": true
     },
     {
-      "name": "Gaspar K.",
+      "name": "Pedraza",
       "team": {
-        "name": "Lecce",
-        "abbreviation": "lec"
+        "name": "Lazio",
+        "abbreviation": "laz"
       },
       "role": 1,
       "isActive": true,
       "visible": true
     },
     {
-      "name": "Veiga D.",
-      "team": {
-        "name": "Lecce",
-        "abbreviation": "lec"
-      },
-      "role": 1,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "Gallo",
+      "name": "Siebert",
       "team": {
         "name": "Lecce",
         "abbreviation": "lec"
@@ -3092,12 +3132,12 @@
       "visible": true
     },
     {
-      "name": "Birindelli",
+      "name": "Musah",
       "team": {
-        "name": "Monza",
-        "abbreviation": "monz"
+        "name": "Milan",
+        "abbreviation": "mil"
       },
-      "role": 1,
+      "role": 2,
       "isActive": true,
       "visible": true
     },
@@ -3108,6 +3148,16 @@
         "abbreviation": "monz"
       },
       "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Milinkovic-Savic V.",
+      "team": {
+        "name": "Napoli",
+        "abbreviation": "nap"
+      },
+      "role": 0,
       "isActive": true,
       "visible": true
     },
@@ -3132,7 +3182,7 @@
       "visible": true
     },
     {
-      "name": "Keita M.",
+      "name": "Nicolussi Caviglia",
       "team": {
         "name": "Parma",
         "abbreviation": "par"
@@ -3142,7 +3192,7 @@
       "visible": true
     },
     {
-      "name": "Nicolussi Caviglia",
+      "name": "Almqvist",
       "team": {
         "name": "Parma",
         "abbreviation": "par"
@@ -3192,22 +3242,32 @@
       "visible": true
     },
     {
-      "name": "Gineitis",
-      "team": {
-        "name": "Torino",
-        "abbreviation": "tor"
-      },
-      "role": 2,
-      "isActive": true,
-      "visible": true
-    },
-    {
       "name": "Njie",
       "team": {
         "name": "Fiorentina",
         "abbreviation": "fio"
       },
       "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Abankwah",
+      "team": {
+        "name": "Udinese",
+        "abbreviation": "udi"
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Stankovic F.",
+      "team": {
+        "name": "Venezia",
+        "abbreviation": "ven"
+      },
+      "role": 0,
       "isActive": true,
       "visible": true
     },
@@ -3223,16 +3283,6 @@
     },
     {
       "name": "Correia T.",
-      "team": {
-        "name": "Venezia",
-        "abbreviation": "ven"
-      },
-      "role": 1,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "Hainaut",
       "team": {
         "name": "Venezia",
         "abbreviation": "ven"
@@ -3262,22 +3312,22 @@
       "visible": true
     },
     {
-      "name": "Perez K.",
-      "team": {
-        "name": "Venezia",
-        "abbreviation": "ven"
-      },
-      "role": 2,
-      "isActive": true,
-      "visible": true
-    },
-    {
       "name": "Lontani",
       "team": {
         "name": "Parma",
         "abbreviation": "par"
       },
       "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Favasuli",
+      "team": {
+        "name": "Napoli",
+        "abbreviation": "nap"
+      },
+      "role": 1,
       "isActive": true,
       "visible": true
     },
@@ -3312,12 +3362,12 @@
       "visible": true
     },
     {
-      "name": "Kossounou",
+      "name": "De Roon",
       "team": {
-        "name": "Atalanta",
-        "abbreviation": "ata"
+        "name": "Roma",
+        "abbreviation": "rom"
       },
-      "role": 1,
+      "role": 2,
       "isActive": true,
       "visible": true
     },
@@ -3352,22 +3402,22 @@
       "visible": true
     },
     {
+      "name": "Dominguez B.",
+      "team": {
+        "name": "Sassuolo",
+        "abbreviation": "sas"
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
       "name": "Zappa",
       "team": {
         "name": "Cagliari",
         "abbreviation": "cag"
       },
       "role": 1,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "Deiola",
-      "team": {
-        "name": "Cagliari",
-        "abbreviation": "cag"
-      },
-      "role": 2,
       "isActive": true,
       "visible": true
     },
@@ -3392,12 +3442,12 @@
       "visible": true
     },
     {
-      "name": "Smolcic I.",
+      "name": "Fadera",
       "team": {
-        "name": "Como",
-        "abbreviation": "com"
+        "name": "Cagliari",
+        "abbreviation": "cag"
       },
-      "role": 1,
+      "role": 2,
       "isActive": true,
       "visible": true
     },
@@ -3428,26 +3478,6 @@
         "abbreviation": "fio"
       },
       "role": 1,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "Brescianini",
-      "team": {
-        "name": "Fiorentina",
-        "abbreviation": "fio"
-      },
-      "role": 2,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "Fabbian",
-      "team": {
-        "name": "Parma",
-        "abbreviation": "par"
-      },
-      "role": 2,
       "isActive": true,
       "visible": true
     },
@@ -3502,10 +3532,30 @@
       "visible": true
     },
     {
+      "name": "Meichtry",
+      "team": {
+        "name": "Genoa",
+        "abbreviation": "gen"
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
       "name": "Traorè Hj.",
       "team": {
         "name": "Genoa",
         "abbreviation": "gen"
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Luis Henrique",
+      "team": {
+        "name": "Inter",
+        "abbreviation": "int"
       },
       "role": 2,
       "isActive": true,
@@ -3562,12 +3612,22 @@
       "visible": true
     },
     {
-      "name": "Siebert",
+      "name": "Gaspar K.",
       "team": {
         "name": "Lecce",
         "abbreviation": "lec"
       },
       "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Maleh",
+      "team": {
+        "name": "Lecce",
+        "abbreviation": "lec"
+      },
+      "role": 2,
       "isActive": true,
       "visible": true
     },
@@ -3613,16 +3673,6 @@
     },
     {
       "name": "Fofana Y.",
-      "team": {
-        "name": "Milan",
-        "abbreviation": "mil"
-      },
-      "role": 2,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "Musah",
       "team": {
         "name": "Milan",
         "abbreviation": "mil"
@@ -3702,16 +3752,6 @@
       "visible": true
     },
     {
-      "name": "Milinkovic-Savic V.",
-      "team": {
-        "name": "Napoli",
-        "abbreviation": "nap"
-      },
-      "role": 0,
-      "isActive": true,
-      "visible": true
-    },
-    {
       "name": "Olivera",
       "team": {
         "name": "Napoli",
@@ -3728,6 +3768,16 @@
         "abbreviation": "monz"
       },
       "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Lang",
+      "team": {
+        "name": "Napoli",
+        "abbreviation": "nap"
+      },
+      "role": 3,
       "isActive": true,
       "visible": true
     },
@@ -3758,16 +3808,6 @@
         "abbreviation": "par"
       },
       "role": 1,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "Almqvist",
-      "team": {
-        "name": "Parma",
-        "abbreviation": "par"
-      },
-      "role": 2,
       "isActive": true,
       "visible": true
     },
@@ -3812,26 +3852,6 @@
       "visible": true
     },
     {
-      "name": "Kulenovic",
-      "team": {
-        "name": "Torino",
-        "abbreviation": "tor"
-      },
-      "role": 3,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "Kabasele",
-      "team": {
-        "name": "Udinese",
-        "abbreviation": "udi"
-      },
-      "role": 1,
-      "isActive": true,
-      "visible": true
-    },
-    {
       "name": "Bertola",
       "team": {
         "name": "Udinese",
@@ -3848,16 +3868,6 @@
         "abbreviation": "udi"
       },
       "role": 2,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "Gueye",
-      "team": {
-        "name": "Udinese",
-        "abbreviation": "udi"
-      },
-      "role": 3,
       "isActive": true,
       "visible": true
     },
@@ -3982,16 +3992,6 @@
       "visible": true
     },
     {
-      "name": "Fernandez T.",
-      "team": {
-        "name": "Venezia",
-        "abbreviation": "ven"
-      },
-      "role": 2,
-      "isActive": true,
-      "visible": true
-    },
-    {
       "name": "Nzola",
       "team": {
         "name": "Cagliari",
@@ -4012,12 +4012,12 @@
       "visible": true
     },
     {
-      "name": "De Roon",
+      "name": "Kossounou",
       "team": {
-        "name": "Roma",
-        "abbreviation": "rom"
+        "name": "Atalanta",
+        "abbreviation": "ata"
       },
-      "role": 2,
+      "role": 1,
       "isActive": true,
       "visible": true
     },
@@ -4042,22 +4042,12 @@
       "visible": true
     },
     {
-      "name": "Dominguez B.",
+      "name": "Smolcic I.",
       "team": {
-        "name": "Sassuolo",
-        "abbreviation": "sas"
+        "name": "Como",
+        "abbreviation": "com"
       },
-      "role": 2,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "Fadera",
-      "team": {
-        "name": "Cagliari",
-        "abbreviation": "cag"
-      },
-      "role": 2,
+      "role": 1,
       "isActive": true,
       "visible": true
     },
@@ -4082,12 +4072,42 @@
       "visible": true
     },
     {
-      "name": "Joao Mario",
+      "name": "Ranieri L.",
       "team": {
         "name": "Fiorentina",
         "abbreviation": "fio"
       },
       "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Brescianini",
+      "team": {
+        "name": "Fiorentina",
+        "abbreviation": "fio"
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Fabbian",
+      "team": {
+        "name": "Parma",
+        "abbreviation": "par"
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Hasa",
+      "team": {
+        "name": "Frosinone",
+        "abbreviation": "fro"
+      },
+      "role": 2,
       "isActive": true,
       "visible": true
     },
@@ -4152,16 +4172,6 @@
       "visible": true
     },
     {
-      "name": "Maleh",
-      "team": {
-        "name": "Lecce",
-        "abbreviation": "lec"
-      },
-      "role": 2,
-      "isActive": true,
-      "visible": true
-    },
-    {
       "name": "Athekame",
       "team": {
         "name": "Milan",
@@ -4192,17 +4202,17 @@
       "visible": true
     },
     {
-      "name": "Giovane",
+      "name": "Gilmour",
       "team": {
         "name": "Napoli",
         "abbreviation": "nap"
       },
-      "role": 3,
+      "role": 2,
       "isActive": true,
       "visible": true
     },
     {
-      "name": "Lang",
+      "name": "Giovane",
       "team": {
         "name": "Napoli",
         "abbreviation": "nap"
@@ -4292,6 +4302,26 @@
       "visible": true
     },
     {
+      "name": "Lipani",
+      "team": {
+        "name": "Sassuolo",
+        "abbreviation": "sas"
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Ilic",
+      "team": {
+        "name": "Lecce",
+        "abbreviation": "lec"
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
       "name": "Aboukhlal",
       "team": {
         "name": "Torino",
@@ -4302,7 +4332,17 @@
       "visible": true
     },
     {
-      "name": "Abankwah",
+      "name": "Kulenovic",
+      "team": {
+        "name": "Torino",
+        "abbreviation": "tor"
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Kabasele",
       "team": {
         "name": "Udinese",
         "abbreviation": "udi"
@@ -4342,26 +4382,6 @@
       "visible": true
     },
     {
-      "name": "Halhal",
-      "team": {
-        "name": "Venezia",
-        "abbreviation": "ven"
-      },
-      "role": 1,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "Schingtienne",
-      "team": {
-        "name": "Venezia",
-        "abbreviation": "ven"
-      },
-      "role": 1,
-      "isActive": true,
-      "visible": true
-    },
-    {
       "name": "Odenthal",
       "team": {
         "name": "Sassuolo",
@@ -4372,40 +4392,10 @@
       "visible": true
     },
     {
-      "name": "Favasuli",
-      "team": {
-        "name": "Napoli",
-        "abbreviation": "nap"
-      },
-      "role": 1,
-      "isActive": true,
-      "visible": true
-    },
-    {
       "name": "Lulli",
       "team": {
         "name": "Roma",
         "abbreviation": "rom"
-      },
-      "role": 1,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "Tchato",
-      "team": {
-        "name": "Frosinone",
-        "abbreviation": "fro"
-      },
-      "role": 1,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "Kambwala",
-      "team": {
-        "name": "Como",
-        "abbreviation": "com"
       },
       "role": 1,
       "isActive": true,
@@ -4428,6 +4418,26 @@
         "abbreviation": "gen"
       },
       "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Fernandez T.",
+      "team": {
+        "name": "Venezia",
+        "abbreviation": "ven"
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Pessina Mas.",
+      "team": {
+        "name": "Bologna",
+        "abbreviation": "bol"
+      },
+      "role": 0,
       "isActive": true,
       "visible": true
     },
@@ -4472,7 +4482,7 @@
       "visible": true
     },
     {
-      "name": "Ranieri L.",
+      "name": "Joao Mario",
       "team": {
         "name": "Fiorentina",
         "abbreviation": "fio"
@@ -4493,16 +4503,6 @@
     },
     {
       "name": "Gelli F.",
-      "team": {
-        "name": "Frosinone",
-        "abbreviation": "fro"
-      },
-      "role": 2,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "Hasa",
       "team": {
         "name": "Frosinone",
         "abbreviation": "fro"
@@ -4552,6 +4552,16 @@
       "visible": true
     },
     {
+      "name": "Bakoune",
+      "team": {
+        "name": "Monza",
+        "abbreviation": "monz"
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
       "name": "Colombo L.",
       "team": {
         "name": "Monza",
@@ -4582,16 +4592,6 @@
       "visible": true
     },
     {
-      "name": "Gilmour",
-      "team": {
-        "name": "Napoli",
-        "abbreviation": "nap"
-      },
-      "role": 2,
-      "isActive": true,
-      "visible": true
-    },
-    {
       "name": "Cremaschi",
       "team": {
         "name": "Parma",
@@ -4608,16 +4608,6 @@
         "abbreviation": "sas"
       },
       "role": 1,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "Lipani",
-      "team": {
-        "name": "Sassuolo",
-        "abbreviation": "sas"
-      },
-      "role": 2,
       "isActive": true,
       "visible": true
     },
@@ -4642,12 +4632,42 @@
       "visible": true
     },
     {
+      "name": "Chakvetadze",
+      "team": {
+        "name": "Udinese",
+        "abbreviation": "udi"
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
       "name": "Buksa",
       "team": {
         "name": "Udinese",
         "abbreviation": "udi"
       },
       "role": 3,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Halhal",
+      "team": {
+        "name": "Venezia",
+        "abbreviation": "ven"
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Schingtienne",
+      "team": {
+        "name": "Venezia",
+        "abbreviation": "ven"
+      },
+      "role": 1,
       "isActive": true,
       "visible": true
     },
@@ -4722,6 +4742,26 @@
       "visible": true
     },
     {
+      "name": "Tchato",
+      "team": {
+        "name": "Frosinone",
+        "abbreviation": "fro"
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Kambwala",
+      "team": {
+        "name": "Como",
+        "abbreviation": "com"
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true
+    },
+    {
       "name": "Drobnic",
       "team": {
         "name": "Parma",
@@ -4752,6 +4792,16 @@
       "visible": true
     },
     {
+      "name": "Sierro",
+      "team": {
+        "name": "Parma",
+        "abbreviation": "par"
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
       "name": "Rossi F.",
       "team": {
         "name": "Atalanta",
@@ -4773,16 +4823,6 @@
     },
     {
       "name": "Happonen",
-      "team": {
-        "name": "Bologna",
-        "abbreviation": "bol"
-      },
-      "role": 0,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "Pessina Mas.",
       "team": {
         "name": "Bologna",
         "abbreviation": "bol"
@@ -5332,16 +5372,6 @@
       "visible": true
     },
     {
-      "name": "Bakoune",
-      "team": {
-        "name": "Monza",
-        "abbreviation": "monz"
-      },
-      "role": 1,
-      "isActive": true,
-      "visible": true
-    },
-    {
       "name": "Ciurria",
       "team": {
         "name": "Monza",
@@ -5552,16 +5582,6 @@
       "visible": true
     },
     {
-      "name": "Ilic",
-      "team": {
-        "name": "Lecce",
-        "abbreviation": "lec"
-      },
-      "role": 2,
-      "isActive": true,
-      "visible": true
-    },
-    {
       "name": "Anjorin",
       "team": {
         "name": "Torino",
@@ -5603,16 +5623,6 @@
     },
     {
       "name": "Camara A.",
-      "team": {
-        "name": "Udinese",
-        "abbreviation": "udi"
-      },
-      "role": 2,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "Chakvetadze",
       "team": {
         "name": "Udinese",
         "abbreviation": "udi"
@@ -5928,16 +5938,6 @@
         "abbreviation": "ata"
       },
       "role": 0,
-      "isActive": true,
-      "visible": true
-    },
-    {
-      "name": "Sierro",
-      "team": {
-        "name": "Parma",
-        "abbreviation": "par"
-      },
-      "role": 2,
       "isActive": true,
       "visible": true
     },
