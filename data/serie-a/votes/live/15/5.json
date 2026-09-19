@@ -949,7 +949,7 @@
         "status": 0,
         "manOfTheMatch": false,
         "hasVote": true,
-        "isOut": false,
+        "isOut": true,
         "isIn": false,
         "injured": false
       }
@@ -993,7 +993,7 @@
       "visible": true,
       "vote": {
         "role": 1,
-        "value": 6,
+        "value": 6.5,
         "isFinal": false,
         "goal": 0,
         "penalty": 0,
@@ -1189,7 +1189,7 @@
       "visible": true,
       "vote": {
         "role": 2,
-        "value": 6.5,
+        "value": 6,
         "isFinal": false,
         "goal": 0,
         "penalty": 0,
@@ -1201,7 +1201,7 @@
         "status": 0,
         "manOfTheMatch": false,
         "hasVote": true,
-        "isOut": false,
+        "isOut": true,
         "isIn": false,
         "injured": false
       }
@@ -1301,7 +1301,7 @@
       "visible": true,
       "vote": {
         "role": 2,
-        "value": 6.5,
+        "value": 6,
         "isFinal": false,
         "goal": 0,
         "penalty": 0,
@@ -1313,7 +1313,7 @@
         "status": 0,
         "manOfTheMatch": false,
         "hasVote": true,
-        "isOut": false,
+        "isOut": true,
         "isIn": false,
         "injured": false
       }
@@ -1637,7 +1637,7 @@
       "visible": true,
       "vote": {
         "role": 2,
-        "value": 5.5,
+        "value": 5,
         "isFinal": false,
         "goal": 0,
         "penalty": 0,
@@ -1649,7 +1649,7 @@
         "status": 0,
         "manOfTheMatch": false,
         "hasVote": true,
-        "isOut": false,
+        "isOut": true,
         "isIn": false,
         "injured": false
       }
@@ -1721,7 +1721,7 @@
       "visible": true,
       "vote": {
         "role": 1,
-        "value": 6,
+        "value": 5.5,
         "isFinal": false,
         "goal": 0,
         "penalty": 0,
@@ -1749,7 +1749,7 @@
       "visible": true,
       "vote": {
         "role": 1,
-        "value": 5.5,
+        "value": 5,
         "isFinal": false,
         "goal": 0,
         "penalty": 0,
@@ -1833,9 +1833,9 @@
       "visible": true,
       "vote": {
         "role": 3,
-        "value": 6,
+        "value": 7,
         "isFinal": false,
-        "goal": 0,
+        "goal": 1,
         "penalty": 0,
         "assist": 0,
         "stoppedPenalty": 0,
@@ -1845,7 +1845,7 @@
         "status": 0,
         "manOfTheMatch": false,
         "hasVote": true,
-        "isOut": false,
+        "isOut": true,
         "isIn": false,
         "injured": false
       }
@@ -2013,7 +2013,7 @@
         "status": 0,
         "manOfTheMatch": false,
         "hasVote": true,
-        "isOut": false,
+        "isOut": true,
         "isIn": false,
         "injured": false
       }
@@ -2197,6 +2197,174 @@
       "visible": true,
       "vote": {
         "role": 2,
+        "value": 6,
+        "isFinal": false,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": true,
+        "injured": false
+      }
+    },
+    {
+      "name": "Odgaard",
+      "team": {
+        "name": "Bologna",
+        "abbreviation": "bol"
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 2,
+        "value": 6,
+        "isFinal": false,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": true,
+        "injured": false
+      }
+    },
+    {
+      "name": "De silvestri",
+      "team": {
+        "name": "Bologna",
+        "abbreviation": "bol"
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 1,
+        "value": 6,
+        "isFinal": false,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": true,
+        "injured": false
+      }
+    },
+    {
+      "name": "Kulenovic",
+      "team": {
+        "name": "Torino",
+        "abbreviation": "tor"
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 3,
+        "value": 6,
+        "isFinal": false,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": true,
+        "injured": false
+      }
+    },
+    {
+      "name": "Unai gomez",
+      "team": {
+        "name": "Udinese",
+        "abbreviation": "udi"
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 2,
+        "value": 6,
+        "isFinal": false,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": true,
+        "injured": false
+      }
+    },
+    {
+      "name": "Kevin carlos",
+      "team": {
+        "name": "Cagliari",
+        "abbreviation": "cag"
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 3,
+        "value": 6,
+        "isFinal": false,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": true,
+        "injured": false
+      }
+    },
+    {
+      "name": "Sugawara",
+      "team": {
+        "name": "Cagliari",
+        "abbreviation": "cag"
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 1,
         "value": 6,
         "isFinal": false,
         "goal": 0,
