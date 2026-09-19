@@ -2713,7 +2713,7 @@
         "status": 0,
         "manOfTheMatch": false,
         "hasVote": true,
-        "isOut": false,
+        "isOut": true,
         "isIn": false,
         "injured": false
       }
@@ -2769,7 +2769,7 @@
         "status": 0,
         "manOfTheMatch": false,
         "hasVote": true,
-        "isOut": false,
+        "isOut": true,
         "isIn": false,
         "injured": false
       }
@@ -2797,7 +2797,7 @@
         "status": 0,
         "manOfTheMatch": false,
         "hasVote": true,
-        "isOut": false,
+        "isOut": true,
         "isIn": false,
         "injured": false
       }
@@ -3074,7 +3074,7 @@
         "sufferedGoal": 0,
         "wrongedPenalty": 0,
         "ownGoal": 0,
-        "status": 0,
+        "status": 1,
         "manOfTheMatch": false,
         "hasVote": true,
         "isOut": false,
@@ -3177,7 +3177,7 @@
       "visible": true,
       "vote": {
         "role": 2,
-        "value": 6,
+        "value": 5.5,
         "isFinal": false,
         "goal": 0,
         "penalty": 0,
@@ -3189,7 +3189,7 @@
         "status": 0,
         "manOfTheMatch": false,
         "hasVote": true,
-        "isOut": false,
+        "isOut": true,
         "isIn": false,
         "injured": false
       }
@@ -3217,7 +3217,7 @@
         "status": 0,
         "manOfTheMatch": false,
         "hasVote": true,
-        "isOut": false,
+        "isOut": true,
         "isIn": false,
         "injured": false
       }
@@ -3275,6 +3275,146 @@
         "hasVote": true,
         "isOut": false,
         "isIn": false,
+        "injured": false
+      }
+    },
+    {
+      "name": "N'dicka",
+      "team": {
+        "name": "Roma",
+        "abbreviation": "rom"
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 1,
+        "value": 6,
+        "isFinal": false,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": true,
+        "injured": false
+      }
+    },
+    {
+      "name": "Rensch",
+      "team": {
+        "name": "Roma",
+        "abbreviation": "rom"
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 1,
+        "value": 6,
+        "isFinal": false,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": true,
+        "injured": false
+      }
+    },
+    {
+      "name": "Pisilli",
+      "team": {
+        "name": "Roma",
+        "abbreviation": "rom"
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 2,
+        "value": 6,
+        "isFinal": false,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": true,
+        "injured": false
+      }
+    },
+    {
+      "name": "Carlos augusto",
+      "team": {
+        "name": "Inter",
+        "abbreviation": "int"
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 1,
+        "value": 6,
+        "isFinal": false,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": true,
+        "injured": false
+      }
+    },
+    {
+      "name": "Sucic p.",
+      "team": {
+        "name": "Inter",
+        "abbreviation": "int"
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 2,
+        "value": 6,
+        "isFinal": false,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": true,
         "injured": false
       }
     }
