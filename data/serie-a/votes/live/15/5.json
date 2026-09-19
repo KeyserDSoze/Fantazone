@@ -2673,13 +2673,13 @@
       "visible": true,
       "vote": {
         "role": 0,
-        "value": 6.5,
+        "value": 7,
         "isFinal": false,
         "goal": 0,
         "penalty": 0,
         "assist": 0,
         "stoppedPenalty": 0,
-        "sufferedGoal": 1,
+        "sufferedGoal": 2,
         "wrongedPenalty": 0,
         "ownGoal": 0,
         "status": 0,
@@ -2741,7 +2741,7 @@
         "status": 0,
         "manOfTheMatch": false,
         "hasVote": true,
-        "isOut": false,
+        "isOut": true,
         "isIn": false,
         "injured": false
       }
@@ -2813,7 +2813,7 @@
       "visible": true,
       "vote": {
         "role": 2,
-        "value": 6,
+        "value": 6.5,
         "isFinal": false,
         "goal": 0,
         "penalty": 0,
@@ -3261,9 +3261,9 @@
       "visible": true,
       "vote": {
         "role": 3,
-        "value": 7,
+        "value": 8,
         "isFinal": false,
-        "goal": 1,
+        "goal": 2,
         "penalty": 0,
         "assist": 0,
         "stoppedPenalty": 0,
@@ -3298,7 +3298,7 @@
         "sufferedGoal": 0,
         "wrongedPenalty": 0,
         "ownGoal": 0,
-        "status": 0,
+        "status": 1,
         "manOfTheMatch": false,
         "hasVote": true,
         "isOut": false,
@@ -3469,6 +3469,34 @@
         "status": 0,
         "manOfTheMatch": false,
         "hasVote": true,
+        "isOut": false,
+        "isIn": true,
+        "injured": false
+      }
+    },
+    {
+      "name": "Koulierakis",
+      "team": {
+        "name": "Roma",
+        "abbreviation": "rom"
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 1,
+        "value": 0,
+        "isFinal": false,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": false,
         "isOut": false,
         "isIn": true,
         "injured": false
