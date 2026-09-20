@@ -5315,7 +5315,7 @@
         "wrongedPenalty": 0,
         "ownGoal": 0,
         "status": 0,
-        "manOfTheMatch": false,
+        "manOfTheMatch": true,
         "hasVote": true,
         "isOut": false,
         "isIn": false,
@@ -7083,6 +7083,622 @@
         "hasVote": false,
         "isOut": false,
         "isIn": true,
+        "injured": false
+      }
+    },
+    {
+      "name": "Vicario",
+      "team": {
+        "name": "Juventus",
+        "abbreviation": "juv"
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 0,
+        "value": 6,
+        "isFinal": false,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": false,
+        "injured": false
+      }
+    },
+    {
+      "name": "Kalulu",
+      "team": {
+        "name": "Juventus",
+        "abbreviation": "juv"
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 1,
+        "value": 6,
+        "isFinal": false,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": false,
+        "injured": false
+      }
+    },
+    {
+      "name": "Bremer",
+      "team": {
+        "name": "Juventus",
+        "abbreviation": "juv"
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 1,
+        "value": 6,
+        "isFinal": false,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": false,
+        "injured": false
+      }
+    },
+    {
+      "name": "Lucumì",
+      "team": {
+        "name": "Juventus",
+        "abbreviation": "juv"
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 1,
+        "value": 6,
+        "isFinal": false,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": false,
+        "injured": false
+      }
+    },
+    {
+      "name": "Celik",
+      "team": {
+        "name": "Juventus",
+        "abbreviation": "juv"
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 1,
+        "value": 6,
+        "isFinal": false,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": false,
+        "injured": false
+      }
+    },
+    {
+      "name": "Douglas luiz",
+      "team": {
+        "name": "Juventus",
+        "abbreviation": "juv"
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 2,
+        "value": 5.5,
+        "isFinal": false,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": false,
+        "injured": false
+      }
+    },
+    {
+      "name": "Mckennie",
+      "team": {
+        "name": "Juventus",
+        "abbreviation": "juv"
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 2,
+        "value": 6,
+        "isFinal": false,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": false,
+        "injured": false
+      }
+    },
+    {
+      "name": "Conceicao",
+      "team": {
+        "name": "Juventus",
+        "abbreviation": "juv"
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 2,
+        "value": 6,
+        "isFinal": false,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": false,
+        "injured": false
+      }
+    },
+    {
+      "name": "Gonzalez n.",
+      "team": {
+        "name": "Juventus",
+        "abbreviation": "juv"
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 2,
+        "value": 6,
+        "isFinal": false,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": false,
+        "injured": false
+      }
+    },
+    {
+      "name": "Alajbegovic",
+      "team": {
+        "name": "Juventus",
+        "abbreviation": "juv"
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 2,
+        "value": 6,
+        "isFinal": false,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": false,
+        "injured": false
+      }
+    },
+    {
+      "name": "Kolo muani",
+      "team": {
+        "name": "Juventus",
+        "abbreviation": "juv"
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 3,
+        "value": 6,
+        "isFinal": false,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": false,
+        "injured": false
+      }
+    },
+    {
+      "name": "Carnesecchi",
+      "team": {
+        "name": "Atalanta",
+        "abbreviation": "ata"
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 0,
+        "value": 6,
+        "isFinal": false,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": false,
+        "injured": false
+      }
+    },
+    {
+      "name": "Bellanova",
+      "team": {
+        "name": "Atalanta",
+        "abbreviation": "ata"
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 1,
+        "value": 6,
+        "isFinal": false,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": false,
+        "injured": false
+      }
+    },
+    {
+      "name": "Kristensen t.",
+      "team": {
+        "name": "Atalanta",
+        "abbreviation": "ata"
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 1,
+        "value": 6,
+        "isFinal": false,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": false,
+        "injured": false
+      }
+    },
+    {
+      "name": "Scalvini",
+      "team": {
+        "name": "Atalanta",
+        "abbreviation": "ata"
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 1,
+        "value": 6,
+        "isFinal": false,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": false,
+        "injured": false
+      }
+    },
+    {
+      "name": "Bernasconi",
+      "team": {
+        "name": "Atalanta",
+        "abbreviation": "ata"
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 1,
+        "value": 6,
+        "isFinal": false,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": false,
+        "injured": false
+      }
+    },
+    {
+      "name": "Samardzic",
+      "team": {
+        "name": "Atalanta",
+        "abbreviation": "ata"
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 2,
+        "value": 5.5,
+        "isFinal": false,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": false,
+        "injured": false
+      }
+    },
+    {
+      "name": "Kessiè",
+      "team": {
+        "name": "Atalanta",
+        "abbreviation": "ata"
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 2,
+        "value": 6,
+        "isFinal": false,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": false,
+        "injured": false
+      }
+    },
+    {
+      "name": "Ederson d.s.",
+      "team": {
+        "name": "Atalanta",
+        "abbreviation": "ata"
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 2,
+        "value": 6,
+        "isFinal": false,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": false,
+        "injured": false
+      }
+    },
+    {
+      "name": "De ketelaere",
+      "team": {
+        "name": "Atalanta",
+        "abbreviation": "ata"
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 3,
+        "value": 6,
+        "isFinal": false,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": false,
+        "injured": false
+      }
+    },
+    {
+      "name": "Krstovic",
+      "team": {
+        "name": "Atalanta",
+        "abbreviation": "ata"
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 3,
+        "value": 6,
+        "isFinal": false,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": false,
+        "injured": false
+      }
+    },
+    {
+      "name": "Rowe",
+      "team": {
+        "name": "Atalanta",
+        "abbreviation": "ata"
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 2,
+        "value": 6,
+        "isFinal": false,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": false,
         "injured": false
       }
     }
