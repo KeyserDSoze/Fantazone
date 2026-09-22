@@ -136,8 +136,8 @@
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
-        "status": 1,
-        "description": "Il turco in tribuna il 14 settembre contro l'Udinese per un risentimento muscolare all'adduttore della coscia destra, condizioni da valutare quotidianamente, ma dovrebbe tornare arruolabile dall'inizio di ottobre.&nbsp;",
+        "status": 0,
+        "description": null,
         "lastGame": null,
         "trend": 2
       }
@@ -176,8 +176,8 @@
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
-        "status": 1,
-        "description": "Il centrocampista l'1 settembre a causa di una lieve aritmia benigna ha deciso di sottoporsi a un intervento di correzione tramite ablazione. Si confida di rivederlo in campo da met&agrave; ottobre.&nbsp;",
+        "status": 0,
+        "description": null,
         "lastGame": null,
         "trend": 2
       }
@@ -192,7 +192,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
+        "fantagazzetta": true,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -212,7 +212,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
+        "fantagazzetta": true,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -312,7 +312,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
+        "fantagazzetta": false,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -352,7 +352,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
+        "fantagazzetta": true,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -592,7 +592,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
+        "fantagazzetta": false,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -696,8 +696,8 @@
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
-        "status": 1,
-        "description": "L'attaccante non al meglio per noie muscolari al flessore, assente contro Napoli e Torino. Recuperabile dall'inizio di ottobre.&nbsp;",
+        "status": 0,
+        "description": null,
         "lastGame": null,
         "trend": 2
       }
@@ -1356,8 +1356,8 @@
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
-        "status": 1,
-        "description": "il difensore il 7 settembre contro la Lazio costretto al cambio per una lesione al muscolo pettineo della gamba sinistra, &egrave; recuperabile dalla fine di settembre.",
+        "status": 0,
+        "description": null,
         "lastGame": null,
         "trend": 2
       }
@@ -1392,7 +1392,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
+        "fantagazzetta": true,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -1496,8 +1496,8 @@
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
-        "status": 1,
-        "description": "il difensore alle prese con un risentimento ai flessori della coscia sinistra, recuperabile dalla prima met&agrave; di&nbsp;ottobre.&nbsp;",
+        "status": 0,
+        "description": null,
         "lastGame": null,
         "trend": 2
       }
@@ -1672,7 +1672,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
+        "fantagazzetta": true,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -1877,7 +1877,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "L'attaccante frenato a met&agrave; settembre da una lesione distrattiva di basso grado all'adduttore, forfait contro Roma e Bologna. Punta a recuperare nella sosta per essere poi arruolabile dalla prima met&agrave; di ottobre.&nbsp;",
+        "description": "L'attaccante frenato a met&agrave; settembre da una lesione distrattiva di basso grado all'adduttore, forfait contro Roma e Bologna. Punta a recuperare nella sosta, ma da valutare nei prossimi allenamenti le possibilit&agrave; di convocazione gi&agrave; nel prossimo turno contro l'Udinese.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -2132,7 +2132,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
+        "fantagazzetta": true,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -2212,7 +2212,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
+        "fantagazzetta": false,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -2236,8 +2236,8 @@
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
-        "status": 1,
-        "description": "Il portiere uscito claudicante dal match di mercoled&igrave; in Champions League per una lesione di basso grado all'adduttore lungo. Recuperabile dall'inizio di ottobre.&nbsp;",
+        "status": 0,
+        "description": null,
         "lastGame": null,
         "trend": 2
       }
@@ -2276,8 +2276,8 @@
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
-        "status": 0,
-        "description": null,
+        "status": 1,
+        "description": "il centrocampista subentrato a gara in corso il 20 settembre a Firenze, ma ha lamentato un nuovo fastidio fisico che andr&agrave; valutato e rischia di tenerlo fuori nel match contro il Frosinone alla ripresa del campionato.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -2552,12 +2552,12 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
+        "fantagazzetta": true,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
-        "status": 2,
-        "description": "squalificato nella 5a giornata di campionato",
+        "status": 0,
+        "description": null,
         "lastGame": null,
         "trend": 2
       }
@@ -2676,8 +2676,8 @@
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
-        "status": 1,
-        "description": "Non disponibile con il Milan a causa di un forte torcicollo",
+        "status": 0,
+        "description": null,
         "lastGame": null,
         "trend": 2
       }
@@ -2857,7 +2857,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "l'esterno offensivo dei neroverdi KO il 6 settembre a Bologna vittima di una lesione di grado moderato al flessore della gamba destra. Recuperabile dall'inizio di ottobre.&nbsp;",
+        "description": "l'esterno offensivo dei neroverdi KO il 6 settembre a Bologna vittima di una lesione di grado moderato al flessore della gamba destra. Recuperabile dalla prima met&agrave; di ottobre, ma da valutare nei prossimi allenamenti le possibilit&agrave; di convocazione gi&agrave; nel prossimo turno contro il Milan.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -2872,7 +2872,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
+        "fantagazzetta": true,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -3112,7 +3112,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
+        "fantagazzetta": false,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -3536,8 +3536,8 @@
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
-        "status": 1,
-        "description": "l'attaccante KO contro la Roma il 31 agosto vittima di una distorsione alla caviglia, rientro previsto da inizio ottobre.&nbsp;",
+        "status": 0,
+        "description": null,
         "lastGame": null,
         "trend": 2
       }
@@ -3617,7 +3617,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "il difensore azzurro da venerd&igrave; non si allena per una lieve contrattura al bicipite femorale della coscia destra, che lo esclude per domenica a Firenze. Da valutare nella sosta in vista della 6a giornata di campionato.&nbsp;",
+        "description": "il difensore azzurro il 18 settembre ha lamentato una lieve contrattura al bicipite femorale della coscia destra, che lo ha escluso dalla trasferta di Firenze. Da valutare nella sosta in vista della 6a giornata di campionato, ma ci sono possibilit&agrave; possa far parte dei convocati contro il Frosinone.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -3692,7 +3692,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
+        "fantagazzetta": true,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -3812,7 +3812,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
+        "fantagazzetta": true,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -4337,7 +4337,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "niente da fare per il centrocampista, ancora condizionato da noie fisiche e non fa parte dei convocati per domenica contro il Genoa. Da valutare nella sosta in vista della 6a giornata di campionato.&nbsp;",
+        "description": "niente da fare per il centrocampista, ancora condizionato da noie fisiche ed escluso il 20 settembre dai convocati contro il Genoa. Da valutare nella sosta in vista della 6a giornata di campionato, a rischio la sua presenza a San Siro contro l'Inter.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -4377,7 +4377,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "Il difensorr ai box per una lesione di grado moderato al quadricipite della gamba sinistra, prover&agrave; a torner&agrave; arruolabile dalla seconda met&agrave; di ottobre.&nbsp;",
+        "description": "Il difensore ai box per una lesione di grado moderato al quadricipite della gamba sinistra, prover&agrave; a torner&agrave; arruolabile dalla seconda met&agrave; di ottobre.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -4452,7 +4452,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
+        "fantagazzetta": false,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -4572,7 +4572,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
+        "fantagazzetta": false,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -4752,7 +4752,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
+        "fantagazzetta": false,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -4952,7 +4952,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
+        "fantagazzetta": false,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -5217,7 +5217,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "l'ala offensiva dei bianconeri fermo dopo il match contro il Milan (6 settembre) per una lesione di medio grado del bicipite femorale. Attesi nuovi esami medici a fine settembre per stabilire con esattezza i tempi di recupero, ma ipotizziamo oggi un possibile rientro dalla met&agrave; di ottobre.&nbsp;",
+        "description": "l'ala offensiva dei bianconeri fermo dopo il match contro il Milan (6 settembre) per una lesione di medio grado del bicipite femorale, ipotizziamo un possibile rientro dalla met&agrave; di ottobre.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -5257,7 +5257,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "il terzino dei biancocelesti KO il 24 agosto a Bologna vittima di una lesione muscolare alla coscia. Ipotesi rientro da inizio ottobre.&nbsp;",
+        "description": "il terzino dei biancocelesti KO il 24 agosto a Bologna vittima di una lesione muscolare alla coscia. Prover&agrave; a recuperare a pieno durante la sosta, da valutare nei prossimi allenamenti le possibilit&agrave; di convocazione gi&agrave; contro il Monza nel prossimo turno.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -5277,7 +5277,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "il regista dei biancocelesti KO il 30 agosto contro il Genoa vittima di una lesione muscolare al polpaccio che lo terr&agrave; ai box fino alla prima met&agrave; di ottobre.&nbsp;",
+        "description": "il regista dei biancocelesti KO il 30 agosto contro il Genoa vittima di una lesione muscolare al polpaccio che lo terr&agrave; ai box fino alla met&agrave; di ottobre.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -5737,7 +5737,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "Il centrocampista out contro Frosinone e Fiorentina per noie fisiche, rimane da valutare quotidianamente in vista di sabato sera in casa contro la Lazio nella 5a giornata di campionato.&nbsp;",
+        "description": "Il centrocampista out contro Lazio, Frosinone e Fiorentina per noie fisiche, rimane da valutare quotidianamente in vista della 6a giornata di campionato contro l'Atalanta.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -5977,7 +5977,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "L'attaccante KO in amichevole l'8 agosto vittima di una lesione del collaterale mediale di secondo grado del ginocchio sinistro, recuperabile da inizio ottobre.&nbsp;",
+        "description": "L'attaccante KO in amichevole l'8 agosto vittima di una lesione del collaterale mediale di secondo grado del ginocchio sinistro. Recuperabile da inizio ottobre, ma da valutare nei prossimi allenamenti le possibilit&agrave; di convocazione gi&agrave; nel prossimo turno contro il Venezia.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -6132,7 +6132,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
+        "fantagazzetta": false,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -6557,7 +6557,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "il difensore costretto al cambio a Frosinone il 6 settembre per un risentimento muscolare mio-fasciale all'adduttore della gamba destra. Recuperabile dall'inizio di ottobre.&nbsp;",
+        "description": "il difensore costretto al cambio a Frosinone il 6 settembre per un risentimento muscolare mio-fasciale all'adduttore della gamba destra. Recuperabile dall'inizio di ottobre, ma da valutare nei prossimi allenamenti le possibilit&agrave; di convocazione gi&agrave; nel prossimo turno contro l'Atalanta.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -7216,8 +7216,8 @@
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
-        "status": 1,
-        "description": "il centrocampista in recupero da un guaio muscolare alla gamba lamentato il 24 agosto a Bologna. Si confida di riaverlo a disposizione dalla 6a giornata di campionato.&nbsp;",
+        "status": 0,
+        "description": null,
         "lastGame": null,
         "trend": 2
       }
@@ -7297,7 +7297,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "Il centrocampista ha lamentato un sovraccarico muscolare alla gamba e non ha preso parte alle sfide contro Monza e Milan. Recuperabile da inizio ottobre.&nbsp;",
+        "description": "Il centrocampista ha lamentato un sovraccarico muscolare alla gamba e non ha preso parte alle sfide contro Monza e Milan. Recuperabile da inizio ottobre, ma da valutare nei prossimi allenamenti le possibilit&agrave; di convocazione gi&agrave; nel prossimo turno contro il Bologna.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -7317,7 +7317,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "Il centrocampista fuori causa da met&agrave; settembre contro il Monza per noie fisiche e out anche domenica a Milano. Da valutare in vista della prossima giornata di campionato, dopo la sosta.&nbsp;",
+        "description": "Il centrocampista fuori causa da met&agrave; settembre per noie fisiche, da valutare convocazione per la prossima giornata di campionato contro il Bologna.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -7817,7 +7817,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "il centrocampista non convocato per Genova a causa di una sindrome retto-adduttoria. Salter&agrave; anche la sfida contro il Como in programma domenica e dovrebbe tornare arruolabile dalla 6a giornata di A.&nbsp;",
+        "description": "il centrocampista non convocato per Genova (12 settembre) a causa di una sindrome retto-adduttoria. Out anche nella sfida successiva contro il Como, da valutare nei prossimi allenamenti le possibilit&agrave; di convocazione gi&agrave; nella trasferta di Napoli alla ripresa del campionato.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -7837,7 +7837,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "Il terzino dei ciociari ai box per una lesione di basso grado del bicipite femorale della coscia sinistra, recuperabile dall'inizio di ottobre.&nbsp;",
+        "description": "Il terzino dei ciociari ai box per una lesione di basso grado del bicipite femorale della coscia sinistra, da valutare nei prossimi allenamenti le possibilit&agrave; di convocazione gi&agrave; nel prossimo turno contro il Napoli.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -8037,7 +8037,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "Il difensore frenato sabato mattina da un risentimento muscolare ai flessori della coscia sinistra, assente domenica dunque contro la Juventus. Da valutare durante la sosta in vista della 6a giornata di campionato.&nbsp;",
+        "description": "Il difensore frenato da una lesione muscolare di medio-alto grado del bicipite femorale della coscia sinistra alla vigilia della sfida di campionato contro la Juventus (del 20 settembre). Lungo stop, ipotizziamo un rientro dalla fine di novembre.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -8437,7 +8437,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "L'attaccante operato il 3 settembre a causa di un'ernia inguinale e recuperabile dall'inizio di ottobre.&nbsp;",
+        "description": "L'attaccante operato il 3 settembre a causa di un'ernia inguinale e recuperabile dall'inizio di ottobre, ma rimane da valutare quotidianamente in vista della ripresa del campionato e capire se ci sono possibilit&agrave; di convocazione gi&agrave; contro il Frosinone.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -8597,7 +8597,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "Il difensore alle prese con un forte trauma contusivo alla gamba destra, da valutare il rientro dalla fine di settembre.&nbsp;",
+        "description": "Il difensore alle prese con un forte trauma contusivo alla gamba destra, da valutare il rientro dalla met&agrave; di ottobre.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -8757,7 +8757,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "il difensore fermo dal 6 settembre vittima di una lesione muscolare al bicipite femorale. Condizioni da valutare, ma dovrebbe tornare convocabile dalla prima met&agrave; di ottobre.&nbsp;",
+        "description": "il difensore fermo dal 6 settembre vittima di una lesione muscolare al bicipite femorale. Condizioni da valutare, ma dovrebbe tornare convocabile dalla met&agrave; di ottobre.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -9032,7 +9032,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
+        "fantagazzetta": false,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -9097,7 +9097,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "l'attaccante vittima di una lesione di medio grado del muscolo semitendinoso, a met&agrave; settembre verr&agrave; sottoposto a nuovi esami medici per stabilire i tempi di recupero (in attesa dei nuovi risultati medici, ipotizziamo un lungo stop e un possibile rientro dalla fine di ottobre).",
+        "description": "l'attaccante vittima di una lesione di medio grado del muscolo semitendinoso, ipotizziamo un possibile rientro dalla fine di ottobre.",
         "lastGame": null,
         "trend": 2
       }
@@ -9217,7 +9217,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "il difensore a gennaio vittima della rottura legamento crociato anteriore ginocchio destro, punta a tornare convocabile dalla fine di settembre.&nbsp;",
+        "description": "il difensore a gennaio vittima della rottura legamento crociato anteriore ginocchio destro, punta a tornare convocabile dalla met&agrave; di ottobre.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -9236,8 +9236,8 @@
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
-        "status": 1,
-        "description": "il difensore nel primo turno di A contro il Como costretto al cambio per un lieve problema muscolare all'adduttore della coscia destra che lo terr&agrave; ai box fino alla fine di settembre.",
+        "status": 0,
+        "description": null,
         "lastGame": null,
         "trend": 2
       }
@@ -9797,7 +9797,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "Il calciatore ricoverato il 16 agosto dopo che avrebbe rischiato di annegare in piscina. Dimesso poi il 28 agosto, ora condizioni monitorate da parte dello staff medico rossobl&ugrave;. Da met&agrave; settembre ha avuto l'ok per riprendere l'attivit&agrave; agonistica, potrebbe ora tornare convocabile dalla prima met&agrave; di ottobre.",
+        "description": "Il calciatore ricoverato il 16 agosto dopo che avrebbe rischiato di annegare in piscina. Dimesso poi il 28 agosto, ora condizioni monitorate da parte dello staff medico rossobl&ugrave;. Da met&agrave; settembre ha avuto l'ok per riprendere l'attivit&agrave; agonistica, potrebbe ora tornare convocabile dalla met&agrave; di ottobre.",
         "lastGame": null,
         "trend": 2
       }
@@ -10356,8 +10356,8 @@
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
-        "status": 1,
-        "description": "il difensore ai box da inizio settembre per una lesione di basso grado del muscolo semimembranoso della coscia sinistra, recuperabile dalla seconda met&agrave; di settembre.&nbsp;",
+        "status": 0,
+        "description": null,
         "lastGame": null,
         "trend": 2
       }
@@ -10757,7 +10757,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "il centrocampista non al meglio per noie fisiche, forfait per venerd&igrave; contro il Sassuolo. Da valutare.",
+        "description": "il centrocampista non al meglio per noie fisiche, forfait anche nel prossimo turno contro la Lazio. Da valutare.",
         "lastGame": null,
         "trend": 2
       }
@@ -10797,7 +10797,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "Il difensore KO in amichevole l'8 agosto vittima di una lesione di alto grado del collaterale mediale del ginocchio sinistro. Stop di circa due mesi, rientro dalla met&agrave; di ottobre.&nbsp;",
+        "description": "Il difensore KO in amichevole l'8 agosto vittima di una lesione di alto grado del collaterale mediale del ginocchio sinistro. Stop di circa due mesi, rientro dalla seconda met&agrave; di ottobre.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -11017,7 +11017,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "il difensore sta proseguendo la fase di recupero dalla lesione legamento crociato anteriore gamba destra e ipotizziamo possa tornare convocabile da ottobre.&nbsp;",
+        "description": "il difensore sta proseguendo la fase di recupero dalla lesione legamento crociato anteriore gamba destra e ipotizziamo possa tornare convocabile da fine ottobre.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -11037,7 +11037,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "il centrocampista fuori causa per un problema al ginocchio e fuori causa in questo inizio di campionato. Da valutare rientro da fine settembre.&nbsp;",
+        "description": "il centrocampista fuori causa per un problema al ginocchio e fuori causa in questo inizio di campionato. Da valutare rientro da met&agrave; ottobre.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -11377,7 +11377,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "Il centrocampista non convocato dalla gara dell'11 settembre contro la Fiorentina per un problema fisico. Recuperabile dalla prima met&agrave; di ottobre.&nbsp;",
+        "description": "Il centrocampista non convocato dalla gara dell'11 settembre contro la Fiorentina per un problema fisico. Recuperabile dalla prima met&agrave; di ottobre, ma da valutare nei prossimi allenamenti le possibilit&agrave; di convocazione gi&agrave; nel prossimo turno a Bergamo.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -11757,7 +11757,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "Il portiere fermo per una lesione al crociato anteriore del ginocchio destro. Out domenica contro l'Atalanta, tempi di recupero da valutare.&nbsp;",
+        "description": "Il portiere out dal 20 settembre per una lesione al crociato anteriore del ginocchio destro. Operazione chirurgica e lungo stop, rientro da aprile.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
