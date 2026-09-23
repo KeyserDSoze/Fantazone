@@ -1352,7 +1352,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
+        "fantagazzetta": true,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -2277,7 +2277,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "il centrocampista subentrato a gara in corso il 20 settembre a Firenze, ma ha lamentato un nuovo fastidio fisico che andr&agrave; valutato e rischia di tenerlo fuori nel match contro il Frosinone alla ripresa del campionato.&nbsp;",
+        "description": "il centrocampista subentrato a gara in corso il 20 settembre a Firenze, ma ha lamentato una lesione miofasciale di basso grado dell'adduttore lungo e rimane da valutare nei prossimi allenamenti in vista della gara contro il Frosinone alla ripresa del campionato.",
         "lastGame": null,
         "trend": 2
       }
@@ -3616,8 +3616,8 @@
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
-        "status": 1,
-        "description": "il difensore azzurro il 18 settembre ha lamentato una lieve contrattura al bicipite femorale della coscia destra, che lo ha escluso dalla trasferta di Firenze. Da valutare nella sosta in vista della 6a giornata di campionato, ma ci sono possibilit&agrave; possa far parte dei convocati contro il Frosinone.&nbsp;",
+        "status": 0,
+        "description": null,
         "lastGame": null,
         "trend": 2
       }
@@ -5457,7 +5457,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "il difensore operato nella seconda met&agrave; di luglio al menisco del ginocchio destro. Sta recuperando lentamente, ipotizziamo possa tornare arruolabile da met&agrave; novembre.&nbsp;",
+        "description": "il difensore operato nella seconda met&agrave; di luglio al menisco del ginocchio destro. Sta recuperando lentamente, ipotizziamo possa tornare arruolabile da fine dicembre.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -8712,7 +8712,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
+        "fantagazzetta": false,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -8756,8 +8756,8 @@
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
-        "status": 1,
-        "description": "il difensore fermo dal 6 settembre vittima di una lesione muscolare al bicipite femorale. Condizioni da valutare, ma dovrebbe tornare convocabile dalla met&agrave; di ottobre.&nbsp;",
+        "status": 0,
+        "description": null,
         "lastGame": null,
         "trend": 2
       }
