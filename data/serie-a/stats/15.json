@@ -7318,6 +7318,61 @@
       ]
     },
     {
+      "name": "Alaba",
+      "team": {
+        "name": "Udinese",
+        "abbreviation": "udi"
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true,
+      "summatory": 0,
+      "fantaSummatory": 0,
+      "withVote": 0,
+      "withoutVote": 0,
+      "noPlayed": 5,
+      "withSpecial": 0,
+      "goals": 0,
+      "penalties": 0,
+      "assists": 0,
+      "stoppedPenalties": 0,
+      "sufferedGoals": 0,
+      "wrongedPenalties": 0,
+      "ownGoals": 0,
+      "yellowCards": 0,
+      "redCards": 0,
+      "enoughVotes": 0,
+      "manOfTheMatch": 0,
+      "injured": 0,
+      "games": [
+        {
+          "serieADay": 5,
+          "vote": null,
+          "positiveness": -2
+        },
+        {
+          "serieADay": 4,
+          "vote": null,
+          "positiveness": -2
+        },
+        {
+          "serieADay": 3,
+          "vote": null,
+          "positiveness": -2
+        },
+        {
+          "serieADay": 2,
+          "vote": null,
+          "positiveness": -2
+        },
+        {
+          "serieADay": 1,
+          "vote": null,
+          "positiveness": -2
+        }
+      ]
+    },
+    {
       "name": "Skorupski",
       "team": {
         "name": "Bologna",
