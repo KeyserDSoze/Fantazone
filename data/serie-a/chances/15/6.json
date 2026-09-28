@@ -2172,7 +2172,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
+        "fantagazzetta": false,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -2232,7 +2232,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
+        "fantagazzetta": true,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -2632,7 +2632,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
+        "fantagazzetta": true,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -4336,8 +4336,8 @@
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
-        "status": 1,
-        "description": "niente da fare per il centrocampista, ancora condizionato da noie fisiche ed escluso il 20 settembre dai convocati contro il Genoa. Da valutare nella sosta in vista della 6a giornata di campionato, a rischio la sua presenza a San Siro contro l'Inter.&nbsp;",
+        "status": 0,
+        "description": null,
         "lastGame": null,
         "trend": 2
       }
@@ -4876,8 +4876,8 @@
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
-        "status": 0,
-        "description": null,
+        "status": 1,
+        "description": "Lo svedese KO in Nazionale il 26 settembre vittima di un problema muscolare alla coscia. Da valutare, ma non ci sar&agrave; alla ripresa del campionato.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -5696,8 +5696,8 @@
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
-        "status": 0,
-        "description": null,
+        "status": 1,
+        "description": "L'attaccante vittima di un problema alla caviglia a fine settembre, condizioni da valutare. Assente nel prossimo turno di campionato.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -6312,7 +6312,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
+        "fantagazzetta": false,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -7076,8 +7076,8 @@
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
-        "status": 0,
-        "description": null,
+        "status": 1,
+        "description": "Il calciatore ai box per noie fisiche che restano da valutare, di certo out nel prossimo turno di campionato.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -7316,8 +7316,8 @@
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
-        "status": 1,
-        "description": "Il centrocampista fuori causa da met&agrave; settembre per noie fisiche, da valutare convocazione per la prossima giornata di campionato contro il Bologna.&nbsp;",
+        "status": 0,
+        "description": null,
         "lastGame": null,
         "trend": 2
       }
@@ -7817,7 +7817,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "il centrocampista non convocato per Genova (12 settembre) a causa di una sindrome retto-adduttoria. Out anche nella sfida successiva contro il Como, da valutare nei prossimi allenamenti le possibilit&agrave; di convocazione gi&agrave; nella trasferta di Napoli alla ripresa del campionato.&nbsp;",
+        "description": "il centrocampista non convocato dalla gara di Genova (12 settembre) a causa di una sindrome retto-adduttoria, ha poi deciso di operarsi. Stop di circa sei settimane, pu&ograve; tornare convocabile da inizio novembre.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -8316,8 +8316,8 @@
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
-        "status": 0,
-        "description": null,
+        "status": 1,
+        "description": "Nuovo stop muscolare per il regista dei biancocelesti, vittima di un problema al quadricipite. Tempi di recupero da valutare, di certo out nel prossimo turno di campionato contro il Monza.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
