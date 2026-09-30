@@ -632,12 +632,12 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
+        "fantagazzetta": false,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
-        "status": 0,
-        "description": null,
+        "status": 1,
+        "description": "Il calciatore alle prese con una lesione muscolare al bicipite femorale destro, rientro previsto dalla seconda met&agrave; di ottobre.",
         "lastGame": null,
         "trend": 2
       }
@@ -1712,7 +1712,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
+        "fantagazzetta": false,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -2972,7 +2972,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
+        "fantagazzetta": true,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -4492,7 +4492,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
+        "fantagazzetta": true,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -4877,7 +4877,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "Lo svedese KO in Nazionale il 26 settembre vittima di un problema muscolare alla coscia. Da valutare, ma non ci sar&agrave; alla ripresa del campionato.&nbsp;",
+        "description": "Lo svedese KO in Nazionale il 26 settembre vittima di un problema muscolare alla coscia. Ha deciso di operarsi e rimangono da valutare i tempi di rientro, non ci sar&agrave; di certo alla ripresa del campionato.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -5697,7 +5697,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "L'attaccante vittima di un problema alla caviglia a fine settembre, condizioni da valutare. Assente nel prossimo turno di campionato.&nbsp;",
+        "description": "L'attaccante vittima di un problema alla caviglia a fine settembre. Assente nel prossimo turno di campionato contro il Torino, da valutare rientro dalla seconda met&agrave; di ottobre.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -6037,7 +6037,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "Il centrocampista operato a fine settembre vittima di una lesione del menisco laterale del ginocchio sinistro. Ipotesi di rientro in campo dalla met&agrave; di novembre.&nbsp;",
+        "description": "Il centrocampista operato a fine settembre vittima di una lesione del menisco laterale del ginocchio sinistro. Ipotesi di rientro in campo dalla fine di ottobre.",
         "lastGame": null,
         "trend": 2
       }
@@ -6957,7 +6957,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "il cursore di fascia della Viola sta svolgendo l'iter di recupero dall'infortunio al legamento crociato al ginocchio, punta a tornare convocabile da novembre.&nbsp;",
+        "description": "il cursore di fascia della Viola sta svolgendo l'iter di recupero dall'infortunio al legamento crociato al ginocchio, punta a tornare convocabile da dicembre.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
