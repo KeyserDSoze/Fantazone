@@ -132,7 +132,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
+        "fantagazzetta": true,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -176,8 +176,8 @@
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
-        "status": 0,
-        "description": null,
+        "status": 1,
+        "description": "Il centrocampista l'1 settembre a causa di una lieve aritmia benigna ha deciso di sottoporsi a un intervento di correzione tramite ablazione. Si confida di rivederlo in campo dalla seconda met&agrave; ottobre.",
         "lastGame": null,
         "trend": 2
       }
@@ -337,7 +337,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "l'attaccante turco, dopo la gara di Frosinone (23 agosto), ha lamentato un problema al piede. Operato il 31 agosto di osteosintesi della frattura della base del V metatarso del piede sinistro, stop di circa tre mesi. Ipotesi di rientro in campo da fine novembre.&nbsp;",
+        "description": "l'attaccante turco, dopo la gara di Frosinone (23 agosto), ha lamentato un problema al piede. Operato il 31 agosto di osteosintesi della frattura della base del V metatarso del piede sinistro, stop di circa tre mesi. Rientro in campo da inizio dicembre.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -1632,7 +1632,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
+        "fantagazzetta": false,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -3417,7 +3417,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "il metronomo del centrocampo bianconero ha rimediato la rottura del menisco esterno del ginocchio. Verr&agrave; operato a Lione a stretto giro. Lungo stop e possibilit&agrave; di rivederlo in campo da gennaio.&nbsp;",
+        "description": "il metronomo del centrocampo bianconero ha rimediato la rottura del menisco esterno del ginocchio. Verr&agrave; operato a Lione a stretto giro. Lungo stop e possibilit&agrave; di rivederlo in campo da febbraio.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -4877,7 +4877,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "Lo svedese KO in Nazionale il 26 settembre vittima di un problema muscolare alla coscia. Ha deciso di operarsi e rimangono da valutare i tempi di rientro, non ci sar&agrave; di certo alla ripresa del campionato.&nbsp;",
+        "description": "Lo svedese KO in Nazionale il 26 settembre vittima di un problema al tendine della coscia destra. Ha deciso di operarsi e affronter&agrave; un lungo stop. Ipotesi di rientro in campo da fine febbraio.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -8436,8 +8436,8 @@
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
-        "status": 1,
-        "description": "L'attaccante operato il 3 settembre a causa di un'ernia inguinale e recuperabile dall'inizio di ottobre, ma rimane da valutare quotidianamente in vista della ripresa del campionato e capire se ci sono possibilit&agrave; di convocazione gi&agrave; contro il Frosinone.&nbsp;",
+        "status": 0,
+        "description": null,
         "lastGame": null,
         "trend": 2
       }
