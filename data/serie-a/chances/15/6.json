@@ -212,7 +212,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
+        "fantagazzetta": false,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -312,7 +312,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
+        "fantagazzetta": true,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -1217,7 +1217,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "L'islandese in Nazionale il 26 settembre vittima di un problema alla spalla destra dopo una caduta fortuita in partita. Condizioni da monitorare, si confida di riaverlo a disposizione dalla fine met&agrave; di ottobre.",
+        "description": "L'islandese in Nazionale il 26 settembre vittima di un problema alla spalla destra dopo una caduta fortuita in partita. Condizioni da monitorare, si confida di riaverlo a disposizione dalla fine met&agrave; di ottobre/inizio di novembre.",
         "lastGame": null,
         "trend": 2
       }
@@ -1896,8 +1896,8 @@
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
-        "status": 0,
-        "description": null,
+        "status": 1,
+        "description": "L'attaccante non al meglio per un problema muscolare alla coscia che andr&agrave; valutato. Verso il forfait nel prossimo turno di campionato.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
