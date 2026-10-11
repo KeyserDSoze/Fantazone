@@ -5992,6 +5992,16 @@
       "visible": true
     },
     {
+      "name": "Wiafe",
+      "team": {
+        "name": "Genoa",
+        "abbreviation": "gen"
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true
+    },
+    {
       "name": "Obric",
       "team": {
         "name": "Atalanta",
@@ -6006,6 +6016,16 @@
       "team": {
         "name": "Juventus",
         "abbreviation": "juv"
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true
+    },
+    {
+      "name": "Vasquez D.",
+      "team": {
+        "name": "Roma",
+        "abbreviation": "rom"
       },
       "role": 0,
       "isActive": true,
