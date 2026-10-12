@@ -7471,7 +7471,7 @@
         "wrongedPenalty": 0,
         "ownGoal": 0,
         "status": 0,
-        "manOfTheMatch": false,
+        "manOfTheMatch": true,
         "hasVote": true,
         "isOut": false,
         "isIn": false,
@@ -8063,6 +8063,622 @@
         "hasVote": false,
         "isOut": false,
         "isIn": true,
+        "injured": false
+      }
+    },
+    {
+      "name": "Perri",
+      "team": {
+        "name": "Torino",
+        "abbreviation": "tor"
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 0,
+        "value": 6,
+        "isFinal": false,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": false,
+        "injured": false
+      }
+    },
+    {
+      "name": "Comuzzo",
+      "team": {
+        "name": "Torino",
+        "abbreviation": "tor"
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 1,
+        "value": 6,
+        "isFinal": false,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": false,
+        "injured": false
+      }
+    },
+    {
+      "name": "Coco",
+      "team": {
+        "name": "Torino",
+        "abbreviation": "tor"
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 1,
+        "value": 6,
+        "isFinal": false,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": false,
+        "injured": false
+      }
+    },
+    {
+      "name": "Rodriguez r.",
+      "team": {
+        "name": "Torino",
+        "abbreviation": "tor"
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 1,
+        "value": 6,
+        "isFinal": false,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": false,
+        "injured": false
+      }
+    },
+    {
+      "name": "Belghali",
+      "team": {
+        "name": "Torino",
+        "abbreviation": "tor"
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 1,
+        "value": 6,
+        "isFinal": false,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": false,
+        "injured": false
+      }
+    },
+    {
+      "name": "Mandragora",
+      "team": {
+        "name": "Torino",
+        "abbreviation": "tor"
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 2,
+        "value": 6,
+        "isFinal": false,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": false,
+        "injured": false
+      }
+    },
+    {
+      "name": "Braganca",
+      "team": {
+        "name": "Torino",
+        "abbreviation": "tor"
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 2,
+        "value": 6,
+        "isFinal": false,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": false,
+        "injured": false
+      }
+    },
+    {
+      "name": "Cacciamani",
+      "team": {
+        "name": "Torino",
+        "abbreviation": "tor"
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 2,
+        "value": 6,
+        "isFinal": false,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": false,
+        "injured": false
+      }
+    },
+    {
+      "name": "Oristanio",
+      "team": {
+        "name": "Torino",
+        "abbreviation": "tor"
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 2,
+        "value": 6,
+        "isFinal": false,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": false,
+        "injured": false
+      }
+    },
+    {
+      "name": "Adams c.",
+      "team": {
+        "name": "Torino",
+        "abbreviation": "tor"
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 3,
+        "value": 6,
+        "isFinal": false,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": false,
+        "injured": false
+      }
+    },
+    {
+      "name": "Simeone",
+      "team": {
+        "name": "Torino",
+        "abbreviation": "tor"
+      },
+      "role": 3,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 3,
+        "value": 6,
+        "isFinal": false,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": false,
+        "injured": false
+      }
+    },
+    {
+      "name": "Okoye",
+      "team": {
+        "name": "Udinese",
+        "abbreviation": "udi"
+      },
+      "role": 0,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 0,
+        "value": 6,
+        "isFinal": false,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": false,
+        "injured": false
+      }
+    },
+    {
+      "name": "Abankwah",
+      "team": {
+        "name": "Udinese",
+        "abbreviation": "udi"
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 1,
+        "value": 6,
+        "isFinal": false,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": false,
+        "injured": false
+      }
+    },
+    {
+      "name": "Solet",
+      "team": {
+        "name": "Udinese",
+        "abbreviation": "udi"
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 1,
+        "value": 6,
+        "isFinal": false,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": false,
+        "injured": false
+      }
+    },
+    {
+      "name": "Ebosse",
+      "team": {
+        "name": "Udinese",
+        "abbreviation": "udi"
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 1,
+        "value": 6,
+        "isFinal": false,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": false,
+        "injured": false
+      }
+    },
+    {
+      "name": "Vojvoda",
+      "team": {
+        "name": "Udinese",
+        "abbreviation": "udi"
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 1,
+        "value": 6,
+        "isFinal": false,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": false,
+        "injured": false
+      }
+    },
+    {
+      "name": "Zarraga",
+      "team": {
+        "name": "Udinese",
+        "abbreviation": "udi"
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 2,
+        "value": 6,
+        "isFinal": false,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": false,
+        "injured": false
+      }
+    },
+    {
+      "name": "Karlstrom",
+      "team": {
+        "name": "Udinese",
+        "abbreviation": "udi"
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 2,
+        "value": 6,
+        "isFinal": false,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": false,
+        "injured": false
+      }
+    },
+    {
+      "name": "Kamara h.",
+      "team": {
+        "name": "Udinese",
+        "abbreviation": "udi"
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 1,
+        "value": 6,
+        "isFinal": false,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": false,
+        "injured": false
+      }
+    },
+    {
+      "name": "Unai gomez",
+      "team": {
+        "name": "Udinese",
+        "abbreviation": "udi"
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 2,
+        "value": 6,
+        "isFinal": false,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": false,
+        "injured": false
+      }
+    },
+    {
+      "name": "Ekkelenkamp",
+      "team": {
+        "name": "Udinese",
+        "abbreviation": "udi"
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 2,
+        "value": 6,
+        "isFinal": false,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": false,
+        "injured": false
+      }
+    },
+    {
+      "name": "Chakvetadze",
+      "team": {
+        "name": "Udinese",
+        "abbreviation": "udi"
+      },
+      "role": 2,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 2,
+        "value": 6,
+        "isFinal": false,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": false,
         "injured": false
       }
     }
