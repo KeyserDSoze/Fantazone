@@ -372,8 +372,8 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
-        "gazzetta": false,
+        "fantagazzetta": true,
+        "gazzetta": true,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -393,7 +393,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": false,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -632,8 +632,8 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
-        "gazzetta": true,
+        "fantagazzetta": false,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -653,7 +653,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -693,7 +693,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": false,
+        "gazzetta": true,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -733,7 +733,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": false,
+        "gazzetta": true,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -913,7 +913,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -973,7 +973,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": false,
-        "gazzetta": false,
+        "gazzetta": true,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -1012,12 +1012,12 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
-        "gazzetta": true,
+        "fantagazzetta": false,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
-        "status": 0,
-        "description": null,
+        "status": 1,
+        "description": "L'attaccante KO il 14 ottobre in Champions League, costretto al cambio per noie muscolari alla gamba che andranno valutate. Forfait nel prossimo turno di campionato contro la Fiorentina.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -1112,12 +1112,12 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
-        "gazzetta": true,
+        "fantagazzetta": false,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
-        "status": 0,
-        "description": null,
+        "status": 1,
+        "description": "Il centrocampista frenato da un fastidio muscolare alla gamba il 14 ottobre in Champions League contro il Real Madrid. Condizioni da valutare, ma va verso il forfait sabato sera in campionato contro il Genoa.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -1253,7 +1253,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": false,
+        "gazzetta": true,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -1832,8 +1832,8 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
-        "gazzetta": false,
+        "fantagazzetta": true,
+        "gazzetta": true,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -2053,7 +2053,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -2213,11 +2213,11 @@
       "visible": true,
       "chance": {
         "fantagazzetta": false,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "il difensore costretto al cambio il 12 ottobre contro il Venezia in campionato per un fastidio muscolare al flessore della coscia sinistra. Condizioni da valutare con appositi esami medici.&nbsp;",
+        "description": "il difensore costretto al cambio il 12 ottobre contro il Venezia in campionato per un risentimento muscolare al flessore della coscia sinistra. Condizioni da valutare quotidianamente, a rischio la sua convocazione nel prossimo turno di campionato contro il Milan.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -2373,7 +2373,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": false,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -3072,8 +3072,8 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
-        "gazzetta": false,
+        "fantagazzetta": true,
+        "gazzetta": true,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -4053,7 +4053,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": false,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -4077,7 +4077,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "il difensore KO l'11 ottobre contro il Milan vittima di un problema al ginocchio che andr&agrave; valutato per stabilire i tempi di recupero. Di certo out venerd&igrave; contro il Frosinone in campionato.&nbsp;",
+        "description": "il difensore KO l'11 ottobre contro il Milan vittima di una lesione al crociato anteriore del ginocchio sinistro. Lungo stop, ipotesi rientro in campo da aprile.",
         "lastGame": null,
         "trend": 2
       }
@@ -4133,7 +4133,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": false,
-        "gazzetta": false,
+        "gazzetta": true,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -4213,7 +4213,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": false,
+        "gazzetta": true,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -4993,7 +4993,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": false,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -5296,8 +5296,8 @@
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
-        "status": 1,
-        "description": "lavoro a parte nei giorni scorsi per l'attaccante a causa del riacutizzarsi di un fastidio muscolare alla gamba. Assente gi&agrave; domenica scorsa contro il Bologna, condizioni da valutare in vista della sfida di domenica a Udine nella 7a giornata di A.&nbsp;",
+        "status": 0,
+        "description": null,
         "lastGame": null,
         "trend": 2
       }
@@ -5317,7 +5317,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "il difensore KO l'11 ottobre contro il Sassuolo vittima di una lesione del flessore della coscia sinistra con parziale interessamento tendineo. Da valutare ora l'opzione operazione chirurgica, ma lo stop sar&agrave; lungo anche in caso di terapia conservativa. Ipotesi rientro in campo da fine febbraio.",
+        "description": "il difensore KO l'11 ottobre contro il Sassuolo vittima di una lesione del flessore della coscia sinistra con parziale interessamento tendineo. Lo stop sar&agrave; lungo, anche con la terapia conservativa. Ipotesi rientro in campo da fine febbraio.",
         "lastGame": null,
         "trend": 2
       }
@@ -6453,7 +6453,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": false,
-        "gazzetta": false,
+        "gazzetta": true,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -8813,7 +8813,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": false,
-        "gazzetta": false,
+        "gazzetta": true,
         "mediaset": false,
         "sky": false,
         "status": 0,
