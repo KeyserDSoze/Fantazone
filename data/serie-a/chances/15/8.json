@@ -193,7 +193,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -673,7 +673,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -1176,8 +1176,8 @@
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
-        "status": 1,
-        "description": "Il calciatore alle prese con una lesione muscolare al bicipite femorale destro, rientro previsto dalla fine di ottobre.",
+        "status": 0,
+        "description": null,
         "lastGame": null,
         "trend": 2
       }
@@ -1557,7 +1557,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "L'islandese in Nazionale il 26 settembre vittima di un problema alla spalla destra dopo una caduta fortuita in partita. Condizioni da monitorare, si confida di riaverlo a disposizione dalla fine met&agrave; di ottobre/inizio di novembre.",
+        "description": "L'islandese in Nazionale il 26 settembre vittima di un problema alla spalla destra dopo una caduta fortuita in partita. Condizioni da monitorare, si confida di riaverlo a disposizione da inizio di novembre.",
         "lastGame": null,
         "trend": 2
       }
@@ -1852,7 +1852,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
+        "fantagazzetta": true,
         "gazzetta": true,
         "mediaset": false,
         "sky": false,
@@ -2512,7 +2512,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
+        "fantagazzetta": true,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -2752,12 +2752,12 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
-        "gazzetta": true,
+        "fantagazzetta": false,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
-        "status": 0,
-        "description": null,
+        "status": 1,
+        "description": "Il nigeriano da mercoled&igrave; fermo per un problema all'anca e viaggia verso il forfait domenica in campionato a Udine. Da valutare con visita specialistica in programma.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -3256,8 +3256,8 @@
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
-        "status": 1,
-        "description": "Il centrocampista sostituito il 5 ottobre con la Nazionale italiana a causa di una lesione distrattiva al polpaccio destro. Recuperabile da fine ottobre.&nbsp;",
+        "status": 0,
+        "description": null,
         "lastGame": null,
         "trend": 2
       }
@@ -3332,7 +3332,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
+        "fantagazzetta": false,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -3572,7 +3572,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
+        "fantagazzetta": false,
         "gazzetta": true,
         "mediaset": false,
         "sky": false,
@@ -5172,7 +5172,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
+        "fantagazzetta": true,
         "gazzetta": true,
         "mediaset": false,
         "sky": false,
@@ -5356,8 +5356,8 @@
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
-        "status": 1,
-        "description": "il regista dei biancocelesti KO il 30 agosto contro il Genoa vittima di una lesione muscolare al polpaccio, ai box fino alla seconda met&agrave; di ottobre. Da valutare convocazione per sabato contro il Parma.&nbsp;",
+        "status": 0,
+        "description": null,
         "lastGame": null,
         "trend": 2
       }
@@ -5733,7 +5733,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": false,
-        "gazzetta": false,
+        "gazzetta": true,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -6032,7 +6032,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
+        "fantagazzetta": false,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -6092,7 +6092,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
+        "fantagazzetta": false,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -6276,8 +6276,8 @@
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
-        "status": 1,
-        "description": "il terzino dei biancocelesti KO il 24 agosto a Bologna vittima di una lesione muscolare alla coscia. Recuperabile dalla seconda met&agrave; di ottobre, ma da valutare la convocazione gi&agrave; sabato contro il Parma all'Olimpico.",
+        "status": 0,
+        "description": null,
         "lastGame": null,
         "trend": 2
       }
@@ -6832,7 +6832,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
+        "fantagazzetta": true,
         "gazzetta": true,
         "mediaset": false,
         "sky": false,
@@ -6876,8 +6876,8 @@
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
-        "status": 0,
-        "description": null,
+        "status": 1,
+        "description": "Il difensore svizzero ai box per una lesione tendinea di basso grado ai muscoli flessori della coscia sinistra, rientro possibile dalla prima met&agrave; di novembre.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -7352,7 +7352,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
+        "fantagazzetta": true,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -8192,7 +8192,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
+        "fantagazzetta": true,
         "gazzetta": true,
         "mediaset": false,
         "sky": false,
@@ -8373,7 +8373,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": false,
-        "gazzetta": false,
+        "gazzetta": true,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -8773,7 +8773,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": false,
-        "gazzetta": false,
+        "gazzetta": true,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -8932,7 +8932,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
+        "fantagazzetta": false,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -9837,7 +9837,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "il calciatore in ripresa dalla rottura del legamento crociato, pu&ograve; tornare arruolabile dalla fine di ottobre.&nbsp;",
+        "description": "il calciatore in ripresa dalla rottura del legamento crociato, pu&ograve; tornare arruolabile dalla met&agrave; di novembre.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -9896,8 +9896,8 @@
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
-        "status": 1,
-        "description": "Il calciatore ricoverato il 16 agosto dopo che avrebbe rischiato di annegare in piscina. Dimesso poi il 28 agosto, ora condizioni monitorate da parte dello staff medico rossobl&ugrave;. Da met&agrave; settembre ha avuto l'ok per riprendere l'attivit&agrave; agonistica, potrebbe ora tornare convocabile dalla fine di ottobre.",
+        "status": 0,
+        "description": null,
         "lastGame": null,
         "trend": 2
       }
