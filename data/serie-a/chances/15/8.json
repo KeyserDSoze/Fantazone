@@ -193,7 +193,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": false,
+        "gazzetta": true,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -296,8 +296,8 @@
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
-        "status": 0,
-        "description": null,
+        "status": 1,
+        "description": "l'attaccante in recupero dal fastidio alla tibia e, dopo aver saltato le sfide contro Roma e Fiorentina, non ci sar&agrave; neppure sabato contro il Sassuolo. Tuttavia, punta a tornare convocabile nella 9a giornata di A.",
         "lastGame": null,
         "trend": 2
       }
@@ -333,7 +333,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": false,
+        "gazzetta": true,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -492,7 +492,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
+        "fantagazzetta": false,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -617,7 +617,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "L'argentino sostituito dopo un tempo il 14 ottobre in Champions League per una lesione al gemello del polpaccio destro. Recuperabile da inizio novembre.&nbsp;",
+        "description": "L'argentino sostituito dopo un tempo il 14 ottobre in Champions League per una lesione al gemello del polpaccio destro. Recuperabile dalla 9a giornata di campionato.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -672,7 +672,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
+        "fantagazzetta": false,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -912,7 +912,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
+        "fantagazzetta": false,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -1472,12 +1472,12 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
-        "gazzetta": true,
+        "fantagazzetta": false,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
-        "status": 0,
-        "description": null,
+        "status": 1,
+        "description": "l'argentino ai box per una lesione di basso grado del soleo destro, recuperabile da met&agrave; novembre.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -1533,7 +1533,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -1893,7 +1893,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -1913,7 +1913,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -2273,7 +2273,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -2293,7 +2293,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -2373,7 +2373,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -2473,7 +2473,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -2657,7 +2657,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "L'attaccante non al meglio per un problema alla caviglia, dar&agrave; forfait nel prossimo turno di campionato. Rientro da inizio novembre.&nbsp;",
+        "description": "L'attaccante non al meglio per un problema alla caviglia, dar&agrave; forfait nel prossimo turno di campionato. Rientro da fine ottobre.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -2792,7 +2792,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
+        "fantagazzetta": true,
         "gazzetta": true,
         "mediaset": false,
         "sky": false,
@@ -3373,7 +3373,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -3453,7 +3453,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -3697,7 +3697,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "Il turco gioved&igrave; in Europa League ha lamentato un fastidio muscolare alla gamba che andr&agrave; valutato. Viaggia verso il forfait per domenica a Lecce.",
+        "description": "Il turco il 22 ottobre in Europa League ha lamentato una lesione di basso grado del bicipite femorale sinistro, recuperabile da met&agrave; novembre.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -3793,7 +3793,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -3813,7 +3813,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -3853,7 +3853,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -3912,7 +3912,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
+        "fantagazzetta": false,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -3993,7 +3993,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -4013,7 +4013,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -4132,8 +4132,8 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
-        "gazzetta": true,
+        "fantagazzetta": false,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -4493,7 +4493,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -4573,7 +4573,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": false,
-        "gazzetta": false,
+        "gazzetta": true,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -4653,7 +4653,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -4753,7 +4753,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -5172,7 +5172,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
+        "fantagazzetta": false,
         "gazzetta": true,
         "mediaset": false,
         "sky": false,
@@ -5356,8 +5356,8 @@
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
-        "status": 0,
-        "description": null,
+        "status": 1,
+        "description": "il regista dei biancocelesti KO il 30 agosto contro il Genoa vittima di una lesione muscolare al polpaccio, ai box fino alla fine di ottobre.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -5517,7 +5517,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "Il difensore ai box per una lesione di grado moderato al quadricipite della gamba sinistra, prover&agrave; a torner&agrave; arruolabile dalla seconda met&agrave; di ottobre.&nbsp;",
+        "description": "Il difensore ai box per una lesione di grado moderato al quadricipite della gamba sinistra, prover&agrave; a torner&agrave; arruolabile dalla fine di ottobre.",
         "lastGame": null,
         "trend": 2
       }
@@ -5572,7 +5572,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
+        "fantagazzetta": true,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -5593,7 +5593,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": false,
+        "gazzetta": true,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -6036,8 +6036,8 @@
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
-        "status": 0,
-        "description": null,
+        "status": 1,
+        "description": "Il centrocampista offensivo dei lariani mercoled&igrave; ha lamentato un fastidio alla gamba, &egrave; out per sabato in campionato contro il Sassuolo, ma pu&ograve; recuperare per il successivo turno (infrasettimanale) di A.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -6177,7 +6177,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "il difensore out per un risentimento agli adduttori della coscia destra, recuperabile dall'inizio di novembre.&nbsp;",
+        "description": "il difensore out per un risentimento agli adduttori della coscia destra, recuperabile dalla fine di ottobre.",
         "lastGame": null,
         "trend": 2
       }
@@ -6196,8 +6196,8 @@
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
-        "status": 0,
-        "description": null,
+        "status": 1,
+        "description": "l'esterno nerazzurro sottoposto il 23 ottobre a esami medici che hanno evidenziato un risentimento all'adduttore lungo della coscia sinistra. Ipotesi di recupero da met&agrave; novembre.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -6212,7 +6212,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
+        "fantagazzetta": true,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -6276,8 +6276,8 @@
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
-        "status": 0,
-        "description": null,
+        "status": 1,
+        "description": "il terzino dei biancocelesti KO il 24 agosto a Bologna vittima di una lesione muscolare alla coscia. Recuperabile dalla fine di ottobre.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -6316,8 +6316,8 @@
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
-        "status": 0,
-        "description": null,
+        "status": 1,
+        "description": "l'ala offensiva dei salentini ferma ai box per la frattura composta del malleolo mediale della caviglia destra rimediata nella seconda met&agrave; di ottobre. Si prospetta un lungo stop, ipotizziamo un rientro in campo da febbraio.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -7472,8 +7472,8 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
-        "gazzetta": true,
+        "fantagazzetta": false,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -7493,7 +7493,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -7552,7 +7552,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
+        "fantagazzetta": true,
         "gazzetta": true,
         "mediaset": false,
         "sky": false,
@@ -7693,7 +7693,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -7852,8 +7852,8 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
-        "gazzetta": true,
+        "fantagazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -7913,7 +7913,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": false,
-        "gazzetta": false,
+        "gazzetta": true,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -8156,8 +8156,8 @@
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
-        "status": 0,
-        "description": null,
+        "status": 1,
+        "description": "il difensore alle prese con uno schiacciamento di un nervo al piede, forfait anche domenica contro l'Inter a San Siro. Da valutare in vista del turno infrasettimanale.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -8373,7 +8373,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": false,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -8412,7 +8412,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
+        "fantagazzetta": true,
         "gazzetta": true,
         "mediaset": false,
         "sky": false,
@@ -8653,7 +8653,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": false,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -8772,7 +8772,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
+        "fantagazzetta": true,
         "gazzetta": true,
         "mediaset": false,
         "sky": false,
@@ -8893,7 +8893,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -8912,7 +8912,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
+        "fantagazzetta": true,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -9273,7 +9273,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": false,
+        "gazzetta": true,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -9313,7 +9313,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": false,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -9493,7 +9493,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -11417,7 +11417,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "il difensore operato in estate per il perdurare di un problema all'anca e recuperabile da fine ottobre.&nbsp;",
+        "description": "il difensore operato in estate per il perdurare di un problema all'anca e recuperabile dalla met&agrave; di novembre.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
