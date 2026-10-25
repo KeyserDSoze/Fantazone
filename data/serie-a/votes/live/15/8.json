@@ -5109,7 +5109,7 @@
       "visible": true,
       "vote": {
         "role": 0,
-        "value": 6,
+        "value": 6.5,
         "isFinal": false,
         "goal": 0,
         "penalty": 0,
@@ -5249,7 +5249,7 @@
       "visible": true,
       "vote": {
         "role": 2,
-        "value": 6,
+        "value": 6.5,
         "isFinal": false,
         "goal": 0,
         "penalty": 0,
@@ -5277,9 +5277,9 @@
       "visible": true,
       "vote": {
         "role": 2,
-        "value": 6,
+        "value": 7,
         "isFinal": false,
-        "goal": 0,
+        "goal": 1,
         "penalty": 0,
         "assist": 0,
         "stoppedPenalty": 0,
@@ -5333,7 +5333,7 @@
       "visible": true,
       "vote": {
         "role": 2,
-        "value": 6,
+        "value": 6.5,
         "isFinal": false,
         "goal": 0,
         "penalty": 0,
@@ -5361,11 +5361,11 @@
       "visible": true,
       "vote": {
         "role": 2,
-        "value": 6,
+        "value": 6.5,
         "isFinal": false,
         "goal": 0,
         "penalty": 0,
-        "assist": 0,
+        "assist": 1,
         "stoppedPenalty": 0,
         "sufferedGoal": 0,
         "wrongedPenalty": 0,
@@ -5423,7 +5423,7 @@
         "penalty": 0,
         "assist": 0,
         "stoppedPenalty": 0,
-        "sufferedGoal": 0,
+        "sufferedGoal": 1,
         "wrongedPenalty": 0,
         "ownGoal": 0,
         "status": 0,
@@ -5585,7 +5585,7 @@
       "visible": true,
       "vote": {
         "role": 1,
-        "value": 6,
+        "value": 5.5,
         "isFinal": false,
         "goal": 0,
         "penalty": 0,
@@ -5697,7 +5697,7 @@
       "visible": true,
       "vote": {
         "role": 2,
-        "value": 6,
+        "value": 5.5,
         "isFinal": false,
         "goal": 0,
         "penalty": 0,
@@ -5977,7 +5977,7 @@
       "visible": true,
       "vote": {
         "role": 1,
-        "value": 6,
+        "value": 5.5,
         "isFinal": false,
         "goal": 0,
         "penalty": 0,
@@ -5989,41 +5989,13 @@
         "status": 0,
         "manOfTheMatch": false,
         "hasVote": true,
-        "isOut": false,
+        "isOut": true,
         "isIn": false,
         "injured": false
       }
     },
     {
       "name": "Kristensen t.",
-      "team": {
-        "name": "Atalanta",
-        "abbreviation": "ata"
-      },
-      "role": 1,
-      "isActive": true,
-      "visible": true,
-      "vote": {
-        "role": 1,
-        "value": 6,
-        "isFinal": false,
-        "goal": 0,
-        "penalty": 0,
-        "assist": 0,
-        "stoppedPenalty": 0,
-        "sufferedGoal": 0,
-        "wrongedPenalty": 0,
-        "ownGoal": 0,
-        "status": 0,
-        "manOfTheMatch": false,
-        "hasVote": true,
-        "isOut": false,
-        "isIn": false,
-        "injured": false
-      }
-    },
-    {
-      "name": "Obric",
       "team": {
         "name": "Atalanta",
         "abbreviation": "ata"
@@ -6051,6 +6023,34 @@
       }
     },
     {
+      "name": "Obric",
+      "team": {
+        "name": "Atalanta",
+        "abbreviation": "ata"
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 1,
+        "value": 5,
+        "isFinal": false,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": false,
+        "injured": false
+      }
+    },
+    {
       "name": "Zappacosta",
       "team": {
         "name": "Atalanta",
@@ -6061,7 +6061,7 @@
       "visible": true,
       "vote": {
         "role": 1,
-        "value": 6,
+        "value": 5.5,
         "isFinal": false,
         "goal": 0,
         "penalty": 0,
@@ -6117,7 +6117,7 @@
       "visible": true,
       "vote": {
         "role": 2,
-        "value": 6,
+        "value": 5.5,
         "isFinal": false,
         "goal": 0,
         "penalty": 0,
@@ -6285,7 +6285,7 @@
       "visible": true,
       "vote": {
         "role": 1,
-        "value": 6,
+        "value": 6.5,
         "isFinal": false,
         "goal": 0,
         "penalty": 0,
@@ -6397,7 +6397,7 @@
       "visible": true,
       "vote": {
         "role": 2,
-        "value": 6,
+        "value": 6.5,
         "isFinal": false,
         "goal": 0,
         "penalty": 0,
@@ -6425,7 +6425,7 @@
       "visible": true,
       "vote": {
         "role": 2,
-        "value": 6,
+        "value": 6.5,
         "isFinal": false,
         "goal": 0,
         "penalty": 0,
@@ -6453,11 +6453,11 @@
       "visible": true,
       "vote": {
         "role": 3,
-        "value": 6,
+        "value": 6.5,
         "isFinal": false,
         "goal": 0,
         "penalty": 0,
-        "assist": 0,
+        "assist": 1,
         "stoppedPenalty": 0,
         "sufferedGoal": 0,
         "wrongedPenalty": 0,
@@ -6481,7 +6481,7 @@
       "visible": true,
       "vote": {
         "role": 2,
-        "value": 7,
+        "value": 8,
         "isFinal": false,
         "goal": 2,
         "penalty": 0,
@@ -6518,7 +6518,7 @@
         "sufferedGoal": 0,
         "wrongedPenalty": 0,
         "ownGoal": 0,
-        "status": 0,
+        "status": 1,
         "manOfTheMatch": false,
         "hasVote": true,
         "isOut": false,
@@ -6551,6 +6551,34 @@
         "hasVote": true,
         "isOut": false,
         "isIn": false,
+        "injured": false
+      }
+    },
+    {
+      "name": "Bernasconi",
+      "team": {
+        "name": "Atalanta",
+        "abbreviation": "ata"
+      },
+      "role": 1,
+      "isActive": true,
+      "visible": true,
+      "vote": {
+        "role": 1,
+        "value": 6,
+        "isFinal": false,
+        "goal": 0,
+        "penalty": 0,
+        "assist": 0,
+        "stoppedPenalty": 0,
+        "sufferedGoal": 0,
+        "wrongedPenalty": 0,
+        "ownGoal": 0,
+        "status": 0,
+        "manOfTheMatch": false,
+        "hasVote": true,
+        "isOut": false,
+        "isIn": true,
         "injured": false
       }
     }
