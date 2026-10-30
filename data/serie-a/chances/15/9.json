@@ -193,7 +193,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -733,7 +733,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -753,7 +753,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -853,7 +853,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -873,7 +873,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -893,7 +893,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -1133,7 +1133,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -1253,7 +1253,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -1293,7 +1293,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -1452,8 +1452,8 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
-        "gazzetta": true,
+        "fantagazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -1573,7 +1573,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -1673,7 +1673,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -2033,7 +2033,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -2132,8 +2132,8 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
-        "gazzetta": true,
+        "fantagazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -2272,7 +2272,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
+        "fantagazzetta": false,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -2352,7 +2352,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
+        "fantagazzetta": false,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -2733,7 +2733,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -2752,8 +2752,8 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
-        "gazzetta": true,
+        "fantagazzetta": false,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -3232,7 +3232,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
+        "fantagazzetta": true,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -3333,7 +3333,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -3473,7 +3473,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -3652,7 +3652,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
+        "fantagazzetta": false,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -3692,8 +3692,8 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
-        "gazzetta": true,
+        "fantagazzetta": false,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -3793,7 +3793,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -3813,7 +3813,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -4053,7 +4053,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -4072,8 +4072,8 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
-        "gazzetta": true,
+        "fantagazzetta": false,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -4373,7 +4373,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -4413,7 +4413,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": false,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -4513,7 +4513,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -4633,7 +4633,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -4673,7 +4673,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -4793,7 +4793,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -5213,7 +5213,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -5373,7 +5373,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -5633,7 +5633,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -5732,8 +5732,8 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
-        "gazzetta": true,
+        "fantagazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -6033,7 +6033,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": false,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -6293,7 +6293,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -6332,8 +6332,8 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
-        "gazzetta": true,
+        "fantagazzetta": false,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -6873,7 +6873,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -7072,8 +7072,8 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
-        "gazzetta": true,
+        "fantagazzetta": false,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -7093,7 +7093,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -7112,7 +7112,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
+        "fantagazzetta": false,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -7132,8 +7132,8 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
-        "gazzetta": true,
+        "fantagazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -7192,7 +7192,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
+        "fantagazzetta": true,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -7313,7 +7313,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -7813,7 +7813,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -9073,7 +9073,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": false,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -9092,7 +9092,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
+        "fantagazzetta": false,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -9132,7 +9132,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
+        "fantagazzetta": true,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -9652,7 +9652,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
+        "fantagazzetta": true,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -10052,7 +10052,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
+        "fantagazzetta": true,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -12012,8 +12012,8 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
-        "gazzetta": true,
+        "fantagazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
