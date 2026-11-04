@@ -293,7 +293,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": false,
+        "gazzetta": true,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -1176,8 +1176,8 @@
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
-        "status": 1,
-        "description": "L'attaccante fuori causa dal match di fine ottobre a Firenze a causa di un risentimento ai muscoli flessori della coscia destra. Verr&agrave; rivalutato, si prover&agrave; ad averlo a disposizione gi&agrave; da inizio novembre nella trasferta di Monza.&nbsp;",
+        "status": 0,
+        "description": null,
         "lastGame": null,
         "trend": 2
       }
@@ -2596,8 +2596,8 @@
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
-        "status": 1,
-        "description": "il centrocampista costretto al cambio il 18 ottobre a Udine per una lesione muscolare al bicipite femorale della coscia destra, recuperabile dall'inizio di novembre ma da valutare la convocazione gi&agrave; sabato a Torino contro i granata.&nbsp;",
+        "status": 0,
+        "description": null,
         "lastGame": null,
         "trend": 2
       }
@@ -2633,7 +2633,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -3157,7 +3157,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "Il nigeriano dal 21 ottobre fermo per un problema all'anca sinistra. Iniziato un trattamento infiltrativo all'anca, a inizio novembre nuovi controlli medici per stabilire i tempi di rientro.",
+        "description": "Il nigeriano dal 21 ottobre fermato dalla rottura del tendine del muscolo tensore della fascia lata dell'anca sinistra. Operato il 4 novembre, lungo stop. Ipotesi di rientro in campo da aprile.",
         "lastGame": null,
         "trend": 2
       }
@@ -3392,12 +3392,12 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
+        "fantagazzetta": true,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
-        "status": 1,
-        "description": "l'attaccante indisponibile a causa di un guaio muscolare al bicipite femorale della coscia destra. Recuperabile dalla met&agrave; di novembre, ma sta provando a forzare il rientro gi&agrave; domenica a Parma.&nbsp;",
+        "status": 0,
+        "description": null,
         "lastGame": null,
         "trend": 2
       }
@@ -5377,7 +5377,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "il centrocampista offensivo dei sardi fermo dalla gara contro la Lazio (1 novembre) per un problema muscolare al flessore della coscia, tentativo di rientro dall'inizio di dicembre.&nbsp;",
+        "description": "il centrocampista offensivo dei sardi fermo dalla gara contro la Lazio (1 novembre) per una lesione muscolare al bicipite femorale, tentativo di rientro dall'inizio di dicembre.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -6012,7 +6012,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
+        "fantagazzetta": false,
         "gazzetta": true,
         "mediaset": false,
         "sky": false,
@@ -6192,7 +6192,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
+        "fantagazzetta": true,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -6212,7 +6212,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
+        "fantagazzetta": false,
         "gazzetta": true,
         "mediaset": false,
         "sky": false,
@@ -7597,7 +7597,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "Il centrocampista KO nella rifinitura di domenica scorsa vittima di un risentimento muscolare alla gamba sinistra che andr&agrave; valutato. Assente poi contro l'Atalanta, a rischio la sua presenza anche per domenica contro il Bologna.&nbsp;",
+        "description": "Il centrocampista KO nella rifinitura dell'1 novembre vittima di una distrazione muscolare di basso grado al retto femorale della coscia sinistra, tentativo rientro dalla seconda met&agrave; di novembre.",
         "lastGame": null,
         "trend": 2
       }
@@ -7636,8 +7636,8 @@
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
-        "status": 0,
-        "description": null,
+        "status": 1,
+        "description": "Il difensore KO a Manchester in Champions League il 3 novembre per un problema fisico che andr&agrave; valutato. Out per domenica in campionato contro il Sassuolo.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -11256,8 +11256,8 @@
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
-        "status": 1,
-        "description": "l'attaccante assente a Torino il 12 ottobre a causa di una lesione al bicipite femorale della coscia destra, rientro tra i convocati da met&agrave; novembre.",
+        "status": 0,
+        "description": null,
         "lastGame": null,
         "trend": 2
       }
@@ -11957,7 +11957,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "Il portiere fermo da inizio ottobre per la frattura della falange della mano destra, out nel prossimo turno di campionato. Tempi di recupero da valutare.&nbsp;",
+        "description": "Il portiere fermo da inizio ottobre per la frattura della falange della mano destra, out nel prossimo turno di campionato. Recuperabile da dicembre.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
