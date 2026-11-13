@@ -32,7 +32,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
+        "fantagazzetta": true,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -1057,7 +1057,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "il terzino dei biancocelesti costretto al cambio l'8 novembre a Napoli a causa di un guaio muscolare al flessore della gamba. Condizioni da valutare, ma dar&agrave; forfait alla ripresa del campionato contro il Lecce all'Olimpico di Roma.&nbsp;",
+        "description": "il terzino dei biancocelesti costretto al cambio l'8 novembre a Napoli a causa di un guaio muscolare al flessore della gamba. Recuperabile dalla met&agrave; di dicembre, prover&agrave; a esserci nel derby.",
         "lastGame": null,
         "trend": 2
       }
@@ -2252,7 +2252,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
+        "fantagazzetta": false,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -3956,8 +3956,8 @@
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
-        "status": 1,
-        "description": "il difensore sostituito nell'intervallo della sfida contro il Lecce (18 ottobre) per un risentimento muscolare al polpaccio destro. Recuperabile dalla met&agrave; di novembre e ora da valutare il rientro tra i convocati gi&agrave; nel prossimo turno a Bologna in campionato.&nbsp;",
+        "status": 0,
+        "description": null,
         "lastGame": null,
         "trend": 2
       }
@@ -5897,7 +5897,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "il difensore KO l'8 novembre a Napoli vittima di un guaio muscolare al flessore della gamba. Condizioni da valutare, verso il forfait alla ripresa del campionato contro il Lecce all'Olimpico di Roma.&nbsp;",
+        "description": "il difensore KO l'8 novembre a Napoli vittima di una lesione muscolare di secondo grado al flessore della gamba. Recuperabile dalla seconda met&agrave; di dicembre.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -8136,8 +8136,8 @@
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
-        "status": 0,
-        "description": null,
+        "status": 1,
+        "description": "Il montenegrino frenato ancora da un fastidio muscolare alla gamba, condizioni che restano valutare ma non ci sar&agrave; nel prossimo turno di campionato.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
