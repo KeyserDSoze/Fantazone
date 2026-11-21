@@ -72,7 +72,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
+        "fantagazzetta": false,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -212,7 +212,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
+        "fantagazzetta": true,
         "gazzetta": true,
         "mediaset": false,
         "sky": false,
@@ -232,8 +232,8 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
-        "gazzetta": true,
+        "fantagazzetta": false,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -352,7 +352,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
+        "fantagazzetta": false,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -832,7 +832,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
+        "fantagazzetta": false,
         "gazzetta": true,
         "mediaset": false,
         "sky": false,
@@ -997,7 +997,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "l'attaccante si sottoporr&agrave; a nuove cure per il perdurare del fastidio alla tibia che lo affligge da diverse settimane. Appare recuperabile non prima della fine di dicembre.&nbsp;",
+        "description": "l'attaccante si sottoporr&agrave; a nuove cure per un problema osseo alla gamba destra. Ipotizziamo un recupero da fine gennaio, ma la situazione rimane da monitorare.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -1013,7 +1013,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": false,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -1232,7 +1232,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
+        "fantagazzetta": true,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -1452,7 +1452,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
+        "fantagazzetta": true,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -1552,7 +1552,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
+        "fantagazzetta": true,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -1712,7 +1712,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
+        "fantagazzetta": false,
         "gazzetta": true,
         "mediaset": false,
         "sky": false,
@@ -1772,7 +1772,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
+        "fantagazzetta": false,
         "gazzetta": true,
         "mediaset": false,
         "sky": false,
@@ -1793,7 +1793,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": false,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -1837,7 +1837,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "L'attaccante KO il 14 ottobre in Champions League, costretto al cambio per una lesione muscolare al flessore della gamba, rientro tra i convocati dalla seconda met&agrave; di novembre ma prover&agrave; gi&agrave; a esserci sabato contro il Cagliari alla ripresa del campionato.&nbsp;",
+        "description": "L'attaccante KO il 14 ottobre in Champions League, costretto al cambio per una lesione muscolare al flessore della gamba, rientro tra i convocati dalla seconda met&agrave; di novembre e prover&agrave; a esserci dunque dalla 13a giornata.",
         "lastGame": null,
         "trend": 2
       }
@@ -2432,8 +2432,8 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
-        "gazzetta": true,
+        "fantagazzetta": false,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -2572,7 +2572,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
+        "fantagazzetta": false,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -2752,8 +2752,8 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
-        "gazzetta": false,
+        "fantagazzetta": true,
+        "gazzetta": true,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -2772,8 +2772,8 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
-        "gazzetta": false,
+        "fantagazzetta": true,
+        "gazzetta": true,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -2792,8 +2792,8 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
-        "gazzetta": true,
+        "fantagazzetta": false,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -2832,7 +2832,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
+        "fantagazzetta": false,
         "gazzetta": true,
         "mediaset": false,
         "sky": false,
@@ -2873,7 +2873,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": false,
-        "gazzetta": false,
+        "gazzetta": true,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -2936,8 +2936,8 @@
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
-        "status": 1,
-        "description": "il centrocampista frenato nella gara di fine ottobre a Firenze per una distrazione di medio grado ai muscoli adduttori della coscia destra, sta provando a recuperare gi&agrave; per la sfida contro l'Inter alla ripresa del campionato.&nbsp;",
+        "status": 0,
+        "description": null,
         "lastGame": null,
         "trend": 2
       }
@@ -3012,7 +3012,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
+        "fantagazzetta": false,
         "gazzetta": true,
         "mediaset": false,
         "sky": false,
@@ -3173,7 +3173,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -3312,7 +3312,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
+        "fantagazzetta": false,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -3452,7 +3452,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
+        "fantagazzetta": true,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -3492,7 +3492,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
+        "fantagazzetta": true,
         "gazzetta": true,
         "mediaset": false,
         "sky": false,
@@ -3512,7 +3512,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
+        "fantagazzetta": false,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -3612,7 +3612,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
+        "fantagazzetta": false,
         "gazzetta": true,
         "mediaset": false,
         "sky": false,
@@ -4012,7 +4012,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
+        "fantagazzetta": false,
         "gazzetta": true,
         "mediaset": false,
         "sky": false,
@@ -4152,7 +4152,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
+        "fantagazzetta": false,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -4633,7 +4633,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": false,
+        "gazzetta": true,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -4857,7 +4857,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "Il calciatore si &egrave; infortunato in allenamento il 20 ottobre, rimane da valutare per stabilire i tempi di recupero. Si ipotizza un ritorno in campo da met&agrave; dicembre.&nbsp;",
+        "description": "Il calciatore si &egrave; infortunato in allenamento il 20 ottobre vittima di un problema muscolare al quadricipite alto. Rimane da valutare per stabilire i tempi di recupero, si ipotizza un ritorno in campo da met&agrave; dicembre.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -4972,7 +4972,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
+        "fantagazzetta": true,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -5252,7 +5252,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
+        "fantagazzetta": true,
         "gazzetta": true,
         "mediaset": false,
         "sky": false,
@@ -5732,7 +5732,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
+        "fantagazzetta": true,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -5913,7 +5913,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": false,
+        "gazzetta": true,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -5952,7 +5952,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
+        "fantagazzetta": true,
         "gazzetta": true,
         "mediaset": false,
         "sky": false,
@@ -6052,7 +6052,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
+        "fantagazzetta": false,
         "gazzetta": true,
         "mediaset": false,
         "sky": false,
@@ -6293,7 +6293,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": false,
-        "gazzetta": false,
+        "gazzetta": true,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -6332,7 +6332,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
+        "fantagazzetta": true,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -6512,7 +6512,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
+        "fantagazzetta": true,
         "gazzetta": true,
         "mediaset": false,
         "sky": false,
@@ -6736,8 +6736,8 @@
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
-        "status": 1,
-        "description": "Il difensore sabato scorso in allenamento ha lamentato un fastidio muscolare alla gamba e ora a forte rischio la sua convocazione in campionato contro la Roma.&nbsp;",
+        "status": 0,
+        "description": null,
         "lastGame": null,
         "trend": 2
       }
@@ -6812,7 +6812,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
+        "fantagazzetta": false,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -6933,7 +6933,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -6997,7 +6997,7 @@
         "mediaset": false,
         "sky": false,
         "status": 1,
-        "description": "l'esterno offensivo ai box per un problema muscolare alla gamba, assente nel prossimo turno contro il Cagliari. Tempi di rientro da valutare.&nbsp;",
+        "description": "l'esterno offensivo in recupero da un problema muscolare alla gamba, assente nel prossimo turno contro il Cagliari. Prover&agrave; a tornare arruolabile dalla 13a di campionato.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -7193,7 +7193,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": true,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -7232,7 +7232,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
+        "fantagazzetta": false,
         "gazzetta": true,
         "mediaset": false,
         "sky": false,
@@ -7252,7 +7252,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
+        "fantagazzetta": false,
         "gazzetta": true,
         "mediaset": false,
         "sky": false,
@@ -7313,7 +7313,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": false,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -7492,7 +7492,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
+        "fantagazzetta": false,
         "gazzetta": true,
         "mediaset": false,
         "sky": false,
@@ -7512,7 +7512,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
+        "fantagazzetta": false,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -7552,7 +7552,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
+        "fantagazzetta": true,
         "gazzetta": true,
         "mediaset": false,
         "sky": false,
@@ -7853,7 +7853,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": false,
-        "gazzetta": false,
+        "gazzetta": true,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -8053,7 +8053,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": false,
-        "gazzetta": false,
+        "gazzetta": true,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -8272,7 +8272,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
+        "fantagazzetta": true,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -8752,12 +8752,12 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": true,
+        "fantagazzetta": false,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
-        "status": 0,
-        "description": null,
+        "status": 1,
+        "description": "Il difensore non ha recuperato da un problema al piede e non &egrave; tra i convocati per sabato contro la Roma. Da valutare in vista della 13a giornata di campionato.&nbsp;",
         "lastGame": null,
         "trend": 2
       }
@@ -8893,7 +8893,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": false,
-        "gazzetta": false,
+        "gazzetta": true,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -8972,7 +8972,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
+        "fantagazzetta": true,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -9016,8 +9016,8 @@
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
-        "status": 0,
-        "description": null,
+        "status": 1,
+        "description": "il centrocampista ai box per una lesione all'adduttore della coscia sinistra, recuperabile da inizio dicembre.",
         "lastGame": null,
         "trend": 2
       }
@@ -9092,7 +9092,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
+        "fantagazzetta": true,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -9212,7 +9212,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
+        "fantagazzetta": true,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -9352,7 +9352,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
+        "fantagazzetta": true,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
@@ -9373,7 +9373,7 @@
       "visible": true,
       "chance": {
         "fantagazzetta": false,
-        "gazzetta": true,
+        "gazzetta": false,
         "mediaset": false,
         "sky": false,
         "status": 0,
@@ -10872,7 +10872,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
+        "fantagazzetta": true,
         "gazzetta": true,
         "mediaset": false,
         "sky": false,
@@ -11292,7 +11292,7 @@
       "isActive": true,
       "visible": true,
       "chance": {
-        "fantagazzetta": false,
+        "fantagazzetta": true,
         "gazzetta": false,
         "mediaset": false,
         "sky": false,
